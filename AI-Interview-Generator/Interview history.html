@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Viva — Interview History</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+:root{
+  --paper:#ECE7DB;      --paper-2:#F5F1E8;    --sheet:#FBF9F3;
+  --ink:#1C1B17;        --ink-soft:#5F5A4E;   --ink-faint:#8B8676;
+  --board:#213A30;      --board-2:#2C4C3E;    --board-ink:#E7E1D4;
+  --pen:#A8352A;        --pen-soft:#C25A4C;   --pen-wash:#F3E2DD;
+  --rule:#D6CFBD;       --rule-soft:#E3DDCC;
+  --gold:#B98A2E;       --pass:#3f7d54;       --pass-wash:#E4EDE3;
+  --shadow:0 1px 0 rgba(28,27,23,.04), 0 18px 40px -28px rgba(28,27,23,.35);
+  --radius:14px;
+  --f-disp:"Fraunces",Georgia,serif;
+  --f-ui:"IBM Plex Sans",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+[data-theme="dark"]{
+  --paper:#141A16;      --paper-2:#1B2420;    --sheet:#1E2823;
+  --ink:#E9E4D7;        --ink-soft:#A7A493;   --ink-faint:#7C7A6B;
+  --board:#0F1712;      --board-2:#1A2620;    --board-ink:#E7E1D4;
+  --pen:#D5695A;        --pen-soft:#E08376;   --pen-wash:#2C211E;
+  --rule:#31403A;       --rule-soft:#28332E;
+  --gold:#D2A24A;       --pass:#7FBF95;       --pass-wash:#20302A;
+  --shadow:0 1px 0 rgba(0,0,0,.2), 0 24px 46px -30px rgba(0,0,0,.7);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;transition:background .4s ease,color .4s ease}
+::selection{background:var(--pen);color:#fff}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:none}
+:focus-visible{outline:2px solid var(--pen);outline-offset:2px;border-radius:6px}
+
+/* ---------- shell ---------- */
+.app{display:flex;min-height:100vh;align-items:flex-start}
+
+/* ---------- sidebar ---------- */
+.sidebar{
+  flex:0 0 270px;width:270px;
+  background:var(--board);color:var(--board-ink);
+  display:flex;flex-direction:column;
+  padding:24px 18px;gap:22px;position:sticky;top:0;height:100vh;
+  align-self:flex-start;overflow-y:auto;
+  border-right:1px solid rgba(0,0,0,.15);transition:background .4s ease;
+}
+.brand{display:flex;align-items:center;gap:12px;padding:2px 8px}
+.brand .mark{width:42px;height:42px;border-radius:11px;flex:none;background:var(--pen);color:#FBF9F3;display:grid;place-items:center;font-family:var(--f-disp);font-weight:600;font-size:22px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),0 6px 16px -8px var(--pen)}
+.brand .word{font-family:var(--f-disp);font-weight:600;font-size:23px;letter-spacing:-.01em;line-height:1}
+.brand .sub{font-family:var(--f-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(231,225,212,.55);margin-top:5px}
+.side-label{font-family:var(--f-mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:rgba(231,225,212,.4);padding:0 10px;margin-bottom:-8px}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav-link{display:flex;align-items:center;gap:13px;padding:10px 12px;border-radius:10px;color:rgba(231,225,212,.72);font-weight:500;font-size:14.5px;position:relative;transition:background .18s,color .18s}
+.nav-link svg{width:19px;height:19px;flex:none;stroke-width:1.7}
+.nav-link:hover{background:rgba(255,255,255,.05);color:var(--board-ink)}
+.nav-link.active{background:var(--board-2);color:#fff}
+.nav-link.active::before{content:"";position:absolute;left:-18px;top:50%;transform:translateY(-50%);width:4px;height:22px;border-radius:0 4px 4px 0;background:var(--pen)}
+.nav-sep{height:1px;background:rgba(255,255,255,.08);margin:6px 10px}
+.side-foot{margin-top:auto;display:flex;flex-direction:column;gap:16px}
+.upgrade{background:linear-gradient(160deg,var(--board-2),rgba(44,76,62,.5));border:1px solid rgba(185,138,46,.35);border-radius:13px;padding:16px}
+.upgrade .u-top{display:flex;align-items:center;gap:9px;font-family:var(--f-disp);font-weight:600;font-size:16px}
+.upgrade .u-top .star{color:var(--gold)}
+.upgrade p{margin:9px 0 13px;font-size:12.5px;line-height:1.5;color:rgba(231,225,212,.66)}
+.u-btn{width:100%;padding:9px;border-radius:9px;font-weight:600;font-size:13px;background:var(--gold);color:#1b1400;transition:filter .18s,transform .1s}
+.u-btn:hover{filter:brightness(1.06)}.u-btn:active{transform:translateY(1px)}
+.user{display:flex;align-items:center;gap:11px;padding:6px 4px}
+.user .av{width:38px;height:38px;border-radius:10px;flex:none;box-shadow:0 0 0 1px rgba(255,255,255,.14)}
+.user .nm{font-weight:600;font-size:13.5px;line-height:1.2}
+.user .pl{font-family:var(--f-mono);font-size:10px;letter-spacing:.06em;color:rgba(231,225,212,.5);text-transform:uppercase;margin-top:2px}
+.user .chev{margin-left:auto;color:rgba(231,225,212,.4)}
+
+/* ---------- main ---------- */
+.main{flex:1 1 0;min-width:0;padding:0 42px 60px;max-width:1320px}
+.topbar{display:flex;align-items:center;gap:16px;padding:22px 0 8px;position:sticky;top:0;z-index:20;background:linear-gradient(var(--paper) 72%,transparent)}
+.crumb{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)}
+.top-actions{margin-left:auto;display:flex;align-items:center;gap:10px}
+.icon-btn{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;border:1px solid var(--rule);background:var(--paper-2);color:var(--ink-soft);transition:background .18s,color .18s,border-color .18s}
+.icon-btn:hover{color:var(--ink);border-color:var(--ink-faint)}
+.icon-btn svg{width:19px;height:19px;stroke-width:1.7}
+.pro-btn{display:flex;align-items:center;gap:8px;padding:0 16px;height:40px;border-radius:10px;background:var(--ink);color:var(--paper);font-weight:600;font-size:13.5px;border:1px solid var(--ink);transition:filter .18s,transform .1s}
+.pro-btn:hover{filter:brightness(1.12)}.pro-btn:active{transform:translateY(1px)}
+.pro-btn .star{color:var(--gold)}
+
+.page-head{margin:20px 0 24px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:var(--f-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--pen);margin-bottom:12px}
+.eyebrow::before{content:"";width:22px;height:1px;background:var(--pen)}
+h1{font-family:var(--f-disp);font-weight:600;letter-spacing:-.02em;font-size:clamp(30px,4vw,46px);line-height:1.02;margin:0;font-optical-sizing:auto}
+h1 em{font-style:italic;color:var(--pen)}
+.lede{margin:12px 0 0;color:var(--ink-soft);font-size:16px;max-width:56ch}
+
+/* ---------- stats ---------- */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;margin-bottom:26px}
+.stat{background:var(--paper-2);border:1px solid var(--rule);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px;position:relative;overflow:hidden}
+.stat::before{content:"";position:absolute;left:0;top:16px;bottom:16px;width:3px;border-radius:3px;background:var(--pen);opacity:.85}
+.stat .sl{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);display:flex;align-items:center;gap:7px}
+.stat .sl svg{width:14px;height:14px;stroke-width:1.9;color:var(--pen)}
+.stat .sn{font-family:var(--f-disp);font-weight:600;font-size:36px;line-height:1;margin-top:12px;letter-spacing:-.01em}
+.stat .sn small{font-size:16px;color:var(--ink-faint);font-weight:500}
+.stat .ss{font-size:12.5px;color:var(--ink-soft);margin-top:6px}
+.stat .ss b{color:var(--pass);font-weight:600}
+
+/* ---------- toolbar ---------- */
+.toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:6px}
+.search{position:relative;flex:1 1 240px;min-width:200px}
+.search .lead{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--ink-faint);pointer-events:none}
+.search .lead svg{width:17px;height:17px;stroke-width:1.8;display:block}
+.search input{width:100%;padding:11px 14px 11px 40px;border-radius:10px;border:1px solid var(--rule);background:var(--paper-2);color:var(--ink);font-family:var(--f-ui);font-size:14.5px;transition:border-color .18s,box-shadow .18s}
+.search input:focus{outline:none;border-color:var(--pen);box-shadow:0 0 0 3px var(--pen-wash)}
+.search input::placeholder{color:var(--ink-faint)}
+.seg{display:flex;background:var(--paper-2);border:1px solid var(--rule);border-radius:10px;padding:3px}
+.seg button{padding:8px 14px;border-radius:8px;font-weight:600;font-size:13px;color:var(--ink-soft);transition:background .18s,color .18s;white-space:nowrap}
+.seg button.active{background:var(--pen);color:#FBF9F3;box-shadow:0 6px 14px -8px var(--pen)}
+.sel{position:relative}
+.sel select{appearance:none;padding:11px 38px 11px 14px;border-radius:10px;border:1px solid var(--rule);background:var(--paper-2);color:var(--ink);font-family:var(--f-ui);font-size:14px;cursor:pointer;transition:border-color .18s}
+.sel select:focus{outline:none;border-color:var(--pen);box-shadow:0 0 0 3px var(--pen-wash)}
+.sel .cd{position:absolute;right:13px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--ink-faint)}
+.sel .cd svg{width:16px;height:16px;stroke-width:1.8;display:block}
+
+.result-line{display:flex;align-items:center;gap:12px;margin:18px 0 4px;font-family:var(--f-mono);font-size:11.5px;letter-spacing:.06em;color:var(--ink-faint)}
+.result-line .clear{color:var(--pen);font-weight:600;cursor:pointer;text-transform:uppercase;letter-spacing:.1em;font-size:10.5px}
+.result-line .clear:hover{text-decoration:underline}
+
+/* ---------- ledger ---------- */
+.month{display:flex;align-items:center;gap:16px;margin:28px 0 12px}
+.month .ml{font-family:var(--f-mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink);font-weight:600}
+.month .mr{flex:1;height:0;border-top:1px solid var(--ink);opacity:.28;position:relative}
+.month .mr::after{content:"";position:absolute;left:0;right:0;top:2px;border-top:1px solid var(--ink);opacity:.5}
+.month .mc{font-family:var(--f-mono);font-size:11px;color:var(--ink-faint);letter-spacing:.06em}
+
+.entry{
+  display:grid;grid-template-columns:68px minmax(0,1fr) auto;gap:20px;align-items:start;
+  background:var(--paper-2);border:1px solid var(--rule);border-radius:var(--radius);
+  padding:18px 20px 18px 0;margin-bottom:12px;position:relative;overflow:hidden;
+  box-shadow:var(--shadow);cursor:pointer;transition:border-color .18s,transform .12s;
+}
+.entry::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--pen);opacity:.55;transition:opacity .18s}
+.entry:hover{border-color:var(--ink-faint)}
+.entry:hover::before{opacity:1}
+.entry.mock::before{background:var(--gold)}
+
+.e-date{grid-column:1;text-align:center;padding-left:18px;padding-top:2px}
+.e-day{font-family:var(--f-disp);font-weight:600;font-size:28px;line-height:1;color:var(--ink)}
+.e-mon{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--pen);margin-top:3px}
+
+.e-main{grid-column:2;min-width:0}
+.e-role{font-family:var(--f-disp);font-weight:600;font-size:19px;letter-spacing:-.01em;line-height:1.15;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.type-dot{font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;padding:3px 8px;border-radius:6px;background:var(--pen-wash);color:var(--pen)}
+.type-dot.mock{background:rgba(185,138,46,.16);color:var(--gold)}
+.e-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.e-tags span{font-family:var(--f-mono);font-size:11px;color:var(--ink-soft);background:var(--sheet);border:1px solid var(--rule-soft);padding:3px 8px;border-radius:6px}
+.e-badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:11px;align-items:center}
+.badge{font-family:var(--f-mono);font-size:11px;font-weight:500;padding:4px 9px;border-radius:6px;display:inline-flex;align-items:center;gap:5px}
+.badge.diff{background:var(--sheet);border:1px solid var(--rule);color:var(--ink-soft)}
+.badge.diff.hard{color:var(--gold);border-color:rgba(185,138,46,.4)}
+.badge.diff.brutal{color:var(--pen);border-color:rgba(168,53,42,.4)}
+.badge.count{background:var(--sheet);border:1px solid var(--rule);color:var(--ink-soft)}
+.badge.score{background:var(--pass-wash);color:var(--pass);font-weight:600}
+
+.e-side{grid-column:3;display:flex;flex-direction:column;align-items:flex-end;gap:10px;padding-right:2px}
+.e-time{font-family:var(--f-mono);font-size:11px;color:var(--ink-faint);letter-spacing:.03em;white-space:nowrap}
+.e-actions{display:flex;gap:6px}
+.act{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;border:1px solid var(--rule);background:var(--sheet);color:var(--ink-soft);transition:color .18s,border-color .18s}
+.act:hover{color:var(--pen);border-color:var(--pen)}
+.act.danger:hover{color:var(--pen);border-color:var(--pen)}
+.act svg{width:15px;height:15px;stroke-width:1.8}
+.e-toggle{color:var(--ink-faint);transition:transform .2s}
+.entry.open .e-toggle{transform:rotate(90deg);color:var(--pen)}
+
+/* expandable preview */
+.e-panel{grid-column:1 / -1;display:none;padding:16px 20px 4px 86px;margin-top:6px;border-top:1px solid var(--rule-soft)}
+.entry.open .e-panel{display:block;animation:rise .35s ease}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.mini-q{display:grid;grid-template-columns:44px 1fr;align-items:baseline;padding:10px 0;border-top:1px solid var(--rule-soft)}
+.mini-q:first-child{border-top:none}
+.mini-q .mn{font-family:var(--f-mono);font-size:11px;font-weight:600;color:var(--pen)}
+.mini-q .mt{font-family:var(--f-disp);font-size:15.5px;line-height:1.45;color:var(--ink)}
+.mini-q .mt code{font-family:var(--f-mono);font-size:.85em;background:var(--pen-wash);color:var(--pen);padding:1px 5px;border-radius:4px}
+.panel-foot{display:flex;gap:10px;padding:12px 0 4px}
+.pf-btn{display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:9px;border:1px solid var(--rule);background:var(--sheet);font-weight:600;font-size:12.5px;color:var(--pen);transition:background .18s,border-color .18s}
+.pf-btn:hover{background:var(--pen-wash);border-color:var(--pen)}
+.pf-btn svg{width:15px;height:15px;stroke-width:1.9}
+
+/* empty */
+.empty{text-align:center;padding:60px 20px;color:var(--ink-faint)}
+.empty .em{font-family:var(--f-disp);font-size:52px;color:var(--rule);line-height:1}
+.empty p{margin:14px auto 0;max-width:36ch;font-size:14.5px;line-height:1.55}
+.empty button{margin-top:16px;padding:10px 18px;border-radius:10px;background:var(--pen);color:#FBF9F3;font-weight:600;font-size:13.5px}
+
+.foot{margin-top:40px;padding-top:20px;border-top:1px solid var(--rule);font-family:var(--f-mono);font-size:11px;letter-spacing:.05em;color:var(--ink-faint);text-align:center}
+
+/* toast */
+.toast{position:fixed;bottom:26px;left:50%;transform:translate(-50%,20px);background:var(--ink);color:var(--paper);padding:12px 20px;border-radius:11px;font-size:13.5px;font-weight:500;display:flex;align-items:center;gap:10px;box-shadow:0 18px 40px -18px rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:60}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast svg{width:17px;height:17px;color:var(--pen-soft);stroke-width:2}
+
+.menu-btn{display:none}
+
+/* responsive */
+@media(max-width:820px){
+  .sidebar{position:fixed;left:0;top:0;bottom:0;width:280px;flex-basis:280px;z-index:50;transform:translateX(-100%);transition:transform .3s ease;height:100vh}
+  .sidebar.open{transform:none}
+  .main{padding:0 20px 50px;max-width:100%}
+  .menu-btn{display:grid}
+  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .3s;z-index:40}
+  .scrim.show{opacity:1;pointer-events:auto}
+}
+@media(max-width:600px){
+  .entry{grid-template-columns:1fr;gap:12px;padding:16px 18px}
+  .entry::before{width:4px}
+  .e-date{grid-column:1;display:flex;align-items:baseline;gap:8px;text-align:left;padding-left:8px}
+  .e-mon{margin-top:0}
+  .e-side{grid-column:1;flex-direction:row;justify-content:space-between;align-items:center;width:100%}
+  .e-panel{padding-left:8px}
+  .mini-q{grid-template-columns:40px 1fr}
+}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="mark">V</div>
+      <div><div class="word">Viva</div><div class="sub">Interview Studio</div></div>
+    </div>
+    <div class="side-label">Workspace</div>
+    <nav class="nav">
+      <a class="nav-link" href="interview-studio.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-link" href="interview-studio.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2.5l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg>
+        Generate Questions
+      </a>
+      <a class="nav-link" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 15a3 3 0 003-3V6a3 3 0 00-6 0v6a3 3 0 003 3z"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg>
+        Mock Interview
+      </a>
+      <a class="nav-link" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 3v5h5"/><path d="M6 3h8l5 5v13H6z"/><path d="M9 13h6M9 17h4"/></svg>
+        Resume Analyzer
+      </a>
+      <a class="nav-link active" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        Interview History
+      </a>
+      <a class="nav-link" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 3h12v18l-6-4-6 4z"/></svg>
+        Saved Questions
+      </a>
+    </nav>
+    <div class="nav-sep"></div>
+    <nav class="nav">
+      <a class="nav-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg>Profile</a>
+      <a class="nav-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>Settings</a>
+    </nav>
+    <div class="side-foot">
+      <div class="upgrade">
+        <div class="u-top"><span class="star">★</span> Go Pro</div>
+        <p>Unlimited history, full transcripts, and PDF export of every sitting.</p>
+        <button class="u-btn" data-toast="Pro checkout is a demo in this preview.">Upgrade — $9/mo</button>
+      </div>
+      <div class="user">
+        <img class="av" alt="Ravi Chandran" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><rect width='80' height='80' fill='%232C4C3E'/><circle cx='40' cy='31' r='15' fill='%23B98A2E'/><path d='M12 78c0-18 14-28 28-28s28 10 28 28z' fill='%23B98A2E'/></svg>">
+        <div><div class="nm">Ravi Chandran</div><div class="pl">Free plan</div></div>
+        <span class="chev"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 10l4 4 4-4"/></svg></span>
+      </div>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <button class="icon-btn menu-btn" id="menuBtn" aria-label="Open menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <span class="crumb">Dashboard / History</span>
+      <div class="top-actions">
+        <button class="icon-btn" id="themeBtn" aria-label="Toggle theme"><svg id="sunMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 12.8A8 8 0 1111.2 3 6.2 6.2 0 0021 12.8z"/></svg></button>
+        <button class="pro-btn" data-toast="Pro checkout is a demo in this preview."><span class="star">★</span> Upgrade</button>
+      </div>
+    </div>
+
+    <header class="page-head">
+      <span class="eyebrow">The record book</span>
+      <h1>Every paper you've <em>sat.</em></h1>
+      <p class="lede">A running ledger of the question papers you've composed and the mock interviews you've taken. Search it, filter it, and reopen any sitting to rehearse again.</p>
+    </header>
+
+    <!-- STATS -->
+    <section class="stats">
+      <div class="stat">
+        <div class="sl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 3h12v18l-6-4-6 4z"/></svg> Papers composed</div>
+        <div class="sn">24</div>
+        <div class="ss"><b>+3</b> this week</div>
+      </div>
+      <div class="stat">
+        <div class="sl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 5h16M4 12h16M4 19h10"/></svg> Questions practised</div>
+        <div class="sn">268</div>
+        <div class="ss">across 6 roles</div>
+      </div>
+      <div class="stat">
+        <div class="sl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 15a3 3 0 003-3V6a3 3 0 00-6 0v6a3 3 0 003 3z"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg> Mock interviews</div>
+        <div class="sn">9</div>
+        <div class="ss">last one 2 days ago</div>
+      </div>
+      <div class="stat">
+        <div class="sl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3l3 6 6 .5-4.5 4L18 20l-6-3.3L6 20l1.5-6.5L3 9.5 9 9z"/></svg> Avg. mock score</div>
+        <div class="sn">78<small>%</small></div>
+        <div class="ss"><b>▲ 6%</b> vs last month</div>
+      </div>
+    </section>
+
+    <!-- TOOLBAR -->
+    <section class="toolbar">
+      <div class="search">
+        <span class="lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg></span>
+        <input id="search" placeholder="Search by role or skill…">
+      </div>
+      <div class="seg" id="seg">
+        <button class="active" data-type="all">All</button>
+        <button data-type="paper">Papers</button>
+        <button data-type="mock">Mocks</button>
+      </div>
+      <div class="sel">
+        <select id="diffSel">
+          <option value="all">Any difficulty</option>
+          <option>Warm-up</option><option>Medium</option><option>Hard</option><option>Brutal</option>
+        </select>
+        <span class="cd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M8 10l4 4 4-4"/></svg></span>
+      </div>
+      <div class="sel">
+        <select id="sortSel">
+          <option value="new">Newest first</option>
+          <option value="old">Oldest first</option>
+          <option value="count">Most questions</option>
+          <option value="score">Highest score</option>
+        </select>
+        <span class="cd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M8 10l4 4 4-4"/></svg></span>
+      </div>
+    </section>
+
+    <div class="result-line"><span id="resultCount">—</span><span class="clear" id="clearBtn" hidden>Clear filters</span></div>
+
+    <div id="ledger"></div>
+
+    <div class="foot">© 2026 Viva Interview Studio — built for the hot seat.</div>
+  </main>
+</div>
+
+<div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12l4 4 10-10"/></svg><span id="toastMsg">Done</span></div>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+let toastT;
+function toast(m){const t=$('#toast');$('#toastMsg').textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),1900)}
+
+/* theme + menu */
+$('#themeBtn').addEventListener('click',()=>{
+  const r=document.documentElement,d=r.getAttribute('data-theme')==='dark';
+  r.setAttribute('data-theme',d?'light':'dark');
+  $('#sunMoon').innerHTML=d?'<path d="M21 12.8A8 8 0 1111.2 3 6.2 6.2 0 0021 12.8z"/>':'<circle cx="12" cy="12" r="4.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.5 4.5l2 2M17.5 17.5l2 2M19.5 4.5l-2 2M6.5 17.5l-2 2"/>';
+});
+$('#menuBtn')?.addEventListener('click',()=>{$('#sidebar').classList.add('open');$('#scrim').classList.add('show')});
+$('#scrim')?.addEventListener('click',()=>{$('#sidebar').classList.remove('open');$('#scrim').classList.remove('show')});
+$$('[data-toast]').forEach(b=>b.addEventListener('click',()=>toast(b.dataset.toast)));
+
+/* ---------- data ---------- */
+let RECORDS=[
+  {id:1,role:"Python Developer",type:"paper",diff:"Medium",count:10,skills:["Python","FastAPI"],month:"July 2026",mon:"Jul",day:25,time:"01:27 PM",sort:100,
+   q:["What is the difference between static and dynamic typing in Python?","How does FastAPI handle CORS requests?","Explain dependency injection in FastAPI.","Write a Python function to reverse a string using recursion."]},
+  {id:2,role:"Backend Developer",type:"paper",diff:"Hard",count:15,skills:["Node.js","Postgres","Redis"],month:"July 2026",mon:"Jul",day:24,time:"11:15 AM",sort:99,
+   q:["How would you design an idempotent payment endpoint?","When does an index hurt write performance in Postgres?","Explain cache stampede and how to prevent it with Redis.","Walk through debugging a memory leak in a Node service."]},
+  {id:3,role:"Data Scientist",type:"mock",diff:"Medium",count:10,skills:["Python","Pandas","ML"],month:"July 2026",mon:"Jul",day:24,time:"09:45 AM",sort:98,score:78,
+   q:["Explain the bias–variance tradeoff with an example.","How do you handle an imbalanced classification dataset?","What is regularization, and how do L1 and L2 differ?","Walk through validating a model before shipping it."]},
+  {id:4,role:"ML Engineer",type:"paper",diff:"Hard",count:15,skills:["PyTorch","ML","CUDA"],month:"July 2026",mon:"Jul",day:23,time:"04:30 PM",sort:97,
+   q:["Explain how backpropagation computes gradients.","What causes vanishing gradients, and how do you fix it?","Compare batch, layer, and group normalization.","How would you serve a model at low latency in production?"]},
+  {id:5,role:"Frontend Engineer",type:"mock",diff:"Medium",count:12,skills:["React","TypeScript"],month:"July 2026",mon:"Jul",day:22,time:"02:10 PM",sort:96,score:85,
+   q:["When would you reach for <code>useMemo</code> versus <code>useCallback</code>?","Explain how the virtual DOM diffing process works.","What problems do React keys solve in list rendering?","How do you type a generic reusable component in TypeScript?"]},
+  {id:6,role:"DevOps Engineer",type:"paper",diff:"Hard",count:12,skills:["Docker","Kubernetes","AWS"],month:"July 2026",mon:"Jul",day:20,time:"10:05 AM",sort:95,
+   q:["Explain the difference between a container and a VM.","What is a Kubernetes readiness probe for?","How do you design a zero-downtime deployment?","Walk through securing secrets in a CI/CD pipeline."]},
+  {id:7,role:"Python Developer",type:"mock",diff:"Warm-up",count:8,skills:["Python"],month:"July 2026",mon:"Jul",day:18,time:"06:20 PM",sort:94,score:91,
+   q:["What is a list comprehension, and when is it a bad idea?","Explain <code>*args</code> and <code>**kwargs</code>.","What does the <code>with</code> statement do?","How do you read a large file without loading it into memory?"]},
+  {id:8,role:"Full-Stack Developer",type:"paper",diff:"Medium",count:14,skills:["React","Node.js","SQL"],month:"July 2026",mon:"Jul",day:16,time:"12:40 PM",sort:93,
+   q:["How do you prevent SQL injection in a Node API?","Explain optimistic vs pessimistic UI updates.","When would you paginate with a cursor instead of an offset?","How do you keep frontend and backend types in sync?"]},
+
+  {id:9,role:"Site Reliability Engineer",type:"paper",diff:"Brutal",count:18,skills:["Linux","Kubernetes","Go"],month:"June 2026",mon:"Jun",day:29,time:"03:15 PM",sort:89,
+   q:["Design an SLO and error budget for a checkout service.","A pod is CrashLoopBackOff — walk through your triage.","How does the Linux OOM killer choose a victim?","Explain how you'd debug packet loss between two services."]},
+  {id:10,role:"Data Analyst",type:"mock",diff:"Warm-up",count:10,skills:["SQL","Excel"],month:"June 2026",mon:"Jun",day:27,time:"09:00 AM",sort:88,score:74,
+   q:["Write a query to find the second-highest salary.","Explain the difference between an INNER and LEFT JOIN.","When would you use a window function?","How do you spot and handle outliers in a dataset?"]},
+  {id:11,role:"Backend Developer",type:"paper",diff:"Medium",count:10,skills:["Java","Spring"],month:"June 2026",mon:"Jun",day:24,time:"05:45 PM",sort:87,
+   q:["Explain the Spring bean lifecycle.","What is dependency injection and why use it?","How does @Transactional actually work?","When would you choose a queue over a direct call?"]},
+  {id:12,role:"Machine Learning Intern",type:"mock",diff:"Warm-up",count:8,skills:["Python","ML"],month:"June 2026",mon:"Jun",day:20,time:"11:30 AM",sort:86,score:66,
+   q:["What is overfitting, in plain terms?","Explain train/validation/test splits.","What does a confusion matrix tell you?","Why do we normalise input features?"]},
+  {id:13,role:"React Developer",type:"paper",diff:"Hard",count:15,skills:["React","Redux","TypeScript"],month:"June 2026",mon:"Jun",day:15,time:"04:00 PM",sort:85,
+   q:["Explain reconciliation and the fiber architecture.","When is Redux the wrong tool for state?","How do you avoid unnecessary re-renders?","Describe a pattern for data fetching with Suspense."]},
+  {id:14,role:"Platform Engineer",type:"paper",diff:"Hard",count:12,skills:["Go","gRPC","Kubernetes"],month:"June 2026",mon:"Jun",day:10,time:"10:20 AM",sort:84,
+   q:["Why choose gRPC over REST for internal services?","How do you version a gRPC API safely?","Explain graceful shutdown of a Go service.","How would you build a self-service deploy platform?"]}
+];
+
+/* ---------- state ---------- */
+const state={q:"",type:"all",diff:"all",sort:"new"};
+const openIds=new Set();
+
+/* icons */
+const IC={
+  view:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+  rerun:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 12a8 8 0 018-8 8 8 0 016 2.7L22 4M22 4v5h-5"/><path d="M20 12a8 8 0 01-8 8 8 8 0 01-6-2.7L2 20M2 20v-5h5"/></svg>',
+  pdf:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v11M8 11l4 3 4-3M5 21h14"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>',
+  chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6l6 6-6 6"/></svg>'
+};
+
+function filtered(){
+  let r=RECORDS.filter(x=>{
+    if(state.type!=="all"&&x.type!==state.type)return false;
+    if(state.diff!=="all"&&x.diff!==state.diff)return false;
+    if(state.q){
+      const hay=(x.role+" "+x.skills.join(" ")).toLowerCase();
+      if(!hay.includes(state.q.toLowerCase()))return false;
+    }
+    return true;
+  });
+  if(state.sort==="new")r.sort((a,b)=>b.sort-a.sort);
+  else if(state.sort==="old")r.sort((a,b)=>a.sort-b.sort);
+  else if(state.sort==="count")r.sort((a,b)=>b.count-a.count);
+  else if(state.sort==="score")r.sort((a,b)=>(b.score??-1)-(a.score??-1));
+  return r;
+}
+
+function entryHTML(x){
+  const isMock=x.type==="mock";
+  const dc=x.diff==="Hard"?"hard":x.diff==="Brutal"?"brutal":"";
+  const mini=x.q.map((t,i)=>`<div class="mini-q"><span class="mn">Q${String(i+1).padStart(2,'0')}</span><span class="mt">${t}</span></div>`).join("");
+  return `<div class="entry ${isMock?'mock':''} ${openIds.has(x.id)?'open':''}" data-id="${x.id}">
+    <div class="e-date"><div class="e-day">${x.day}</div><div class="e-mon">${x.mon}</div></div>
+    <div class="e-main">
+      <div class="e-role">${x.role}<span class="type-dot ${isMock?'mock':''}">${isMock?'Mock':'Paper'}</span></div>
+      <div class="e-tags">${x.skills.map(s=>`<span>${s}</span>`).join("")}</div>
+      <div class="e-badges">
+        <span class="badge diff ${dc}">${x.diff}</span>
+        <span class="badge count">${x.count} Q</span>
+        ${isMock?`<span class="badge score">Score ${x.score}%</span>`:''}
+      </div>
+    </div>
+    <div class="e-side">
+      <span class="e-time">${x.mon} ${x.day} · ${x.time}</span>
+      <div class="e-actions">
+        <button class="act" data-act="view" title="Open">${IC.view}</button>
+        <button class="act" data-act="rerun" title="Re-run">${IC.rerun}</button>
+        <button class="act" data-act="pdf" title="Export PDF">${IC.pdf}</button>
+        <button class="act danger" data-act="trash" title="Delete">${IC.trash}</button>
+        <button class="act e-toggle" data-act="toggle" title="Preview questions">${IC.chev}</button>
+      </div>
+    </div>
+    <div class="e-panel">
+      ${mini}
+      <div class="panel-foot">
+        <button class="pf-btn" data-act="view">${IC.view} Open full ${isMock?'transcript':'paper'}</button>
+        <button class="pf-btn" data-act="pdf">${IC.pdf} Export PDF</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function render(){
+  const rows=filtered();
+  const ledger=$('#ledger');
+  const n=rows.length;
+  $('#resultCount').textContent = n===0 ? "No sittings match your filters" : `${n} sitting${n>1?'s':''} on record`;
+  const dirty=state.q||state.type!=="all"||state.diff!=="all"||state.sort!=="new";
+  $('#clearBtn').hidden=!dirty;
+
+  if(n===0){
+    ledger.innerHTML=`<div class="empty"><div class="em">∅</div><p>Nothing here yet. Loosen a filter, or compose a new question paper to start your record.</p><button id="goGen">Compose a paper</button></div>`;
+    $('#goGen').onclick=()=>location.href="interview-studio.html";
+    return;
+  }
+
+  const grouped = (state.sort==="new"||state.sort==="old");
+  let html="";
+  if(grouped){
+    const order=[]; const map={};
+    rows.forEach(r=>{(map[r.month]??=[]).push(r); if(!order.includes(r.month))order.push(r.month)});
+    order.forEach(mo=>{
+      const items=map[mo];
+      html+=`<div class="month"><span class="ml">${mo}</span><span class="mr"></span><span class="mc">${items.length} sitting${items.length>1?'s':''}</span></div>`;
+      html+=items.map(entryHTML).join("");
+    });
+  } else {
+    html+=`<div class="month"><span class="ml">Results</span><span class="mr"></span><span class="mc">sorted</span></div>`;
+    html+=rows.map(entryHTML).join("");
+  }
+  ledger.innerHTML=html;
+}
+
+/* ---------- interactions ---------- */
+$('#ledger').addEventListener('click',e=>{
+  const entry=e.target.closest('.entry'); if(!entry)return;
+  const id=+entry.dataset.id;
+  const actBtn=e.target.closest('[data-act]');
+  const rec=RECORDS.find(r=>r.id===id);
+  if(actBtn){
+    e.stopPropagation();
+    const a=actBtn.dataset.act;
+    if(a==="toggle"){ openIds.has(id)?openIds.delete(id):openIds.add(id); render(); return; }
+    if(a==="view"){ toast(`Opening "${rec.role}" — demo in this preview`); return; }
+    if(a==="rerun"){ location.href="interview-studio.html"; return; }
+    if(a==="pdf"){ toast("PDF export is a demo in this preview"); return; }
+    if(a==="trash"){ RECORDS=RECORDS.filter(r=>r.id!==id); openIds.delete(id); render(); toast(`Removed "${rec.role}" from your record`); return; }
+  } else {
+    // click anywhere on the row toggles the preview
+    openIds.has(id)?openIds.delete(id):openIds.add(id); render();
+  }
+});
+
+$('#search').addEventListener('input',e=>{state.q=e.target.value;render()});
+$('#seg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  $$('#seg button').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+  state.type=b.dataset.type; render();
+});
+$('#diffSel').addEventListener('change',e=>{state.diff=e.target.value;render()});
+$('#sortSel').addEventListener('change',e=>{state.sort=e.target.value;render()});
+$('#clearBtn').addEventListener('click',()=>{
+  state.q="";state.type="all";state.diff="all";state.sort="new";
+  $('#search').value="";$('#diffSel').value="all";$('#sortSel').value="new";
+  $$('#seg button').forEach((x,i)=>x.classList.toggle('active',i===0));
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
