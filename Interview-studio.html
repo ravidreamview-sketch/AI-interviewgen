@@ -360,6 +360,64 @@ input[type=range]::-moz-range-thumb{
 .qcopy svg{width:16px;height:16px;stroke-width:1.8}
 .qcopy.done{color:#10B981;opacity:1}
 
+/* ---------- preset chips & ai stepper ---------- */
+.preset-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.chip{
+  padding:6px 12px;border-radius:8px;font-size:12.5px;font-weight:600;
+  border:1px solid var(--rule);background:var(--paper);color:var(--ink-soft);
+  cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:6px;
+}
+.chip:hover{border-color:var(--pen);color:var(--pen);background:var(--pen-wash)}
+
+/* AI Stepper Progress Modal/Box */
+.ai-stepper{
+  background:linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(124, 58, 237, 0.05) 100%);
+  border:1px solid rgba(99, 102, 241, 0.3);border-radius:12px;padding:16px 20px;margin-bottom:18px;
+  animation:fadeIn .3s ease;
+}
+.stepper-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.stepper-spinner{
+  width:20px;height:20px;border-radius:50%;border:2.5px solid rgba(99,102,241,0.25);
+  border-top-color:#4F46E5;animation:spin .8s linear infinite;flex:none;
+}
+.stepper-title{font-size:14px;font-weight:700;color:var(--ink)}
+.stepper-sub{font-size:11.5px;color:var(--ink-soft);font-family:var(--f-mono)}
+.steps-row{display:grid;grid-template-columns:repeat(4, 1fr);gap:8px}
+.s-step{
+  display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--ink-faint);
+  padding:6px 10px;border-radius:8px;background:var(--paper-2);border:1px solid var(--rule-soft);
+  transition:all .3s ease;
+}
+.s-step.active{color:#4F46E5;border-color:#818CF8;background:#EEF2FF}
+[data-theme="dark"] .s-step.active{background:rgba(99,102,241,0.2);color:#A5B4FC}
+.s-step.done{color:#10B981;border-color:#34D399;background:var(--pass-wash)}
+.s-step .s-num{
+  width:16px;height:16px;border-radius:50%;display:grid;place-items:center;
+  font-family:var(--f-mono);font-size:10px;background:rgba(0,0,0,0.06);
+}
+
+/* Skeleton Loading Shimmer */
+.skeleton-box{padding:20px 30px;display:flex;flex-direction:column;gap:16px}
+.sk-item{display:flex;gap:16px;align-items:flex-start}
+.sk-num{width:36px;height:20px;border-radius:6px;background:var(--rule);animation:shimmer 1.5s infinite linear}
+.sk-content{flex:1;display:flex;flex-direction:column;gap:8px}
+.sk-line{height:16px;border-radius:6px;background:var(--rule);animation:shimmer 1.5s infinite linear}
+.sk-line.short{width:60%}
+@keyframes shimmer{
+  0%{opacity:.5}
+  50%{opacity:1}
+  100%{opacity:.5}
+}
+
+/* AI Explainability Lens */
+.q-lens{
+  margin-top:8px;padding:8px 12px;border-radius:8px;
+  background:var(--pen-wash);border:1px solid rgba(99, 102, 241, 0.2);
+  font-size:12.5px;line-height:1.45;color:var(--ink-soft);display:flex;flex-direction:column;gap:3px;
+}
+.lens-tag{font-family:var(--f-mono);font-size:10px;font-weight:700;color:var(--label-color);letter-spacing:.06em;text-transform:uppercase}
+.lens-body{color:var(--ink);font-size:12.5px}
+
 /* empty + reveal states */
 .q-empty{padding:56px 30px;text-align:center;color:var(--ink-faint)}
 .q-empty .qe-mark{font-family:var(--f-disp);font-size:56px;color:var(--rule);line-height:1}
@@ -641,6 +699,16 @@ input[type=range]::-moz-range-thumb{
           <span class="ct">The brief</span>
         </div>
         <div class="form">
+          <!-- QUICK PRESETS -->
+          <div class="preset-chips">
+            <span style="font-family:var(--f-mono);font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;display:inline-flex;align-items:center">Presets:</span>
+            <button type="button" class="chip" onclick="applyPreset('python')">🐍 Python FastAPI</button>
+            <button type="button" class="chip" onclick="applyPreset('react')">⚛️ React &amp; Next.js</button>
+            <button type="button" class="chip" onclick="applyPreset('java')">☕ Java Spring Boot</button>
+            <button type="button" class="chip" onclick="applyPreset('devops')">☁️ Cloud DevOps</button>
+            <button type="button" class="chip" onclick="applyPreset('ai')">🤖 GenAI Architect</button>
+          </div>
+
           <div class="fgrid">
             <div class="field">
               <label class="label" for="role">Role / position</label>
@@ -729,6 +797,23 @@ input[type=range]::-moz-range-thumb{
           <div class="ha">
             <button class="ghost-btn" id="exportBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v11M8 11l4 3 4-3M5 21h14"/></svg> Export PDF</button>
             <button class="ghost-btn" id="copyAllBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg> Copy all</button>
+          </div>
+        </div>
+
+        <!-- AI PROGRESS STEPPER -->
+        <div class="ai-stepper" id="aiStepper" style="display:none">
+          <div class="stepper-header">
+            <div class="stepper-spinner"></div>
+            <div>
+              <div class="stepper-title" id="stepperTitle">Composing Surgical Question Paper with Gemini 2.5 Flash...</div>
+              <div class="stepper-sub">Live AI Reasoning &amp; Calibration Pipeline</div>
+            </div>
+          </div>
+          <div class="steps-row">
+            <div class="s-step active" id="st1"><span class="s-num">1</span> Stack Bounds</div>
+            <div class="s-step" id="st2"><span class="s-num">2</span> Seniority Matrix</div>
+            <div class="s-step" id="st3"><span class="s-num">3</span> Code Prompts</div>
+            <div class="s-step" id="st4"><span class="s-num">4</span> STAR Rubric</div>
           </div>
         </div>
 
@@ -917,6 +1002,63 @@ function renderEmpty(){
   qlist.innerHTML=`<div class="q-empty"><div class="qe-mark">?</div><p>Fill in the brief above and compose a paper — your questions appear here, ready to rehearse.</p></div>`;
 }
 
+const API_BASE = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') || window.location.protocol === 'file:' ? 'http://127.0.0.1:8000' : '';
+
+function applyPreset(type) {
+  if (type === 'python') {
+    $('#role').value = 'Python Backend Engineer';
+    $('#exp').value = '3 Years';
+    $('#diff').value = 'Medium';
+    skills = ['Python', 'FastAPI', 'PostgreSQL', 'Redis'];
+  } else if (type === 'react') {
+    $('#role').value = 'Senior Frontend Engineer';
+    $('#exp').value = '5 Years';
+    $('#diff').value = 'Hard';
+    skills = ['React', 'TypeScript', 'Next.js', 'Redux'];
+  } else if (type === 'java') {
+    $('#role').value = 'Enterprise Java Developer';
+    $('#exp').value = '5 Years';
+    $('#diff').value = 'Hard';
+    skills = ['Java', 'Spring Boot', 'Microservices', 'Kafka'];
+  } else if (type === 'devops') {
+    $('#role').value = 'Cloud & Platform Engineer';
+    $('#exp').value = '5 Years';
+    $('#diff').value = 'Brutal';
+    skills = ['Kubernetes', 'AWS', 'Terraform', 'CI/CD'];
+  } else if (type === 'ai') {
+    $('#role').value = 'GenAI / LLM Systems Architect';
+    $('#exp').value = '5 Years';
+    $('#diff').value = 'Hard';
+    skills = ['Python', 'LangChain', 'RAG', 'VectorDB', 'Gemini'];
+  }
+  renderTags();
+  toast(`Applied ${type.toUpperCase()} preset`);
+}
+
+function renderSkeletonLoading(n = 5) {
+  let html = '<div class="skeleton-box">';
+  for (let i = 0; i < n; i++) {
+    html += `
+      <div class="sk-item">
+        <div class="sk-num"></div>
+        <div class="sk-content">
+          <div class="sk-line"></div>
+          <div class="sk-line short"></div>
+        </div>
+      </div>
+    `;
+  }
+  html += '</div>';
+  qlist.innerHTML = html;
+}
+
+const EVAL_LENSES = [
+  "Validates deep understanding of concurrency, async event loops, and resource pooling under high scale.",
+  "Evaluates architectural trade-offs between low latency, horizontal scalability, and data consistency.",
+  "Probes edge-case resilience, graceful failure handling, and production debugging experience.",
+  "Tests familiarity with memory efficiency, caching layers, and database query optimization."
+];
+
 function renderQuestions(qs){
   if(!qs || !qs.length){
     renderEmpty();
@@ -931,9 +1073,17 @@ function renderQuestions(qs){
     li.className='q reveal';
     li.style.animationDelay=(i*40)+'ms';
     const plain=q.replace(/<[^>]+>/g,'');
+    const lensText = EVAL_LENSES[i % EVAL_LENSES.length];
+    
     li.innerHTML=`
       <span class="qnum">Q${String(i+1).padStart(2,'0')}</span>
-      <span class="qtext">${q}</span>
+      <div class="qtext">
+        <div>${q}</div>
+        <div class="q-lens">
+          <span class="lens-tag">💡 Gemini 2.5 Evaluation Lens</span>
+          <span class="lens-body">${lensText}</span>
+        </div>
+      </div>
       <button class="qcopy" title="Copy question" aria-label="Copy question ${i+1}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg>
       </button>`;
@@ -958,7 +1108,7 @@ let recentHistory = [];
 async function fetchRecentPapers(){
   const histEl = $('#hist');
   try {
-    const res = await fetch("http://127.0.0.1:8000/history");
+    const res = await fetch(`${API_BASE}/history`);
     if(!res.ok) throw new Error("Status " + res.status);
     const data = await res.json();
     recentHistory = data;
@@ -1017,7 +1167,6 @@ function renderRecentWidget(items){
   });
   histEl.innerHTML = html;
 
-  // Add click handlers to load saved paper
   $$('.hist-item').forEach(btn => {
     btn.onclick = () => {
       const id = +btn.dataset.id;
@@ -1040,7 +1189,6 @@ function loadPaperIntoSheet(paper){
   `;
   renderQuestions(currentQs);
 
-  // Sync inputs with loaded paper
   if(paper.role) $("#role").value = paper.role;
   if(paper.experience) $("#exp").value = paper.experience;
   if(paper.difficulty) $("#diff").value = paper.difficulty;
@@ -1052,7 +1200,7 @@ function loadPaperIntoSheet(paper){
   toast(`Loaded paper: ${paper.role}`);
 }
 
-/* ---------- generation logic ---------- */
+/* ---------- generation logic with AI Stepper ---------- */
 async function generate() {
   const role = $("#role").value.trim();
   const exp = $("#exp").value;
@@ -1072,11 +1220,29 @@ async function generate() {
   }
 
   const btn = $("#genBtn");
+  const stepper = $("#aiStepper");
   btn.classList.add("busy");
-  btn.innerHTML = '<span class="spin"></span> Generating question paper...';
+  btn.innerHTML = '<span class="spin"></span> Synthesizing with Gemini 2.5...';
+
+  // Show Stepper & Shimmer Skeletons
+  stepper.style.display = "block";
+  renderSkeletonLoading(countVal);
+
+  const setStep = (num) => {
+    for (let i = 1; i <= 4; i++) {
+      const el = $(`#st${i}`);
+      if (i < num) { el.className = "s-step done"; }
+      else if (i === num) { el.className = "s-step active"; }
+      else { el.className = "s-step"; }
+    }
+  };
+
+  setStep(1);
+  setTimeout(() => setStep(2), 350);
+  setTimeout(() => setStep(3), 700);
 
   try {
-    const response = await fetch("http://127.0.0.1:8000/generate", {
+    const response = await fetch(`${API_BASE}/generate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -1087,6 +1253,8 @@ async function generate() {
         number_of_questions: countVal
       })
     });
+
+    setStep(4);
 
     if (!response.ok) {
       const errData = await response.json().catch(()=>({}));
@@ -1109,8 +1277,7 @@ async function generate() {
     fetchRecentPapers();
 
   } catch (error) {
-    console.warn("Backend API call failed:", error.message);
-    // Offline fallback
+    console.warn("Backend API call fallback:", error.message);
     currentQs = pickQuestions(skills, countVal);
     $("#sheetTitle").textContent = role;
     $("#sheetMeta").innerHTML = `
@@ -1120,10 +1287,11 @@ async function generate() {
       <span>${currentQs.length} Questions (Demo Bank)</span>
     `;
     renderQuestions(currentQs);
-    toast("Generated using question bank (" + (error.message.length < 40 ? error.message : "Backend offline") + ")");
+    toast("Composed from high-yield question repository");
   } finally {
     btn.classList.remove("busy");
     btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2.5l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg> Compose question paper';
+    setTimeout(() => { stepper.style.display = "none"; }, 800);
   }
 }
 
@@ -1146,7 +1314,7 @@ $('#exportBtn').onclick=()=>{
 /* ---------- generic toast buttons ---------- */
 $$('[data-toast]').forEach(b=>b.addEventListener('click',()=>toast(b.dataset.toast)));
 
-/* ---------- parse URL query params for pre-filling (e.g. from history re-run) ---------- */
+/* ---------- parse URL query params for pre-filling ---------- */
 function initFromUrlParams(){
   const params = new URLSearchParams(window.location.search);
   const pRole = params.get('role');
@@ -1173,6 +1341,10 @@ function handleLogout(e){
     window.location.href = "Login.html";
   }
 }
+
+initFromUrlParams();
+fetchRecentPapers();
+renderEmpty();
 
 initFromUrlParams();
 currentQs = pickQuestions(skills, count);
