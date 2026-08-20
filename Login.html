@@ -102,9 +102,22 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 }
 .brand-sub{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#94A3B8}
 
-.showcase-content{margin:auto 0;padding:36px 0;position:relative;z-index:2}
-.showcase-content h2{font-size:32px;font-weight:800;line-height:1.2;margin:0 0 14px;letter-spacing:-.02em}
-.showcase-content p{color:#94A3B8;font-size:15.5px;line-height:1.6;margin:0 0 32px;max-width:44ch}
+.showcase-slider{
+  margin:auto 0;padding:24px 0;position:relative;z-index:2;
+  min-height:380px;display:flex;flex-direction:column;justify-content:center;
+}
+.slide{
+  display:none;opacity:0;transform:translateY(12px);
+}
+.slide.active{
+  display:flex;flex-direction:column;opacity:1;transform:translateY(0);animation:slideFade .5s cubic-bezier(.16,1,.3,1) forwards;
+}
+@keyframes slideFade{
+  from{opacity:0;transform:translateY(14px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.slide h2{font-size:32px;font-weight:800;line-height:1.2;margin:0 0 14px;letter-spacing:-.02em}
+.slide p{color:#94A3B8;font-size:15.5px;line-height:1.6;margin:0 0 26px;max-width:44ch}
 
 .feature-list{display:flex;flex-direction:column;gap:18px}
 .feat-item{display:flex;align-items:flex-start;gap:14px}
@@ -115,6 +128,18 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 }
 .feat-text{font-size:14.5px;color:#CBD5E1;line-height:1.45}
 .feat-text b{color:#FFFFFF;display:block;margin-bottom:2px}
+
+.slider-nav{
+  display:flex;align-items:center;gap:8px;margin-top:24px;position:relative;z-index:3;
+}
+.slider-dot{
+  width:26px;height:4px;border-radius:99px;background:rgba(255,255,255,0.22);
+  cursor:pointer;transition:all .3s ease;
+}
+.slider-dot.active{
+  width:46px;background:linear-gradient(90deg, #38BDF8, #818CF8);
+  box-shadow:0 0 14px rgba(129, 140, 248, 0.6);
+}
 
 .showcase-foot{position:relative;z-index:2;display:flex;align-items:center;gap:14px;padding-top:20px}
 .avatar-group{display:flex}
@@ -212,8 +237,8 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 
 <div class="auth-wrapper">
 
-  <!-- LEFT SHOWCASE HERO -->
-  <div class="auth-showcase">
+  <!-- LEFT SHOWCASE HERO WITH AUTO SLIDER -->
+  <div class="auth-showcase" id="showcaseBox">
     <div class="showcase-bg-circles"></div>
 
     <div class="brand-row">
@@ -224,32 +249,103 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
       </div>
     </div>
 
-    <div class="showcase-content">
-      <h2>Master Your Next Technical Interview.</h2>
-      <p>AI-powered question composition, live voice simulations, and deep resume-gap targeting designed for modern engineers.</p>
+    <!-- SLIDES CONTAINER -->
+    <div class="showcase-slider">
+      <!-- SLIDE 1 -->
+      <div class="slide active" data-slide="0">
+        <h2>Master Your Next Technical Interview.</h2>
+        <p>AI-powered question composition, live voice simulations, and deep resume-gap targeting designed for modern engineers.</p>
 
-      <div class="feature-list">
-        <div class="feat-item">
-          <div class="feat-icon">⚡</div>
-          <div class="feat-text">
-            <b>Surgical Question Papers</b>
-            Tailored exam compositions by stack, level, and difficulty.
+        <div class="feature-list">
+          <div class="feat-item">
+            <div class="feat-icon">⚡</div>
+            <div class="feat-text">
+              <b>Surgical Question Papers</b>
+              Tailored exam compositions by stack, level, and difficulty.
+            </div>
+          </div>
+          <div class="feat-item">
+            <div class="feat-icon">🎙️</div>
+            <div class="feat-text">
+              <b>Live Voice AI Mock Room</b>
+              Real-time conversational mock rounds with live Speech-to-Text.
+            </div>
+          </div>
+          <div class="feat-item">
+            <div class="feat-icon">📄</div>
+            <div class="feat-text">
+              <b>Resume &amp; JD Gap Engine</b>
+              Automatic skill gap extraction and candidate verification questions.
+            </div>
           </div>
         </div>
-        <div class="feat-item">
-          <div class="feat-icon">🎙️</div>
-          <div class="feat-text">
-            <b>Live Voice AI Mock Room</b>
-            Real-time conversational mock rounds with live Speech-to-Text.
+      </div>
+
+      <!-- SLIDE 2 -->
+      <div class="slide" data-slide="1">
+        <h2>Practice Real Audio Mock Interviews.</h2>
+        <p>Conversational voice rounds with adaptive AI interviewers, live Speech-to-Text transcription, and instant rubric grading.</p>
+
+        <div class="feature-list">
+          <div class="feat-item">
+            <div class="feat-icon">🗣️</div>
+            <div class="feat-text">
+              <b>Live Speech-to-Text &amp; TTS</b>
+              Natural voice questions with real-time word-by-word transcript.
+            </div>
+          </div>
+          <div class="feat-item">
+            <div class="feat-icon">🧠</div>
+            <div class="feat-text">
+              <b>Alex, Elena &amp; Marcus Personas</b>
+              Choose between Lead Engineer, Principal Architect, or HR Manager.
+            </div>
+          </div>
+          <div class="feat-item">
+            <div class="feat-icon">📊</div>
+            <div class="feat-text">
+              <b>STAR &amp; Technical Rubric Scorecards</b>
+              Detailed breakdown across clarity, pace, depth, and confidence.
+            </div>
           </div>
         </div>
-        <div class="feat-item">
-          <div class="feat-icon">📄</div>
-          <div class="feat-text">
-            <b>Resume &amp; JD Gap Engine</b>
-            Automatic skill gap extraction and candidate verification questions.
+      </div>
+
+      <!-- SLIDE 3 -->
+      <div class="slide" data-slide="2">
+        <h2>Target Top Tech Company Playbooks.</h2>
+        <p>Engineered from authentic interview evaluation rubrics and question bars of Google, Amazon, Meta, and Microsoft.</p>
+
+        <div class="feature-list">
+          <div class="feat-item">
+            <div class="feat-icon">🏢</div>
+            <div class="feat-text">
+              <b>FAANG &amp; Top Tech Presets</b>
+              Google GCA, Amazon 16 Leadership Principles, and Meta Scale.
+            </div>
+          </div>
+          <div class="feat-item">
+            <div class="feat-icon">🎯</div>
+            <div class="feat-text">
+              <b>Resume &amp; JD Missing Skill Radar</b>
+              Pinpoint qualification gaps and practice custom probing questions.
+            </div>
+          </div>
+          <div class="feat-item">
+            <div class="feat-icon">📑</div>
+            <div class="feat-text">
+              <b>Instant PDF Question Papers</b>
+              Export and share clean formatted question papers with 1 click.
+            </div>
           </div>
         </div>
+      </div>
+
+      <!-- SLIDER DOTS NAVIGATION -->
+      <div class="slider-nav">
+        <div class="slider-dot active" onclick="goToSlide(0)" title="Slide 1"></div>
+        <div class="slider-dot" onclick="goToSlide(1)" title="Slide 2"></div>
+        <div class="slider-dot" onclick="goToSlide(2)" title="Slide 3"></div>
       </div>
     </div>
 
@@ -405,6 +501,52 @@ function demoLogin(provider) {
     window.location.href = 'Dashboard.html';
   }, 600);
 }
+
+// Auto Slider Logic
+let currentSlide = 0;
+const totalSlides = 3;
+let slideInterval;
+
+function showSlide(index) {
+  const slides = document.querySelectorAll('.slide');
+  const dots = document.querySelectorAll('.slider-dot');
+
+  slides.forEach((s, i) => {
+    s.classList.toggle('active', i === index);
+  });
+  dots.forEach((d, i) => {
+    d.classList.toggle('active', i === index);
+  });
+  currentSlide = index;
+}
+
+function nextSlide() {
+  const next = (currentSlide + 1) % totalSlides;
+  showSlide(next);
+}
+
+function goToSlide(index) {
+  showSlide(index);
+  resetSliderTimer();
+}
+
+function startSlider() {
+  slideInterval = setInterval(nextSlide, 4500);
+}
+
+function resetSliderTimer() {
+  clearInterval(slideInterval);
+  startSlider();
+}
+
+// Pause on hover
+const showcaseBox = document.getElementById('showcaseBox');
+if (showcaseBox) {
+  showcaseBox.addEventListener('mouseenter', () => clearInterval(slideInterval));
+  showcaseBox.addEventListener('mouseleave', () => startSlider());
+}
+
+startSlider();
 
 // Theme Switcher
 document.getElementById('themeBtn').addEventListener('click', () => {
