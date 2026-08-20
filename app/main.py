@@ -135,48 +135,61 @@ def delete_interview(interview_id: int, db: Session = Depends(get_db)):
 
 @app.get("/", include_in_schema=False)
 @app.get("/login", include_in_schema=False)
+@app.get("/Login", include_in_schema=False)
 @app.get("/Login.html", include_in_schema=False)
+@app.get("/index.html", include_in_schema=False)
 def serve_login():
     f = BASE_DIR / "Login.html"
     return FileResponse(f) if f.exists() else HTTPException(404, "Login.html not found")
 
 @app.get("/dashboard", include_in_schema=False)
+@app.get("/Dashboard", include_in_schema=False)
 @app.get("/Dashboard.html", include_in_schema=False)
 def serve_dashboard():
     f = BASE_DIR / "Dashboard.html"
     return FileResponse(f) if f.exists() else HTTPException(404, "Dashboard.html not found")
 
 @app.get("/studio", include_in_schema=False)
+@app.get("/Studio", include_in_schema=False)
+@app.get("/Interview-studio", include_in_schema=False)
+@app.get("/interview-studio", include_in_schema=False)
 @app.get("/Interview-studio.html", include_in_schema=False)
 def serve_studio():
     f = BASE_DIR / "Interview-studio.html"
     return FileResponse(f) if f.exists() else HTTPException(404, "Interview-studio.html not found")
 
 @app.get("/mock-interview", include_in_schema=False)
+@app.get("/Mock-interview", include_in_schema=False)
 @app.get("/Mock-interview.html", include_in_schema=False)
 def serve_mock():
     f = BASE_DIR / "Mock-interview.html"
     return FileResponse(f) if f.exists() else HTTPException(404, "Mock-interview.html not found")
 
 @app.get("/resume-match", include_in_schema=False)
+@app.get("/Resume-match", include_in_schema=False)
 @app.get("/Resume-match.html", include_in_schema=False)
 def serve_resume():
     f = BASE_DIR / "Resume-match.html"
     return FileResponse(f) if f.exists() else HTTPException(404, "Resume-match.html not found")
 
 @app.get("/company-playbooks", include_in_schema=False)
+@app.get("/Company-playbooks", include_in_schema=False)
 @app.get("/Company-playbooks.html", include_in_schema=False)
 def serve_playbooks():
     f = BASE_DIR / "Company-playbooks.html"
     return FileResponse(f) if f.exists() else HTTPException(404, "Company-playbooks.html not found")
 
 @app.get("/history-page", include_in_schema=False)
+@app.get("/Interview-history", include_in_schema=False)
+@app.get("/interview-history", include_in_schema=False)
 @app.get("/Interview history.html", include_in_schema=False)
+@app.get("/Interview%20history.html", include_in_schema=False)
 def serve_history_page():
     f = BASE_DIR / "Interview history.html"
     return FileResponse(f) if f.exists() else HTTPException(404, "Interview history.html not found")
 
 @app.get("/upgrade-pro", include_in_schema=False)
+@app.get("/Upgrade-pro", include_in_schema=False)
 @app.get("/Upgrade-pro.html", include_in_schema=False)
 def serve_upgrade():
     f = BASE_DIR / "Upgrade-pro.html"
