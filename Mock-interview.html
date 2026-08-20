@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ravi — AI Voice Mock Interview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400;1,700&display=swap');
+
+:root{
+  --paper:#F8FAFC;      --paper-2:#FFFFFF;    --sheet:#FFFFFF;
+  --ink:#0F172A;        --ink-soft:#475569;   --ink-faint:#94A3B8;
+  --board:#0B0F19;      --board-2:#1E1B4B;    --board-ink:#F8FAFC;
+  --primary:#4F46E5;    --primary-grad:linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);
+  --pen:#4F46E5;        --pen-soft:#6366F1;   --pen-wash:#EEF2FF;
+  --label-color:#2563EB;
+  --rule:#E2E8F0;       --rule-soft:#F1F5F9;
+  --gold:#F59E0B;       --pass:#10B981;       --pass-wash:#ECFDF5;
+  --shadow:0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0,0,0,0.03);
+  --radius:16px;
+  --f-disp:"Roboto",system-ui,-apple-system,sans-serif;
+  --f-ui:"Roboto",system-ui,-apple-system,sans-serif;
+  --f-mono:"Roboto Mono",ui-monospace,monospace;
+}
+[data-theme="dark"]{
+  --paper:#0B0F19;      --paper-2:#111827;    --sheet:#131D33;
+  --ink:#F8FAFC;        --ink-soft:#94A3B8;   --ink-faint:#64748B;
+  --board:#070A10;      --board-2:#1E1B4B;    --board-ink:#F8FAFC;
+  --primary:#6366F1;    --primary-grad:linear-gradient(135deg, #3B82F6 0%, #6366F1 50%, #8B5CF6 100%);
+  --pen:#818CF8;        --pen-soft:#A5B4FC;   --pen-wash:rgba(99, 102, 241, 0.15);
+  --label-color:#60A5FA;
+  --rule:#1E293B;       --rule-soft:#182234;
+  --gold:#FBBF24;       --pass:#34D399;       --pass-wash:rgba(16, 185, 129, 0.15);
+  --shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--f-ui);
+  font-size:15px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  transition:background .3s ease,color .3s ease;
+}
+::selection{background:var(--primary);color:#fff}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:none}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px;border-radius:6px}
+
+/* shell */
+.app{display:flex;min-height:100vh;align-items:flex-start}
+
+/* sidebar */
+.sidebar{
+  flex:0 0 270px;width:270px;
+  background:var(--board);color:var(--board-ink);
+  display:flex;flex-direction:column;
+  padding:22px 16px;gap:14px;position:sticky;top:0;height:100vh;
+  align-self:flex-start;overflow-y:auto;
+  border-right:1px solid rgba(255,255,255,.07);
+  transition:background .3s ease;
+}
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:4px}
+.brand{display:flex;align-items:center;gap:12px;padding:4px 8px 8px}
+.brand .brand-logo{
+  width:44px;height:44px;border-radius:50%;flex:none;
+  object-fit:cover;box-shadow:0 0 18px rgba(59, 130, 246, 0.45);
+  border:1.5px solid rgba(99, 102, 241, 0.6);
+  background:#0B0F19;
+}
+.brand .word{font-weight:700;font-size:20px;letter-spacing:-.02em;line-height:1.1;color:#FFFFFF}
+.brand .brand-grad{
+  background:linear-gradient(135deg, #38BDF8 0%, #818CF8 50%, #C084FC 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.brand .sub{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#94A3B8;margin-top:2px;font-weight:600}
+
+.side-label{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#64748B;padding:4px 10px 0;margin-bottom:-6px;font-weight:600}
+.nav{display:flex;flex-direction:column;gap:3px}
+.nav-link{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 14px;border-radius:12px;
+  color:#94A3B8;font-weight:500;font-size:14px;
+  position:relative;transition:all .2s ease;
+}
+.nav-link svg{width:18px;height:18px;flex:none;stroke-width:1.8}
+.nav-link:hover{background:rgba(255,255,255,.06);color:#F8FAFC}
+.nav-link.active{
+  background:linear-gradient(135deg, #1E40AF 0%, #4F46E5 50%, #7C3AED 100%);
+  color:#FFFFFF;
+  box-shadow:0 4px 16px rgba(79, 70, 229, 0.4);
+  font-weight:600;
+}
+.nav-badge{
+  margin-left:auto;font-family:var(--f-mono);font-size:9.5px;font-weight:700;
+  letter-spacing:.04em;padding:2.5px 7px;border-radius:6px;
+  background:rgba(255,255,255,.12);color:#FFFFFF;
+}
+.nav-badge.new{background:#7C3AED;color:#FFFFFF}
+.nav-badge.pro{background:#6366F1;color:#FFFFFF;border:none}
+.nav-sep{height:1px;background:rgba(255,255,255,.08);margin:2px 8px}
+
+.side-foot{margin-top:auto;display:flex;flex-direction:column;gap:12px}
+.upgrade{
+  background:linear-gradient(145deg, #0F172A 0%, #1E1B4B 100%);
+  border:1px solid rgba(99, 102, 241, 0.35);border-radius:14px;padding:14px 16px;
+  cursor:pointer;transition:transform .18s,border-color .18s;
+  box-shadow:0 4px 20px rgba(0,0,0,0.3);
+}
+.upgrade:hover{transform:translateY(-1px);border-color:rgba(99,102,241,0.6)}
+.upgrade .u-top{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;color:#FFFFFF}
+.upgrade .u-top .star{color:#818CF8;font-size:16px}
+.upgrade .u-top .u-chev{margin-left:auto;color:#818CF8;display:grid;place-items:center}
+.upgrade p{margin:4px 0 0;font-size:12px;line-height:1.4;color:#94A3B8}
+
+.user{display:flex;align-items:center;gap:11px;padding:6px 4px}
+.user .av{width:38px;height:38px;border-radius:10px;flex:none;object-fit:cover;box-shadow:0 0 0 1px rgba(255,255,255,.14)}
+.user .nm{font-weight:600;font-size:13.5px;line-height:1.2;color:#FFFFFF}
+.user .pl{font-family:var(--f-mono);font-size:10px;letter-spacing:.06em;color:#64748B;text-transform:uppercase;margin-top:2px}
+.logout-btn{
+  margin-left:auto;width:32px;height:32px;border-radius:8px;
+  display:grid;place-items:center;color:#94A3B8;background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.1);cursor:pointer;transition:all .18s;flex:none;
+}
+.logout-btn:hover{color:#EF4444;background:rgba(239,68,68,0.18);border-color:rgba(239,68,68,0.4);transform:scale(1.05)}
+.logout-btn svg{width:16px;height:16px;stroke-width:2}
+
+/* main content */
+.main{flex:1 1 0;min-width:0;padding:0 42px 24px;max-width:1320px}
+.topbar{
+  display:flex;align-items:center;gap:16px;
+  padding:22px 0 8px;position:sticky;top:0;z-index:20;
+  background:linear-gradient(var(--paper) 72%,transparent);
+}
+.crumb{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);font-weight:600}
+.top-actions{margin-left:auto;display:flex;align-items:center;gap:10px}
+.icon-btn{
+  width:40px;height:40px;border-radius:10px;display:grid;place-items:center;
+  border:1px solid var(--rule);background:var(--paper-2);color:var(--ink-soft);
+  transition:all .18s;box-shadow:0 1px 2px rgba(0,0,0,0.03);
+}
+.icon-btn:hover{color:var(--ink);border-color:var(--pen);box-shadow:0 2px 8px rgba(99,102,241,0.15)}
+.icon-btn svg{width:19px;height:19px;stroke-width:1.7}
+.pro-btn{
+  display:flex;align-items:center;gap:8px;padding:0 18px;height:40px;border-radius:10px;
+  background:linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);
+  color:#FFFFFF;font-weight:600;font-size:13.5px;
+  border:none;box-shadow:0 4px 14px rgba(79, 70, 229, 0.35);
+  transition:all .18s;
+}
+.pro-btn:hover{filter:brightness(1.08);box-shadow:0 6px 20px rgba(79, 70, 229, 0.45)}
+
+/* mock interview layout */
+.stage{display:none;animation:fadeIn .35s ease}
+.stage.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* setup view */
+.setup-grid{display:grid;grid-template-columns:1fr 360px;gap:24px;margin-top:20px}
+.card{background:var(--paper-2);border:1px solid var(--rule);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;padding:24px}
+.card-title{font-size:19px;font-weight:700;margin:0 0 16px;display:flex;align-items:center;gap:10px}
+.card-title svg{color:#4F46E5;width:22px;height:22px}
+
+.persona-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
+.persona-card{
+  border:2px solid var(--rule);border-radius:14px;padding:16px;text-align:center;
+  cursor:pointer;transition:all .2s ease;background:var(--paper);
+}
+.persona-card:hover{border-color:#818CF8;transform:translateY(-2px)}
+.persona-card.selected{
+  border-color:#4F46E5;background:#EEF2FF;box-shadow:0 0 0 3px rgba(79,70,229,0.2);
+}
+[data-theme="dark"] .persona-card.selected{background:rgba(79,70,229,0.2)}
+.persona-avatar{
+  width:56px;height:56px;border-radius:50%;margin:0 auto 10px;display:grid;place-items:center;
+  font-size:24px;background:var(--paper-2);box-shadow:0 4px 12px rgba(0,0,0,0.08);
+}
+.persona-name{font-weight:700;font-size:15px;margin-bottom:2px}
+.persona-role{font-size:12px;color:var(--ink-soft);font-family:var(--f-mono)}
+
+.f-field{margin-bottom:18px}
+.f-label{display:block;font-family:var(--f-mono);font-size:11.5px;font-weight:700;text-transform:uppercase;color:var(--label-color);margin-bottom:8px}
+.f-input, .f-select{
+  width:100%;padding:12px 14px;border-radius:11px;border:1px solid var(--rule);
+  background:var(--paper);color:var(--ink);font-family:var(--f-ui);font-size:14.5px;
+}
+.f-input:focus, .f-select:focus{outline:none;border-color:#4F46E5;box-shadow:0 0 0 3px var(--pen-wash)}
+
+.start-btn{
+  width:100%;padding:16px;border-radius:12px;
+  background:linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);
+  color:#FFFFFF;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;gap:10px;
+  box-shadow:0 10px 25px -4px rgba(79, 70, 229, 0.45);transition:all .18s;margin-top:10px;
+}
+.start-btn:hover{filter:brightness(1.08);box-shadow:0 14px 28px -4px rgba(79, 70, 229, 0.55)}
+
+/* live stage */
+.live-container{max-width:880px;margin:20px auto;text-align:center}
+.live-header{display:flex;align-items:center;justify-content:space-between;background:var(--paper-2);padding:14px 22px;border-radius:14px;border:1px solid var(--rule);margin-bottom:20px}
+.live-stat{display:flex;align-items:center;gap:8px;font-family:var(--f-mono);font-size:13px;font-weight:600}
+.live-stat svg{color:#4F46E5;width:18px;height:18px}
+
+.ai-orb-wrap{margin:40px auto 30px;position:relative;width:150px;height:150px;display:grid;place-items:center}
+.ai-orb{
+  width:110px;height:110px;border-radius:50%;
+  background:linear-gradient(135deg, #38BDF8 0%, #6366F1 50%, #C084FC 100%);
+  box-shadow:0 0 40px rgba(99, 102, 241, 0.6), inset 0 0 20px rgba(255,255,255,0.4);
+  position:relative;z-index:2;display:grid;place-items:center;color:#FFFFFF;font-size:42px;
+  animation:floatOrb 3s ease-in-out infinite;
+}
+@keyframes floatOrb{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+.orb-pulse{
+  position:absolute;inset:0;border-radius:50%;
+  background:radial-gradient(circle, rgba(99,102,241,0.4) 0%, rgba(99,102,241,0) 70%);
+  animation:orbPulse 2s cubic-bezier(0.2,0.8,0.2,1) infinite;
+}
+@keyframes orbPulse{0%{transform:scale(0.8);opacity:0.8}100%{transform:scale(1.8);opacity:0}}
+
+.live-q-card{background:var(--paper-2);border:1px solid var(--rule);border-radius:16px;padding:28px;margin-bottom:24px;box-shadow:var(--shadow);text-align:left}
+.live-q-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;background:#EEF2FF;color:#4F46E5;font-family:var(--f-mono);font-size:11.5px;font-weight:700;margin-bottom:12px}
+.live-q-text{font-size:22px;font-weight:600;line-height:1.4;margin:0 0 16px}
+
+.transcript-box{
+  background:var(--paper);border:1px dashed var(--rule);border-radius:12px;padding:16px;
+  min-height:90px;text-align:left;font-size:14.5px;color:var(--ink-soft);margin-top:16px;position:relative;
+}
+.live-indicator{display:inline-block;width:8px;height:8px;border-radius:50%;background:#EF4444;margin-right:6px;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+.live-controls{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:24px}
+.mic-btn{
+  width:64px;height:64px;border-radius:50%;
+  background:linear-gradient(135deg, #2563EB 0%, #4F46E5 100%);
+  color:#FFFFFF;display:grid;place-items:center;box-shadow:0 8px 20px rgba(79,70,229,0.4);
+  transition:all .2s ease;font-size:24px;
+}
+.mic-btn.recording{background:#EF4444;box-shadow:0 0 24px rgba(239,68,68,0.6);animation:pulseMic 1.5s infinite}
+@keyframes pulseMic{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+
+.action-pill-btn{
+  padding:12px 20px;border-radius:12px;border:1px solid var(--rule);background:var(--paper-2);
+  font-weight:600;font-size:14px;color:var(--ink);display:flex;align-items:center;gap:8px;transition:all .18s;
+}
+.action-pill-btn:hover{border-color:#4F46E5;color:#4F46E5}
+
+/* scorecard stage */
+.scorecard-wrap{max-width:960px;margin:20px auto}
+.score-hero{display:grid;grid-template-columns:260px 1fr;gap:24px;margin-bottom:24px}
+.score-circle-card{background:var(--paper-2);border:1px solid var(--rule);border-radius:16px;padding:30px;text-align:center;box-shadow:var(--shadow)}
+.score-big{font-size:56px;font-weight:800;color:#4F46E5;line-height:1;margin:10px 0}
+.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.metric-card{background:var(--paper-2);border:1px solid var(--rule);border-radius:14px;padding:16px;box-shadow:var(--shadow)}
+.metric-header{display:flex;justify-content:space-between;font-size:13.5px;font-weight:600;margin-bottom:8px}
+.progress-bar{width:100%;height:8px;border-radius:99px;background:var(--rule);overflow:hidden}
+.progress-fill{height:100%;border-radius:99px;background:linear-gradient(90deg, #3B82F6, #7C3AED)}
+
+.qa-review{background:var(--paper-2);border:1px solid var(--rule);border-radius:16px;padding:24px;margin-top:20px;box-shadow:var(--shadow)}
+.qa-item{padding:16px 0;border-bottom:1px solid var(--rule-soft)}
+.qa-item:last-child{border-bottom:none}
+.qa-q{font-weight:700;font-size:16px;margin-bottom:6px;color:var(--ink)}
+.qa-feedback{background:var(--paper);border-radius:10px;padding:12px;margin-top:8px;font-size:13.5px;color:var(--ink-soft)}
+.qa-feedback b{color:#4F46E5}
+
+/* responsive */
+@media(max-width:820px){
+  .sidebar{position:fixed;left:0;top:0;bottom:0;width:280px;z-index:50;transform:translateX(-100%);transition:transform .3s ease}
+  .sidebar.open{transform:none}
+  .main{padding:0 20px 24px}
+  .setup-grid,.score-hero,.persona-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <img class="brand-logo" src="logo.png" alt="Ravi GenAI Studio Logo">
+      <div>
+        <div class="word"><span class="brand-grad">RaviGenAI</span></div>
+        <div class="sub">Studio</div>
+      </div>
+    </div>
+    <div class="side-label">Workspace</div>
+    <nav class="nav">
+      <a class="nav-link" href="Dashboard.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-link" href="Interview-studio.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2.5l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg>
+        Generate Questions
+      </a>
+      <a class="nav-link active" href="Mock-interview.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
+        AI Mock Interview
+        <span class="nav-badge new">VOICE</span>
+      </a>
+      <a class="nav-link" href="Interview-studio.html#evaluator">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        Answer Evaluator
+      </a>
+      <a class="nav-link" href="Resume-match.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+        Resume &amp; JD Match
+        <span class="nav-badge pro">PRO</span>
+      </a>
+    </nav>
+
+    <div class="nav-sep"></div>
+
+    <div class="side-label">Library</div>
+    <nav class="nav">
+      <a class="nav-link" href="Interview history.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        Interview History
+      </a>
+      <a class="nav-link" href="Interview history.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        Question Bank
+      </a>
+      <a class="nav-link" href="Company-playbooks.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21h18M3 7v14M21 7v14M6 3h12a2 2 0 012 2v2H4V5a2 2 0 012-2zM9 11h2M13 11h2M9 15h2M13 15h2"/></svg>
+        Company Playbooks
+      </a>
+    </nav>
+
+    <div class="side-foot">
+      <div class="upgrade">
+        <div class="u-top"><span class="star">✦</span> Go Pro <span class="u-chev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"/></svg></span></div>
+        <p>Unlock advanced AI features</p>
+      </div>
+      <div class="user">
+        <img class="av" alt="Ravi Chandran" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><rect width='80' height='80' fill='%231E1B4B'/><circle cx='40' cy='31' r='15' fill='%23818CF8'/><path d='M12 78c0-18 14-28 28-28s28 10 28 28z' fill='%23818CF8'/></svg>">
+        <div>
+          <div class="nm">Ravi Chandran</div>
+          <div class="pl">Free plan</div>
+        </div>
+        <button class="logout-btn" title="Sign Out / Logout" onclick="handleLogout(event)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CANVAS -->
+  <main class="main">
+    <div class="topbar">
+      <span class="crumb">Workspace / AI Voice Mock Interview</span>
+      <div class="top-actions">
+        <button class="icon-btn" id="themeBtn" aria-label="Toggle theme">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 12.8A8 8 0 1111.2 3 6.2 6.2 0 0021 12.8z"/></svg>
+        </button>
+        <button class="icon-btn" title="Sign Out / Logout" onclick="handleLogout(event)" aria-label="Logout">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+        <button class="pro-btn" onclick="location.href='Upgrade-pro.html'"><span class="star">✦</span> Upgrade</button>
+      </div>
+    </div>
+
+    <!-- ================== STAGE 1: SETUP ================== -->
+    <div class="stage active" id="stageSetup">
+      <header style="margin:20px 0">
+        <h1 style="font-size:32px;font-weight:700;margin:0 0 6px">AI Voice Mock Interview</h1>
+        <p style="color:var(--ink-soft);margin:0">Practice realistic audio interview simulations with instant live AI feedback and rubric grading.</p>
+      </header>
+
+      <div class="setup-grid">
+        <div class="card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            1. Select Your AI Interviewer Persona
+          </div>
+          <div class="persona-grid">
+            <div class="persona-card selected" data-persona="Alex (Lead Engineer)">
+              <div class="persona-avatar">🤖</div>
+              <div class="persona-name">Alex</div>
+              <div class="persona-role">Tech Lead · Balanced</div>
+            </div>
+            <div class="persona-card" data-persona="Elena (Principal Architect)">
+              <div class="persona-avatar">👩‍💻</div>
+              <div class="persona-name">Elena</div>
+              <div class="persona-role">Architect · In-Depth</div>
+            </div>
+            <div class="persona-card" data-persona="Marcus (Hiring Manager)">
+              <div class="persona-avatar">👔</div>
+              <div class="persona-name">Marcus</div>
+              <div class="persona-role">HR Lead · Behavioral</div>
+            </div>
+          </div>
+
+          <div class="card-title" style="margin-top:24px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            2. Interview Brief &amp; Focus Area
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div class="f-field">
+              <label class="f-label">Target Role</label>
+              <input class="f-input" id="mockRole" value="Python Backend Engineer">
+            </div>
+            <div class="f-field">
+              <label class="f-label">Experience Level</label>
+              <select class="f-select" id="mockExp">
+                <option>Entry Level (0-2 Years)</option>
+                <option selected>Mid Level (3-5 Years)</option>
+                <option>Senior Lead (6+ Years)</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div class="f-field">
+              <label class="f-label">Question Format</label>
+              <select class="f-select" id="mockType">
+                <option selected>Technical &amp; System Architecture</option>
+                <option>STAR Behavioral &amp; Leadership</option>
+                <option>Full Mixed Round (5 Questions)</option>
+              </select>
+            </div>
+            <div class="f-field">
+              <label class="f-label">Difficulty Mode</label>
+              <select class="f-select" id="mockDiff">
+                <option>Standard / Realistic</option>
+                <option selected>Challenging (Follow-ups)</option>
+                <option>FAANG / High Bar</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT PANEL: MIC CHECK & START -->
+        <div>
+          <div class="card" style="margin-bottom:16px;text-align:center">
+            <div style="font-size:36px;margin-bottom:8px">🎙️</div>
+            <div style="font-weight:700;font-size:16px;margin-bottom:4px">Microphone &amp; Audio Check</div>
+            <p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 14px">Speak into your mic to verify sound input before starting.</p>
+            <div style="display:flex;justify-content:center;gap:4px;height:24px;align-items:center;margin-bottom:12px" id="audioMeter">
+              <span style="width:4px;height:12px;background:#4F46E5;border-radius:2px"></span>
+              <span style="width:4px;height:18px;background:#4F46E5;border-radius:2px"></span>
+              <span style="width:4px;height:8px;background:#4F46E5;border-radius:2px"></span>
+              <span style="width:4px;height:22px;background:#6366F1;border-radius:2px"></span>
+              <span style="width:4px;height:14px;background:#6366F1;border-radius:2px"></span>
+              <span style="width:4px;height:6px;background:#4F46E5;border-radius:2px"></span>
+            </div>
+            <div style="font-family:var(--f-mono);font-size:11px;color:#10B981;font-weight:600">● Mic Ready (Built-in Audio)</div>
+          </div>
+
+          <button class="start-btn" id="startInterviewBtn">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Start Voice Interview
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================== STAGE 2: LIVE VOICE ROOM ================== -->
+    <div class="stage" id="stageLive">
+      <div class="live-container">
+        <div class="live-header">
+          <div class="live-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Time: <span id="liveTimer">00:00</span></div>
+          <div class="live-stat" id="liveQCount">Question 1 of 5</div>
+          <div class="live-stat" style="color:#10B981">● Connected to Gemini Live Voice</div>
+        </div>
+
+        <div class="ai-orb-wrap">
+          <div class="orb-pulse"></div>
+          <div class="ai-orb" id="aiOrb">🎙️</div>
+        </div>
+        <div style="font-family:var(--f-mono);font-size:12.5px;color:var(--ink-soft);font-weight:600" id="aiStatus">AI Interviewer is speaking...</div>
+
+        <div class="live-q-card">
+          <div class="live-q-badge" id="liveBadge">Question #1 · Technical Architecture</div>
+          <div class="live-q-text" id="liveQuestion">"Can you explain how FastAPI handles asynchronous requests under the hood compared to Django or Flask?"</div>
+
+          <div class="transcript-box">
+            <div style="font-family:var(--f-mono);font-size:11px;color:var(--label-color);font-weight:700;margin-bottom:4px">
+              <span class="live-indicator"></span> YOUR VOICE TRANSCRIPT:
+            </div>
+            <div id="liveTranscript">Listening for your response... Click the mic button to start speaking.</div>
+          </div>
+        </div>
+
+        <div class="live-controls">
+          <button class="action-pill-btn" id="repeatQBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
+            Replay Question
+          </button>
+          <button class="mic-btn" id="micBtn" title="Toggle Microphone">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
+          </button>
+          <button class="action-pill-btn" id="submitAnswerBtn" style="background:#4F46E5;color:#fff;border-color:#4F46E5">
+            Submit &amp; Next
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================== STAGE 3: SCORECARD ================== -->
+    <div class="stage" id="stageScorecard">
+      <div class="scorecard-wrap">
+        <header style="display:flex;justify-content:space-between;align-items:center;margin:20px 0">
+          <div>
+            <h1 style="font-size:30px;font-weight:700;margin:0 0 4px">Interview Evaluation &amp; Scorecard</h1>
+            <p style="color:var(--ink-soft);margin:0">Overall AI Performance Assessment for Python Backend Engineer</p>
+          </div>
+          <button class="action-pill-btn" id="retakeBtn" style="background:#4F46E5;color:#fff;border:none">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
+            Retake Interview
+          </button>
+        </header>
+
+        <div class="score-hero">
+          <div class="score-circle-card">
+            <div style="font-family:var(--f-mono);font-size:11px;font-weight:700;color:#64748B;letter-spacing:.1em;text-transform:uppercase">Overall Score</div>
+            <div class="score-big">88%</div>
+            <div style="color:#10B981;font-weight:700;font-size:14px">★ Strong Hire / Advanced</div>
+          </div>
+          <div class="metric-grid">
+            <div class="metric-card">
+              <div class="metric-header"><span>Technical Accuracy</span><b>92%</b></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:92%"></div></div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-header"><span>Communication Clarity</span><b>85%</b></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:85%"></div></div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-header"><span>STAR Structure &amp; Depth</span><b>84%</b></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:84%"></div></div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-header"><span>Confidence &amp; Pace</span><b>90%</b></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:90%"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="qa-review">
+          <h2 style="font-size:18px;font-weight:700;margin:0 0 16px">Question-by-Question AI Analysis</h2>
+          <div class="qa-item">
+            <div class="qa-q">Q1: How does FastAPI handle async requests with ASGI vs WSGI?</div>
+            <div class="qa-feedback"><b>AI Critique:</b> Strong technical explanation of uvloop and event loops. Mentioning concurrency vs parallelism made the answer stand out.</div>
+          </div>
+          <div class="qa-item">
+            <div class="qa-q">Q2: How do you prevent database connection pool exhaustion under high concurrency?</div>
+            <div class="qa-feedback"><b>AI Critique:</b> Good mention of SQLAlchemy async engines, connection pool sizing, and PgBouncer connection multiplexing.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// Mock interview state & questions
+const questions = [
+  "Can you explain how FastAPI handles asynchronous requests under the hood compared to Django or Flask?",
+  "How would you design a database connection pooling strategy in Python to prevent connection exhaustion during traffic spikes?",
+  "Describe a time when you had to debug a difficult memory leak or CPU bottleneck in a live production environment.",
+  "What is the difference between concurrency and parallelism in Python, and how does the GIL affect multithreaded code?",
+  "How do you ensure data consistency across distributed services without relying on heavy two-phase commits?"
+];
+
+let currentQIndex = 0;
+let timerSeconds = 0;
+let timerInterval = null;
+let isRecording = false;
+let recognition = null;
+
+// DOM Elements
+const stageSetup = document.getElementById('stageSetup');
+const stageLive = document.getElementById('stageLive');
+const stageScorecard = document.getElementById('stageScorecard');
+const startBtn = document.getElementById('startInterviewBtn');
+const micBtn = document.getElementById('micBtn');
+const submitAnswerBtn = document.getElementById('submitAnswerBtn');
+const repeatQBtn = document.getElementById('repeatQBtn');
+const retakeBtn = document.getElementById('retakeBtn');
+const liveTimer = document.getElementById('liveTimer');
+const liveQCount = document.getElementById('liveQCount');
+const liveQuestion = document.getElementById('liveQuestion');
+const liveTranscript = document.getElementById('liveTranscript');
+const aiStatus = document.getElementById('aiStatus');
+
+// Persona Selection
+document.querySelectorAll('.persona-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.persona-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+  });
+});
+
+// Speech Synthesis (Text to Speech for AI Question)
+function speakQuestion(text) {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    aiStatus.textContent = "AI Interviewer is speaking...";
+    document.getElementById('aiOrb').style.transform = "scale(1.1)";
+    utterance.onend = () => {
+      aiStatus.textContent = "AI Interviewer is listening. Click mic to answer.";
+      document.getElementById('aiOrb').style.transform = "scale(1)";
+    };
+    window.speechSynthesis.speak(utterance);
+  }
+}
+
+// Speech Recognition (Speech to Text for Candidate)
+function initSpeechRecognition() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SpeechRecognition) {
+    recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (event) => {
+      let finalTranscript = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        finalTranscript += event.results[i][0].transcript;
+      }
+      liveTranscript.textContent = finalTranscript || "Speaking...";
+    };
+
+    recognition.onerror = (e) => {
+      console.log("Speech recognition error", e);
+    };
+  }
+}
+initSpeechRecognition();
+
+// Start Interview Button
+startBtn.addEventListener('click', () => {
+  stageSetup.classList.remove('active');
+  stageLive.classList.add('active');
+  currentQIndex = 0;
+  loadQuestion(0);
+  startTimer();
+});
+
+function loadQuestion(index) {
+  liveQCount.textContent = `Question ${index + 1} of ${questions.length}`;
+  liveQuestion.textContent = `"${questions[index]}"`;
+  liveTranscript.textContent = "Listening for your response... Click the mic button to speak.";
+  speakQuestion(questions[index]);
+}
+
+function startTimer() {
+  timerSeconds = 0;
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timerSeconds++;
+    const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+    const s = String(timerSeconds % 60).padStart(2, '0');
+    liveTimer.textContent = `${m}:${s}`;
+  }, 1000);
+}
+
+// Mic Toggle
+micBtn.addEventListener('click', () => {
+  isRecording = !isRecording;
+  if (isRecording) {
+    micBtn.classList.add('recording');
+    if (recognition) {
+      try { recognition.start(); } catch(e){}
+    }
+  } else {
+    micBtn.classList.remove('recording');
+    if (recognition) {
+      try { recognition.stop(); } catch(e){}
+    }
+  }
+});
+
+// Repeat Question
+repeatQBtn.addEventListener('click', () => {
+  speakQuestion(questions[currentQIndex]);
+});
+
+// Submit & Next Question
+submitAnswerBtn.addEventListener('click', () => {
+  if (recognition) {
+    try { recognition.stop(); } catch(e){}
+  }
+  isRecording = false;
+  micBtn.classList.remove('recording');
+
+  currentQIndex++;
+  if (currentQIndex < questions.length) {
+    loadQuestion(currentQIndex);
+  } else {
+    // Finish interview -> Show Scorecard
+    clearInterval(timerInterval);
+    stageLive.classList.remove('active');
+    stageScorecard.classList.add('active');
+  }
+});
+
+// Retake Interview
+retakeBtn.addEventListener('click', () => {
+  stageScorecard.classList.remove('active');
+  stageSetup.classList.add('active');
+});
+
+// Theme Switcher
+document.getElementById('themeBtn').addEventListener('click', () => {
+  const root = document.documentElement;
+  const currentTheme = root.getAttribute('data-theme');
+  root.setAttribute('data-theme', currentTheme === 'dark' ? 'light' : 'dark');
+});
+
+function handleLogout(e) {
+  if (e) e.stopPropagation();
+  if (confirm("Are you sure you want to log out from Ravi GenAI Studio?")) {
+    window.location.href = "Login.html";
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ravi — GenAI Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400;1,700&display=swap');
+
+:root{
+  --paper:#F8FAFC;      --paper-2:#FFFFFF;    --sheet:#FFFFFF;
+  --ink:#0F172A;        --ink-soft:#475569;   --ink-faint:#94A3B8;
+  --board:#0B0F19;      --board-2:#1E1B4B;    --board-ink:#F8FAFC;
+  --primary:#4F46E5;    --primary-grad:linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);
+  --pen:#4F46E5;        --pen-soft:#6366F1;   --pen-wash:#EEF2FF;
+  --label-color:#2563EB;
+  --rule:#E2E8F0;       --rule-soft:#F1F5F9;
+  --gold:#F59E0B;       --pass:#10B981;       --pass-wash:#ECFDF5;
+  --shadow:0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0,0,0,0.03);
+  --radius:16px;
+  --f-disp:"Roboto",system-ui,-apple-system,sans-serif;
+  --f-ui:"Roboto",system-ui,-apple-system,sans-serif;
+  --f-mono:"Roboto Mono",ui-monospace,monospace;
+}
+[data-theme="dark"]{
+  --paper:#0B0F19;      --paper-2:#111827;    --sheet:#131D33;
+  --ink:#F8FAFC;        --ink-soft:#94A3B8;   --ink-faint:#64748B;
+  --board:#070A10;      --board-2:#1E1B4B;    --board-ink:#F8FAFC;
+  --primary:#6366F1;    --primary-grad:linear-gradient(135deg, #3B82F6 0%, #6366F1 50%, #8B5CF6 100%);
+  --pen:#818CF8;        --pen-soft:#A5B4FC;   --pen-wash:rgba(99, 102, 241, 0.15);
+  --label-color:#60A5FA;
+  --rule:#1E293B;       --rule-soft:#182234;
+  --gold:#FBBF24;       --pass:#34D399;       --pass-wash:rgba(16, 185, 129, 0.15);
+  --shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--f-ui);
+  font-size:15px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  transition:background .3s ease,color .3s ease;
+}
+::selection{background:var(--primary);color:#fff}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:none}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px;border-radius:6px}
+
+/* ---------- shell ---------- */
+.app{display:flex;min-height:100vh;align-items:flex-start}
+
+/* ---------- sidebar ---------- */
+.sidebar{
+  flex:0 0 270px;width:270px;
+  background:var(--board);color:var(--board-ink);
+  display:flex;flex-direction:column;
+  padding:22px 16px;gap:14px;position:sticky;top:0;height:100vh;
+  align-self:flex-start;overflow-y:auto;
+  border-right:1px solid rgba(255,255,255,.07);
+  transition:background .3s ease;
+}
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:4px}
+.brand{display:flex;align-items:center;gap:12px;padding:4px 8px 8px}
+.brand .brand-logo{
+  width:44px;height:44px;border-radius:50%;flex:none;
+  object-fit:cover;box-shadow:0 0 18px rgba(59, 130, 246, 0.45);
+  border:1.5px solid rgba(99, 102, 241, 0.6);
+  background:#0B0F19;
+}
+.brand .word{font-weight:700;font-size:20px;letter-spacing:-.02em;line-height:1.1;color:#FFFFFF}
+.brand .brand-grad{
+  background:linear-gradient(135deg, #38BDF8 0%, #818CF8 50%, #C084FC 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.brand .sub{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#94A3B8;margin-top:2px;font-weight:600}
+
+.side-label{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#64748B;padding:4px 10px 0;margin-bottom:-6px;font-weight:600}
+.nav{display:flex;flex-direction:column;gap:3px}
+.nav-link{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 14px;border-radius:12px;
+  color:#94A3B8;font-weight:500;font-size:14px;
+  position:relative;transition:all .2s ease;
+}
+.nav-link svg{width:18px;height:18px;flex:none;stroke-width:1.8}
+.nav-link:hover{background:rgba(255,255,255,.06);color:#F8FAFC}
+.nav-link.active{
+  background:linear-gradient(135deg, #1E40AF 0%, #4F46E5 50%, #7C3AED 100%);
+  color:#FFFFFF;
+  box-shadow:0 4px 16px rgba(79, 70, 229, 0.4);
+  font-weight:600;
+}
+.nav-link.active::before{display:none}
+.nav-badge{
+  margin-left:auto;font-family:var(--f-mono);font-size:9.5px;font-weight:700;
+  letter-spacing:.04em;padding:2.5px 7px;border-radius:6px;
+  background:rgba(255,255,255,.12);color:#FFFFFF;
+}
+.nav-badge.new{background:#7C3AED;color:#FFFFFF}
+.nav-badge.pro{background:#6366F1;color:#FFFFFF;border:none}
+.nav-sep{height:1px;background:rgba(255,255,255,.08);margin:2px 8px}
+
+.side-foot{margin-top:auto;display:flex;flex-direction:column;gap:12px}
+.upgrade{
+  background:linear-gradient(145deg, #0F172A 0%, #1E1B4B 100%);
+  border:1px solid rgba(99, 102, 241, 0.35);border-radius:14px;padding:14px 16px;
+  cursor:pointer;transition:transform .18s,border-color .18s;
+  box-shadow:0 4px 20px rgba(0,0,0,0.3);
+}
+.upgrade:hover{transform:translateY(-1px);border-color:rgba(99,102,241,0.6)}
+.upgrade .u-top{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;color:#FFFFFF}
+.upgrade .u-top .star{color:#818CF8;font-size:16px}
+.upgrade .u-top .u-chev{margin-left:auto;color:#818CF8;display:grid;place-items:center}
+.upgrade p{margin:4px 0 0;font-size:12px;line-height:1.4;color:#94A3B8}
+
+.user{display:flex;align-items:center;gap:11px;padding:6px 4px}
+.user .av{width:38px;height:38px;border-radius:10px;flex:none;object-fit:cover;box-shadow:0 0 0 1px rgba(255,255,255,.14)}
+.user .nm{font-weight:600;font-size:13.5px;line-height:1.2;color:#FFFFFF}
+.user .pl{font-family:var(--f-mono);font-size:10px;letter-spacing:.06em;color:#64748B;text-transform:uppercase;margin-top:2px}
+.logout-btn{
+  margin-left:auto;width:32px;height:32px;border-radius:8px;
+  display:grid;place-items:center;color:#94A3B8;background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.1);cursor:pointer;transition:all .18s;flex:none;
+}
+.logout-btn:hover{color:#EF4444;background:rgba(239,68,68,0.18);border-color:rgba(239,68,68,0.4);transform:scale(1.05)}
+.logout-btn svg{width:16px;height:16px;stroke-width:2}
+
+/* ---------- main ---------- */
+.main{flex:1 1 0;min-width:0;padding:0 42px 24px;max-width:1320px}
+.topbar{
+  display:flex;align-items:center;gap:16px;
+  padding:22px 0 8px;position:sticky;top:0;z-index:20;
+  background:linear-gradient(var(--paper) 72%,transparent);
+}
+.crumb{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);font-weight:600}
+.top-actions{margin-left:auto;display:flex;align-items:center;gap:10px}
+.icon-btn{
+  width:40px;height:40px;border-radius:10px;display:grid;place-items:center;
+  border:1px solid var(--rule);background:var(--paper-2);color:var(--ink-soft);
+  transition:background .18s,color .18s,border-color .18s,box-shadow .18s;
+  box-shadow:0 1px 2px rgba(0,0,0,0.03);
+}
+.icon-btn:hover{color:var(--ink);border-color:var(--pen);box-shadow:0 2px 8px rgba(99,102,241,0.15)}
+.icon-btn svg{width:19px;height:19px;stroke-width:1.7}
+.pro-btn{
+  display:flex;align-items:center;gap:8px;padding:0 18px;height:40px;border-radius:10px;
+  background:linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);
+  color:#FFFFFF;font-weight:600;font-size:13.5px;
+  border:none;box-shadow:0 4px 14px rgba(79, 70, 229, 0.35);
+  transition:filter .18s,transform .1s,box-shadow .18s;
+}
+.pro-btn:hover{filter:brightness(1.08);box-shadow:0 6px 20px rgba(79, 70, 229, 0.45)}.pro-btn:active{transform:translateY(1px)}
+.pro-btn .star{color:#FDE047}
+
+.page-head{
+  margin:20px 0 26px;
+  display:flex;align-items:center;justify-content:space-between;gap:30px;
+}
+.page-head-left{flex:1;min-width:0}
+.page-head-hero{flex:0 0 340px;display:flex;justify-content:flex-end}
+.hero-bot-wrap{width:100%;max-width:340px}
+.hero-svg{width:100%;height:auto;display:block}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;font-family:var(--f-mono);
+  font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:#7C3AED;font-weight:700;margin-bottom:12px;
+}
+.eyebrow::before{content:"";width:18px;height:2px;background:#7C3AED;border-radius:2px}
+h1{
+  font-family:var(--f-disp);font-weight:700;letter-spacing:-.025em;
+  font-size:clamp(30px,4vw,44px);line-height:1.08;margin:0;
+}
+h1 em{
+  font-style:normal;font-weight:700;
+  background:linear-gradient(135deg, #2563EB 0%, #7C3AED 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.lede{margin:12px 0 0;color:var(--ink-soft);font-size:15.5px;max-width:52ch;line-height:1.55}
+
+/* ---------- layout grids ---------- */
+.grid-top{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:22px;align-items:start}
+.grid-bottom{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:22px;align-items:start;margin-top:22px}
+
+/* ---------- cards & form ---------- */
+.card{
+  background:var(--paper-2);border:1px solid var(--rule);border-radius:var(--radius);
+  box-shadow:var(--shadow);overflow:hidden;
+}
+.card-head{
+  display:flex;align-items:center;gap:11px;padding:18px 22px;
+  border-bottom:1px solid var(--rule-soft);
+}
+.card-head .ci{
+  width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+  background:#EEF2FF;color:#4F46E5;flex:none;
+}
+.card-head .ci svg{width:17px;height:17px;stroke-width:1.8}
+.card-head .ct{font-family:var(--f-disp);font-weight:700;font-size:18.5px}
+
+.form{padding:22px}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.field{display:flex;flex-direction:column;gap:7px}
+.field.full{grid-column:1 / -1}
+.label{
+  font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--label-color);font-weight:700;
+  display:flex;align-items:center;gap:6px;
+}
+.label .n{color:var(--label-color);font-weight:800}
+.control{position:relative}
+.control .lead{
+  position:absolute;left:13px;top:50%;transform:translateY(-50%);
+  color:var(--ink-faint);pointer-events:none;
+}
+.control .lead svg{width:17px;height:17px;stroke-width:1.8;display:block}
+
+.input, .select{
+  width:100%;padding:11px 14px 11px 40px;border-radius:11px;
+  border:1px solid var(--rule);background:var(--sheet);
+  color:var(--ink);font-family:var(--f-ui);font-size:14.5px;
+  transition:border-color .18s,box-shadow .18s;
+}
+.input:focus, .select:focus{
+  outline:none;border-color:var(--pen);
+  box-shadow:0 0 0 3px var(--pen-wash);
+}
+.select{appearance:none;padding-right:38px;cursor:pointer}
+.chev-d{position:absolute;right:13px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--ink-faint)}
+.chev-d svg{width:16px;height:16px;stroke-width:1.8}
+
+.tagbox{
+  display:flex;flex-wrap:wrap;gap:7px;align-items:center;
+  padding:7px 10px 7px 40px;min-height:46px;
+  border-radius:11px;border:1px solid var(--rule);background:var(--sheet);
+  transition:border-color .18s,box-shadow .18s;cursor:text;
+}
+.tagbox.focus{border-color:var(--pen);box-shadow:0 0 0 3px var(--pen-wash)}
+.tag{
+  display:inline-flex;align-items:center;gap:6px;padding:3.5px 8px 3.5px 10px;border-radius:7px;
+  background:#EEF2FF;color:#4F46E5;border:1px solid #C7D2FE;font-family:var(--f-mono);font-size:12px;font-weight:600;
+}
+[data-theme="dark"] .tag{background:rgba(99,102,241,0.18);color:#A5B4FC;border-color:rgba(99,102,241,0.35)}
+.tag button{color:#4F46E5;opacity:.7;display:grid;place-items:center;border-radius:4px;line-height:0;padding:2px}
+[data-theme="dark"] .tag button{color:#A5B4FC}
+.tag button:hover{opacity:1;background:rgba(79,70,229,.14)}
+.tag button svg{width:12px;height:12px;stroke-width:2.4}
+.tagbox input{flex:1;min-width:90px;border:none;background:none;outline:none;font-family:var(--f-ui);font-size:14px;color:var(--ink);padding:4px 0}
+.tagbox input::placeholder{color:var(--ink-faint)}
+
+.count-row{display:flex;align-items:center;gap:14px}
+.count-row .num{
+  font-family:var(--f-disp);font-weight:700;font-size:30px;line-height:1;min-width:52px;
+  padding:6px 0;color:var(--ink);
+}
+.stepper{display:flex;gap:6px}
+.stepper button{
+  width:38px;height:38px;border-radius:10px;border:1px solid var(--rule);background:var(--sheet);
+  font-size:20px;color:var(--ink-soft);display:grid;place-items:center;transition:border-color .18s,color .18s;
+}
+.stepper button:hover{border-color:var(--pen);color:var(--pen)}
+.range{flex:1}
+input[type=range]{-webkit-appearance:none;width:100%;height:5px;border-radius:99px;background:var(--rule);outline:none}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+  background:#6366F1;cursor:pointer;box-shadow:0 0 0 4px rgba(99, 102, 241, 0.2);
+  transition:transform .12s,background .12s;
+}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.12);background:#4F46E5}
+input[type=range]::-moz-range-thumb{
+  width:20px;height:20px;border:none;border-radius:50%;
+  background:#6366F1;cursor:pointer;box-shadow:0 0 0 4px rgba(99, 102, 241, 0.2);
+}
+
+.generate{
+  margin-top:22px;width:100%;padding:15px;border-radius:12px;
+  background:linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);
+  color:#FFFFFF;font-weight:600;font-size:15.5px;letter-spacing:.01em;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  box-shadow:0 10px 25px -4px rgba(79, 70, 229, 0.45);
+  transition:filter .18s,transform .1s,box-shadow .18s;
+}
+.generate:hover{filter:brightness(1.08);box-shadow:0 14px 28px -4px rgba(79, 70, 229, 0.55)}
+.generate:active{transform:translateY(1px)}
+.generate svg{width:19px;height:19px;stroke-width:1.9}
+.generate.busy{pointer-events:none;opacity:.85}
+.spin{width:18px;height:18px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- tips ---------- */
+.tips{padding:22px}
+.tips .th{display:flex;align-items:center;gap:9px;font-family:var(--f-disp);font-weight:700;font-size:17.5px;margin-bottom:4px}
+.tips .th svg{width:18px;height:18px;color:#7C3AED;stroke-width:1.8}
+.tips .thh{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#8B5CF6;margin-bottom:16px;font-weight:700}
+.tip{display:flex;gap:12px;padding:12px 0;border-top:1px solid var(--rule-soft)}
+.tip:first-of-type{border-top:none}
+.tip .tn{font-family:var(--f-mono);font-size:12px;color:#2563EB;font-weight:700;flex:none;padding-top:1px}
+.tip p{margin:0;font-size:13.5px;line-height:1.5;color:var(--ink-soft)}
+.tip b{color:var(--ink);font-weight:600}
+
+/* ---------- question paper (signature) ---------- */
+.paper-card{background:var(--paper-2);border:1px solid var(--rule);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.paper-toolbar{display:flex;align-items:center;gap:11px;padding:18px 22px;border-bottom:1px solid var(--rule-soft)}
+.paper-toolbar .ci{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:#EEF2FF;color:#4F46E5;flex:none}
+.paper-toolbar .ci svg{width:17px;height:17px;stroke-width:1.8}
+.paper-toolbar .ct{font-family:var(--f-disp);font-weight:700;font-size:18.5px}
+.paper-toolbar .ha{margin-left:auto;display:flex;gap:8px}
+.ghost-btn{
+  display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:9px;
+  border:1px solid var(--rule);background:var(--sheet);font-weight:600;font-size:12.5px;color:var(--ink-soft);
+  transition:background .18s,border-color .18s,color .18s,box-shadow .18s;
+}
+.ghost-btn:hover{background:#EEF2FF;border-color:#818CF8;color:#4F46E5}
+[data-theme="dark"] .ghost-btn:hover{background:rgba(99,102,241,0.15);border-color:#818CF8;color:#A5B4FC}
+.ghost-btn svg{width:15px;height:15px;stroke-width:1.8}
+
+.sheet{background:var(--sheet);margin:18px;border-radius:12px;border:1px solid var(--rule-soft);position:relative;overflow:hidden}
+.sheet-head{padding:26px 30px 20px 30px;border-bottom:2px solid var(--rule);position:relative}
+.sheet-title{font-family:var(--f-disp);font-weight:700;font-size:26px;letter-spacing:-.01em;line-height:1.1}
+.sheet-meta{display:flex;flex-wrap:wrap;gap:8px 10px;margin-top:14px;font-family:var(--f-mono);font-size:11px;letter-spacing:.03em}
+.sheet-meta span{padding:4px 9px;border-radius:7px;background:var(--paper);border:1px solid var(--rule);color:var(--ink-soft)}
+.sheet-meta span b{color:var(--ink);font-weight:600}
+.sheet-stamp{
+  position:absolute;top:24px;right:28px;font-family:var(--f-mono);font-size:10px;
+  letter-spacing:.16em;text-transform:uppercase;color:#6366F1;border:1.5px solid #6366F1;
+  border-radius:8px;padding:6px 10px;transform:rotate(3deg);opacity:.9;font-weight:700;
+}
+
+.qlist{padding:6px 0 12px;margin:0;list-style:none}
+.q{
+  display:grid;grid-template-columns:56px 1fr auto;align-items:baseline;
+  padding:17px 30px 17px 0;border-bottom:1px solid var(--rule-soft);position:relative;
+}
+.q:last-child{border-bottom:none}
+.qnum{
+  grid-column:1;text-align:center;font-family:var(--f-mono);font-weight:700;font-size:12.5px;
+  color:#4F46E5;padding-top:4px;
+}
+[data-theme="dark"] .qnum{color:#818CF8}
+.qtext{
+  grid-column:2;font-family:var(--f-disp);font-weight:400;font-size:17px;line-height:1.5;
+  color:var(--ink);padding-right:14px;position:relative;overflow-wrap:anywhere;
+}
+.qtext code{font-family:var(--f-mono);font-size:.86em;background:#EEF2FF;color:#4F46E5;padding:1px 6px;border-radius:5px}
+[data-theme="dark"] .qtext code{background:rgba(99,102,241,0.2);color:#A5B4FC}
+.qtext::after{content:"";position:absolute;left:0;right:14px;bottom:-2px;height:2px;background:var(--primary-grad);opacity:.6;transform:scaleX(0);transform-origin:left;transition:transform .35s cubic-bezier(.2,.7,.2,1)}
+.q:hover .qtext::after{transform:scaleX(1)}
+.qcopy{
+  grid-column:3;width:34px;height:34px;border-radius:8px;display:grid;place-items:center;
+  color:var(--ink-faint);border:1px solid transparent;opacity:0;transition:opacity .18s,color .18s,border-color .18s;
+}
+.q:hover .qcopy{opacity:1}
+.qcopy:hover{color:var(--pen);border-color:var(--rule)}
+.qcopy svg{width:16px;height:16px;stroke-width:1.8}
+.qcopy.done{color:#10B981;opacity:1}
+
+/* empty + reveal states */
+.q-empty{padding:56px 30px;text-align:center;color:var(--ink-faint)}
+.q-empty .qe-mark{font-family:var(--f-disp);font-size:56px;color:var(--rule);line-height:1}
+.q-empty p{margin:14px auto 0;max-width:34ch;font-size:14px;line-height:1.55}
+.reveal{opacity:0;transform:translateY(8px);animation:rise .5s forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+
+/* ---------- history sidebar widget ---------- */
+.hist{padding:8px 8px 12px}
+.hist-item{
+  display:block;width:100%;text-align:left;padding:14px;border-radius:12px;
+  border:1px solid transparent;transition:background .18s,border-color .18s;position:relative;
+  cursor:pointer;
+}
+.hist-item:hover{background:var(--paper);border-color:var(--rule)}
+.hist-item .hi-top{display:flex;align-items:center;gap:8px}
+.hi-role{font-family:var(--f-disp);font-weight:600;font-size:15.5px;letter-spacing:-.01em}
+.hi-chev{margin-left:auto;color:var(--ink-faint);transition:transform .18s}
+.hist-item:hover .hi-chev{transform:translateX(3px);color:var(--pen)}
+.hi-meta{display:flex;gap:8px;align-items:center;margin-top:5px;font-family:var(--f-mono);font-size:11px;color:var(--ink-soft)}
+.hi-badge{padding:2px 7px;border-radius:6px;background:#EEF2FF;color:#4F46E5;font-weight:600}
+[data-theme="dark"] .hi-badge{background:rgba(99,102,241,0.2);color:#A5B4FC}
+.hi-badge.hard{background:rgba(245,158,11,.16);color:var(--gold)}
+.hi-badge.brutal{background:rgba(239,68,68,.16);color:#EF4444}
+.hi-date{margin-top:6px;font-family:var(--f-mono);font-size:10.5px;color:var(--ink-faint);letter-spacing:.04em}
+.hist-sep{height:1px;background:var(--rule-soft);margin:2px 14px}
+.hist-all{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  margin:8px;padding:12px;border-radius:10px;border:1px solid var(--rule);
+  font-weight:600;font-size:13.5px;color:#4F46E5;transition:background .18s,border-color .18s;
+  text-decoration:none;background:var(--paper);
+}
+.hist-all:hover{background:#EEF2FF;border-color:#818CF8}
+[data-theme="dark"] .hist-all{color:#A5B4FC}
+[data-theme="dark"] .hist-all:hover{background:rgba(99,102,241,0.15)}
+
+.foot{margin-top:24px;padding:16px 0;border-top:1px solid var(--rule);font-family:var(--f-mono);font-size:11px;letter-spacing:.05em;color:var(--ink-faint);text-align:center}
+
+/* ---------- toast ---------- */
+.toast{
+  position:fixed;bottom:26px;left:50%;transform:translate(-50%,20px);
+  background:#0F172A;color:#FFFFFF;padding:12px 20px;border-radius:12px;
+  font-size:13.5px;font-weight:500;display:flex;align-items:center;gap:10px;
+  box-shadow:0 18px 40px -18px rgba(0,0,0,.6);opacity:0;pointer-events:none;
+  transition:opacity .25s,transform .25s;z-index:60;border:1px solid rgba(255,255,255,.1);
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast svg{width:17px;height:17px;color:#818CF8;stroke-width:2}
+
+/* ---------- mobile menu btn ---------- */
+.menu-btn{display:none}
+
+/* ---------- responsive ---------- */
+@media(max-width:1080px){
+  .grid-top,.grid-bottom{grid-template-columns:minmax(0,1fr)}
+  .page-head{flex-direction:column;align-items:flex-start}
+  .page-head-hero{display:none}
+}
+@media(max-width:820px){
+  .sidebar{position:fixed;left:0;top:0;bottom:0;width:280px;flex-basis:280px;z-index:50;transform:translateX(-100%);transition:transform .3s ease;height:100vh}
+  .sidebar.open{transform:none}
+  .main{padding:0 20px 24px;max-width:100%}
+  .menu-btn{display:grid}
+  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .3s;z-index:40}
+  .scrim.show{opacity:1;pointer-events:auto}
+}
+@media(max-width:560px){
+  .fgrid{grid-template-columns:1fr}
+  .q{grid-template-columns:40px 1fr auto}
+  .sheet{margin:12px}
+  .sheet-stamp{display:none}
+  .sheet-head{padding:22px 20px 18px}
+  .q{padding-right:16px}
+}
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms !important;transition-duration:.001ms !important}
+}
+
+/* ---------- print ---------- */
+@media print{
+  .sidebar,.topbar,.grid-top,.grid-bottom > .card:last-child,.paper-toolbar,.foot,.menu-btn{display:none !important}
+  body,.main{background:#fff}
+  .app{display:block}.main{padding:0;max-width:100%}
+  .grid-bottom{display:block;margin:0}
+  .paper-card{border:none;box-shadow:none}
+  .sheet{margin:0;border:none}
+  .qcopy{display:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <img class="brand-logo" src="logo.png" alt="Ravi GenAI Studio Logo">
+      <div>
+        <div class="word"><span class="brand-grad">RaviGenAI</span></div>
+        <div class="sub">Studio</div>
+      </div>
+    </div>
+
+    <div class="side-label">Workspace</div>
+    <nav class="nav">
+      <a class="nav-link" href="Dashboard.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-link active" href="Interview-studio.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2.5l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg>
+        Generate Questions
+      </a>
+      <a class="nav-link" href="Mock-interview.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
+        AI Mock Interview
+        <span class="nav-badge new">VOICE</span>
+      </a>
+      <a class="nav-link" href="javascript:void(0)" data-toast="Answer Evaluator: Submit candidate answers to receive instant rubric scoring.">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        Answer Evaluator
+      </a>
+      <a class="nav-link" href="Resume-match.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+        Resume &amp; JD Match
+        <span class="nav-badge pro">PRO</span>
+      </a>
+    </nav>
+
+    <div class="nav-sep"></div>
+
+    <div class="side-label">Library</div>
+    <nav class="nav">
+      <a class="nav-link" href="Interview history.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        Interview History
+      </a>
+      <a class="nav-link" href="Interview history.html" data-toast="Question Bank: Browse, filter and reuse past question collections.">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        Question Bank
+      </a>
+      <a class="nav-link" href="Company-playbooks.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21h18M3 7v14M21 7v14M6 3h12a2 2 0 012 2v2H4V5a2 2 0 012-2zM9 11h2M13 11h2M9 15h2M13 15h2"/></svg>
+        Company Playbooks
+      </a>
+    </nav>
+
+    <div class="nav-sep"></div>
+
+    <div class="side-label">Preferences</div>
+    <nav class="nav">
+      <a class="nav-link" href="Interview history.html#stats" data-toast="Analytics: Overall stats and preparation tracking are active.">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+        Analytics
+      </a>
+      <a class="nav-link" href="javascript:void(0)" data-toast="Model & Settings: Connected to Gemini 2.5 Flash & GPT-4o backend.">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Model &amp; Settings
+      </a>
+    </nav>
+
+    <div class="side-foot">
+      <div class="upgrade" onclick="location.href='Upgrade-pro.html'">
+        <div class="u-top"><span class="star">✦</span> Go Pro <span class="u-chev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"/></svg></span></div>
+        <p>Unlock advanced AI features</p>
+      </div>
+      <div class="user">
+        <img class="av" alt="Ravi Chandran" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><rect width='80' height='80' fill='%231E1B4B'/><circle cx='40' cy='31' r='15' fill='%23818CF8'/><path d='M12 78c0-18 14-28 28-28s28 10 28 28z' fill='%23818CF8'/></svg>">
+        <div>
+          <div class="nm">Ravi Chandran</div>
+          <div class="pl">Free plan</div>
+        </div>
+        <button class="logout-btn" title="Sign Out / Logout" onclick="handleLogout(event)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main">
+    <div class="topbar">
+      <button class="icon-btn menu-btn" id="menuBtn" aria-label="Open menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <span class="crumb">Dashboard / Generate</span>
+      <div class="top-actions">
+        <button class="icon-btn" id="themeBtn" aria-label="Toggle theme">
+          <svg id="sunMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 12.8A8 8 0 1111.2 3 6.2 6.2 0 0021 12.8z"/></svg>
+        </button>
+        <button class="icon-btn" title="Sign Out / Logout" onclick="handleLogout(event)" aria-label="Logout">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+        <button class="pro-btn" onclick="location.href='Upgrade-pro.html'"><span class="star">✦</span> Upgrade</button>
+      </div>
+    </div>
+
+    <header class="page-head">
+      <div class="page-head-left">
+        <h1>Set the brief.<br>We'll <em>compose the exam.</em></h1>
+        <p class="lede">Describe the role, the stack, and the level you're preparing for — tailored question papers you can rehearse or hand to a candidate.</p>
+      </div>
+      <div class="page-head-hero">
+        <div class="hero-bot-wrap">
+          <svg class="hero-svg" viewBox="0 0 340 190" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="cloudGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#C084FC"/>
+                <stop offset="100%" stop-color="#60A5FA"/>
+              </linearGradient>
+              <linearGradient id="botGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#FFFFFF"/>
+                <stop offset="100%" stop-color="#E2E8F0"/>
+              </linearGradient>
+              <linearGradient id="blueGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#38BDF8"/>
+                <stop offset="100%" stop-color="#3B82F6"/>
+              </linearGradient>
+              <linearGradient id="screenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#0F172A"/>
+                <stop offset="100%" stop-color="#1E1B4B"/>
+              </linearGradient>
+            </defs>
+            <!-- Cloud & Data nodes -->
+            <path d="M60 40 C60 25, 80 15, 95 25 C105 10, 130 10, 140 25 C155 25, 165 35, 160 50 C165 65, 150 75, 135 75 L65 75 C50 75, 45 60, 55 50 C50 40, 55 40, 60 40 Z" fill="url(#cloudGrad)" opacity="0.85"/>
+            <g stroke="#93C5FD" stroke-width="1.5" stroke-dasharray="3 3">
+              <line x1="80" y1="75" x2="80" y2="110"/>
+              <line x1="110" y1="75" x2="110" y2="115"/>
+              <line x1="140" y1="75" x2="140" y2="105"/>
+            </g>
+            <!-- Background Analytics Card -->
+            <rect x="180" y="20" width="140" height="95" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5" filter="drop-shadow(0 8px 16px rgba(0,0,0,0.06))"/>
+            <circle cx="198" cy="35" r="3" fill="#EF4444"/>
+            <circle cx="208" cy="35" r="3" fill="#F59E0B"/>
+            <circle cx="218" cy="35" r="3" fill="#10B981"/>
+            <line x1="198" y1="50" x2="250" y2="50" stroke="#818CF8" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="198" y1="60" x2="280" y2="60" stroke="#38BDF8" stroke-width="2" stroke-linecap="round"/>
+            <line x1="198" y1="70" x2="240" y2="70" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round"/>
+            <!-- Bar Chart in card -->
+            <rect x="255" y="85" width="7" height="15" rx="2" fill="#93C5FD"/>
+            <rect x="266" y="78" width="7" height="22" rx="2" fill="#60A5FA"/>
+            <rect x="277" y="68" width="7" height="32" rx="2" fill="#3B82F6"/>
+            <rect x="288" y="58" width="7" height="42" rx="2" fill="#4F46E5"/>
+            <!-- Robot Body & Head -->
+            <g transform="translate(0, 10)">
+              <!-- Body -->
+              <rect x="75" y="95" width="65" height="60" rx="22" fill="url(#botGrad)" stroke="#CBD5E1" stroke-width="1.5"/>
+              <rect x="88" y="110" width="38" height="26" rx="7" fill="#F1F5F9"/>
+              <text x="107" y="128" fill="#2563EB" font-family="'Roboto', sans-serif" font-weight="900" font-size="14" text-anchor="middle">AI</text>
+              <!-- Head -->
+              <rect x="65" y="40" width="85" height="60" rx="28" fill="url(#botGrad)" stroke="#CBD5E1" stroke-width="1.5"/>
+              <!-- Screen Visor -->
+              <rect x="75" y="50" width="65" height="40" rx="16" fill="#0F172A"/>
+              <!-- Glowing Cyan Eyes -->
+              <ellipse cx="93" cy="70" rx="8" ry="10" fill="url(#blueGlow)"/>
+              <ellipse cx="121" cy="70" rx="8" ry="10" fill="url(#blueGlow)"/>
+              <!-- Ears / Antenna -->
+              <rect x="60" y="58" width="5" height="20" rx="2.5" fill="#94A3B8"/>
+              <rect x="150" y="58" width="5" height="20" rx="2.5" fill="#94A3B8"/>
+              <circle cx="107" cy="33" r="4" fill="#38BDF8"/>
+              <line x1="107" y1="37" x2="107" y2="40" stroke="#94A3B8" stroke-width="2"/>
+              <!-- Laptop -->
+              <path d="M125 130 L165 130 L175 155 L115 155 Z" fill="#334155"/>
+              <rect x="128" y="105" width="38" height="28" rx="4" fill="url(#screenGrad)" stroke="#475569" stroke-width="1"/>
+              <text x="147" y="123" fill="#38BDF8" font-family="'Roboto', sans-serif" font-weight="700" font-size="10" text-anchor="middle">AI</text>
+              <ellipse cx="120" cy="145" rx="8" ry="6" fill="#E2E8F0"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </header>
+
+    <!-- FORM + TIPS -->
+    <section class="grid-top">
+      <div class="card">
+        <div class="card-head">
+          <span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 5h16M4 12h16M4 19h10"/></svg></span>
+          <span class="ct">The brief</span>
+        </div>
+        <div class="form">
+          <div class="fgrid">
+            <div class="field">
+              <label class="label" for="role">Role / position</label>
+              <div class="control">
+                <span class="lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></span>
+                <input class="input" id="role" value="Python Developer" placeholder="e.g. Senior Backend Engineer">
+              </div>
+            </div>
+            <div class="field">
+              <label class="label" for="exp">Experience</label>
+              <div class="control">
+                <span class="lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg></span>
+                <select class="select" id="exp">
+                  <option>Intern / Fresher</option>
+                  <option>1 Year</option>
+                  <option>2 Years</option>
+                  <option selected>3 Years</option>
+                  <option>5 Years</option>
+                  <option>8+ Years</option>
+                </select>
+                <span class="chev-d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M8 10l4 4 4-4"/></svg></span>
+              </div>
+            </div>
+
+            <div class="field full">
+              <label class="label">Skills &amp; stack <span style="color:var(--ink-faint);text-transform:none;letter-spacing:0;font-family:var(--f-ui)">— type and press enter</span></label>
+              <div class="control">
+                <span class="lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3M13 6l-2 12"/></svg></span>
+                <div class="tagbox" id="tagbox">
+                  <input id="tagInput" placeholder="Add a skill…">
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="label" for="diff">Difficulty</label>
+              <div class="control">
+                <span class="lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3l3 6 6 .5-4.5 4L18 20l-6-3.3L6 20l1.5-6.5L3 9.5 9 9z"/></svg></span>
+                <select class="select" id="diff">
+                  <option>Warm-up</option>
+                  <option selected>Medium</option>
+                  <option>Hard</option>
+                  <option>Brutal</option>
+                </select>
+                <span class="chev-d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M8 10l4 4 4-4"/></svg></span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="label">Questions</label>
+              <div class="count-row">
+                <span class="num" id="countNum">10</span>
+                <div class="stepper">
+                  <button id="minus" aria-label="Fewer">−</button>
+                  <button id="plus" aria-label="More">+</button>
+                </div>
+                <input class="range" id="range" type="range" min="3" max="20" value="10">
+              </div>
+            </div>
+          </div>
+
+          <button class="generate" id="genBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2.5l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg>
+            Compose question paper
+          </button>
+        </div>
+      </div>
+
+      <!-- TIPS -->
+      <aside class="card tips">
+        <div class="th"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 18h6M10 21h4M12 3a6 6 0 013.5 10.9c-.6.5-1 1.2-1 2H9.5c0-.8-.4-1.5-1-2A6 6 0 0112 3z"/></svg> Sharper briefs, sharper questions</div>
+        <div class="thh">Marker's notes</div>
+        <div class="tip"><span class="tn">01</span><p>Name the <b>exact</b> role. "Senior Python Developer" outranks "developer" every time.</p></div>
+        <div class="tip"><span class="tn">02</span><p>List the <b>real stack</b> you'll be tested on — frameworks, databases, tooling.</p></div>
+        <div class="tip"><span class="tn">03</span><p>Match difficulty to the <b>level</b> you're prepping or hiring for.</p></div>
+        <div class="tip"><span class="tn">04</span><p>The more you put in the brief, the <b>less generic</b> the paper comes out.</p></div>
+      </aside>
+    </section>
+
+    <!-- QUESTION PAPER + HISTORY -->
+    <section class="grid-bottom">
+      <div class="paper-card">
+        <div class="paper-toolbar">
+          <span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 3h9l3 3v15H6z"/><path d="M15 3v3h3M9 12h6M9 16h4"/></svg></span>
+          <span class="ct">Question paper</span>
+          <div class="ha">
+            <button class="ghost-btn" id="exportBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v11M8 11l4 3 4-3M5 21h14"/></svg> Export PDF</button>
+            <button class="ghost-btn" id="copyAllBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg> Copy all</button>
+          </div>
+        </div>
+
+        <div class="sheet" id="sheet">
+          <div class="sheet-head">
+            <div class="sheet-stamp">For practice</div>
+            <div class="sheet-title" id="sheetTitle">Python Developer</div>
+            <div class="sheet-meta" id="sheetMeta">
+              <span>Level <b>Medium</b></span>
+              <span>Experience <b>3 Years</b></span>
+              <span>Stack <b>Python · FastAPI</b></span>
+              <span id="metaCount">10 questions</span>
+            </div>
+          </div>
+          <ol class="qlist" id="qlist"></ol>
+        </div>
+      </div>
+
+      <!-- HISTORY -->
+      <aside class="card">
+        <div class="card-head">
+          <span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+          <span class="ct">Recent papers</span>
+        </div>
+        <div class="hist" id="hist">
+          <!-- Dynamically populated from backend /history -->
+        </div>
+        <a class="hist-all" href="Interview history.html" id="viewAllHistBtn">
+          View all history
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+        </a>
+      </aside>
+    </section>
+
+    <div class="foot">© 2026 Ravi GenAI Studio — built for the hot seat.</div>
+  </main>
+</div>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12l4 4 10-10"/></svg>
+  <span id="toastMsg">Copied</span>
+</div>
+
+<script>
+/* ---------- tiny helpers ---------- */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+let toastT;
+function toast(msg){
+  const t=$('#toast'); $('#toastMsg').textContent=msg;
+  t.classList.add('show'); clearTimeout(toastT);
+  toastT=setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+/* ---------- theme ---------- */
+$('#themeBtn').addEventListener('click',()=>{
+  const r=document.documentElement;
+  const dark=r.getAttribute('data-theme')==='dark';
+  r.setAttribute('data-theme',dark?'light':'dark');
+  $('#sunMoon').innerHTML = dark
+    ? '<path d="M21 12.8A8 8 0 1111.2 3 6.2 6.2 0 0021 12.8z"/>'
+    : '<circle cx="12" cy="12" r="4.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.5 4.5l2 2M17.5 17.5l2 2M19.5 4.5l-2 2M6.5 17.5l-2 2"/>';
+});
+
+/* ---------- mobile menu ---------- */
+$('#menuBtn')?.addEventListener('click',()=>{$('#sidebar').classList.add('open');$('#scrim').classList.add('show')});
+$('#scrim')?.addEventListener('click',()=>{$('#sidebar').classList.remove('open');$('#scrim').classList.remove('show')});
+
+/* ---------- skills tags ---------- */
+let skills=['Python','FastAPI'];
+const tagbox=$('#tagbox'), tagInput=$('#tagInput');
+function renderTags(){
+  $$('.tag').forEach(t=>t.remove());
+  skills.forEach((s,i)=>{
+    const el=document.createElement('span'); el.className='tag';
+    el.innerHTML=`${s}<button aria-label="Remove ${s}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 6l12 12M18 6L6 18"/></svg></button>`;
+    el.querySelector('button').onclick=()=>{skills.splice(i,1);renderTags()};
+    tagbox.insertBefore(el,tagInput);
+  });
+}
+function addTag(v){v=v.trim().replace(/,$/,'');if(v&&!skills.some(s=>s.toLowerCase()===v.toLowerCase())){skills.push(v);renderTags()}}
+tagInput.addEventListener('keydown',e=>{
+  if(e.key==='Enter'||e.key===','){e.preventDefault();addTag(tagInput.value);tagInput.value=''}
+  else if(e.key==='Backspace'&&!tagInput.value&&skills.length){skills.pop();renderTags()}
+});
+tagInput.addEventListener('blur',()=>{if(tagInput.value)addTag(tagInput.value);tagInput.value=''});
+tagbox.addEventListener('click',()=>tagInput.focus());
+tagInput.addEventListener('focus',()=>tagbox.classList.add('focus'));
+tagInput.addEventListener('blur',()=>tagbox.classList.remove('focus'));
+renderTags();
+
+/* ---------- count stepper + range ---------- */
+let count=10;
+const countNum=$('#countNum'), range=$('#range');
+function setCount(n){count=Math.max(3,Math.min(20,n));countNum.textContent=count;range.value=count}
+$('#minus').onclick=()=>setCount(count-1);
+$('#plus').onclick=()=>setCount(count+1);
+range.oninput=()=>setCount(+range.value);
+
+/* ---------- question bank fallback (offline) ---------- */
+const BANK={
+  python:[
+    "What is the difference between static typing and dynamic typing in Python?",
+    "Write a Python function to reverse a string using recursion.",
+    "Explain how Python's Global Interpreter Lock (GIL) affects multithreaded code.",
+    "Write a Python class that implements the singleton pattern.",
+    "How does list comprehension differ from a generator expression in memory use?",
+    "Explain the difference between <code>__str__</code> and <code>__repr__</code>.",
+    "Describe how Python's garbage collection handles reference cycles.",
+    "What are decorators, and write one that times a function's execution."
+  ],
+  fastapi:[
+    "How does FastAPI handle CORS requests?",
+    "Explain the concept of dependency injection in FastAPI.",
+    "Create a simple FastAPI endpoint that returns a list of users from a mock database.",
+    "How do you handle errors and exceptions in a FastAPI application?",
+    "What is the purpose of the <code>await</code> keyword in asynchronous Python code?",
+    "How does FastAPI use Pydantic models for request validation?",
+    "Compare <code>http.server</code> and FastAPI for building web services.",
+    "Describe a scenario where you'd use background tasks in FastAPI."
+  ],
+  sql:[
+    "Explain the difference between an INNER JOIN and a LEFT JOIN.",
+    "How would you diagnose and fix a slow SQL query?",
+    "What is database normalization, and when might you denormalize on purpose?",
+    "Write a query to find the second-highest salary in an employees table."
+  ],
+  javascript:[
+    "Explain the difference between <code>let</code>, <code>const</code>, and <code>var</code>.",
+    "What is a closure, and give a practical use for one.",
+    "How does the JavaScript event loop process async callbacks?",
+    "Explain prototypal inheritance versus classical inheritance."
+  ],
+  react:[
+    "When would you reach for <code>useMemo</code> versus <code>useCallback</code>?",
+    "Explain how the virtual DOM diffing process works.",
+    "What problems do React keys solve in list rendering?",
+    "Describe how you'd lift state up between two sibling components."
+  ],
+  ml:[
+    "Explain the bias–variance tradeoff with a concrete example.",
+    "How do you handle an imbalanced classification dataset?",
+    "What is regularization, and how do L1 and L2 differ?",
+    "Walk through how you'd validate a model before shipping it."
+  ],
+  generic:[
+    "Describe a challenging bug you fixed and how you found the root cause.",
+    "How do you decide when code is 'good enough' to ship?",
+    "Walk through how you'd design a system to handle 10x current traffic.",
+    "How do you approach writing tests for a new feature?",
+    "Tell me about a technical decision you later regretted, and why.",
+    "How do you keep a codebase maintainable as a team grows?"
+  ]
+};
+
+function pickQuestions(skillList,n){
+  const keys=new Set(['generic']);
+  skillList.forEach(s=>{
+    const l=s.toLowerCase();
+    if(/py|django|flask/.test(l))keys.add('python');
+    if(/fastapi|starlette|pydantic/.test(l))keys.add('fastapi');
+    if(/sql|postgres|mysql|db|database/.test(l))keys.add('sql');
+    if(/^js|javascript|node|typescript|ts$/.test(l))keys.add('javascript');
+    if(/react|next|vue|angular/.test(l))keys.add('react');
+    if(/ml|machine|learning|tensor|pytorch|data|ai/.test(l))keys.add('ml');
+  });
+  const pools=[...keys].map(k=>[...BANK[k]]);
+  const out=[]; let i=0;
+  while(out.length<n && pools.some(p=>p.length)){
+    const p=pools[i%pools.length];
+    if(p.length)out.push(p.shift());
+    i++;
+  }
+  let g=[...BANK.generic];
+  while(out.length<n && g.length)out.push(g.shift());
+  return out.slice(0,n);
+}
+
+/* ---------- render questions ---------- */
+const qlist=$('#qlist');
+function cleanQuestionText(q){
+  if(!q) return "";
+  return q.replace(/^(q\d+[\.\:\)]|\d+[\.\:\)]|\-|\*)\s*/i, '').trim();
+}
+
+function renderEmpty(){
+  qlist.innerHTML=`<div class="q-empty"><div class="qe-mark">?</div><p>Fill in the brief above and compose a paper — your questions appear here, ready to rehearse.</p></div>`;
+}
+
+function renderQuestions(qs){
+  if(!qs || !qs.length){
+    renderEmpty();
+    return;
+  }
+  qlist.innerHTML='';
+  qs.forEach((rawQ,i)=>{
+    const q = cleanQuestionText(rawQ);
+    if(!q) return;
+
+    const li=document.createElement('li');
+    li.className='q reveal';
+    li.style.animationDelay=(i*40)+'ms';
+    const plain=q.replace(/<[^>]+>/g,'');
+    li.innerHTML=`
+      <span class="qnum">Q${String(i+1).padStart(2,'0')}</span>
+      <span class="qtext">${q}</span>
+      <button class="qcopy" title="Copy question" aria-label="Copy question ${i+1}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg>
+      </button>`;
+    li.querySelector('.qcopy').onclick=(e)=>{
+      navigator.clipboard?.writeText(plain);
+      const b=e.currentTarget; b.classList.add('done');
+      b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12l4 4 10-10"/></svg>';
+      toast('Question copied');
+      setTimeout(()=>{
+        b.classList.remove('done');
+        b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg>';
+      },1400);
+    };
+    qlist.appendChild(li);
+  });
+}
+
+let currentQs = [];
+let recentHistory = [];
+
+/* ---------- load recent papers from API ---------- */
+async function fetchRecentPapers(){
+  const histEl = $('#hist');
+  try {
+    const res = await fetch("http://127.0.0.1:8000/history");
+    if(!res.ok) throw new Error("Status " + res.status);
+    const data = await res.json();
+    recentHistory = data;
+    renderRecentWidget(data.slice(0, 4));
+  } catch(err) {
+    console.warn("Could not fetch recent history from backend:", err.message);
+    histEl.innerHTML = `
+      <div style="padding:14px;font-size:12.5px;color:var(--ink-faint);text-align:center">
+        History available via backend.
+      </div>`;
+  }
+}
+
+function formatDateDisplay(isoStr){
+  if(!isoStr) return "Recent paper";
+  try {
+    const d = new Date(isoStr);
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const day = d.getDate();
+    const mon = months[d.getMonth()];
+    const yr = d.getFullYear();
+    let hours = d.getHours();
+    const mins = String(d.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    return `${day} ${mon} ${yr} · ${String(hours).padStart(2, '0')}:${mins} ${ampm}`;
+  } catch(e) {
+    return "Recent paper";
+  }
+}
+
+function renderRecentWidget(items){
+  const histEl = $('#hist');
+  if(!items || items.length === 0){
+    histEl.innerHTML = `<div style="padding:16px;font-size:13px;color:var(--ink-faint);text-align:center">No papers saved yet.</div>`;
+    return;
+  }
+  let html = "";
+  items.forEach((item, idx)=>{
+    const diffClass = item.difficulty === 'Hard' ? 'hard' : item.difficulty === 'Brutal' ? 'brutal' : '';
+    const dateStr = formatDateDisplay(item.created_at);
+    html += `
+      <button class="hist-item" data-id="${item.id}">
+        <div class="hi-top">
+          <span class="hi-role">${item.role || 'Question Paper'}</span>
+          <span class="hi-chev"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span>
+        </div>
+        <div class="hi-meta">
+          <span class="hi-badge ${diffClass}">${item.difficulty}</span>
+          ${item.count || item.questions.length} questions
+        </div>
+        <div class="hi-date">${dateStr}</div>
+      </button>
+      ${idx < items.length - 1 ? '<div class="hist-sep"></div>' : ''}
+    `;
+  });
+  histEl.innerHTML = html;
+
+  // Add click handlers to load saved paper
+  $$('.hist-item').forEach(btn => {
+    btn.onclick = () => {
+      const id = +btn.dataset.id;
+      const found = recentHistory.find(r => r.id === id);
+      if(found){
+        loadPaperIntoSheet(found);
+      }
+    };
+  });
+}
+
+function loadPaperIntoSheet(paper){
+  currentQs = paper.questions || [];
+  $("#sheetTitle").textContent = paper.role;
+  $("#sheetMeta").innerHTML = `
+    <span>Level <b>${paper.difficulty}</b></span>
+    <span>Experience <b>${paper.experience}</b></span>
+    <span>Stack <b>${(paper.skills || []).join(" · ")}</b></span>
+    <span>${currentQs.length} Questions</span>
+  `;
+  renderQuestions(currentQs);
+
+  // Sync inputs with loaded paper
+  if(paper.role) $("#role").value = paper.role;
+  if(paper.experience) $("#exp").value = paper.experience;
+  if(paper.difficulty) $("#diff").value = paper.difficulty;
+  if(paper.skills && paper.skills.length) {
+    skills = [...paper.skills];
+    renderTags();
+  }
+  setCount(currentQs.length || 10);
+  toast(`Loaded paper: ${paper.role}`);
+}
+
+/* ---------- generation logic ---------- */
+async function generate() {
+  const role = $("#role").value.trim();
+  const exp = $("#exp").value;
+  const diff = $("#diff").value;
+  const countVal = Number($("#countNum").textContent);
+
+  if(!role){
+    toast("Please enter a role or position");
+    $("#role").focus();
+    return;
+  }
+
+  if (skills.length === 0) {
+    toast("Add at least one skill");
+    tagInput.focus();
+    return;
+  }
+
+  const btn = $("#genBtn");
+  btn.classList.add("busy");
+  btn.innerHTML = '<span class="spin"></span> Generating question paper...';
+
+  try {
+    const response = await fetch("http://127.0.0.1:8000/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        role: role,
+        experience: exp,
+        skills: skills,
+        difficulty: diff,
+        number_of_questions: countVal
+      })
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(()=>({}));
+      throw new Error(errData.detail || ("HTTP Error " + response.status));
+    }
+
+    const data = await response.json();
+    currentQs = data.questions;
+
+    $("#sheetTitle").textContent = role;
+    $("#sheetMeta").innerHTML = `
+      <span>Level <b>${diff}</b></span>
+      <span>Experience <b>${exp}</b></span>
+      <span>Stack <b>${skills.join(" · ")}</b></span>
+      <span>${currentQs.length} Questions</span>
+    `;
+
+    renderQuestions(currentQs);
+    toast("Questions generated & saved to history!");
+    fetchRecentPapers();
+
+  } catch (error) {
+    console.warn("Backend API call failed:", error.message);
+    // Offline fallback
+    currentQs = pickQuestions(skills, countVal);
+    $("#sheetTitle").textContent = role;
+    $("#sheetMeta").innerHTML = `
+      <span>Level <b>${diff}</b></span>
+      <span>Experience <b>${exp}</b></span>
+      <span>Stack <b>${skills.join(" · ")}</b></span>
+      <span>${currentQs.length} Questions (Demo Bank)</span>
+    `;
+    renderQuestions(currentQs);
+    toast("Generated using question bank (" + (error.message.length < 40 ? error.message : "Backend offline") + ")");
+  } finally {
+    btn.classList.remove("busy");
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2.5l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg> Compose question paper';
+  }
+}
+
+document.getElementById("genBtn").addEventListener("click", generate);
+
+/* ---------- copy all + export ---------- */
+$('#copyAllBtn').onclick=()=>{
+  if(!currentQs.length){toast('Compose a paper first');return}
+  const text=currentQs.map((q,i)=>`${i+1}. ${cleanQuestionText(q).replace(/<[^>]+>/g,'')}`).join('\n');
+  navigator.clipboard?.writeText(text);
+  toast('All questions copied to clipboard');
+};
+
+$('#exportBtn').onclick=()=>{
+  if(!currentQs.length){toast('Compose a paper first');return}
+  toast('Opening print dialog…');
+  setTimeout(()=>window.print(),400);
+};
+
+/* ---------- generic toast buttons ---------- */
+$$('[data-toast]').forEach(b=>b.addEventListener('click',()=>toast(b.dataset.toast)));
+
+/* ---------- parse URL query params for pre-filling (e.g. from history re-run) ---------- */
+function initFromUrlParams(){
+  const params = new URLSearchParams(window.location.search);
+  const pRole = params.get('role');
+  const pExp = params.get('exp');
+  const pDiff = params.get('diff');
+  const pSkills = params.get('skills');
+  const pCount = params.get('count');
+
+  if(pRole) $("#role").value = pRole;
+  if(pExp) $("#exp").value = pExp;
+  if(pDiff) $("#diff").value = pDiff;
+  if(pSkills) {
+    skills = pSkills.split(',').map(s=>s.trim()).filter(Boolean);
+    renderTags();
+  }
+  if(pCount && !isNaN(pCount)) {
+    setCount(Number(pCount));
+  }
+}
+
+function handleLogout(e){
+  if(e) e.stopPropagation();
+  if(confirm("Are you sure you want to log out from Ravi GenAI Studio?")){
+    window.location.href = "Login.html";
+  }
+}
+
+initFromUrlParams();
+currentQs = pickQuestions(skills, count);
+renderQuestions(currentQs);
+fetchRecentPapers();
+</script>
+</body>
+</html>
