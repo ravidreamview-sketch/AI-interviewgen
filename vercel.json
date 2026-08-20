@@ -1,4 +1,9 @@
 {
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/generate", "destination": "/api/index.py" },
+    { "source": "/history", "destination": "/api/index.py" },
+    { "source": "/history/(.*)", "destination": "/api/index.py" }
+  ]
 }

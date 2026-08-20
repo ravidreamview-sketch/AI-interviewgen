@@ -1,7 +1,13 @@
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-DATABASE_URL = "sqlite:///./interview.db"
+import os
+import tempfile
+
+if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+    DATABASE_URL = f"sqlite:///{tempfile.gettempdir()}/interview.db"
+else:
+    DATABASE_URL = "sqlite:///./interview.db"
 
 engine = create_engine(
     DATABASE_URL,
