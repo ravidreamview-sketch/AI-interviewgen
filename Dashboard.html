@@ -256,6 +256,15 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
+.dash-synth-grid{
+  display:grid;grid-template-columns:1.3fr 1.2fr 1.4fr 0.7fr 0.7fr auto;
+  gap:10px;align-items:end;background:var(--paper);padding:16px;
+  border-radius:14px;border:1px solid var(--rule);margin-bottom:16px;
+}
+
+@media(max-width:1180px){
+  .dash-synth-grid{grid-template-columns:1fr 1fr 1fr}
+}
 @media(max-width:1024px){
   .stats-grid{grid-template-columns:repeat(2, 1fr)}
   .analytics-grid{grid-template-columns:1fr}
@@ -269,6 +278,11 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
   .main{padding:0 20px 24px}
   .stats-grid{grid-template-columns:1fr}
   .dash-head{flex-direction:column;align-items:flex-start}
+  .dash-synth-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:600px){
+  .dash-synth-grid{grid-template-columns:1fr;gap:12px}
+  #dashSynthesizeBtn{width:100%;justify-content:center}
 }
 </style>
 </head>
@@ -476,7 +490,7 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
       </div>
 
       <!-- INPUT CONTROLS ROW -->
-      <div style="display:grid;grid-template-columns:1.3fr 1.2fr 1.4fr 0.7fr 0.7fr auto;gap:10px;align-items:end;background:var(--paper);padding:16px;border-radius:14px;border:1px solid var(--rule);margin-bottom:16px">
+      <div class="dash-synth-grid">
         <div>
           <label style="font-size:12px;font-weight:700;color:var(--ink);display:block;margin-bottom:4px">Target Role (Auto-regenerates):</label>
           <select id="dashRoleSelect" onchange="onRoleSelectChange(this.value)" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--rule);background:var(--paper-2);color:var(--ink);font-size:13.5px;font-weight:600;outline:none;cursor:pointer">

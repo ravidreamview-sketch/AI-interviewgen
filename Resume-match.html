@@ -275,10 +275,15 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
     </div>
   </aside>
 
+  <div class="scrim" id="scrim"></div>
+
   <!-- MAIN CANVAS -->
   <main class="main">
     <div class="topbar">
-      <span class="crumb">Workspace / Resume &amp; JD Matcher</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button class="mob-btn" id="menuBtn" aria-label="Open Navigation">☰</button>
+        <span class="crumb">Workspace / Resume &amp; JD Matcher</span>
+      </div>
       <div class="top-actions">
         <button class="icon-btn" id="themeBtn" aria-label="Toggle theme">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 12.8A8 8 0 1111.2 3 6.2 6.2 0 0021 12.8z"/></svg>
@@ -429,6 +434,15 @@ document.getElementById('matchBtn').addEventListener('click', () => {
     document.getElementById('resultsPanel').scrollIntoView({ behavior: 'smooth' });
   }, 700);
 });
+
+// Mobile Drawer Setup
+const menuBtn = document.getElementById('menuBtn');
+const sidebar = document.getElementById('sidebar');
+const scrim = document.getElementById('scrim');
+if (menuBtn && sidebar && scrim) {
+  menuBtn.onclick = () => { sidebar.classList.add('open'); scrim.classList.add('show'); };
+  scrim.onclick = () => { sidebar.classList.remove('open'); scrim.classList.remove('show'); };
+}
 </script>
 <script src="analytics-tracker.js"></script>
 </body>
