@@ -467,6 +467,46 @@ input[type=range]::-moz-range-thumb{
 .toast.show{opacity:1;transform:translate(-50%,0)}
 .toast svg{width:17px;height:17px;color:#818CF8;stroke-width:2}
 
+/* ---------- share modal ---------- */
+.share-modal-backdrop{
+  position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);
+  z-index:70;display:none;place-items:center;padding:20px;animation:fadeIn .2s ease;
+}
+.share-modal-backdrop.open{display:grid}
+.share-modal{
+  background:var(--paper-2);border:1px solid var(--rule);border-radius:18px;
+  max-width:480px;width:100%;padding:26px;box-shadow:var(--shadow);
+  position:relative;animation:modalScale .25s cubic-bezier(.16,1,.3,1);
+}
+@keyframes modalScale{from{transform:scale(0.92);opacity:0}to{transform:scale(1);opacity:1}}
+.share-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.share-head h3{margin:0;font-size:19px;font-weight:700}
+.close-modal-btn{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:var(--ink-soft);cursor:pointer;transition:all .18s}
+.close-modal-btn:hover{background:var(--paper);color:var(--ink)}
+
+.share-url-box{
+  display:flex;gap:8px;background:var(--paper);border:1px solid var(--rule);
+  border-radius:12px;padding:6px 6px 6px 14px;align-items:center;margin-bottom:20px;
+}
+.share-url-text{
+  flex:1;border:none;background:none;color:var(--ink);font-family:var(--f-mono);
+  font-size:12.5px;outline:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.share-copy-btn{
+  padding:8px 14px;border-radius:8px;background:var(--primary);color:#fff;
+  font-weight:600;font-size:12.5px;cursor:pointer;transition:filter .18s;flex:none;
+}
+.share-copy-btn:hover{filter:brightness(1.1)}
+
+.share-channels-grid{display:grid;grid-template-columns:repeat(4, 1fr);gap:10px}
+.share-channel-btn{
+  display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 8px;
+  border-radius:12px;background:var(--paper);border:1px solid var(--rule-soft);
+  color:var(--ink);font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;text-decoration:none;
+}
+.share-channel-btn:hover{border-color:var(--primary);transform:translateY(-2px);background:var(--pen-wash)}
+.share-channel-icon{font-size:22px}
+
 /* ---------- mobile menu btn ---------- */
 .menu-btn{display:none}
 
@@ -791,6 +831,7 @@ input[type=range]::-moz-range-thumb{
           <span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 3h9l3 3v15H6z"/><path d="M15 3v3h3M9 12h6M9 16h4"/></svg></span>
           <span class="ct">Question paper</span>
           <div class="ha">
+            <button class="ghost-btn" id="shareBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share</button>
             <button class="ghost-btn" id="exportBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v11M8 11l4 3 4-3M5 21h14"/></svg> Export PDF</button>
             <button class="ghost-btn" id="copyAllBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg> Copy all</button>
           </div>
@@ -846,6 +887,62 @@ input[type=range]::-moz-range-thumb{
 
     <div class="foot">© 2026 Ravi GenAI Studio — built for the hot seat.</div>
   </main>
+</div>
+
+<!-- REAL-TIME SHARE QUESTION PAPER MODAL -->
+<div class="share-modal-backdrop" id="shareModalBackdrop">
+  <div class="share-modal">
+    <div class="share-head">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:20px">🔗</span>
+        <h3>Real-Time Share Question Paper</h3>
+      </div>
+      <button class="close-modal-btn" id="closeShareModal" aria-label="Close modal">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <p style="font-size:13.5px;color:var(--ink-soft);margin:0 0 16px;line-height:1.45">
+      Anyone with this real-time link or QR code can instantly open this exact question paper with all questions, level, and evaluation lenses.
+    </p>
+
+    <!-- LIVE LINK COPY BOX -->
+    <div class="share-url-box">
+      <input class="share-url-text" id="shareUrlInput" readonly value="">
+      <button class="share-copy-btn" id="shareUrlCopyBtn">Copy Link</button>
+    </div>
+
+    <!-- QR CODE & ACTIONS ROW -->
+    <div style="display:flex;align-items:center;gap:16px;background:var(--paper);padding:14px;border-radius:12px;border:1px solid var(--rule);margin-bottom:16px">
+      <img id="shareQrImg" alt="Question Paper QR Code" style="width:78px;height:78px;border-radius:8px;background:#fff;padding:4px;border:1px solid var(--rule);flex:none" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><rect width='80' height='80' fill='%23EEF2FF'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='10' fill='%234F46E5'>QR Code</text></svg>">
+      <div>
+        <div style="font-weight:700;font-size:13.5px;color:var(--ink);margin-bottom:3px">Scan to Open on Mobile</div>
+        <div style="font-size:12px;color:var(--ink-soft);line-height:1.4">Interviewers or candidates can scan to access live questions on any device.</div>
+        <button id="copyMarkdownBtn" style="margin-top:8px;font-size:11.5px;font-weight:700;color:var(--pen);display:inline-flex;align-items:center;gap:4px;cursor:pointer">
+          📋 Copy as Formatted Markdown
+        </button>
+      </div>
+    </div>
+
+    <div style="font-family:var(--f-mono);font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;margin-bottom:10px">Instant Share Channels:</div>
+    <div class="share-channels-grid">
+      <a class="share-channel-btn" id="shareWhatsApp" target="_blank" rel="noopener noreferrer">
+        <span class="share-channel-icon">💬</span>
+        <span>WhatsApp</span>
+      </a>
+      <a class="share-channel-btn" id="shareLinkedIn" target="_blank" rel="noopener noreferrer">
+        <span class="share-channel-icon">💼</span>
+        <span>LinkedIn</span>
+      </a>
+      <a class="share-channel-btn" id="shareTwitter" target="_blank" rel="noopener noreferrer">
+        <span class="share-channel-icon">🐦</span>
+        <span>X / Twitter</span>
+      </a>
+      <a class="share-channel-btn" id="shareEmail">
+        <span class="share-channel-icon">✉️</span>
+        <span>Email</span>
+      </a>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast">
@@ -1220,7 +1317,6 @@ async function generate() {
   btn.classList.add("busy");
   btn.innerHTML = '<span class="spin"></span> Synthesizing with Gemini 2.5...';
 
-  // Show Stepper & Shimmer Skeletons
   stepper.style.display = "block";
   renderSkeletonLoading(countVal);
 
@@ -1307,12 +1403,137 @@ $('#exportBtn').onclick=()=>{
   setTimeout(()=>window.print(),400);
 };
 
+/* ---------- real-time share question paper ---------- */
+function getShareableUrl() {
+  const role = $("#role").value.trim() || 'Software Engineer';
+  const exp = $("#exp").value;
+  const diff = $("#diff").value;
+  const countVal = currentQs.length || Number(count);
+  
+  const payloadObj = {
+    role: role,
+    exp: exp,
+    diff: diff,
+    skills: skills,
+    count: countVal,
+    questions: currentQs
+  };
+  
+  try {
+    const jsonStr = JSON.stringify(payloadObj);
+    const encoded = encodeURIComponent(btoa(unescape(encodeURIComponent(jsonStr))));
+    const baseUrl = window.location.origin + window.location.pathname;
+    return `${baseUrl}?paper=${encoded}`;
+  } catch(e) {
+    const baseUrl = window.location.origin + window.location.pathname;
+    return `${baseUrl}?role=${encodeURIComponent(role)}&exp=${encodeURIComponent(exp)}&diff=${encodeURIComponent(diff)}&skills=${encodeURIComponent(skills.join(','))}&count=${countVal}`;
+  }
+}
+
+function openShareModal() {
+  if (!currentQs.length) {
+    toast('Compose a question paper first');
+    return;
+  }
+  const shareUrl = getShareableUrl();
+  const shareTitle = $("#sheetTitle").textContent || "Interview Question Paper";
+  const shareText = `Check out this AI-generated ${shareTitle} interview question paper on Ravi GenAI Studio!`;
+
+  if (navigator.share && /mobile|android|iphone|ipad/i.test(navigator.userAgent)) {
+    navigator.share({
+      title: shareTitle,
+      text: shareText,
+      url: shareUrl
+    }).catch(() => {});
+    return;
+  }
+
+  $('#shareUrlInput').value = shareUrl;
+  $('#shareQrImg').src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(shareUrl)}`;
+  $('#shareWhatsApp').href = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + '\n\n' + shareUrl)}`;
+  $('#shareLinkedIn').href = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
+  $('#shareTwitter').href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+  $('#shareEmail').href = `mailto:?subject=${encodeURIComponent('Interview Question Paper: ' + shareTitle)}&body=${encodeURIComponent(shareText + '\n\nAccess it here in real-time:\n' + shareUrl)}`;
+
+  $('#shareModalBackdrop').classList.add('open');
+}
+
+function closeShareModal() {
+  $('#shareModalBackdrop').classList.remove('open');
+}
+
+$('#shareBtn').onclick = openShareModal;
+$('#closeShareModal').onclick = closeShareModal;
+$('#shareModalBackdrop').onclick = (e) => {
+  if (e.target === $('#shareModalBackdrop')) closeShareModal();
+};
+
+$('#shareUrlCopyBtn').onclick = () => {
+  const input = $('#shareUrlInput');
+  navigator.clipboard?.writeText(input.value);
+  $('#shareUrlCopyBtn').textContent = 'Copied! ✓';
+  toast('Real-time paper link copied to clipboard 🔗');
+  setTimeout(() => {
+    $('#shareUrlCopyBtn').textContent = 'Copy Link';
+  }, 1600);
+};
+
+$('#copyMarkdownBtn').onclick = () => {
+  if (!currentQs.length) return;
+  const title = $("#sheetTitle").textContent || "Question Paper";
+  const role = $("#role").value;
+  const exp = $("#exp").value;
+  const diff = $("#diff").value;
+  let md = `# Interview Question Paper: ${title}\n`;
+  md += `**Target Role:** ${role} | **Experience:** ${exp} | **Difficulty:** ${diff}\n`;
+  md += `**Skills Stack:** ${skills.join(', ')}\n\n---\n\n`;
+  currentQs.forEach((q, i) => {
+    md += `### Q${i+1}. ${cleanQuestionText(q).replace(/<[^>]+>/g,'')}\n\n`;
+  });
+  md += `\n*Generated with Ravi GenAI Studio*\n`;
+  navigator.clipboard?.writeText(md);
+  toast('Full Markdown formatted paper copied! 📋');
+};
+
 /* ---------- generic toast buttons ---------- */
 $$('[data-toast]').forEach(b=>b.addEventListener('click',()=>toast(b.dataset.toast)));
 
-/* ---------- parse URL query params for pre-filling ---------- */
+/* ---------- parse URL query params & real-time rehydration ---------- */
 function initFromUrlParams(){
   const params = new URLSearchParams(window.location.search);
+  const paperPayload = params.get('paper');
+
+  if (paperPayload) {
+    try {
+      const decodedJson = decodeURIComponent(escape(atob(decodeURIComponent(paperPayload))));
+      const data = JSON.parse(decodedJson);
+      if (data && data.questions && data.questions.length) {
+        currentQs = data.questions;
+        if (data.role) $("#role").value = data.role;
+        if (data.exp) $("#exp").value = data.exp;
+        if (data.diff) $("#diff").value = data.diff;
+        if (data.skills && data.skills.length) {
+          skills = [...data.skills];
+          renderTags();
+        }
+        setCount(data.count || currentQs.length);
+
+        $("#sheetTitle").textContent = data.role || "Shared Question Paper";
+        $("#sheetMeta").innerHTML = `
+          <span>Level <b>${data.diff || 'Medium'}</b></span>
+          <span>Experience <b>${data.exp || '3 Years'}</b></span>
+          <span>Stack <b>${(data.skills || []).join(" · ")}</b></span>
+          <span>${currentQs.length} Questions (Shared Live)</span>
+        `;
+        renderQuestions(currentQs);
+        toast(`Loaded shared paper: ${data.role || 'Interview Paper'}`);
+        return true;
+      }
+    } catch(err) {
+      console.warn("Could not unpack real-time shared payload:", err);
+    }
+  }
+
   const pRole = params.get('role');
   const pExp = params.get('exp');
   const pDiff = params.get('diff');
@@ -1329,6 +1550,7 @@ function initFromUrlParams(){
   if(pCount && !isNaN(pCount)) {
     setCount(Number(pCount));
   }
+  return false;
 }
 
 function handleLogout(e){
@@ -1338,14 +1560,11 @@ function handleLogout(e){
   }
 }
 
-initFromUrlParams();
+const isSharedPaper = initFromUrlParams();
 fetchRecentPapers();
-renderEmpty();
-
-initFromUrlParams();
-currentQs = pickQuestions(skills, count);
-renderQuestions(currentQs);
-fetchRecentPapers();
+if (!isSharedPaper) {
+  renderEmpty();
+}
 </script>
 </body>
 </html>
