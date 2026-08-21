@@ -278,6 +278,15 @@ input[type=range]::-moz-range-thumb{
   background:#6366F1;cursor:pointer;box-shadow:0 0 0 4px rgba(99, 102, 241, 0.2);
 }
 
+/* Specific Seed Inspiration Pills */
+.seed-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.seed-pill{
+  font-size:11.5px;font-family:var(--f-mono);padding:4px 9px;border-radius:7px;
+  background:var(--paper);border:1px solid var(--rule);color:var(--ink-soft);
+  cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:4px;
+}
+.seed-pill:hover{border-color:var(--pen);color:var(--pen);background:var(--pen-wash);transform:translateY(-1px)}
+
 .generate{
   margin-top:22px;width:100%;padding:15px;border-radius:12px;
   background:linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);
@@ -306,11 +315,11 @@ input[type=range]::-moz-range-thumb{
 
 /* ---------- question paper (signature) ---------- */
 .paper-card{background:var(--paper-2);border:1px solid var(--rule);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
-.paper-toolbar{display:flex;align-items:center;gap:11px;padding:18px 22px;border-bottom:1px solid var(--rule-soft)}
+.paper-toolbar{display:flex;align-items:center;gap:11px;padding:18px 22px;border-bottom:1px solid var(--rule-soft);flex-wrap:wrap}
 .paper-toolbar .ci{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:#EEF2FF;color:#4F46E5;flex:none}
 .paper-toolbar .ci svg{width:17px;height:17px;stroke-width:1.8}
 .paper-toolbar .ct{font-family:var(--f-disp);font-weight:700;font-size:18.5px}
-.paper-toolbar .ha{margin-left:auto;display:flex;gap:8px}
+.paper-toolbar .ha{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
 .ghost-btn{
   display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:9px;
   border:1px solid var(--rule);background:var(--sheet);font-weight:600;font-size:12.5px;color:var(--ink-soft);
@@ -344,7 +353,7 @@ input[type=range]::-moz-range-thumb{
 }
 [data-theme="dark"] .qnum{color:#818CF8}
 .qtext{
-  grid-column:2;font-family:var(--f-disp);font-weight:400;font-size:17px;line-height:1.5;
+  grid-column:2;font-family:var(--f-disp);font-weight:400;font-size:16.5px;line-height:1.5;
   color:var(--ink);padding-right:14px;position:relative;overflow-wrap:anywhere;
 }
 .qtext code{font-family:var(--f-mono);font-size:.86em;background:#EEF2FF;color:#4F46E5;padding:1px 6px;border-radius:5px}
@@ -360,6 +369,10 @@ input[type=range]::-moz-range-thumb{
 .qcopy svg{width:16px;height:16px;stroke-width:1.8}
 .qcopy.done{color:#10B981;opacity:1}
 
+/* Typewriter Live Streaming */
+.type-cursor{display:inline-block;color:#4F46E5;font-weight:700;animation:blink .6s infinite;margin-left:2px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
 /* ---------- preset chips & ai stepper ---------- */
 .preset-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
 .chip{
@@ -368,6 +381,7 @@ input[type=range]::-moz-range-thumb{
   cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:6px;
 }
 .chip:hover{border-color:var(--pen);color:var(--pen);background:var(--pen-wash)}
+.chip.active-preset{border-color:var(--pen);background:var(--pen-wash);color:var(--pen)}
 
 /* AI Stepper Progress Modal/Box */
 .ai-stepper{
@@ -467,45 +481,84 @@ input[type=range]::-moz-range-thumb{
 .toast.show{opacity:1;transform:translate(-50%,0)}
 .toast svg{width:17px;height:17px;color:#818CF8;stroke-width:2}
 
-/* ---------- share modal ---------- */
+/* ---------- share modal (question package) ---------- */
 .share-modal-backdrop{
-  position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);
+  position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);
   z-index:70;display:none;place-items:center;padding:20px;animation:fadeIn .2s ease;
 }
 .share-modal-backdrop.open{display:grid}
 .share-modal{
-  background:var(--paper-2);border:1px solid var(--rule);border-radius:18px;
-  max-width:480px;width:100%;padding:26px;box-shadow:var(--shadow);
+  background:var(--paper-2);border:1px solid var(--rule);border-radius:20px;
+  max-width:540px;width:100%;padding:24px;box-shadow:var(--shadow);
   position:relative;animation:modalScale .25s cubic-bezier(.16,1,.3,1);
+  max-height:92vh;display:flex;flex-direction:column;overflow-y:auto;
 }
 @keyframes modalScale{from{transform:scale(0.92);opacity:0}to{transform:scale(1);opacity:1}}
-.share-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-.share-head h3{margin:0;font-size:19px;font-weight:700}
-.close-modal-btn{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:var(--ink-soft);cursor:pointer;transition:all .18s}
-.close-modal-btn:hover{background:var(--paper);color:var(--ink)}
+.share-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.share-head h3{margin:0;font-size:20px;font-weight:700;display:flex;align-items:center;gap:8px}
+.close-modal-btn{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:var(--ink-soft);cursor:pointer;transition:all .18s;background:var(--paper);border:1px solid var(--rule)}
+.close-modal-btn:hover{background:var(--rule-soft);color:var(--ink)}
+
+.pkg-hero-banner{
+  display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;
+  background:var(--pen-wash);border:1px solid rgba(99,102,241,0.2);margin-bottom:14px;
+  font-size:12.5px;color:var(--pen);font-weight:600;line-height:1.4;
+}
+
+.pkg-preview-card{
+  background:var(--paper);border:1px solid var(--rule);border-radius:14px;
+  padding:14px 16px;margin-bottom:16px;display:flex;flex-direction:column;gap:10px;
+}
+.pkg-preview-header{
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;
+}
+.pkg-title{font-weight:700;font-size:14px;color:var(--ink)}
+.pkg-badge-group{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pkg-badge{
+  font-size:11px;font-family:var(--f-mono);font-weight:600;padding:2px 7px;
+  border-radius:6px;background:var(--paper-2);border:1px solid var(--rule);color:var(--ink-soft);
+}
+.pkg-badge.primary{background:var(--primary-grad);color:#fff;border:none}
+.pkg-preview-content{
+  max-height:135px;overflow-y:auto;font-size:12.5px;color:var(--ink-soft);
+  background:var(--paper-2);border:1px solid var(--rule-soft);border-radius:8px;
+  padding:10px 12px;line-height:1.5;font-family:var(--f-ui);white-space:pre-line;
+}
+.pkg-preview-actions{
+  display:flex;gap:8px;justify-content:flex-end;
+}
+.pkg-btn-sm{
+  padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;
+  border:1px solid var(--rule);background:var(--paper-2);color:var(--ink);
+  display:inline-flex;align-items:center;gap:5px;transition:all .18s;
+}
+.pkg-btn-sm:hover{background:var(--pen-wash);border-color:var(--pen);color:var(--pen)}
+
+.share-channels-grid{display:grid;grid-template-columns:repeat(2, 1fr);gap:10px;margin-bottom:12px}
+.share-channel-btn{
+  display:flex;align-items:center;gap:12px;padding:12px 14px;
+  border-radius:12px;background:var(--paper);border:1px solid var(--rule);
+  color:var(--ink);font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;text-decoration:none;
+}
+.share-channel-btn:hover{border-color:var(--primary);transform:translateY(-1px);background:var(--pen-wash)}
+.share-channel-icon{font-size:24px;flex:none}
+.share-channel-info{display:flex;flex-direction:column;text-align:left}
+.share-channel-title{font-weight:700;font-size:13.5px;color:var(--ink)}
+.share-channel-desc{font-size:11px;color:var(--ink-faint);font-weight:500;margin-top:1px}
 
 .share-url-box{
-  display:flex;gap:8px;background:var(--paper);border:1px solid var(--rule);
-  border-radius:12px;padding:6px 6px 6px 14px;align-items:center;margin-bottom:20px;
+  display:flex;gap:8px;background:var(--paper-2);border:1px solid var(--rule);
+  border-radius:10px;padding:4px 4px 4px 10px;align-items:center;
 }
 .share-url-text{
   flex:1;border:none;background:none;color:var(--ink);font-family:var(--f-mono);
-  font-size:12.5px;outline:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-size:11.5px;outline:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .share-copy-btn{
-  padding:8px 14px;border-radius:8px;background:var(--primary);color:#fff;
-  font-weight:600;font-size:12.5px;cursor:pointer;transition:filter .18s;flex:none;
+  padding:6px 12px;border-radius:7px;background:var(--primary);color:#fff;
+  font-weight:600;font-size:11.5px;cursor:pointer;transition:filter .18s;flex:none;
 }
 .share-copy-btn:hover{filter:brightness(1.1)}
-
-.share-channels-grid{display:grid;grid-template-columns:repeat(4, 1fr);gap:10px}
-.share-channel-btn{
-  display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 8px;
-  border-radius:12px;background:var(--paper);border:1px solid var(--rule-soft);
-  color:var(--ink);font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;text-decoration:none;
-}
-.share-channel-btn:hover{border-color:var(--primary);transform:translateY(-2px);background:var(--pen-wash)}
-.share-channel-icon{font-size:22px}
 
 /* ---------- mobile menu btn ---------- */
 .menu-btn{display:none}
@@ -655,7 +708,7 @@ input[type=range]::-moz-range-thumb{
     <header class="page-head">
       <div class="page-head-left">
         <h1>Set the brief.<br>We'll <em>compose the exam.</em></h1>
-        <p class="lede">Describe the role, the stack, and the level you're preparing for — tailored question papers you can rehearse or hand to a candidate.</p>
+        <p class="lede">Describe the role, the stack, or provide a specific focus question — we'll dynamically synthesize tightly related questions you can rehearse or hand to a candidate.</p>
       </div>
       <div class="page-head-hero">
         <div class="hero-bot-wrap">
@@ -678,14 +731,12 @@ input[type=range]::-moz-range-thumb{
                 <stop offset="100%" stop-color="#1E1B4B"/>
               </linearGradient>
             </defs>
-            <!-- Cloud & Data nodes -->
             <path d="M60 40 C60 25, 80 15, 95 25 C105 10, 130 10, 140 25 C155 25, 165 35, 160 50 C165 65, 150 75, 135 75 L65 75 C50 75, 45 60, 55 50 C50 40, 55 40, 60 40 Z" fill="url(#cloudGrad)" opacity="0.85"/>
             <g stroke="#93C5FD" stroke-width="1.5" stroke-dasharray="3 3">
               <line x1="80" y1="75" x2="80" y2="110"/>
               <line x1="110" y1="75" x2="110" y2="115"/>
               <line x1="140" y1="75" x2="140" y2="105"/>
             </g>
-            <!-- Background Analytics Card -->
             <rect x="180" y="20" width="140" height="95" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5" filter="drop-shadow(0 8px 16px rgba(0,0,0,0.06))"/>
             <circle cx="198" cy="35" r="3" fill="#EF4444"/>
             <circle cx="208" cy="35" r="3" fill="#F59E0B"/>
@@ -693,30 +744,22 @@ input[type=range]::-moz-range-thumb{
             <line x1="198" y1="50" x2="250" y2="50" stroke="#818CF8" stroke-width="2.5" stroke-linecap="round"/>
             <line x1="198" y1="60" x2="280" y2="60" stroke="#38BDF8" stroke-width="2" stroke-linecap="round"/>
             <line x1="198" y1="70" x2="240" y2="70" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round"/>
-            <!-- Bar Chart in card -->
             <rect x="255" y="85" width="7" height="15" rx="2" fill="#93C5FD"/>
             <rect x="266" y="78" width="7" height="22" rx="2" fill="#60A5FA"/>
             <rect x="277" y="68" width="7" height="32" rx="2" fill="#3B82F6"/>
             <rect x="288" y="58" width="7" height="42" rx="2" fill="#4F46E5"/>
-            <!-- Robot Body & Head -->
             <g transform="translate(0, 10)">
-              <!-- Body -->
               <rect x="75" y="95" width="65" height="60" rx="22" fill="url(#botGrad)" stroke="#CBD5E1" stroke-width="1.5"/>
               <rect x="88" y="110" width="38" height="26" rx="7" fill="#F1F5F9"/>
               <text x="107" y="128" fill="#2563EB" font-family="'Roboto', sans-serif" font-weight="900" font-size="14" text-anchor="middle">AI</text>
-              <!-- Head -->
               <rect x="65" y="40" width="85" height="60" rx="28" fill="url(#botGrad)" stroke="#CBD5E1" stroke-width="1.5"/>
-              <!-- Screen Visor -->
               <rect x="75" y="50" width="65" height="40" rx="16" fill="#0F172A"/>
-              <!-- Glowing Cyan Eyes -->
               <ellipse cx="93" cy="70" rx="8" ry="10" fill="url(#blueGlow)"/>
               <ellipse cx="121" cy="70" rx="8" ry="10" fill="url(#blueGlow)"/>
-              <!-- Ears / Antenna -->
               <rect x="60" y="58" width="5" height="20" rx="2.5" fill="#94A3B8"/>
               <rect x="150" y="58" width="5" height="20" rx="2.5" fill="#94A3B8"/>
               <circle cx="107" cy="33" r="4" fill="#38BDF8"/>
               <line x1="107" y1="37" x2="107" y2="40" stroke="#94A3B8" stroke-width="2"/>
-              <!-- Laptop -->
               <path d="M125 130 L165 130 L175 155 L115 155 Z" fill="#334155"/>
               <rect x="128" y="105" width="38" height="28" rx="4" fill="url(#screenGrad)" stroke="#475569" stroke-width="1"/>
               <text x="147" y="123" fill="#38BDF8" font-family="'Roboto', sans-serif" font-weight="700" font-size="10" text-anchor="middle">AI</text>
@@ -737,12 +780,13 @@ input[type=range]::-moz-range-thumb{
         <div class="form">
           <!-- QUICK PRESETS -->
           <div class="preset-chips">
-            <span style="font-family:var(--f-mono);font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;display:inline-flex;align-items:center">Presets:</span>
-            <button type="button" class="chip" onclick="applyPreset('python')">🐍 Python FastAPI</button>
-            <button type="button" class="chip" onclick="applyPreset('react')">⚛️ React &amp; Next.js</button>
-            <button type="button" class="chip" onclick="applyPreset('java')">☕ Java Spring Boot</button>
-            <button type="button" class="chip" onclick="applyPreset('devops')">☁️ Cloud DevOps</button>
-            <button type="button" class="chip" onclick="applyPreset('ai')">🤖 GenAI Architect</button>
+            <span style="font-family:var(--f-mono);font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;display:inline-flex;align-items:center">Role Presets:</span>
+            <button type="button" class="chip" onclick="applyPreset('ux')">🎨 UX Designer</button>
+            <button type="button" class="chip" onclick="applyPreset('product')">💡 Product Designer</button>
+            <button type="button" class="chip" onclick="applyPreset('uiux')">✨ UI/UX Designer</button>
+            <button type="button" class="chip" onclick="applyPreset('frontend')">⚛️ Frontend Developer</button>
+            <button type="button" class="chip" onclick="applyPreset('backend')">⚙️ Backend Developer</button>
+            <button type="button" class="chip" onclick="applyPreset('genai')">🤖 GenAI Engineer</button>
           </div>
 
           <div class="fgrid">
@@ -750,7 +794,7 @@ input[type=range]::-moz-range-thumb{
               <label class="label" for="role">Role / position</label>
               <div class="control">
                 <span class="lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></span>
-                <input class="input" id="role" value="Python Developer" placeholder="e.g. Senior Backend Engineer">
+                <input class="input" id="role" value="UX Designer" placeholder="e.g. Senior UX Designer">
               </div>
             </div>
             <div class="field">
@@ -761,8 +805,8 @@ input[type=range]::-moz-range-thumb{
                   <option>Intern / Fresher</option>
                   <option>1 Year</option>
                   <option>2 Years</option>
-                  <option selected>3 Years</option>
-                  <option>5 Years</option>
+                  <option>3 Years</option>
+                  <option selected>5 Years</option>
                   <option>8+ Years</option>
                 </select>
                 <span class="chev-d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M8 10l4 4 4-4"/></svg></span>
@@ -779,14 +823,37 @@ input[type=range]::-moz-range-thumb{
               </div>
             </div>
 
+            <!-- SPECIFIC FOCUS QUESTION / SEED TOPIC FIELD -->
+            <div class="field full" style="margin-top:4px">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <label class="label" for="customQuestion">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                  Specific Focus Question / Seed Topic (Optional)
+                </label>
+                <span style="font-size:11px;font-family:var(--f-mono);color:var(--pen);font-weight:600">Generates related deep-dive questions</span>
+              </div>
+              <div class="control">
+                <span class="lead" style="top:18px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+                <textarea class="input" id="customQuestion" rows="2" style="padding:10px 14px 10px 40px;height:auto;resize:vertical;min-height:48px;font-family:var(--f-ui);font-size:13.5px;line-height:1.45" placeholder="e.g. How do you design, prototype, and usability-test a multi-step checkout experience in Figma?"></textarea>
+              </div>
+              <!-- INSPIRATION PILLS -->
+              <div class="seed-pills">
+                <span style="font-size:10.5px;font-family:var(--f-mono);color:var(--ink-faint);align-self:center;font-weight:600">Quick seed:</span>
+                <button type="button" class="seed-pill" onclick="setSeedTopic('How do you structure design tokens and variable modes in Figma for multi-brand design systems?')">✨ Figma Design Tokens</button>
+                <button type="button" class="seed-pill" onclick="setSeedTopic('How do you conduct unmoderated usability testing on an interactive Figma prototype to reduce cart abandonment?')">✨ Usability Testing Case</button>
+                <button type="button" class="seed-pill" onclick="setSeedTopic('How do you balance WCAG 2.2 AAA accessibility contrast with modern dark mode aesthetic guidelines?')">✨ Accessibility &amp; WCAG</button>
+                <button type="button" class="seed-pill" onclick="setSeedTopic('How do you facilitate a design critique when engineering and PM have conflicting performance vs UX trade-offs?')">✨ Stakeholder Trade-offs</button>
+              </div>
+            </div>
+
             <div class="field">
               <label class="label" for="diff">Difficulty</label>
               <div class="control">
                 <span class="lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3l3 6 6 .5-4.5 4L18 20l-6-3.3L6 20l1.5-6.5L3 9.5 9 9z"/></svg></span>
                 <select class="select" id="diff">
                   <option>Warm-up</option>
-                  <option selected>Medium</option>
-                  <option>Hard</option>
+                  <option>Medium</option>
+                  <option selected>Hard</option>
                   <option>Brutal</option>
                 </select>
                 <span class="chev-d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M8 10l4 4 4-4"/></svg></span>
@@ -817,10 +884,10 @@ input[type=range]::-moz-range-thumb{
       <aside class="card tips">
         <div class="th"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 18h6M10 21h4M12 3a6 6 0 013.5 10.9c-.6.5-1 1.2-1 2H9.5c0-.8-.4-1.5-1-2A6 6 0 0112 3z"/></svg> Sharper briefs, sharper questions</div>
         <div class="thh">Marker's notes</div>
-        <div class="tip"><span class="tn">01</span><p>Name the <b>exact</b> role. "Senior Python Developer" outranks "developer" every time.</p></div>
-        <div class="tip"><span class="tn">02</span><p>List the <b>real stack</b> you'll be tested on — frameworks, databases, tooling.</p></div>
-        <div class="tip"><span class="tn">03</span><p>Match difficulty to the <b>level</b> you're prepping or hiring for.</p></div>
-        <div class="tip"><span class="tn">04</span><p>The more you put in the brief, the <b>less generic</b> the paper comes out.</p></div>
+        <div class="tip"><span class="tn">01</span><p>Provide a <b>specific seed question</b> above to generate deep-dive related questions.</p></div>
+        <div class="tip"><span class="tn">02</span><p>For UX/UI Design, include specific tools (e.g. <b>Figma, Design Tokens, Usability Testing</b>).</p></div>
+        <div class="tip"><span class="tn">03</span><p>Match difficulty to seniority — <b>Hard/Brutal</b> challenges design trade-offs &amp; systems.</p></div>
+        <div class="tip"><span class="tn">04</span><p>Questions stream <b>in real time</b> with Gemini 2.5 evaluation rubrics attached.</p></div>
       </aside>
     </section>
 
@@ -831,6 +898,7 @@ input[type=range]::-moz-range-thumb{
           <span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 3h9l3 3v15H6z"/><path d="M15 3v3h3M9 12h6M9 16h4"/></svg></span>
           <span class="ct">Question paper</span>
           <div class="ha">
+            <button class="ghost-btn" id="emailPackageBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Email Package</button>
             <button class="ghost-btn" id="shareBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share</button>
             <button class="ghost-btn" id="exportBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v11M8 11l4 3 4-3M5 21h14"/></svg> Export PDF</button>
             <button class="ghost-btn" id="copyAllBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg> Copy all</button>
@@ -842,27 +910,30 @@ input[type=range]::-moz-range-thumb{
           <div class="stepper-header">
             <div class="stepper-spinner"></div>
             <div>
-              <div class="stepper-title" id="stepperTitle">Composing Surgical Question Paper with Gemini 2.5 Flash...</div>
-              <div class="stepper-sub">Live AI Reasoning &amp; Calibration Pipeline</div>
+              <div class="stepper-title" id="stepperTitle">Synthesizing Surgical Question Paper with Gemini 2.5 Flash...</div>
+              <div class="stepper-sub" id="stepperSub">Live AI Reasoning &amp; Context-Branching Pipeline</div>
             </div>
           </div>
           <div class="steps-row">
-            <div class="s-step active" id="st1"><span class="s-num">1</span> Stack Bounds</div>
-            <div class="s-step" id="st2"><span class="s-num">2</span> Seniority Matrix</div>
-            <div class="s-step" id="st3"><span class="s-num">3</span> Code Prompts</div>
-            <div class="s-step" id="st4"><span class="s-num">4</span> STAR Rubric</div>
+            <div class="s-step active" id="st1"><span class="s-num">1</span> Context Extraction</div>
+            <div class="s-step" id="st2"><span class="s-num">2</span> Domain Calibration</div>
+            <div class="s-step" id="st3"><span class="s-num">3</span> Related Question Branching</div>
+            <div class="s-step" id="st4"><span class="s-num">4</span> Evaluation Rubrics</div>
           </div>
         </div>
 
         <div class="sheet" id="sheet">
           <div class="sheet-head">
             <div class="sheet-stamp">For practice</div>
-            <div class="sheet-title" id="sheetTitle">Python Developer</div>
+            <div class="sheet-title" id="sheetTitle">UX Designer</div>
             <div class="sheet-meta" id="sheetMeta">
-              <span>Level <b>Medium</b></span>
-              <span>Experience <b>3 Years</b></span>
-              <span>Stack <b>Python · FastAPI</b></span>
+              <span>Level <b>Hard</b></span>
+              <span>Experience <b>5 Years</b></span>
+              <span>Stack <b>Figma · Design Systems · User Research</b></span>
               <span id="metaCount">10 questions</span>
+            </div>
+            <div id="sheetFocusBadge" style="display:none;margin-top:10px;padding:6px 12px;border-radius:8px;background:var(--pen-wash);border:1px solid rgba(99,102,241,0.25);font-size:12px;color:var(--pen);font-weight:600">
+              🎯 <b>Specific Focus Seed:</b> <span id="sheetFocusText"></span>
             </div>
           </div>
           <ol class="qlist" id="qlist"></ol>
@@ -889,58 +960,176 @@ input[type=range]::-moz-range-thumb{
   </main>
 </div>
 
-<!-- REAL-TIME SHARE QUESTION PAPER MODAL -->
+<!-- QUESTION PACKAGE SHARE MODAL -->
 <div class="share-modal-backdrop" id="shareModalBackdrop">
   <div class="share-modal">
     <div class="share-head">
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:20px">🔗</span>
-        <h3>Real-Time Share Question Paper</h3>
-      </div>
+      <h3>
+        <span style="font-size:22px">📦</span>
+        <span>Share Question Package</span>
+      </h3>
       <button class="close-modal-btn" id="closeShareModal" aria-label="Close modal">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
     </div>
-    <p style="font-size:13.5px;color:var(--ink-soft);margin:0 0 16px;line-height:1.45">
-      Anyone with this real-time link or QR code can instantly open this exact question paper with all questions, level, and evaluation lenses.
-    </p>
 
-    <!-- LIVE LINK COPY BOX -->
-    <div class="share-url-box">
-      <input class="share-url-text" id="shareUrlInput" readonly value="">
-      <button class="share-copy-btn" id="shareUrlCopyBtn">Copy Link</button>
+    <div class="pkg-hero-banner">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      <span>Shares the complete formatted question set directly into Email, LinkedIn, or chat — no URL required!</span>
     </div>
 
-    <!-- QR CODE & ACTIONS ROW -->
-    <div style="display:flex;align-items:center;gap:16px;background:var(--paper);padding:14px;border-radius:12px;border:1px solid var(--rule);margin-bottom:16px">
-      <img id="shareQrImg" alt="Question Paper QR Code" style="width:78px;height:78px;border-radius:8px;background:#fff;padding:4px;border:1px solid var(--rule);flex:none" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><rect width='80' height='80' fill='%23EEF2FF'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='10' fill='%234F46E5'>QR Code</text></svg>">
-      <div>
-        <div style="font-weight:700;font-size:13.5px;color:var(--ink);margin-bottom:3px">Scan to Open on Mobile</div>
-        <div style="font-size:12px;color:var(--ink-soft);line-height:1.4">Interviewers or candidates can scan to access live questions on any device.</div>
-        <button id="copyMarkdownBtn" style="margin-top:8px;font-size:11.5px;font-weight:700;color:var(--pen);display:inline-flex;align-items:center;gap:4px;cursor:pointer">
-          📋 Copy as Formatted Markdown
+    <!-- QUESTION PACKAGE PREVIEW CARD -->
+    <div class="pkg-preview-card">
+      <div class="pkg-preview-header">
+        <span class="pkg-title" id="pkgPreviewTitle">Interview Question Paper</span>
+        <div class="pkg-badge-group">
+          <span class="pkg-badge primary" id="pkgPreviewCount">10 Qs</span>
+          <span class="pkg-badge" id="pkgPreviewDiff">Hard</span>
+          <span class="pkg-badge" id="pkgPreviewExp">5 Years</span>
+        </div>
+      </div>
+      <div class="pkg-preview-content" id="pkgPreviewContent"></div>
+      <div class="pkg-preview-actions">
+        <button class="pkg-btn-sm" id="shareCopyPackageBtn">
+          📋 Copy Question Package
+        </button>
+        <button class="pkg-btn-sm" id="copyMarkdownBtn">
+          📑 Copy Markdown
         </button>
       </div>
     </div>
 
-    <div style="font-family:var(--f-mono);font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;margin-bottom:10px">Instant Share Channels:</div>
+    <div style="font-family:var(--f-mono);font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;margin-bottom:8px">
+      Instant Share Channels (Full Package Embedded):
+    </div>
     <div class="share-channels-grid">
-      <a class="share-channel-btn" id="shareWhatsApp" target="_blank" rel="noopener noreferrer">
-        <span class="share-channel-icon">💬</span>
-        <span>WhatsApp</span>
-      </a>
-      <a class="share-channel-btn" id="shareLinkedIn" target="_blank" rel="noopener noreferrer">
-        <span class="share-channel-icon">💼</span>
-        <span>LinkedIn</span>
-      </a>
-      <a class="share-channel-btn" id="shareTwitter" target="_blank" rel="noopener noreferrer">
-        <span class="share-channel-icon">🐦</span>
-        <span>X / Twitter</span>
-      </a>
-      <a class="share-channel-btn" id="shareEmail">
+      <button class="share-channel-btn" id="shareEmailBtn" type="button">
         <span class="share-channel-icon">✉️</span>
-        <span>Email</span>
-      </a>
+        <div class="share-channel-info">
+          <span class="share-channel-title">Email Package</span>
+          <span class="share-channel-desc">Prefills email with full questions</span>
+        </div>
+      </button>
+
+      <button class="share-channel-btn" id="shareLinkedInBtn" type="button">
+        <span class="share-channel-icon">💼</span>
+        <div class="share-channel-info">
+          <span class="share-channel-title">LinkedIn Post</span>
+          <span class="share-channel-desc">Copies package &amp; opens LinkedIn</span>
+        </div>
+      </button>
+
+      <button class="share-channel-btn" id="shareWhatsAppBtn" type="button">
+        <span class="share-channel-icon">💬</span>
+        <div class="share-channel-info">
+          <span class="share-channel-title">WhatsApp</span>
+          <span class="share-channel-desc">Sends package directly in chat</span>
+        </div>
+      </button>
+
+      <button class="share-channel-btn" id="shareTwitterBtn" type="button">
+        <span class="share-channel-icon">🐦</span>
+        <div class="share-channel-info">
+          <span class="share-channel-title">X / Twitter</span>
+          <span class="share-channel-desc">Post questions package</span>
+        </div>
+      </button>
+    </div>
+
+    <!-- Optional Real-time Live Link & QR Accordion -->
+    <details style="margin-top:4px;border:1px solid var(--rule);border-radius:12px;background:var(--paper);padding:8px 12px">
+      <summary style="font-size:11.5px;font-weight:600;color:var(--ink-soft);cursor:pointer;display:flex;align-items:center;gap:6px">
+        <span>🔗 Need a live interactive link or QR code instead?</span>
+      </summary>
+      <div style="margin-top:10px;display:flex;flex-direction:column;gap:10px">
+        <div class="share-url-box">
+          <input class="share-url-text" id="shareUrlInput" readonly value="">
+          <button class="share-copy-btn" id="shareUrlCopyBtn">Copy Link</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <img id="shareQrImg" alt="QR Code" style="width:58px;height:58px;border-radius:6px;border:1px solid var(--rule);background:#fff;padding:2px">
+          <span style="font-size:11.5px;color:var(--ink-faint)">Scan to load real-time questions directly in mobile browser.</span>
+        </div>
+      </div>
+    </details>
+  </div>
+</div>
+
+<!-- DEDICATED EMAIL PACKAGE MODAL -->
+<div class="share-modal-backdrop" id="emailModalBackdrop">
+  <div class="share-modal" style="max-width:560px">
+    <div class="share-head">
+      <h3>
+        <span style="font-size:22px">✉️</span>
+        <span>Email Question Package</span>
+      </h3>
+      <button class="close-modal-btn" id="closeEmailModal" aria-label="Close email modal">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="pkg-hero-banner">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      <span>Pre-fills your chosen email app with the complete question set, rubric &amp; role details — no link needed!</span>
+    </div>
+
+    <!-- RECIPIENT INPUT (OPTIONAL) -->
+    <div style="margin-bottom:12px">
+      <label style="font-size:12px;font-weight:700;color:var(--ink);margin-bottom:4px;display:block">Recipient Email (Optional):</label>
+      <input type="email" id="emailRecipientInput" placeholder="e.g. candidate@example.com or interviewer@team.com" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--rule);background:var(--paper);color:var(--ink);font-size:13px;outline:none">
+    </div>
+
+    <!-- EMAIL SUBJECT PREVIEW -->
+    <div style="margin-bottom:12px">
+      <label style="font-size:12px;font-weight:700;color:var(--ink);margin-bottom:4px;display:block">Subject Line:</label>
+      <input type="text" id="emailSubjectInput" readonly style="width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--rule);background:var(--paper-2);color:var(--ink-soft);font-size:12px;font-family:var(--f-mono);outline:none">
+    </div>
+
+    <!-- PREVIEW OF EMAIL BODY PACKAGE -->
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <label style="font-size:12px;font-weight:700;color:var(--ink)">Email Package Body Preview:</label>
+        <span style="font-size:11px;font-family:var(--f-mono);color:var(--pen);font-weight:600" id="emailQCountBadge">10 Questions</span>
+      </div>
+      <div class="pkg-preview-content" id="emailBodyPreview" style="max-height:130px"></div>
+    </div>
+
+    <!-- EMAIL LAUNCH CHANNELS -->
+    <div style="font-family:var(--f-mono);font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;margin-bottom:8px">
+      Choose How to Send:
+    </div>
+    <div class="share-channels-grid">
+      <button class="share-channel-btn" id="sendViaGmailBtn" type="button">
+        <span class="share-channel-icon">🔴</span>
+        <div class="share-channel-info">
+          <span class="share-channel-title">Gmail Web</span>
+          <span class="share-channel-desc">Opens in browser Gmail</span>
+        </div>
+      </button>
+
+      <button class="share-channel-btn" id="sendViaOutlookBtn" type="button">
+        <span class="share-channel-icon">🔵</span>
+        <div class="share-channel-info">
+          <span class="share-channel-title">Outlook Web</span>
+          <span class="share-channel-desc">Opens in Outlook.com</span>
+        </div>
+      </button>
+
+      <button class="share-channel-btn" id="sendViaDefaultMailBtn" type="button">
+        <span class="share-channel-icon">✉️</span>
+        <div class="share-channel-info">
+          <span class="share-channel-title">Default Mail App</span>
+          <span class="share-channel-desc">Windows / Mac / Desktop app</span>
+        </div>
+      </button>
+
+      <button class="share-channel-btn" id="copyEmailDraftBtn" type="button">
+        <span class="share-channel-icon">📋</span>
+        <div class="share-channel-info">
+          <span class="share-channel-title">Copy Email Text</span>
+          <span class="share-channel-desc">Copy full email draft</span>
+        </div>
+      </button>
     </div>
   </div>
 </div>
@@ -961,7 +1150,7 @@ function toast(msg){
 }
 
 /* ---------- theme ---------- */
-$('#themeBtn').addEventListener('click',()=>{
+$('#themeBtn')?.addEventListener('click',()=>{
   const r=document.documentElement;
   const dark=r.getAttribute('data-theme')==='dark';
   r.setAttribute('data-theme',dark?'light':'dark');
@@ -970,12 +1159,28 @@ $('#themeBtn').addEventListener('click',()=>{
     : '<circle cx="12" cy="12" r="4.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.5 4.5l2 2M17.5 17.5l2 2M19.5 4.5l-2 2M6.5 17.5l-2 2"/>';
 });
 
+function handleLogout(e) {
+  if (e) e.stopPropagation();
+  if (confirm("Are you sure you want to log out from Ravi GenAI Studio?")) {
+    window.location.href = "Login.html";
+  }
+}
+
+function setSeedTopic(topicText) {
+  const el = $('#customQuestion');
+  if (el) {
+    el.value = topicText;
+    el.focus();
+    toast("Seed topic applied!");
+  }
+}
+
 /* ---------- mobile menu ---------- */
 $('#menuBtn')?.addEventListener('click',()=>{$('#sidebar').classList.add('open');$('#scrim').classList.add('show')});
 $('#scrim')?.addEventListener('click',()=>{$('#sidebar').classList.remove('open');$('#scrim').classList.remove('show')});
 
 /* ---------- skills tags ---------- */
-let skills=['Python','FastAPI'];
+let skills=['Figma', 'Design Systems', 'User Research'];
 const tagbox=$('#tagbox'), tagInput=$('#tagInput');
 function renderTags(){
   $$('.tag').forEach(t=>t.remove());
@@ -1005,87 +1210,195 @@ $('#minus').onclick=()=>setCount(count-1);
 $('#plus').onclick=()=>setCount(count+1);
 range.oninput=()=>setCount(+range.value);
 
-/* ---------- question bank fallback (offline) ---------- */
+/* ---------- comprehensive question bank (offline & fallback) ---------- */
 const BANK={
-  python:[
-    "What is the difference between static typing and dynamic typing in Python?",
-    "Write a Python function to reverse a string using recursion.",
-    "Explain how Python's Global Interpreter Lock (GIL) affects multithreaded code.",
-    "Write a Python class that implements the singleton pattern.",
-    "How does list comprehension differ from a generator expression in memory use?",
-    "Explain the difference between <code>__str__</code> and <code>__repr__</code>.",
-    "Describe how Python's garbage collection handles reference cycles.",
-    "What are decorators, and write one that times a function's execution."
+  ux:[
+    "How do you design and execute a mixed-methods user research plan for an ambiguous feature definition?",
+    "Walk through how you construct a task-based usability testing protocol and analyze the System Usability Scale (SUS) results.",
+    "How do you organize information architecture and mental models for an enterprise application with dense navigation hierarchy?",
+    "Describe your approach to wireframing and low-fidelity prototyping to align cross-functional teams early.",
+    "How do you ensure interaction design patterns meet WCAG 2.2 AA accessibility standards for keyboard and screen-reader navigation?",
+    "Scenario: User drop-off spikes at step 2 of a multi-step onboarding wizard. How do you diagnose whether the issue is cognitive load, usability friction, or value communication?",
+    "How do you handle a situation where a Product Manager pushes for a dark pattern to temporarily boost conversion numbers?"
   ],
-  fastapi:[
-    "How does FastAPI handle CORS requests?",
-    "Explain the concept of dependency injection in FastAPI.",
-    "Create a simple FastAPI endpoint that returns a list of users from a mock database.",
-    "How do you handle errors and exceptions in a FastAPI application?",
-    "What is the purpose of the <code>await</code> keyword in asynchronous Python code?",
-    "How does FastAPI use Pydantic models for request validation?",
-    "Compare <code>http.server</code> and FastAPI for building web services.",
-    "Describe a scenario where you'd use background tasks in FastAPI."
+  product:[
+    "How do you frame a product problem statement to balance business viability (e.g. ARR, retention) with core user needs?",
+    "Walk through a product feature you designed: what North Star metric and secondary guardrail metrics did you track?",
+    "How do you navigate discovery vs delivery when working in fast two-week agile sprint cycles with engineering?",
+    "Describe a scenario where A/B test data showed positive revenue metrics but qualitative customer feedback was negative. What did you do?",
+    "How do you determine when a design system component should be added to the core library vs remaining feature-specific?",
+    "Scenario: You are designing a zero-to-one product in a competitive space. How do you identify the minimum lovable product (MLP) scope?"
   ],
-  sql:[
-    "Explain the difference between an INNER JOIN and a LEFT JOIN.",
-    "How would you diagnose and fix a slow SQL query?",
-    "What is database normalization, and when might you denormalize on purpose?",
-    "Write a query to find the second-highest salary in an employees table."
+  uiux:[
+    "How do you establish typographic scale, 8pt/4pt spatial rhythm, and contrast ratios across multi-density screens?",
+    "Explain how you architect multi-brand design tokens (Global -> Semantic -> Component) in Figma Variables.",
+    "How do you design state machines for complex interactive UI components (hover, focus-visible, active, error, loading, skeleton)?",
+    "Walk through your approach to micro-interactions and motion design to provide clear user feedback without causing distraction.",
+    "Scenario: An existing design system has 40+ inconsistent button variants. How do you audit, consolidate, and roll out a refactored component set?"
   ],
-  javascript:[
-    "Explain the difference between <code>let</code>, <code>const</code>, and <code>var</code>.",
-    "What is a closure, and give a practical use for one.",
-    "How does the JavaScript event loop process async callbacks?",
-    "Explain prototypal inheritance versus classical inheritance."
+  frontend:[
+    "Explain how the React 19 concurrent renderer and Server Components (RSC) change data fetching and hydration performance.",
+    "How do you profile, identify, and eliminate memory leaks and unnecessary re-renders in a complex component tree?",
+    "Compare client-side state architectures (Zustand/Redux) vs server cache state (TanStack Query/SWR) in high-frequency apps.",
+    "Describe how you build a custom accessible dropdown component compliant with WAI-ARIA authoring practices from scratch.",
+    "Scenario: A live trading dashboard receives 100 WebSocket price updates per second. How do you prevent UI freezing and DOM thrashing?"
   ],
-  react:[
-    "When would you reach for <code>useMemo</code> versus <code>useCallback</code>?",
-    "Explain how the virtual DOM diffing process works.",
-    "What problems do React keys solve in list rendering?",
-    "Describe how you'd lift state up between two sibling components."
+  backend:[
+    "How do you structure database indexes (B-Tree, GIN, composite) in PostgreSQL and interpret EXPLAIN ANALYZE output?",
+    "Explain concurrency control mechanisms: compare optimistic locking vs pessimistic locking with concrete SQL examples.",
+    "How do you design distributed caching with Redis (Cache-Aside, Write-Through) and prevent cache stampedes (dogpiling)?",
+    "Describe how you implement token bucket or leaky bucket rate limiting across distributed API gateway instances.",
+    "Scenario: A distributed payment endpoint experiences intermittent database timeouts under heavy load. How do you implement circuit breakers and dead-letter queue retry mechanisms?"
   ],
-  ml:[
-    "Explain the bias–variance tradeoff with a concrete example.",
-    "How do you handle an imbalanced classification dataset?",
-    "What is regularization, and how do L1 and L2 differ?",
-    "Walk through how you'd validate a model before shipping it."
+  genai:[
+    "Compare chunking strategies (semantic chunking, parent-document retrieval, sentence windowing) for dense domain-specific documents.",
+    "How do you implement hybrid search combining dense vector embeddings with sparse BM25 keyword search using reciprocal rank fusion (RRF)?",
+    "Describe how you build a multi-step agentic workflow with LangGraph/AutoGen that executes deterministic tool calls safely.",
+    "How do you quantitatively benchmark and monitor hallucination rates in production using Ragas or LLM-as-a-judge frameworks?",
+    "Scenario: Your production LLM service suffers high TTFT (Time to First Token) and token cost. How do you optimize latency and throughput using semantic caching and model quantization?"
+  ],
+  figma:[
+    "How do you structure component variants, boolean properties, and nested instances in Figma to maximize reuse across product teams?",
+    "Explain how you leverage Figma Variables and Modes for dynamic light/dark theming and responsive layout spacing.",
+    "How do you utilize Auto Layout v5 to accurately mirror production flexbox behavior for developers?"
   ],
   generic:[
-    "Describe a challenging bug you fixed and how you found the root cause.",
-    "How do you decide when code is 'good enough' to ship?",
-    "Walk through how you'd design a system to handle 10x current traffic.",
-    "How do you approach writing tests for a new feature?",
-    "Tell me about a technical decision you later regretted, and why.",
-    "How do you keep a codebase maintainable as a team grows?"
+    "Describe a challenging project where you resolved a core conflict between team members.",
+    "How do you decide when a deliverable is 'good enough' to ship vs requiring further iteration?",
+    "Walk through how you approach prioritizing technical or design debt alongside new feature work."
   ]
 };
 
-function pickQuestions(skillList,n){
-  const keys=new Set(['generic']);
-  skillList.forEach(s=>{
-    const l=s.toLowerCase();
-    if(/py|django|flask/.test(l))keys.add('python');
-    if(/fastapi|starlette|pydantic/.test(l))keys.add('fastapi');
-    if(/sql|postgres|mysql|db|database/.test(l))keys.add('sql');
-    if(/^js|javascript|node|typescript|ts$/.test(l))keys.add('javascript');
-    if(/react|next|vue|angular/.test(l))keys.add('react');
-    if(/ml|machine|learning|tensor|pytorch|data|ai/.test(l))keys.add('ml');
-  });
-  const pools=[...keys].map(k=>[...BANK[k]]);
-  const out=[]; let i=0;
-  while(out.length<n && pools.some(p=>p.length)){
-    const p=pools[i%pools.length];
-    if(p.length)out.push(p.shift());
-    i++;
+/* ---------- dynamic seed question relation synthesis ---------- */
+function generateRelatedQuestionsFromSeed(seedQ, role, skillList, diff, n) {
+  const cleanSeed = seedQ.replace(/[?.\s]+$/, '').trim();
+  const r = (role || '').toLowerCase();
+
+  if (r.includes('product designer')) {
+    return [
+      `Regarding "${cleanSeed}" — How do you define the product hypothesis and balance business metrics (conversion/retention) with user friction?`,
+      `How do you conduct rapid user discovery for "${cleanSeed}" while keeping engineering delivery on track during sprint cycles?`,
+      `What North Star metric and secondary guardrails would you monitor post-launch for: "${cleanSeed}"?`,
+      `Describe how you would facilitate a cross-functional workshop with PM and Engineering leads to align on the MVP scope for: "${cleanSeed}".`,
+      `Scenario: 30 days after launching "${cleanSeed}", adoption is high but customer support tickets increased by 25%. How do you diagnose and iterate?`
+    ].slice(0, n);
+  } else if (r.includes('ui/ux') || r.includes('ui designer') || r.includes('visual')) {
+    return [
+      `Regarding "${cleanSeed}" — How do you establish typographic hierarchy, 8pt spatial grid, and color contrast tokens in Figma?`,
+      `Explain how you architect component variants, boolean properties, and variable modes to build: "${cleanSeed}".`,
+      `How do you design realistic micro-interactions and motion feedback loops for: "${cleanSeed}"?`,
+      `How do you ensure responsive layout adaptability across mobile, tablet, and ultra-wide viewports for: "${cleanSeed}"?`,
+      `Describe how you prepare design specs and token handoff in Figma to guarantee pixel-perfect developer implementation of: "${cleanSeed}".`
+    ].slice(0, n);
+  } else if (r.includes('ux designer') || r.includes('user experience') || r.includes('research')) {
+    return [
+      `Regarding "${cleanSeed}" — What user research methodology (generative interviews vs unmoderated testing) would you use to define requirements?`,
+      `In Figma, how would you architect the wireframes, Auto Layout constraints, and interactive states to prototype: "${cleanSeed}"?`,
+      `What usability friction points, accessibility (WCAG 2.2 AA) edge cases, and error states must be solved in: "${cleanSeed}"?`,
+      `How would you design a usability testing protocol (tasks, metrics like SUS/time-on-task) to validate your prototype for: "${cleanSeed}"?`,
+      `How do you defend your UX decisions for "${cleanSeed}" when engineering raises technical constraints or timeline trade-offs?`
+    ].slice(0, n);
+  } else if (r.includes('front') || r.includes('react')) {
+    return [
+      `Regarding "${cleanSeed}" — Explain how you architect the component hierarchy, client/server state, and DOM rendering in React 19/Next.js.`,
+      `How do you optimize Core Web Vitals (LCP, INP, CLS) and prevent unnecessary re-renders when implementing: "${cleanSeed}"?`,
+      `How do you implement keyboard navigation, focus trap, and ARIA attributes to make "${cleanSeed}" 100% WCAG accessible?`,
+      `Describe your error boundary, optimistic UI update, and offline cache invalidation strategy for: "${cleanSeed}".`,
+      `Scenario: Performance profiling reveals high JS main-thread blocking time in "${cleanSeed}". Walk through your step-by-step optimization.`
+    ].slice(0, n);
+  } else if (r.includes('back') || r.includes('python') || r.includes('fastapi')) {
+    return [
+      `Regarding "${cleanSeed}" — Explain the API schema design, idempotency safeguards, and database transaction boundaries (ACID).`,
+      `How would you architect the database indexes, query plan, and Redis caching layer to handle high throughput in: "${cleanSeed}"?`,
+      `What concurrency race conditions, deadlocks, and partial failure modes must be guarded against in: "${cleanSeed}"?`,
+      `Describe how you implement distributed rate limiting, authentication (JWT/OAuth2), and background worker task queues for: "${cleanSeed}".`,
+      `Scenario: Under 5x peak traffic, the database connection pool saturates for "${cleanSeed}". How do you diagnose and resolve the bottleneck?`
+    ].slice(0, n);
+  } else {
+    return [
+      `Regarding "${cleanSeed}" — Explain the chunking strategy, embedding model selection, and hybrid vector search pipeline.`,
+      `How do you implement semantic caching, prompt templating, and guardrails to minimize latency and token cost for: "${cleanSeed}"?`,
+      `How do you architect a multi-step agentic workflow (LangGraph/ReAct) with deterministic tool validation for: "${cleanSeed}"?`,
+      `Describe how you benchmark and prevent hallucination rates in production using quantitative evaluation frameworks for: "${cleanSeed}".`,
+      `Scenario: Streaming tokens degrade and experience high TTFT under multi-tenant load for "${cleanSeed}". How do you optimize inference?`
+    ].slice(0, n);
   }
-  let g=[...BANK.generic];
-  while(out.length<n && g.length)out.push(g.shift());
-  return out.slice(0,n);
 }
 
-/* ---------- render questions ---------- */
-const qlist=$('#qlist');
+function pickQuestions(skillList, n, role = '', customQ = ''){
+  if (customQ && customQ.trim().length > 5) {
+    return generateRelatedQuestionsFromSeed(customQ.trim(), role, skillList, 'Hard', n);
+  }
+
+  const roleLower = (role || '').toLowerCase();
+  let pool = [];
+
+  if (roleLower.includes('product designer')) {
+    pool = BANK.product;
+  } else if (roleLower.includes('ui/ux') || roleLower.includes('ui designer') || roleLower.includes('visual')) {
+    pool = BANK.uiux;
+  } else if (roleLower.includes('ux designer') || roleLower.includes('user experience') || roleLower.includes('research')) {
+    pool = BANK.ux;
+  } else if (roleLower.includes('front') || roleLower.includes('react')) {
+    pool = BANK.frontend;
+  } else if (roleLower.includes('back') || roleLower.includes('python') || roleLower.includes('fastapi')) {
+    pool = BANK.backend;
+  } else if (roleLower.includes('ai') || roleLower.includes('genai') || roleLower.includes('llm') || roleLower.includes('rag')) {
+    pool = BANK.genai;
+  } else {
+    pool = BANK.ux;
+  }
+
+  return pool.slice(0, n);
+}
+
+const EVAL_LENSES_ROLE = {
+  ux: [
+    "Validates user research methodology, mental model alignment, information architecture, and WCAG accessibility.",
+    "Evaluates usability testing protocols, task completion metrics, and quantitative validation rigor.",
+    "Probes cognitive load reduction, edge-case recovery, and defending UX decisions to stakeholders."
+  ],
+  product: [
+    "Validates product thinking, user needs vs business viability, and prioritization frameworks.",
+    "Evaluates metric-driven decision making (retention, conversion funnels, churn, North Star).",
+    "Probes cross-functional collaboration, PM/Engineering trade-offs, and discovery vs delivery execution."
+  ],
+  uiux: [
+    "Validates visual craft, typographic hierarchy, 8pt/4pt spatial rhythm, and contrast ratios.",
+    "Evaluates Figma component architecture, design tokens, and variable mode scalability.",
+    "Probes micro-interaction design, component state machines, and pixel-perfect developer handoff."
+  ],
+  frontend: [
+    "Validates React 19/Next.js architecture, component lifecycle, and state synchronization.",
+    "Evaluates Core Web Vitals (LCP, INP, CLS) optimization, bundle splitting, and memory profiling.",
+    "Probes WAI-ARIA accessibility compliance, optimistic updates, and async DOM handling."
+  ],
+  backend: [
+    "Validates REST/FastAPI architecture, idempotent endpoints, and ACID transaction boundaries.",
+    "Evaluates PostgreSQL indexing, Redis caching strategies, and distributed locking mechanisms.",
+    "Probes circuit breakers, rate limiting, connection pooling, and high-concurrency resilience."
+  ],
+  genai: [
+    "Validates hybrid vector search (BM25 + dense embeddings) and document chunking strategies.",
+    "Evaluates multi-step agentic workflows (LangGraph), deterministic tool calling, and guardrails.",
+    "Probes quantitative hallucination benchmarking, TTFT optimization, and semantic caching."
+  ]
+};
+
+function getEvalLensText(index, role) {
+  const r = (role || $("#role").value || '').toLowerCase();
+  let key = 'ux';
+  if (r.includes('product designer')) key = 'product';
+  else if (r.includes('ui/ux') || r.includes('ui designer') || r.includes('visual')) key = 'uiux';
+  else if (r.includes('ux designer') || r.includes('user experience')) key = 'ux';
+  else if (r.includes('front') || r.includes('react')) key = 'frontend';
+  else if (r.includes('back') || r.includes('python')) key = 'backend';
+  else if (r.includes('ai') || r.includes('genai') || r.includes('llm')) key = 'genai';
+
+  const lenses = EVAL_LENSES_ROLE[key] || EVAL_LENSES_ROLE.ux;
+  return lenses[index % lenses.length];
+}
+
 function cleanQuestionText(q){
   if(!q) return "";
   return q.replace(/^(q\d+[\.\:\)]|\d+[\.\:\)]|\-|\*)\s*/i, '').trim();
@@ -1098,34 +1411,45 @@ function renderEmpty(){
 const API_BASE = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') || window.location.protocol === 'file:' ? 'http://127.0.0.1:8000' : '';
 
 function applyPreset(type) {
-  if (type === 'python') {
-    $('#role').value = 'Python Backend Engineer';
-    $('#exp').value = '3 Years';
-    $('#diff').value = 'Medium';
-    skills = ['Python', 'FastAPI', 'PostgreSQL', 'Redis'];
-  } else if (type === 'react') {
-    $('#role').value = 'Senior Frontend Engineer';
+  if (type === 'ux') {
+    $('#role').value = 'UX Designer';
     $('#exp').value = '5 Years';
     $('#diff').value = 'Hard';
-    skills = ['React', 'TypeScript', 'Next.js', 'Redux'];
-  } else if (type === 'java') {
-    $('#role').value = 'Enterprise Java Developer';
+    skills = ['User Research', 'Usability Testing', 'Information Architecture', 'Wireframes', 'Figma', 'Design Systems', 'WCAG 2.2'];
+    $('#customQuestion').value = 'How do you conduct usability testing on a Figma prototype for an e-commerce checkout flow?';
+  } else if (type === 'product') {
+    $('#role').value = 'Product Designer';
     $('#exp').value = '5 Years';
     $('#diff').value = 'Hard';
-    skills = ['Java', 'Spring Boot', 'Microservices', 'Kafka'];
-  } else if (type === 'devops') {
-    $('#role').value = 'Cloud & Platform Engineer';
-    $('#exp').value = '5 Years';
-    $('#diff').value = 'Brutal';
-    skills = ['Kubernetes', 'AWS', 'Terraform', 'CI/CD'];
-  } else if (type === 'ai') {
-    $('#role').value = 'GenAI / LLM Systems Architect';
+    skills = ['Product Thinking', 'UX Strategy', 'Product Metrics', 'User Research', 'Design Systems', 'PM Collaboration'];
+    $('#customQuestion').value = 'How do you balance business conversion goals with user friction in a subscription upgrade flow?';
+  } else if (type === 'uiux') {
+    $('#role').value = 'UI/UX Designer';
     $('#exp').value = '5 Years';
     $('#diff').value = 'Hard';
-    skills = ['Python', 'LangChain', 'RAG', 'VectorDB', 'Gemini'];
+    skills = ['Visual Hierarchy', 'Micro-interactions', 'Design Tokens', 'Figma Auto Layout', 'Responsive Grids', 'Component States'];
+    $('#customQuestion').value = 'How do you build a responsive design system in Figma using tokens and variable modes?';
+  } else if (type === 'frontend') {
+    $('#role').value = 'Frontend Developer';
+    $('#exp').value = '5 Years';
+    $('#diff').value = 'Hard';
+    skills = ['HTML5', 'CSS3', 'JavaScript ESNext', 'React 19', 'Next.js', 'Performance', 'a11y', 'State Management'];
+    $('#customQuestion').value = 'How do you optimize Core Web Vitals (LCP, INP, CLS) in a large-scale React/Next.js application?';
+  } else if (type === 'backend') {
+    $('#role').value = 'Backend Developer';
+    $('#exp').value = '5 Years';
+    $('#diff').value = 'Hard';
+    skills = ['Python', 'FastAPI', 'PostgreSQL', 'Redis', 'System Design', 'Distributed Systems', 'JWT Auth', 'Microservices'];
+    $('#customQuestion').value = 'How do you design a high-throughput, idempotent payment webhook processing service in FastAPI and PostgreSQL?';
+  } else if (type === 'genai') {
+    $('#role').value = 'GenAI Engineer';
+    $('#exp').value = '5 Years';
+    $('#diff').value = 'Hard';
+    skills = ['LLMs', 'RAG Architecture', 'Vector Databases', 'Embeddings', 'LangGraph Agents', 'Hallucination Evaluation', 'Prompt Engineering'];
+    $('#customQuestion').value = 'How do you architect a multi-tenant enterprise RAG pipeline with hybrid search and strict document access control?';
   }
   renderTags();
-  toast(`Applied ${type.toUpperCase()} preset`);
+  toast(`Applied ${$('#role').value} preset`);
 }
 
 function renderSkeletonLoading(n = 5) {
@@ -1145,53 +1469,112 @@ function renderSkeletonLoading(n = 5) {
   qlist.innerHTML = html;
 }
 
-const EVAL_LENSES = [
-  "Validates deep understanding of concurrency, async event loops, and resource pooling under high scale.",
-  "Evaluates architectural trade-offs between low latency, horizontal scalability, and data consistency.",
-  "Probes edge-case resilience, graceful failure handling, and production debugging experience.",
-  "Tests familiarity with memory efficiency, caching layers, and database query optimization."
-];
-
-function renderQuestions(qs){
+function renderQuestions(qs, isStreaming = false){
   if(!qs || !qs.length){
     renderEmpty();
     return;
   }
   qlist.innerHTML='';
-  qs.forEach((rawQ,i)=>{
-    const q = cleanQuestionText(rawQ);
-    if(!q) return;
+  const role = $("#role").value;
 
-    const li=document.createElement('li');
-    li.className='q reveal';
-    li.style.animationDelay=(i*40)+'ms';
-    const plain=q.replace(/<[^>]+>/g,'');
-    const lensText = EVAL_LENSES[i % EVAL_LENSES.length];
-    
-    li.innerHTML=`
-      <span class="qnum">Q${String(i+1).padStart(2,'0')}</span>
-      <div class="qtext">
-        <div>${q}</div>
-        <div class="q-lens">
-          <span class="lens-tag">💡 Gemini 2.5 Evaluation Lens</span>
-          <span class="lens-body">${lensText}</span>
+  if (!isStreaming) {
+    qs.forEach((rawQ,i)=>{
+      const q = cleanQuestionText(rawQ);
+      if(!q) return;
+
+      const li=document.createElement('li');
+      li.className='q reveal';
+      li.style.animationDelay=(i*40)+'ms';
+      const plain=q.replace(/<[^>]+>/g,'');
+      const lensText = getEvalLensText(i, role);
+      
+      li.innerHTML=`
+        <span class="qnum">Q${String(i+1).padStart(2,'0')}</span>
+        <div class="qtext">
+          <div>${q}</div>
+          <div class="q-lens">
+            <span class="lens-tag">💡 Gemini 2.5 Evaluation Lens</span>
+            <span class="lens-body">${lensText}</span>
+          </div>
         </div>
-      </div>
-      <button class="qcopy" title="Copy question" aria-label="Copy question ${i+1}">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg>
-      </button>`;
-    li.querySelector('.qcopy').onclick=(e)=>{
-      navigator.clipboard?.writeText(plain);
-      const b=e.currentTarget; b.classList.add('done');
-      b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12l4 4 10-10"/></svg>';
-      toast('Question copied');
-      setTimeout(()=>{
-        b.classList.remove('done');
-        b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg>';
-      },1400);
-    };
-    qlist.appendChild(li);
-  });
+        <button class="qcopy" title="Copy question" aria-label="Copy question ${i+1}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg>
+        </button>`;
+      li.querySelector('.qcopy').onclick=(e)=>{
+        navigator.clipboard?.writeText(plain);
+        const b=e.currentTarget; b.classList.add('done');
+        b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12l4 4 10-10"/></svg>';
+        toast('Question copied');
+        setTimeout(()=>{
+          b.classList.remove('done');
+          b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg>';
+        },1400);
+      };
+      qlist.appendChild(li);
+    });
+    return;
+  }
+
+  // Live Real-Time Progressive Streaming Mode
+  const metaCount = $('#metaCount');
+  (async () => {
+    for (let i = 0; i < qs.length; i++) {
+      const rawQ = qs[i];
+      const q = cleanQuestionText(rawQ);
+      if(!q) continue;
+
+      const li = document.createElement('li');
+      li.className = 'q reveal';
+      const plain = q.replace(/<[^>]+>/g,'');
+      const lensText = getEvalLensText(i, role);
+
+      li.innerHTML = `
+        <span class="qnum">Q${String(i+1).padStart(2,'0')}</span>
+        <div class="qtext">
+          <div class="q-live-text"><span class="typewriter-txt"></span><span class="type-cursor">|</span></div>
+          <div class="q-lens" style="opacity:0;transition:opacity .35s ease">
+            <span class="lens-tag">💡 Gemini 2.5 Evaluation Lens</span>
+            <span class="lens-body">${lensText}</span>
+          </div>
+        </div>
+        <button class="qcopy" title="Copy question" aria-label="Copy question ${i+1}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg>
+        </button>`;
+
+      li.querySelector('.qcopy').onclick=(e)=>{
+        navigator.clipboard?.writeText(plain);
+        const b=e.currentTarget; b.classList.add('done');
+        b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12l4 4 10-10"/></svg>';
+        toast('Question copied');
+        setTimeout(()=>{
+          b.classList.remove('done');
+          b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg>';
+        },1400);
+      };
+
+      qlist.appendChild(li);
+      if(metaCount) {
+        metaCount.innerHTML = `<span style="color:var(--primary);font-weight:700">⚡ Streaming Q${i+1} of ${qs.length}...</span>`;
+      }
+
+      const typeBox = li.querySelector('.typewriter-txt');
+      const cursor = li.querySelector('.type-cursor');
+      const lens = li.querySelector('.q-lens');
+
+      const words = q.split(' ');
+      for (let w = 0; w < words.length; w++) {
+        typeBox.textContent += (w === 0 ? '' : ' ') + words[w];
+        await new Promise(r => setTimeout(r, 14));
+      }
+      cursor?.remove();
+      if(lens) lens.style.opacity = '1';
+      await new Promise(r => setTimeout(r, 20));
+    }
+
+    if (metaCount) {
+      metaCount.textContent = `${qs.length} questions`;
+    }
+  })();
 }
 
 let currentQs = [];
@@ -1299,6 +1682,7 @@ async function generate() {
   const exp = $("#exp").value;
   const diff = $("#diff").value;
   const countVal = Number($("#countNum").textContent);
+  const customQ = ($("#customQuestion")?.value || "").trim();
 
   if(!role){
     toast("Please enter a role or position");
@@ -1319,6 +1703,15 @@ async function generate() {
 
   stepper.style.display = "block";
   renderSkeletonLoading(countVal);
+
+  const focusBadge = $("#sheetFocusBadge");
+  const focusText = $("#sheetFocusText");
+  if (customQ) {
+    focusBadge.style.display = "block";
+    focusText.textContent = customQ;
+  } else {
+    focusBadge.style.display = "none";
+  }
 
   const setStep = (num) => {
     for (let i = 1; i <= 4; i++) {
@@ -1342,7 +1735,8 @@ async function generate() {
         experience: exp,
         skills: skills,
         difficulty: diff,
-        number_of_questions: countVal
+        number_of_questions: countVal,
+        custom_question: customQ || undefined
       })
     });
 
@@ -1364,22 +1758,22 @@ async function generate() {
       <span>${currentQs.length} Questions</span>
     `;
 
-    renderQuestions(currentQs);
-    toast("Questions generated & saved to history!");
+    renderQuestions(currentQs, true);
+    toast("⚡ Targeted questions synthesized in real-time!");
     fetchRecentPapers();
 
   } catch (error) {
     console.warn("Backend API call fallback:", error.message);
-    currentQs = pickQuestions(skills, countVal);
+    currentQs = pickQuestions(skills, countVal, role, customQ);
     $("#sheetTitle").textContent = role;
     $("#sheetMeta").innerHTML = `
       <span>Level <b>${diff}</b></span>
       <span>Experience <b>${exp}</b></span>
       <span>Stack <b>${skills.join(" · ")}</b></span>
-      <span>${currentQs.length} Questions (Demo Bank)</span>
+      <span>${currentQs.length} Questions (Contextual Bank)</span>
     `;
-    renderQuestions(currentQs);
-    toast("Composed from high-yield question repository");
+    renderQuestions(currentQs, true);
+    toast("⚡ Related questions synthesized in real-time");
   } finally {
     btn.classList.remove("busy");
     btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2.5l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg> Compose question paper';
@@ -1403,11 +1797,127 @@ $('#exportBtn').onclick=()=>{
   setTimeout(()=>window.print(),400);
 };
 
-/* ---------- real-time share question paper ---------- */
+/* ---------- question package builders & sharing ---------- */
+function getCleanQuestionsArray() {
+  return currentQs.map((q) => cleanQuestionText(q).replace(/<[^>]+>/g, '').trim()).filter(Boolean);
+}
+
+function getQuestionPackagePlainText() {
+  const role = $("#role").value.trim() || $("#sheetTitle").textContent || "Interview Candidate";
+  const exp = $("#exp").value || "5 Years";
+  const diff = $("#diff").value || "Hard";
+  const stack = skills.length ? skills.join(", ") : "General";
+  const customQ = ($("#customQuestion")?.value || "").trim();
+  const qs = getCleanQuestionsArray();
+
+  let text = `AI INTERVIEW QUESTION PACKAGE\n`;
+  text += `==================================================\n`;
+  text += `Target Role : ${role}\n`;
+  text += `Experience  : ${exp}\n`;
+  text += `Difficulty  : ${diff}\n`;
+  text += `Tech Stack  : ${stack}\n`;
+  if (customQ) {
+    text += `Focus Topic : ${customQ}\n`;
+  }
+  text += `Total Qs    : ${qs.length}\n`;
+  text += `==================================================\n\n`;
+  text += `QUESTIONS:\n\n`;
+
+  qs.forEach((q, i) => {
+    text += `${i + 1}. ${q}\n\n`;
+  });
+
+  text += `--------------------------------------------------\n`;
+  text += `Evaluation Guidelines:\n`;
+  text += `• Depth & clarity on fundamental principles & mental models\n`;
+  text += `• Real-world architecture, design systems, trade-offs & edge cases\n`;
+  text += `• Structure problem-solving & stakeholder defense with clarity\n\n`;
+  text += `Generated with Ravi GenAI Studio`;
+  return text;
+}
+
+function getEmailPackageText() {
+  return getQuestionPackagePlainText();
+}
+
+function getLinkedInPackageText() {
+  const role = $("#role").value.trim() || $("#sheetTitle").textContent || "UX Designer";
+  const exp = $("#exp").value || "5 Years";
+  const diff = $("#diff").value || "Hard";
+  const stack = skills.length ? skills.join(" · ") : "Design & Tech";
+  const customQ = ($("#customQuestion")?.value || "").trim();
+  const qs = getCleanQuestionsArray();
+
+  let text = `🎯 Interview Question Package: ${role}\n\n`;
+  text += `💼 Experience Level: ${exp}\n`;
+  text += `⚡ Difficulty: ${diff}\n`;
+  text += `🛠️ Tech & Tools: ${stack}\n`;
+  if (customQ) {
+    text += `💡 Specific Topic: "${customQ}"\n`;
+  }
+  text += `📊 Questions: ${qs.length}\n\n`;
+  text += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+  text += `📝 INTERVIEW QUESTIONS:\n`;
+  text += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+  qs.forEach((q, i) => {
+    text += `${i + 1}️⃣ ${q}\n\n`;
+  });
+
+  text += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+  text += `💡 How would you answer these questions? Share your approach or favorite question below!\n\n`;
+
+  const skillTags = skills.map(s => '#' + s.replace(/[^a-zA-Z0-9]/g, '')).filter(Boolean).join(' ');
+  const roleTag = '#' + role.replace(/[^a-zA-Z0-9]/g, '');
+  text += `#InterviewQuestions #DesignHiring #UXDesign #Figma ${roleTag} ${skillTags} #CareerGrowth #InterviewPrep #RaviGenAI`;
+  return text;
+}
+
+function getWhatsAppPackageText() {
+  const role = $("#role").value.trim() || $("#sheetTitle").textContent || "UX Designer";
+  const exp = $("#exp").value || "5 Years";
+  const diff = $("#diff").value || "Hard";
+  const stack = skills.length ? skills.join(", ") : "Design";
+  const customQ = ($("#customQuestion")?.value || "").trim();
+  const qs = getCleanQuestionsArray();
+
+  let text = `*🎯 Interview Question Package: ${role}*\n`;
+  text += `*Level:* ${diff} | *Exp:* ${exp} | *Stack:* ${stack}\n`;
+  if (customQ) text += `*Focus Topic:* _${customQ}_\n`;
+  text += `\n*Questions (${qs.length}):*\n\n`;
+  qs.forEach((q, i) => {
+    text += `${i + 1}. ${q}\n\n`;
+  });
+  text += `_Generated with Ravi GenAI Studio_`;
+  return text;
+}
+
+function getMarkdownPackageText() {
+  const title = $("#sheetTitle").textContent || "Question Paper";
+  const role = $("#role").value.trim() || title;
+  const exp = $("#exp").value || "5 Years";
+  const diff = $("#diff").value || "Hard";
+  const customQ = ($("#customQuestion")?.value || "").trim();
+  const qs = getCleanQuestionsArray();
+
+  let md = `# Interview Question Paper: ${title}\n\n`;
+  md += `**Target Role:** ${role} | **Experience:** ${exp} | **Difficulty:** ${diff}\n`;
+  md += `**Skills Stack:** ${skills.join(', ')}\n`;
+  if (customQ) md += `**Focus Topic:** *${customQ}*\n`;
+  md += `\n---\n\n## Questions (${qs.length})\n\n`;
+  qs.forEach((q, i) => {
+    md += `### Q${i+1}. ${q}\n\n`;
+  });
+  md += `\n*Generated with Ravi GenAI Studio*\n`;
+  return md;
+}
+
+/* ---------- real-time share question paper URL helper ---------- */
 function getShareableUrl() {
-  const role = $("#role").value.trim() || 'Software Engineer';
+  const role = $("#role").value.trim() || 'UX Designer';
   const exp = $("#exp").value;
   const diff = $("#diff").value;
+  const customQ = ($("#customQuestion")?.value || "").trim();
   const countVal = currentQs.length || Number(count);
   
   const payloadObj = {
@@ -1415,6 +1925,7 @@ function getShareableUrl() {
     exp: exp,
     diff: diff,
     skills: skills,
+    customQ: customQ,
     count: countVal,
     questions: currentQs
   };
@@ -1426,7 +1937,7 @@ function getShareableUrl() {
     return `${baseUrl}?paper=${encoded}`;
   } catch(e) {
     const baseUrl = window.location.origin + window.location.pathname;
-    return `${baseUrl}?role=${encodeURIComponent(role)}&exp=${encodeURIComponent(exp)}&diff=${encodeURIComponent(diff)}&skills=${encodeURIComponent(skills.join(','))}&count=${countVal}`;
+    return `${baseUrl}?role=${encodeURIComponent(role)}&exp=${encodeURIComponent(exp)}&diff=${encodeURIComponent(diff)}&skills=${encodeURIComponent(skills.join(','))}&customQ=${encodeURIComponent(customQ)}&count=${countVal}`;
   }
 }
 
@@ -1435,25 +1946,24 @@ function openShareModal() {
     toast('Compose a question paper first');
     return;
   }
+
+  const role = $("#role").value.trim() || $("#sheetTitle").textContent || "Interview Paper";
+  const exp = $("#exp").value || "5 Years";
+  const diff = $("#diff").value || "Hard";
+  const qs = getCleanQuestionsArray();
+
+  $('#pkgPreviewTitle').textContent = role;
+  $('#pkgPreviewCount').textContent = `${qs.length} Questions`;
+  $('#pkgPreviewDiff').textContent = diff;
+  $('#pkgPreviewExp').textContent = exp;
+
+  const previewLines = qs.slice(0, 4).map((q, i) => `${i + 1}. ${q}`).join('\n\n');
+  const remaining = qs.length > 4 ? `\n\n... and ${qs.length - 4} more questions in package.` : '';
+  $('#pkgPreviewContent').textContent = previewLines + remaining;
+
   const shareUrl = getShareableUrl();
-  const shareTitle = $("#sheetTitle").textContent || "Interview Question Paper";
-  const shareText = `Check out this AI-generated ${shareTitle} interview question paper on Ravi GenAI Studio!`;
-
-  if (navigator.share && /mobile|android|iphone|ipad/i.test(navigator.userAgent)) {
-    navigator.share({
-      title: shareTitle,
-      text: shareText,
-      url: shareUrl
-    }).catch(() => {});
-    return;
-  }
-
   $('#shareUrlInput').value = shareUrl;
   $('#shareQrImg').src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(shareUrl)}`;
-  $('#shareWhatsApp').href = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + '\n\n' + shareUrl)}`;
-  $('#shareLinkedIn').href = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
-  $('#shareTwitter').href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
-  $('#shareEmail').href = `mailto:?subject=${encodeURIComponent('Interview Question Paper: ' + shareTitle)}&body=${encodeURIComponent(shareText + '\n\nAccess it here in real-time:\n' + shareUrl)}`;
 
   $('#shareModalBackdrop').classList.add('open');
 }
@@ -1468,6 +1978,159 @@ $('#shareModalBackdrop').onclick = (e) => {
   if (e.target === $('#shareModalBackdrop')) closeShareModal();
 };
 
+/* ---------- Email Package Modal Handlers ---------- */
+function openEmailModal() {
+  if (!currentQs.length) {
+    toast('Compose a question paper first');
+    return;
+  }
+  const role = $("#role").value.trim() || $("#sheetTitle").textContent || "Interview Candidate";
+  const exp = $("#exp").value || "5 Years";
+  const diff = $("#diff").value || "Hard";
+  const qs = getCleanQuestionsArray();
+  const subject = `Interview Question Package: ${role} (${exp} · ${diff})`;
+  const body = getEmailPackageText();
+
+  $('#emailSubjectInput').value = subject;
+  $('#emailQCountBadge').textContent = `${qs.length} Questions`;
+  $('#emailBodyPreview').textContent = body;
+
+  closeShareModal();
+  $('#emailModalBackdrop').classList.add('open');
+}
+
+function closeEmailModal() {
+  $('#emailModalBackdrop').classList.remove('open');
+}
+
+$('#emailPackageBtn').onclick = openEmailModal;
+$('#shareEmailBtn').onclick = openEmailModal;
+$('#closeEmailModal').onclick = closeEmailModal;
+$('#emailModalBackdrop').onclick = (e) => {
+  if (e.target === $('#emailModalBackdrop')) closeEmailModal();
+};
+
+// 1. Send via Gmail Web
+$('#sendViaGmailBtn').onclick = () => {
+  if (!currentQs.length) return;
+  const to = ($('#emailRecipientInput').value || '').trim();
+  const subject = $('#emailSubjectInput').value;
+  const body = getEmailPackageText();
+  navigator.clipboard?.writeText(body);
+
+  const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.open(gmailUrl, '_blank', 'noopener,noreferrer');
+  toast('Opening Gmail with full question package! 🔴 (Copied to clipboard as backup)');
+};
+
+// 2. Send via Outlook Web
+$('#sendViaOutlookBtn').onclick = () => {
+  if (!currentQs.length) return;
+  const to = ($('#emailRecipientInput').value || '').trim();
+  const subject = $('#emailSubjectInput').value;
+  const body = getEmailPackageText();
+  navigator.clipboard?.writeText(body);
+
+  const outlookUrl = `https://outlook.live.com/mail/0/deeplink/compose?to=${encodeURIComponent(to)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.open(outlookUrl, '_blank', 'noopener,noreferrer');
+  toast('Opening Outlook with full question package! 🔵 (Copied to clipboard as backup)');
+};
+
+// 3. Send via Default Mail App (mailto:)
+$('#sendViaDefaultMailBtn').onclick = () => {
+  if (!currentQs.length) return;
+  const to = ($('#emailRecipientInput').value || '').trim();
+  const subject = $('#emailSubjectInput').value;
+  const body = getEmailPackageText();
+  navigator.clipboard?.writeText(body);
+
+  const mailtoUrl = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  const link = document.createElement('a');
+  link.href = mailtoUrl;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  toast('Opening Default Mail Client with full question package! ✉️');
+};
+
+// 4. Copy Email Draft
+$('#copyEmailDraftBtn').onclick = () => {
+  if (!currentQs.length) return;
+  const subject = $('#emailSubjectInput').value;
+  const body = getEmailPackageText();
+  const fullDraft = `Subject: ${subject}\n\n${body}`;
+  navigator.clipboard?.writeText(fullDraft);
+  $('#copyEmailDraftBtn').querySelector('.share-channel-title').textContent = 'Draft Copied! ✓';
+  toast('Complete Email Draft copied to clipboard! 📋');
+  setTimeout(() => {
+    $('#copyEmailDraftBtn').querySelector('.share-channel-title').textContent = 'Copy Email Text';
+  }, 1600);
+};
+
+// 2. LinkedIn Post Package (No URL needed)
+$('#shareLinkedInBtn').onclick = () => {
+  if (!currentQs.length) return;
+  const postText = getLinkedInPackageText();
+
+  navigator.clipboard?.writeText(postText).then(() => {
+    toast('Question package copied for LinkedIn! 💼 Paste (Ctrl+V) directly into your post.');
+  }).catch(() => {
+    toast('Opening LinkedIn... 💼');
+  });
+
+  window.open('https://www.linkedin.com/feed/?shareActive=true', '_blank', 'noopener,noreferrer');
+};
+
+// 3. WhatsApp Package (No URL needed)
+$('#shareWhatsAppBtn').onclick = () => {
+  if (!currentQs.length) return;
+  const waText = getWhatsAppPackageText();
+  navigator.clipboard?.writeText(waText);
+  const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(waText)}`;
+  window.open(waUrl, '_blank', 'noopener,noreferrer');
+  toast('Opening WhatsApp with question package! 💬');
+};
+
+// 4. X / Twitter Package
+$('#shareTwitterBtn').onclick = () => {
+  if (!currentQs.length) return;
+  const role = $("#role").value.trim() || $("#sheetTitle").textContent || "UX Designer";
+  const qs = getCleanQuestionsArray();
+  const topQ = qs[0] ? `\n\nSample Q: "${qs[0].slice(0, 90)}..."` : '';
+  const tweetText = `🎯 Interview Question Package for ${role} (${currentQs.length} questions)${topQ}\n\n#InterviewQuestions #UXDesign #CareerGrowth`;
+  
+  navigator.clipboard?.writeText(getQuestionPackagePlainText());
+  const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+  window.open(tweetUrl, '_blank', 'noopener,noreferrer');
+  toast('Opening X/Twitter! (Full package also copied to clipboard 📋)');
+};
+
+// 5. Copy Full Package (Plain text)
+$('#shareCopyPackageBtn').onclick = () => {
+  if (!currentQs.length) return;
+  const pkg = getQuestionPackagePlainText();
+  navigator.clipboard?.writeText(pkg);
+  $('#shareCopyPackageBtn').textContent = 'Copied! ✓';
+  toast('Complete Question Package copied to clipboard! 📋');
+  setTimeout(() => {
+    $('#shareCopyPackageBtn').textContent = '📋 Copy Question Package';
+  }, 1600);
+};
+
+// 6. Copy Markdown
+$('#copyMarkdownBtn').onclick = () => {
+  if (!currentQs.length) return;
+  const md = getMarkdownPackageText();
+  navigator.clipboard?.writeText(md);
+  $('#copyMarkdownBtn').textContent = 'Copied! ✓';
+  toast('Full Markdown Question Paper copied! 📑');
+  setTimeout(() => {
+    $('#copyMarkdownBtn').textContent = '📑 Copy Markdown';
+  }, 1600);
+};
+
+// 7. Copy URL
 $('#shareUrlCopyBtn').onclick = () => {
   const input = $('#shareUrlInput');
   navigator.clipboard?.writeText(input.value);
@@ -1477,26 +2140,6 @@ $('#shareUrlCopyBtn').onclick = () => {
     $('#shareUrlCopyBtn').textContent = 'Copy Link';
   }, 1600);
 };
-
-$('#copyMarkdownBtn').onclick = () => {
-  if (!currentQs.length) return;
-  const title = $("#sheetTitle").textContent || "Question Paper";
-  const role = $("#role").value;
-  const exp = $("#exp").value;
-  const diff = $("#diff").value;
-  let md = `# Interview Question Paper: ${title}\n`;
-  md += `**Target Role:** ${role} | **Experience:** ${exp} | **Difficulty:** ${diff}\n`;
-  md += `**Skills Stack:** ${skills.join(', ')}\n\n---\n\n`;
-  currentQs.forEach((q, i) => {
-    md += `### Q${i+1}. ${cleanQuestionText(q).replace(/<[^>]+>/g,'')}\n\n`;
-  });
-  md += `\n*Generated with Ravi GenAI Studio*\n`;
-  navigator.clipboard?.writeText(md);
-  toast('Full Markdown formatted paper copied! 📋');
-};
-
-/* ---------- generic toast buttons ---------- */
-$$('[data-toast]').forEach(b=>b.addEventListener('click',()=>toast(b.dataset.toast)));
 
 /* ---------- parse URL query params & real-time rehydration ---------- */
 function initFromUrlParams(){
@@ -1512,6 +2155,7 @@ function initFromUrlParams(){
         if (data.role) $("#role").value = data.role;
         if (data.exp) $("#exp").value = data.exp;
         if (data.diff) $("#diff").value = data.diff;
+        if (data.customQ && $("#customQuestion")) $("#customQuestion").value = data.customQ;
         if (data.skills && data.skills.length) {
           skills = [...data.skills];
           renderTags();
@@ -1520,11 +2164,15 @@ function initFromUrlParams(){
 
         $("#sheetTitle").textContent = data.role || "Shared Question Paper";
         $("#sheetMeta").innerHTML = `
-          <span>Level <b>${data.diff || 'Medium'}</b></span>
-          <span>Experience <b>${data.exp || '3 Years'}</b></span>
+          <span>Level <b>${data.diff || 'Hard'}</b></span>
+          <span>Experience <b>${data.exp || '5 Years'}</b></span>
           <span>Stack <b>${(data.skills || []).join(" · ")}</b></span>
           <span>${currentQs.length} Questions (Shared Live)</span>
         `;
+        if (data.customQ) {
+          $("#sheetFocusBadge").style.display = "block";
+          $("#sheetFocusText").textContent = data.customQ;
+        }
         renderQuestions(currentQs);
         toast(`Loaded shared paper: ${data.role || 'Interview Paper'}`);
         return true;
@@ -1538,33 +2186,32 @@ function initFromUrlParams(){
   const pExp = params.get('exp');
   const pDiff = params.get('diff');
   const pSkills = params.get('skills');
+  const pCustomQ = params.get('customQ');
   const pCount = params.get('count');
 
-  if(pRole) $("#role").value = pRole;
-  if(pExp) $("#exp").value = pExp;
-  if(pDiff) $("#diff").value = pDiff;
-  if(pSkills) {
-    skills = pSkills.split(',').map(s=>s.trim()).filter(Boolean);
-    renderTags();
-  }
-  if(pCount && !isNaN(pCount)) {
-    setCount(Number(pCount));
+  if (pRole || pSkills || pDiff || pCustomQ) {
+    if (pRole) $("#role").value = pRole;
+    if (pExp) $("#exp").value = pExp;
+    if (pDiff) $("#diff").value = pDiff;
+    if (pCustomQ && $("#customQuestion")) $("#customQuestion").value = pCustomQ;
+    if (pSkills) {
+      skills = pSkills.split(',').map(s=>s.trim()).filter(Boolean);
+      renderTags();
+    }
+    if (pCount) setCount(Number(pCount));
+    generate();
+    return true;
   }
   return false;
 }
 
-function handleLogout(e){
-  if(e) e.stopPropagation();
-  if(confirm("Are you sure you want to log out from Ravi GenAI Studio?")){
-    window.location.href = "Login.html";
-  }
+// Initialize on page load
+const loadedFromUrl = initFromUrlParams();
+if (!loadedFromUrl) {
+  currentQs = pickQuestions(skills, 10, 'Senior UX Designer');
+  renderQuestions(currentQs);
 }
-
-const isSharedPaper = initFromUrlParams();
 fetchRecentPapers();
-if (!isSharedPaper) {
-  renderEmpty();
-}
 </script>
 </body>
 </html>

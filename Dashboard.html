@@ -234,6 +234,28 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 .r-btn:hover{border-color:#4F46E5;color:#4F46E5}
 .r-btn.primary{background:linear-gradient(135deg, #2563EB, #4F46E5);color:#FFFFFF;border:none}
 
+/* live streaming & questions */
+.dash-q-card{
+  background:var(--paper);border:1px solid var(--rule-soft);border-radius:12px;
+  padding:14px 18px;display:flex;gap:14px;align-items:flex-start;
+  animation:fadeIn .3s cubic-bezier(.16,1,.3,1);transition:border-color .18s;
+}
+.dash-q-card:hover{border-color:var(--pen);background:var(--paper-2)}
+.dash-q-num{
+  font-family:var(--f-mono);font-size:11.5px;font-weight:700;color:#4F46E5;
+  background:#EEF2FF;padding:4px 8px;border-radius:6px;flex:none;
+}
+[data-theme="dark"] .dash-q-num{background:rgba(99,102,241,0.2);color:#A5B4FC}
+.dash-q-content{flex:1;font-size:14px;color:var(--ink);line-height:1.45}
+.dash-q-lens{
+  margin-top:8px;padding:6px 10px;border-radius:6px;background:var(--paper-2);
+  border:1px solid var(--rule-soft);font-size:11.5px;color:var(--ink-soft);
+  display:flex;align-items:center;gap:6px;
+}
+.type-cursor{display:inline-block;color:#4F46E5;font-weight:700;animation:blink .6s infinite;margin-left:2px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
 @media(max-width:1024px){
   .stats-grid{grid-template-columns:repeat(2, 1fr)}
   .analytics-grid{grid-template-columns:1fr}
@@ -427,6 +449,94 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
       <a class="preset-tag" href="Interview-studio.html?role=Cloud+Platform+Architect&skills=AWS,Kubernetes,Terraform">☁️ Cloud &amp; DevOps</a>
       <a class="preset-tag" href="Interview-studio.html?role=GenAI+LLM+Engineer&skills=Python,LangChain,RAG,VectorDB">🤖 GenAI / LLM Architect</a>
       <a class="preset-tag" href="Company-playbooks.html">🏢 FAANG Playbooks</a>
+    </div>
+
+    <!-- REAL-TIME LIVE QUESTION GENERATOR ON FRONT-PAGE DASHBOARD -->
+    <div class="section-card" id="realTimeGenCard" style="background:var(--paper-2);border:1px solid var(--rule);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);margin-bottom:24px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="width:42px;height:42px;border-radius:12px;background:var(--pen-wash);color:var(--pen);display:grid;place-items:center;font-size:22px">⚡</span>
+          <div>
+            <h2 style="font-size:19px;font-weight:800;margin:0;display:flex;align-items:center;gap:8px">
+              <span>Real-Time AI Question Synthesizer</span>
+              <span style="font-size:10.5px;font-family:var(--f-mono);padding:2px 8px;border-radius:6px;background:rgba(16,185,129,0.15);color:#10B981;font-weight:700">LIVE ENGINE</span>
+            </h2>
+            <p style="font-size:13px;color:var(--ink-soft);margin:2px 0 0">Generate interview questions in real-time and display them directly on this front-page UI.</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap">
+          <button class="preset-tag active-role-pill" id="pillUX" onclick="selectRolePreset('UX Designer')">🎨 UX Designer</button>
+          <button class="preset-tag" id="pillProduct" onclick="selectRolePreset('Product Designer')">💡 Product Designer</button>
+          <button class="preset-tag" id="pillUIUX" onclick="selectRolePreset('UI/UX Designer')">✨ UI/UX Designer</button>
+          <button class="preset-tag" id="pillFrontend" onclick="selectRolePreset('Frontend Developer')">⚛️ Frontend Developer</button>
+          <button class="preset-tag" id="pillBackend" onclick="selectRolePreset('Backend Developer')">⚙️ Backend Developer</button>
+          <button class="preset-tag" id="pillGenAI" onclick="selectRolePreset('GenAI Engineer')">🤖 GenAI Engineer</button>
+        </div>
+      </div>
+
+      <!-- INPUT CONTROLS ROW -->
+      <div style="display:grid;grid-template-columns:1.3fr 1.2fr 1.4fr 0.7fr 0.7fr auto;gap:10px;align-items:end;background:var(--paper);padding:16px;border-radius:14px;border:1px solid var(--rule);margin-bottom:16px">
+        <div>
+          <label style="font-size:12px;font-weight:700;color:var(--ink);display:block;margin-bottom:4px">Target Role (Auto-regenerates):</label>
+          <select id="dashRoleSelect" onchange="onRoleSelectChange(this.value)" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--rule);background:var(--paper-2);color:var(--ink);font-size:13.5px;font-weight:600;outline:none;cursor:pointer">
+            <option value="UX Designer" selected>🎨 UX Designer</option>
+            <option value="Product Designer">💡 Product Designer</option>
+            <option value="UI/UX Designer">✨ UI/UX Designer</option>
+            <option value="Frontend Developer">⚛️ Frontend Developer</option>
+            <option value="Backend Developer">⚙️ Backend Developer</option>
+            <option value="GenAI Engineer">🤖 GenAI Engineer</option>
+            <option value="Custom">Custom Role...</option>
+          </select>
+          <input type="text" id="dashRoleInput" value="UX Designer" placeholder="e.g. UX Designer" style="display:none;width:100%;margin-top:6px;padding:8px 10px;border-radius:6px;border:1px solid var(--rule);background:var(--paper-2);color:var(--ink);font-size:12.5px;outline:none">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:var(--ink);display:block;margin-bottom:4px">Skills &amp; Methodologies:</label>
+          <input type="text" id="dashSkillsInput" value="User Research, Usability Testing, Information Architecture, Wireframes, Figma, Design Systems, WCAG" placeholder="e.g. Figma, Research" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--rule);background:var(--paper-2);color:var(--ink);font-size:13px;outline:none">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:var(--ink);display:block;margin-bottom:4px">Focus Question / Seed (Optional):</label>
+          <input type="text" id="dashCustomQInput" value="How do you conduct usability testing on a Figma prototype for an e-commerce checkout flow?" placeholder="e.g. Specific question to branch related questions from" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--rule);background:var(--paper-2);color:var(--ink);font-size:13px;outline:none">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:var(--ink);display:block;margin-bottom:4px">Difficulty:</label>
+          <select id="dashDiffSelect" onchange="synthesizeDashboardQuestions()" style="width:100%;padding:10px 10px;border-radius:8px;border:1px solid var(--rule);background:var(--paper-2);color:var(--ink);font-size:13px;outline:none;cursor:pointer">
+            <option>Warm-up</option>
+            <option>Medium</option>
+            <option selected>Hard</option>
+            <option>Brutal</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:var(--ink);display:block;margin-bottom:4px">Questions:</label>
+          <select id="dashCountSelect" onchange="synthesizeDashboardQuestions()" style="width:100%;padding:10px 10px;border-radius:8px;border:1px solid var(--rule);background:var(--paper-2);color:var(--ink);font-size:13px;outline:none;cursor:pointer">
+            <option value="3">3 Qs</option>
+            <option value="5" selected>5 Qs</option>
+            <option value="10">10 Qs</option>
+          </select>
+        </div>
+        <button id="dashSynthesizeBtn" style="padding:10px 18px;border-radius:8px;background:var(--primary-grad);color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap;height:40px;box-shadow:0 4px 14px rgba(79,70,229,0.35);transition:all .18s">
+          <span>⚡ Regenerate</span>
+        </button>
+      </div>
+
+      <!-- REAL-TIME LIVE OUTPUT SHEET -->
+      <div id="dashLiveSheet" style="display:none;background:var(--sheet);border:1px solid var(--rule);border-radius:14px;padding:20px;box-shadow:var(--shadow)">
+        <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--rule);padding-bottom:12px;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+          <div>
+            <div id="dashSheetTitle" style="font-size:17px;font-weight:800;color:var(--ink)">Python Backend Engineer</div>
+            <div id="dashSheetMeta" style="font-size:12px;color:var(--ink-soft);font-family:var(--f-mono);margin-top:2px">
+              <span id="dashStatusBadge" style="color:var(--pen);font-weight:700">⚡ Synthesizing in real-time...</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <button id="dashCopyAllBtn" class="r-btn" style="font-size:12px">📋 Copy All</button>
+            <button id="dashEmailPkgBtn" class="r-btn" style="font-size:12px">✉️ Email Package</button>
+            <a id="dashOpenStudioBtn" class="r-btn primary" href="Interview-studio.html" style="font-size:12px">Open Full in Studio →</a>
+          </div>
+        </div>
+
+        <div id="dashQuestionsList" style="display:flex;flex-direction:column;gap:12px"></div>
+      </div>
     </div>
 
     <!-- STATS -->
@@ -642,6 +752,382 @@ async function loadDashboardPapers() {
 }
 
 loadDashboardPapers();
+
+/* ---------- ROLE DEFINITIONS & ROLE-BASED PRESETS ---------- */
+const ROLE_PRESETS = {
+  'UX Designer': {
+    title: 'UX Designer',
+    skills: 'User Research, Usability Testing, Information Architecture, Wireframes, Figma, Design Systems, WCAG',
+    diff: 'Hard',
+    seed: 'How do you conduct usability testing on a Figma prototype for an e-commerce checkout flow?'
+  },
+  'Product Designer': {
+    title: 'Product Designer',
+    skills: 'Product Thinking, UX Strategy, Product Metrics, User Research, Design Systems, PM Collaboration',
+    diff: 'Hard',
+    seed: 'How do you balance business conversion goals with user friction in a subscription upgrade flow?'
+  },
+  'UI/UX Designer': {
+    title: 'UI/UX Designer',
+    skills: 'Visual Hierarchy, Micro-interactions, Design Tokens, Figma Auto Layout, Responsive Grids, Component States',
+    diff: 'Hard',
+    seed: 'How do you build a responsive design system in Figma using tokens and variable modes?'
+  },
+  'Frontend Developer': {
+    title: 'Frontend Developer',
+    skills: 'HTML5, CSS3, JavaScript ESNext, React 19, Next.js, Performance, a11y, State Management',
+    diff: 'Hard',
+    seed: 'How do you optimize Core Web Vitals (LCP, INP, CLS) in a large-scale React/Next.js application?'
+  },
+  'Backend Developer': {
+    title: 'Backend Developer',
+    skills: 'Python, FastAPI, PostgreSQL, Redis, System Design, Distributed Systems, JWT Auth, Microservices',
+    diff: 'Hard',
+    seed: 'How do you design a high-throughput, idempotent payment webhook processing service in FastAPI and PostgreSQL?'
+  },
+  'GenAI Engineer': {
+    title: 'GenAI Engineer',
+    skills: 'LLMs, RAG Architecture, Vector Databases, Embeddings, LangGraph Agents, Hallucination Evaluation, Prompt Engineering',
+    diff: 'Hard',
+    seed: 'How do you architect a multi-tenant enterprise RAG pipeline with hybrid search and strict document access control?'
+  }
+};
+
+function selectRolePreset(roleKey) {
+  const select = document.getElementById('dashRoleSelect');
+  const input = document.getElementById('dashRoleInput');
+  const cfg = ROLE_PRESETS[roleKey];
+  if (!cfg) return;
+
+  if (select) select.value = roleKey;
+  if (input) {
+    input.value = cfg.title;
+    input.style.display = 'none';
+  }
+  document.getElementById('dashSkillsInput').value = cfg.skills;
+  document.getElementById('dashDiffSelect').value = cfg.diff;
+  document.getElementById('dashCustomQInput').value = cfg.seed;
+
+  // Update active pill UI
+  document.querySelectorAll('.preset-tag').forEach(p => p.classList.remove('active-role-pill'));
+  if (roleKey === 'UX Designer') document.getElementById('pillUX')?.classList.add('active-role-pill');
+  if (roleKey === 'Product Designer') document.getElementById('pillProduct')?.classList.add('active-role-pill');
+  if (roleKey === 'UI/UX Designer') document.getElementById('pillUIUX')?.classList.add('active-role-pill');
+  if (roleKey === 'Frontend Developer') document.getElementById('pillFrontend')?.classList.add('active-role-pill');
+  if (roleKey === 'Backend Developer') document.getElementById('pillBackend')?.classList.add('active-role-pill');
+  if (roleKey === 'GenAI Engineer') document.getElementById('pillGenAI')?.classList.add('active-role-pill');
+
+  // Immediately regenerate for the new role
+  synthesizeDashboardQuestions();
+}
+
+function onRoleSelectChange(val) {
+  const input = document.getElementById('dashRoleInput');
+  if (val === 'Custom') {
+    input.style.display = 'block';
+    input.focus();
+  } else if (ROLE_PRESETS[val]) {
+    selectRolePreset(val);
+  }
+}
+
+let dashCurrentQs = [];
+
+/* ---------- STRICT ROLE-BASED QUESTION BANKS ---------- */
+const DASH_ROLE_BANKS = {
+  'ux': [
+    "How do you design and execute a mixed-methods user research plan for an ambiguous feature definition?",
+    "Walk through how you construct a task-based usability testing protocol and analyze the System Usability Scale (SUS) results.",
+    "How do you organize information architecture and mental models for an enterprise application with dense navigation hierarchy?",
+    "Describe your approach to wireframing and low-fidelity prototyping to align cross-functional teams early.",
+    "How do you ensure interaction design patterns meet WCAG 2.2 AA accessibility standards for keyboard and screen-reader navigation?",
+    "Scenario: User drop-off spikes at step 2 of a multi-step onboarding wizard. How do you diagnose whether the issue is cognitive load, usability friction, or value communication?",
+    "How do you handle a situation where a Product Manager pushes for a dark pattern to temporarily boost conversion numbers?"
+  ],
+  'product': [
+    "How do you frame a product problem statement to balance business viability (e.g. ARR, retention) with core user needs?",
+    "Walk through a product feature you designed: what North Star metric and secondary guardrail metrics did you track?",
+    "How do you navigate discovery vs delivery when working in fast two-week agile sprint cycles with engineering?",
+    "Describe a scenario where A/B test data showed positive revenue metrics but qualitative customer feedback was negative. What did you do?",
+    "How do you determine when a design system component should be added to the core library vs remaining feature-specific?",
+    "Scenario: You are designing a zero-to-one product in a competitive space. How do you identify the minimum lovable product (MLP) scope?"
+  ],
+  'uiux': [
+    "How do you establish typographic scale, 8pt/4pt spatial rhythm, and contrast ratios across multi-density screens?",
+    "Explain how you architect multi-brand design tokens (Global -> Semantic -> Component) in Figma Variables.",
+    "How do you design state machines for complex interactive UI components (hover, focus-visible, active, error, loading, skeleton)?",
+    "Walk through your approach to micro-interactions and motion design to provide clear user feedback without causing distraction.",
+    "Scenario: An existing design system has 40+ inconsistent button variants. How do you audit, consolidate, and roll out a refactored component set?"
+  ],
+  'frontend': [
+    "Explain how the React 19 concurrent renderer and Server Components (RSC) change data fetching and hydration performance.",
+    "How do you profile, identify, and eliminate memory leaks and unnecessary re-renders in a complex component tree?",
+    "Compare client-side state architectures (Zustand/Redux) vs server cache state (TanStack Query/SWR) in high-frequency apps.",
+    "Describe how you build a custom accessible dropdown component compliant with WAI-ARIA authoring practices from scratch.",
+    "Scenario: A live trading dashboard receives 100 WebSocket price updates per second. How do you prevent UI freezing and DOM thrashing?"
+  ],
+  'backend': [
+    "How do you structure database indexes (B-Tree, GIN, composite) in PostgreSQL and interpret EXPLAIN ANALYZE output?",
+    "Explain concurrency control mechanisms: compare optimistic locking vs pessimistic locking with concrete SQL examples.",
+    "How do you design distributed caching with Redis (Cache-Aside, Write-Through) and prevent cache stampedes (dogpiling)?",
+    "Describe how you implement token bucket or leaky bucket rate limiting across distributed API gateway instances.",
+    "Scenario: A distributed payment endpoint experiences intermittent database timeouts under heavy load. How do you implement circuit breakers and dead-letter queue retry mechanisms?"
+  ],
+  'genai': [
+    "Compare chunking strategies (semantic chunking, parent-document retrieval, sentence windowing) for dense domain-specific documents.",
+    "How do you implement hybrid search combining dense vector embeddings with sparse BM25 keyword search using reciprocal rank fusion (RRF)?",
+    "Describe how you build a multi-step agentic workflow with LangGraph/AutoGen that executes deterministic tool calls safely.",
+    "How do you quantitatively benchmark and monitor hallucination rates in production using Ragas or LLM-as-a-judge frameworks?",
+    "Scenario: Your production LLM service suffers high TTFT (Time to First Token) and token cost. How do you optimize latency and throughput using semantic caching and model quantization?"
+  ]
+};
+
+function getRoleKey(roleStr) {
+  const r = (roleStr || '').toLowerCase();
+  if (r.includes('product designer')) return 'product';
+  if (r.includes('ui/ux') || r.includes('ui designer') || r.includes('visual')) return 'uiux';
+  if (r.includes('ux designer') || r.includes('user experience') || r.includes('researcher')) return 'ux';
+  if (r.includes('front') || r.includes('react')) return 'frontend';
+  if (r.includes('back') || r.includes('python') || r.includes('fastapi')) return 'backend';
+  if (r.includes('ai') || r.includes('genai') || r.includes('llm') || r.includes('rag')) return 'genai';
+  return 'ux';
+}
+
+function generateRoleSpecificSeedQuestions(seedQ, roleKey, n) {
+  const cleanSeed = seedQ.replace(/[?.\s]+$/, '').trim();
+  if (roleKey === 'ux') {
+    return [
+      `Regarding "${cleanSeed}" — What user research methodology (generative interviews vs unmoderated testing) would you use to define requirements?`,
+      `In Figma, how would you architect the wireframes, Auto Layout constraints, and interactive states to prototype: "${cleanSeed}"?`,
+      `What usability friction points, accessibility (WCAG 2.2 AA) edge cases, and error states must be solved in: "${cleanSeed}"?`,
+      `How would you design a usability testing protocol (tasks, metrics like SUS/time-on-task) to validate your prototype for: "${cleanSeed}"?`,
+      `How do you defend your UX decisions for "${cleanSeed}" when engineering raises technical constraints or timeline trade-offs?`
+    ].slice(0, n);
+  } else if (roleKey === 'product') {
+    return [
+      `Regarding "${cleanSeed}" — How do you define the product hypothesis and balance business metrics (conversion/retention) with user friction?`,
+      `How do you conduct rapid user discovery for "${cleanSeed}" while keeping engineering delivery on track during sprint cycles?`,
+      `What North Star metric and secondary guardrails would you monitor post-launch for: "${cleanSeed}"?`,
+      `Describe how you would facilitate a cross-functional workshop with PM and Engineering leads to align on the MVP scope for: "${cleanSeed}".`,
+      `Scenario: 30 days after launching "${cleanSeed}", adoption is high but customer support tickets increased by 25%. How do you diagnose and iterate?`
+    ].slice(0, n);
+  } else if (roleKey === 'uiux') {
+    return [
+      `Regarding "${cleanSeed}" — How do you establish typographic hierarchy, 8pt spatial grid, and color contrast tokens in Figma?`,
+      `Explain how you architect component variants, boolean properties, and variable modes to build: "${cleanSeed}".`,
+      `How do you design realistic micro-interactions and motion feedback loops for: "${cleanSeed}"?`,
+      `How do you ensure responsive layout adaptability across mobile, tablet, and ultra-wide viewports for: "${cleanSeed}"?`,
+      `Describe how you prepare design specs and token handoff in Figma to guarantee pixel-perfect developer implementation of: "${cleanSeed}".`
+    ].slice(0, n);
+  } else if (roleKey === 'frontend') {
+    return [
+      `Regarding "${cleanSeed}" — Explain how you architect the component hierarchy, client/server state, and DOM rendering in React 19/Next.js.`,
+      `How do you optimize Core Web Vitals (LCP, INP, CLS) and prevent unnecessary re-renders when implementing: "${cleanSeed}"?`,
+      `How do you implement keyboard navigation, focus trap, and ARIA attributes to make "${cleanSeed}" 100% WCAG accessible?`,
+      `Describe your error boundary, optimistic UI update, and offline cache invalidation strategy for: "${cleanSeed}".`,
+      `Scenario: Performance profiling reveals high JS main-thread blocking time in "${cleanSeed}". Walk through your step-by-step optimization.`
+    ].slice(0, n);
+  } else if (roleKey === 'backend') {
+    return [
+      `Regarding "${cleanSeed}" — Explain the API schema design, idempotency safeguards, and database transaction boundaries (ACID).`,
+      `How would you architect the database indexes, query plan, and Redis caching layer to handle high throughput in: "${cleanSeed}"?`,
+      `What concurrency race conditions, deadlocks, and partial failure modes must be guarded against in: "${cleanSeed}"?`,
+      `Describe how you implement distributed rate limiting, authentication (JWT/OAuth2), and background worker task queues for: "${cleanSeed}".`,
+      `Scenario: Under 5x peak traffic, the database connection pool saturates for "${cleanSeed}". How do you diagnose and resolve the bottleneck?`
+    ].slice(0, n);
+  } else {
+    return [
+      `Regarding "${cleanSeed}" — Explain the chunking strategy, embedding model selection, and hybrid vector search pipeline.`,
+      `How do you implement semantic caching, prompt templating, and guardrails to minimize latency and token cost for: "${cleanSeed}"?`,
+      `How do you architect a multi-step agentic workflow (LangGraph/ReAct) with deterministic tool validation for: "${cleanSeed}"?`,
+      `Describe how you benchmark and prevent hallucination rates in production using quantitative evaluation frameworks for: "${cleanSeed}".`,
+      `Scenario: Streaming tokens degrade and experience high TTFT under multi-tenant load for "${cleanSeed}". How do you optimize inference?`
+    ].slice(0, n);
+  }
+}
+
+const ROLE_EVAL_LENSES = {
+  'ux': [
+    "Validates user research methodology, mental model alignment, information architecture, and WCAG accessibility.",
+    "Evaluates usability testing protocols, task completion metrics, and quantitative validation rigor.",
+    "Probes cognitive load reduction, edge-case recovery, and defending UX decisions to stakeholders."
+  ],
+  'product': [
+    "Validates product thinking, user needs vs business viability, and prioritization frameworks.",
+    "Evaluates metric-driven decision making (retention, conversion funnels, churn, North Star).",
+    "Probes cross-functional collaboration, PM/Engineering trade-offs, and discovery vs delivery execution."
+  ],
+  'uiux': [
+    "Validates visual craft, typographic hierarchy, 8pt/4pt spatial rhythm, and contrast ratios.",
+    "Evaluates Figma component architecture, design tokens, and variable mode scalability.",
+    "Probes micro-interaction design, component state machines, and pixel-perfect developer handoff."
+  ],
+  'frontend': [
+    "Validates React 19/Next.js architecture, component lifecycle, and state synchronization.",
+    "Evaluates Core Web Vitals (LCP, INP, CLS) optimization, bundle splitting, and memory profiling.",
+    "Probes WAI-ARIA accessibility compliance, optimistic updates, and async DOM handling."
+  ],
+  'backend': [
+    "Validates REST/FastAPI architecture, idempotent endpoints, and ACID transaction boundaries.",
+    "Evaluates PostgreSQL indexing, Redis caching strategies, and distributed locking mechanisms.",
+    "Probes circuit breakers, rate limiting, connection pooling, and high-concurrency resilience."
+  ],
+  'genai': [
+    "Validates hybrid vector search (BM25 + dense embeddings) and document chunking strategies.",
+    "Evaluates multi-step agentic workflows (LangGraph), deterministic tool calling, and guardrails.",
+    "Probes quantitative hallucination benchmarking, TTFT optimization, and semantic caching."
+  ]
+};
+
+async function synthesizeDashboardQuestions() {
+  const select = document.getElementById('dashRoleSelect');
+  const roleInput = document.getElementById('dashRoleInput');
+  const role = (select.value === 'Custom' ? roleInput.value : select.value).trim() || 'UX Designer';
+  const roleKey = getRoleKey(role);
+
+  const skillsStr = document.getElementById('dashSkillsInput').value.trim() || 'Core Methodologies';
+  const customQ = (document.getElementById('dashCustomQInput')?.value || '').trim();
+  const diff = document.getElementById('dashDiffSelect').value;
+  const countVal = Number(document.getElementById('dashCountSelect').value) || 5;
+
+  const btn = document.getElementById('dashSynthesizeBtn');
+  const sheet = document.getElementById('dashLiveSheet');
+  const listEl = document.getElementById('dashQuestionsList');
+  const titleEl = document.getElementById('dashSheetTitle');
+  const metaEl = document.getElementById('dashSheetMeta');
+
+  btn.innerHTML = '<span>⚡ Synthesizing...</span>';
+  btn.style.opacity = '0.7';
+  btn.style.pointerEvents = 'none';
+
+  sheet.style.display = 'block';
+  listEl.innerHTML = `<div style="padding:20px;text-align:center;color:var(--ink-soft);font-size:14px">⚡ Synthesizing role-specific questions for <b>${role}</b> in real-time...</div>`;
+  titleEl.textContent = role;
+  metaEl.innerHTML = `<span style="color:var(--pen);font-weight:700">⚡ Calibrating ${diff} role questions for ${role}...</span>`;
+
+  document.getElementById('dashOpenStudioBtn').href = `Interview-studio.html?role=${encodeURIComponent(role)}&diff=${encodeURIComponent(diff)}&skills=${encodeURIComponent(skillsStr)}&customQ=${encodeURIComponent(customQ)}&count=${countVal}`;
+
+  const skillsArr = skillsStr.split(',').map(s => s.trim()).filter(Boolean);
+  let questions = [];
+
+  try {
+    const res = await fetch(`${API_BASE}/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        role: role,
+        experience: "5 Years",
+        skills: skillsArr,
+        difficulty: diff,
+        number_of_questions: countVal,
+        custom_question: customQ || undefined
+      })
+    });
+
+    if (!res.ok) throw new Error("HTTP Error " + res.status);
+    const data = await res.json();
+    questions = data.questions || [];
+  } catch (err) {
+    console.warn("Using dashboard role-based synthesis engine:", err.message);
+    if (customQ && customQ.length > 5) {
+      questions = generateRoleSpecificSeedQuestions(customQ, roleKey, countVal);
+    } else {
+      const pool = DASH_ROLE_BANKS[roleKey] || DASH_ROLE_BANKS['ux'];
+      questions = pool.slice(0, countVal);
+    }
+  }
+
+  dashCurrentQs = questions;
+  listEl.innerHTML = '';
+  metaEl.innerHTML = `<span>Role <b>${role}</b></span> · <span>Level <b>${diff}</b></span> · <span style="color:#10B981;font-weight:700">⚡ Strictly Role-Specific Real-Time Stream</span>`;
+
+  const lenses = ROLE_EVAL_LENSES[roleKey] || ROLE_EVAL_LENSES['ux'];
+
+  for (let i = 0; i < questions.length; i++) {
+    const cleanQ = questions[i].replace(/^(q\d+[\.\:\)]|\d+[\.\:\)]|\-|\*)\s*/i, '').replace(/<[^>]+>/g, '').trim();
+    const card = document.createElement('div');
+    card.className = 'dash-q-card';
+    const lensText = lenses[i % lenses.length];
+
+    card.innerHTML = `
+      <div class="dash-q-num">Q0${i + 1}</div>
+      <div class="dash-q-content">
+        <div class="q-live-text"><span class="type-text"></span><span class="type-cursor">|</span></div>
+        <div class="dash-q-lens" style="opacity:0;transition:opacity .3s ease">
+          <span style="color:#4F46E5;font-weight:700">💡 Interviewer Evaluation Lens (${role}):</span>
+          <span>${lensText}</span>
+        </div>
+      </div>
+      <button class="r-btn" style="padding:5px 10px;font-size:11.5px;flex:none" title="Copy question">📋 Copy</button>
+    `;
+
+    card.querySelector('.r-btn').onclick = (e) => {
+      navigator.clipboard?.writeText(cleanQ);
+      e.target.textContent = 'Copied! ✓';
+      setTimeout(() => { e.target.textContent = '📋 Copy'; }, 1400);
+    };
+
+    listEl.appendChild(card);
+
+    const textEl = card.querySelector('.type-text');
+    const cursor = card.querySelector('.type-cursor');
+    const lensEl = card.querySelector('.dash-q-lens');
+
+    const words = cleanQ.split(' ');
+    for (let w = 0; w < words.length; w++) {
+      textEl.textContent += (w === 0 ? '' : ' ') + words[w];
+      await new Promise(r => setTimeout(r, 13));
+    }
+    cursor.remove();
+    lensEl.style.opacity = '1';
+    await new Promise(r => setTimeout(r, 18));
+  }
+
+  btn.innerHTML = '<span>⚡ Regenerate</span>';
+  btn.style.opacity = '1';
+  btn.style.pointerEvents = 'auto';
+}
+
+document.getElementById('dashSynthesizeBtn')?.addEventListener('click', synthesizeDashboardQuestions);
+
+// Trigger initial real-time generation on page load
+setTimeout(() => {
+  if (document.getElementById('dashRoleSelect')) {
+    selectRolePreset('UX Designer');
+  }
+}, 300);
+
+document.getElementById('dashCopyAllBtn')?.addEventListener('click', () => {
+  if (!dashCurrentQs.length) return;
+  const role = document.getElementById('dashRoleInput').value;
+  let text = `AI INTERVIEW QUESTION PACKAGE: ${role}\n==================================================\n\n`;
+  dashCurrentQs.forEach((q, i) => {
+    text += `${i + 1}. ${q.replace(/^(q\d+[\.\:\)]|\d+[\.\:\)]|\-|\*)\s*/i, '').replace(/<[^>]+>/g, '').trim()}\n\n`;
+  });
+  navigator.clipboard?.writeText(text);
+  const btn = document.getElementById('dashCopyAllBtn');
+  btn.textContent = 'Copied! ✓';
+  setTimeout(() => { btn.textContent = '📋 Copy All'; }, 1600);
+});
+
+document.getElementById('dashEmailPkgBtn')?.addEventListener('click', () => {
+  if (!dashCurrentQs.length) return;
+  const role = document.getElementById('dashRoleInput').value;
+  const diff = document.getElementById('dashDiffSelect').value;
+  const skills = document.getElementById('dashSkillsInput').value;
+  const subject = `Interview Question Package: ${role} (${diff})`;
+
+  let body = `AI INTERVIEW QUESTION PACKAGE\n==================================================\n`;
+  body += `Target Role : ${role}\nDifficulty  : ${diff}\nTech Stack  : ${skills}\nTotal Qs    : ${dashCurrentQs.length}\n==================================================\n\nQUESTIONS:\n\n`;
+  dashCurrentQs.forEach((q, i) => {
+    body += `${i + 1}. ${q.replace(/^(q\d+[\.\:\)]|\d+[\.\:\)]|\-|\*)\s*/i, '').replace(/<[^>]+>/g, '').trim()}\n\n`;
+  });
+  body += `\nGenerated via Ravi GenAI Studio`;
+
+  navigator.clipboard?.writeText(body);
+  const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.open(mailtoUrl, '_blank');
+});
 </script>
 </body>
 </html>
