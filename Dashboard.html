@@ -331,9 +331,9 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 16 14"/></svg>
         <span>Interview History</span>
       </a>
-      <a class="nav-link" href="Interview history.html">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-        <span>Question Bank</span>
+      <a class="nav-link" href="scorecard.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+        <span>Public Scorecards</span>
       </a>
       <a class="nav-link" href="Company-playbooks.html">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
@@ -848,7 +848,7 @@ function onRoleSelectChange(val) {
 
 let dashCurrentQs = [];
 
-/* ---------- STRICT ROLE-BASED QUESTION BANKS ---------- */
+/* ---------- STRICT ROLE-BASED QUESTION BANKS (25+ items per role) ---------- */
 const DASH_ROLE_BANKS = {
   'ux': [
     "How do you design and execute a mixed-methods user research plan for an ambiguous feature definition?",
@@ -857,7 +857,25 @@ const DASH_ROLE_BANKS = {
     "Describe your approach to wireframing and low-fidelity prototyping to align cross-functional teams early.",
     "How do you ensure interaction design patterns meet WCAG 2.2 AA accessibility standards for keyboard and screen-reader navigation?",
     "Scenario: User drop-off spikes at step 2 of a multi-step onboarding wizard. How do you diagnose whether the issue is cognitive load, usability friction, or value communication?",
-    "How do you handle a situation where a Product Manager pushes for a dark pattern to temporarily boost conversion numbers?"
+    "How do you handle a situation where a Product Manager pushes for a dark pattern to temporarily boost conversion numbers?",
+    "Explain how you synthesize generative research findings into actionable personas and journey maps without introducing confirmation bias.",
+    "What quantitative metrics (SEQ, time-on-task, error rate) do you pair with qualitative observations during unmoderated user tests?",
+    "How do you design an intuitive search and filter experience for a dataset with over 50 multi-faceted dimensions?",
+    "Describe how you conduct tree testing and closed card sorting to validate a restructured taxonomy.",
+    "How do you balance aesthetic delight and micro-interactions with cognitive accessibility and task velocity?",
+    "Walk through your strategy for conducting accessibility audits across legacy web interfaces.",
+    "How do you facilitate co-design design thinking workshops with non-designer engineering and business stakeholders?",
+    "Scenario: Usability testing reveals users misunderstand a critical action button label. How do you rapidly test copy and icon variations?",
+    "How do you define UX guardrail metrics when product teams run high-velocity multivariate experiments?",
+    "Describe how you structure user interview discussion guides to avoid leading questions and uncover latent user needs.",
+    "How do you manage design handoff and annotate Figma files with edge cases, error states, and responsive breakpoints?",
+    "What is your approach to designing error recovery and empty states that guide users toward constructive resolution?",
+    "How do you evaluate user feedback from in-app CSAT/NPS micro-surveys alongside session replay analytics?",
+    "Scenario: A critical client requires an immediate custom workflow that compromises the core navigation UX. How do you navigate this trade-off?",
+    "How do you prototype high-fidelity motion and micro-interactions in Figma or ProtoPie to validate user feedback loops?",
+    "Explain how you create design tokens in Figma Variables to support dynamic theming and WCAG contrast compliance?",
+    "How do you measure the long-term ROI and business impact of UX research on product adoption and churn reduction?",
+    "What strategies do you use to continuously test and iterate on design system components based on real user behavior?"
   ],
   'product': [
     "How do you frame a product problem statement to balance business viability (e.g. ARR, retention) with core user needs?",
@@ -865,35 +883,134 @@ const DASH_ROLE_BANKS = {
     "How do you navigate discovery vs delivery when working in fast two-week agile sprint cycles with engineering?",
     "Describe a scenario where A/B test data showed positive revenue metrics but qualitative customer feedback was negative. What did you do?",
     "How do you determine when a design system component should be added to the core library vs remaining feature-specific?",
-    "Scenario: You are designing a zero-to-one product in a competitive space. How do you identify the minimum lovable product (MLP) scope?"
+    "Scenario: You are designing a zero-to-one product in a competitive space. How do you identify the minimum lovable product (MLP) scope?",
+    "How do you prioritize competing feature requests from high-value enterprise sales leads against core consumer user experience?",
+    "Explain how you design monetization and paywall trigger moments without degrading user engagement and product trust.",
+    "What frameworks (e.g., RICE, Kano Model, ICE) do you apply to evaluate product design trade-offs and roadmap initiatives?",
+    "How do you partner with Product Managers and Data Scientists to define funnel conversion milestones and event instrumentation?",
+    "Walk through your approach to sunsetting a legacy product feature that has passionate but low-volume user adoption.",
+    "How do you align multi-disciplinary squads across mobile, desktop web, and email notification touchpoints?",
+    "Describe a time you used cohort retention curves to identify where new users experience their initial 'aha!' value moment.",
+    "How do you design self-service onboarding flows that maximize Day-1 product activation and minimize time-to-value (TTV)?",
+    "Scenario: Product leadership wants to launch an AI feature quickly. How do you ensure it solves real customer pain rather than being a gimmick?",
+    "How do you evaluate whether to build custom bespoke components or adopt standard off-the-shelf design patterns for speed to market?",
+    "Walk through how you defend controversial design decisions using qualitative insights and quantitative benchmark metrics.",
+    "How do you run rapid customer advisory board (CAB) sessions to de-risk high-stakes strategic roadmap bets?",
+    "Describe how you architect omni-channel user experiences connecting web apps, mobile apps, and physical operational workflows.",
+    "How do you build business cases for investing engineering sprint capacity into foundational design debt refactoring?",
+    "Scenario: Key user engagement drops 15% after a major redesign rollout. Walk through your step-by-step diagnostic and remediation plan.",
+    "How do you ensure enterprise administrative permission models and role-based access control (RBAC) remain easy to configure?",
+    "What methods do you use to map out end-to-end customer service blueprints across support, sales, and automated product systems?",
+    "How do you balance immediate conversion rate optimization (CRO) quick-wins with long-term brand equity and UX integrity?",
+    "Describe your methodology for conducting post-launch product retrospectives and feeding user telemetry back into the roadmap."
   ],
   'uiux': [
     "How do you establish typographic scale, 8pt/4pt spatial rhythm, and contrast ratios across multi-density screens?",
     "Explain how you architect multi-brand design tokens (Global -> Semantic -> Component) in Figma Variables.",
     "How do you design state machines for complex interactive UI components (hover, focus-visible, active, error, loading, skeleton)?",
     "Walk through your approach to micro-interactions and motion design to provide clear user feedback without causing distraction.",
-    "Scenario: An existing design system has 40+ inconsistent button variants. How do you audit, consolidate, and roll out a refactored component set?"
+    "Scenario: An existing design system has 40+ inconsistent button variants. How do you audit, consolidate, and roll out a refactored component set?",
+    "How do you ensure visual accessibility for color-blind users across complex statistical charts and status badges?",
+    "Describe how you build responsive auto-layout components in Figma that fluidly resize across 320px mobile to 2560px ultra-wide screens.",
+    "What is your strategy for implementing dark mode theming with semantic color tokens while preserving hierarchy and depth?",
+    "How do you prototype realistic user input validation states and multi-field inline error messages in Figma?",
+    "Walk through how you organize component libraries in Figma using variants, nested instances, and boolean property toggles.",
+    "How do you collaborate with frontend engineers to ensure CSS custom properties match Figma token definitions precisely?",
+    "Describe how you design accessible keyboard navigation focus indicators that blend with brand aesthetics.",
+    "How do you maintain visual harmony when incorporating dense data tables, graphs, and action toolbars on a single dashboard viewport?",
+    "Scenario: Marketing requires large hero imagery, but engineering reports severe performance impacts on mobile. How do you solve this visually?",
+    "How do you create unified iconography guidelines (stroke weight, corner radius, optical volume) for a product suite?",
+    "Explain your approach to designing toast notifications, banners, and modal dialogs with strict visual z-index hierarchies.",
+    "How do you test UI components across high-contrast mode, browser font-size zoom (up to 200%), and RTL language scripts?",
+    "Describe how you design skeletal loading states that match actual layout geometries to reduce perceived latency.",
+    "What methods do you use to audit UI components for WCAG 2.2 target size requirements (minimum 24x24px / 44x44px)?",
+    "How do you design fluid bottom sheets, drawer navigation, and gesture-driven interactions for modern mobile apps?",
+    "Scenario: A critical user workflow requires dense multi-step configuration. How do you design progressive disclosure without visual clutter?",
+    "How do you document component usage guidelines and 'Do / Don't' visual specifications in Storybook or Zeroheight?",
+    "Describe your approach to designing micro-copy and typographic emphasis within tight interface constraints.",
+    "How do you handle visual degradation and responsive fallbacks for users on low-resolution or legacy display hardware?",
+    "What is your process for creating interactive prototypes to pitch high-concept visual UI innovations to executive leadership?"
   ],
   'frontend': [
     "Explain how the React 19 concurrent renderer and Server Components (RSC) change data fetching and hydration performance.",
     "How do you profile, identify, and eliminate memory leaks and unnecessary re-renders in a complex component tree?",
     "Compare client-side state architectures (Zustand/Redux) vs server cache state (TanStack Query/SWR) in high-frequency apps.",
     "Describe how you build a custom accessible dropdown component compliant with WAI-ARIA authoring practices from scratch.",
-    "Scenario: A live trading dashboard receives 100 WebSocket price updates per second. How do you prevent UI freezing and DOM thrashing?"
+    "Scenario: A live trading dashboard receives 100 WebSocket price updates per second. How do you prevent UI freezing and DOM thrashing?",
+    "How do you optimize Core Web Vitals (LCP, INP, CLS) in Next.js applications using script prioritization and image optimization?",
+    "Explain how the JavaScript Event Loop coordinates the microtask queue (Promises), macrotask queue (setTimeout), and animation frames (rAF).",
+    "How do you implement code splitting, dynamic imports, and route-level bundle chunking to keep initial JS bundles under 100KB?",
+    "Describe your strategy for optimistic UI mutations, rollback on error, and background cache synchronization in TanStack Query.",
+    "How do you architect end-to-end type safety between backend OpenAPI/tRPC schemas and frontend TypeScript models?",
+    "Walk through how you create virtualized lists (e.g. react-virtual/tanstack-virtual) to render 50,000+ items smoothly at 60 FPS.",
+    "How do you handle offline sync, service worker caching, and IndexedDB persistence in Progressive Web Apps (PWAs)?",
+    "Scenario: A third-party analytics script is causing severe Interaction to Next Paint (INP) degradation. How do you isolate and fix it?",
+    "Compare CSS Modules, Tailwind CSS, and CSS-in-JS (e.g. styled-components) regarding runtime overhead and build-time zero-runtime extraction.",
+    "How do you design robust frontend error boundaries with fallback UI, telemetry logging (Sentry), and retry mechanisms?",
+    "Explain how you use Web Workers to offload heavy computational algorithms (e.g. large JSON parsing or image filtering) from the main thread.",
+    "How do you build responsive, high-performance canvas/SVG data visualizer components using D3 or PixiJS in React?",
+    "Describe how you implement secure JWT token storage (httpOnly cookies vs memory) and handle silent token refresh cycles.",
+    "What is your approach to testing frontend applications across Unit (Vitest/Jest), Integration (React Testing Library), and E2E (Playwright)?",
+    "Scenario: Layout shifts occur when custom web fonts and hero banners load asynchronously. How do you eliminate CLS completely?",
+    "How do you implement internationalization (i18n), right-to-left (RTL) layout switching, and localized number/date formatting cleanly?",
+    "Explain how modern browser rendering engines handle reflow, repaint, and GPU compositing layers.",
+    "How do you structure shared Monorepo architectures (Turborepo/Nx) with reusable UI component packages across multiple web apps?",
+    "Describe how you enforce strict accessibility linting (eslint-plugin-jsx-a11y) and automated axe-core audits in CI/CD pipelines.",
+    "How do you architect real-time collaborative document editing using CRDTs (Yjs/Automerge) and WebSockets?"
   ],
   'backend': [
     "How do you structure database indexes (B-Tree, GIN, composite) in PostgreSQL and interpret EXPLAIN ANALYZE output?",
     "Explain concurrency control mechanisms: compare optimistic locking vs pessimistic locking with concrete SQL examples.",
     "How do you design distributed caching with Redis (Cache-Aside, Write-Through) and prevent cache stampedes (dogpiling)?",
     "Describe how you implement token bucket or leaky bucket rate limiting across distributed API gateway instances.",
-    "Scenario: A distributed payment endpoint experiences intermittent database timeouts under heavy load. How do you implement circuit breakers and dead-letter queue retry mechanisms?"
+    "Scenario: A distributed payment endpoint experiences intermittent database timeouts under heavy load. How do you implement circuit breakers and dead-letter queue retry mechanisms?",
+    "Compare RESTful APIs, GraphQL, and gRPC with Protobuf regarding schema evolution, latency overhead, and client flexibility.",
+    "How do you design idempotent API endpoints using unique idempotency keys, Redis locks, and atomic database commits?",
+    "Explain database transaction isolation levels (Read Committed, Repeatable Read, Serializable) and the anomalies they prevent.",
+    "How do you architect event-driven microservices using Apache Kafka or RabbitMQ, ensuring at-least-once or exactly-once message delivery?",
+    "Describe how you implement secure OAuth2 + OpenID Connect authentication with JWT signing (RS256) and token revocation lists.",
+    "How do you manage database connection pooling (HikariCP, PgBouncer) and prevent pool starvation during traffic spikes?",
+    "Scenario: A monolithic PostgreSQL database table has reached 500 million rows. How do you plan and execute zero-downtime partitioning/sharding?",
+    "How do you structure asynchronous background task workers using Celery/BullMQ with exponential backoff and dead-letter queues?",
+    "Explain how you design structured logging, distributed tracing (OpenTelemetry/Jaeger), and metrics (Prometheus) across microservices.",
+    "How do you guard backend APIs against SQL injection, SSRF, broken object-level authorization (BOLA), and ReDoS attacks?",
+    "Walk through your strategy for zero-downtime database schema migrations with zero locks on live production tables.",
+    "How do you implement database read-replicas with replication lag monitoring and read-after-write consistency guarantees?",
+    "Scenario: Microservices communication experiences cascading network failures during an AWS AZ outage. How do you build resilience?",
+    "How do you architect secure multi-tenant data isolation (Row-Level Security vs schema-per-tenant vs database-per-tenant)?",
+    "Explain how modern asynchronous runtimes (Python asyncio, Node.js libuv, Go goroutines) handle 50,000+ concurrent network sockets.",
+    "How do you design distributed locks in Redis using Redlock and ensure safety during unexpected process pauses or clock drift?",
+    "Describe how you implement webhook delivery systems with HMAC-SHA256 signature verification and retry backoff policies.",
+    "How do you optimize slow SQL queries with heavy JOINs and aggregations using materialized views and covering indexes?",
+    "Scenario: A memory leak in a backend microservice causes OOM crashes every 6 hours. Walk through how you profile heap dumps and resolve it.",
+    "How do you architect high-volume data ingestion pipelines using CDC (Change Data Capture) with Debezium and Kafka Connect?"
   ],
   'genai': [
     "Compare chunking strategies (semantic chunking, parent-document retrieval, sentence windowing) for dense domain-specific documents.",
     "How do you implement hybrid search combining dense vector embeddings with sparse BM25 keyword search using reciprocal rank fusion (RRF)?",
     "Describe how you build a multi-step agentic workflow with LangGraph/AutoGen that executes deterministic tool calls safely.",
     "How do you quantitatively benchmark and monitor hallucination rates in production using Ragas or LLM-as-a-judge frameworks?",
-    "Scenario: Your production LLM service suffers high TTFT (Time to First Token) and token cost. How do you optimize latency and throughput using semantic caching and model quantization?"
+    "Scenario: Your production LLM service suffers high TTFT (Time to First Token) and token cost. How do you optimize latency and throughput using semantic caching and model quantization?",
+    "Explain how Multi-Head Attention, RoPE (Rotary Position Embedding), and KV-caching operate inside transformer decoder architectures.",
+    "How do you design vector database index configurations (HNSW parameters M and efConstruction vs IVFFlat) for sub-20ms search latency?",
+    "Describe your methodology for fine-tuning open-weights models (e.g. LLaMA-3) using QLoRA, LoRA ranks, and target modules.",
+    "How do you implement multi-tenant RAG security to guarantee strict document-level Access Control Lists (ACLs) during vector retrieval?",
+    "Compare ReAct (Reason + Act), Plan-and-Solve, and Reflexion agentic frameworks regarding reliability and token consumption.",
+    "How do you design guardrails (NeMo Guardrails, Llama-Guard) to prevent prompt injections, jailbreaks, and sensitive PII exfiltration?",
+    "Scenario: Retrieval returns 20 relevant chunks but LLM context degradation causes 'lost in the middle' syndrome. How do you solve this with rerankers (Cohere/BGE)?",
+    "How do you implement streaming token output via Server-Sent Events (SSE) while preserving structured JSON schema validation?",
+    "Explain how speculative decoding and vLLM PagedAttention optimize GPU throughput and vRAM memory bandwidth.",
+    "How do you architect synthetic data generation pipelines with strict diversity filtering to train specialized domain models?",
+    "Describe how you benchmark embeddings models (MTEB leaderboard) for specialized legal, medical, or multilingual enterprise corpora.",
+    "How do you build self-correcting agent loops that validate SQL/code output against schemas and retry with error feedback?",
+    "Scenario: An agent gets caught in an infinite tool-calling loop or exhibits oscillatory tool behavior. How do you detect and safely terminate it?",
+    "How do you implement dynamic few-shot prompt exemplar selection using semantic similarity vector search?",
+    "Explain how Direct Preference Optimization (DPO) and RLHF align model responses with human feedback and domain safety guidelines.",
+    "How do you design observability tracing (Langfuse, Arize Phoenix, OpenInference) across multi-step LLM chains and tool calls?",
+    "What strategies do you use for cost-performance routing between frontier models (GPT-4o, Claude 3.5 Sonnet) and fast SLMs (Llama-3-8B)?",
+    "How do you handle contextual document updates, deletions, and real-time vector re-indexing in production RAG systems?",
+    "Describe your approach to evaluating agentic reasoning trajectories when there is no single deterministic ground truth answer.",
+    "Scenario: Multi-modal LLM applications process complex scanned PDFs with mixed tables and charts. How do you structure the OCR and vision ingestion pipeline?"
   ]
 };
 
@@ -910,55 +1027,94 @@ function getRoleKey(roleStr) {
 
 function generateRoleSpecificSeedQuestions(seedQ, roleKey, n) {
   const cleanSeed = seedQ.replace(/[?.\s]+$/, '').trim();
+  let pool = [];
+
   if (roleKey === 'ux') {
-    return [
+    pool = [
       `Regarding "${cleanSeed}" — What user research methodology (generative interviews vs unmoderated testing) would you use to define requirements?`,
       `In Figma, how would you architect the wireframes, Auto Layout constraints, and interactive states to prototype: "${cleanSeed}"?`,
       `What usability friction points, accessibility (WCAG 2.2 AA) edge cases, and error states must be solved in: "${cleanSeed}"?`,
       `How would you design a usability testing protocol (tasks, metrics like SUS/time-on-task) to validate your prototype for: "${cleanSeed}"?`,
-      `How do you defend your UX decisions for "${cleanSeed}" when engineering raises technical constraints or timeline trade-offs?`
-    ].slice(0, n);
+      `How do you defend your UX decisions for "${cleanSeed}" when engineering raises technical constraints or timeline trade-offs?`,
+      `Scenario: User testing on "${cleanSeed}" shows a 40% drop-off at step 2. Walk through how you diagnose cognitive load vs usability friction.`,
+      `How do you establish design system tokens, component variants, and interactive states in Figma for: "${cleanSeed}"?`,
+      `Describe how you map the end-to-end customer journey and uncover latent user needs for: "${cleanSeed}".`,
+      `How do you ensure "${cleanSeed}" is 100% accessible for screen-reader users and keyboard navigators?`,
+      `What quantitative benchmark metrics and qualitative proof-points would you present to stakeholders before launching: "${cleanSeed}"?`
+    ];
   } else if (roleKey === 'product') {
-    return [
+    pool = [
       `Regarding "${cleanSeed}" — How do you define the product hypothesis and balance business metrics (conversion/retention) with user friction?`,
       `How do you conduct rapid user discovery for "${cleanSeed}" while keeping engineering delivery on track during sprint cycles?`,
       `What North Star metric and secondary guardrails would you monitor post-launch for: "${cleanSeed}"?`,
       `Describe how you would facilitate a cross-functional workshop with PM and Engineering leads to align on the MVP scope for: "${cleanSeed}".`,
-      `Scenario: 30 days after launching "${cleanSeed}", adoption is high but customer support tickets increased by 25%. How do you diagnose and iterate?`
-    ].slice(0, n);
+      `Scenario: 30 days after launching "${cleanSeed}", adoption is high but customer support tickets increased by 25%. How do you diagnose and iterate?`,
+      `How do you prioritize trade-offs between speed-to-market and long-term UX architecture when designing: "${cleanSeed}"?`,
+      `What qualitative customer signals vs quantitative product telemetry would you evaluate when iterating on: "${cleanSeed}"?`,
+      `Describe how you design monetization or conversion upgrade touchpoints within: "${cleanSeed}".`,
+      `How do you map out user onboarding flows and activation milestones specifically for: "${cleanSeed}"?`,
+      `Scenario: A competitor launches an alternative to "${cleanSeed}". How do you evaluate customer feedback and differentiate your experience?`
+    ];
   } else if (roleKey === 'uiux') {
-    return [
+    pool = [
       `Regarding "${cleanSeed}" — How do you establish typographic hierarchy, 8pt spatial grid, and color contrast tokens in Figma?`,
       `Explain how you architect component variants, boolean properties, and variable modes to build: "${cleanSeed}".`,
       `How do you design realistic micro-interactions and motion feedback loops for: "${cleanSeed}"?`,
       `How do you ensure responsive layout adaptability across mobile, tablet, and ultra-wide viewports for: "${cleanSeed}"?`,
-      `Describe how you prepare design specs and token handoff in Figma to guarantee pixel-perfect developer implementation of: "${cleanSeed}".`
-    ].slice(0, n);
+      `Describe how you prepare design specs and token handoff in Figma to guarantee pixel-perfect developer implementation of: "${cleanSeed}".`,
+      `How do you design high-contrast dark mode palettes and semantic tokens for: "${cleanSeed}"?`,
+      `Scenario: Component states in "${cleanSeed}" lack visual consistency. Walk through your audit and refactoring plan.`,
+      `How do you design skeletal loading animations and inline validation cues for: "${cleanSeed}"?`,
+      `What methods do you use to ensure WCAG 2.2 touch target compliance and focus ring visibility in: "${cleanSeed}"?`,
+      `Describe how you prototype realistic multi-breakpoint interactions in Figma or ProtoPie for: "${cleanSeed}".`
+    ];
   } else if (roleKey === 'frontend') {
-    return [
+    pool = [
       `Regarding "${cleanSeed}" — Explain how you architect the component hierarchy, client/server state, and DOM rendering in React 19/Next.js.`,
       `How do you optimize Core Web Vitals (LCP, INP, CLS) and prevent unnecessary re-renders when implementing: "${cleanSeed}"?`,
       `How do you implement keyboard navigation, focus trap, and ARIA attributes to make "${cleanSeed}" 100% WCAG accessible?`,
       `Describe your error boundary, optimistic UI update, and offline cache invalidation strategy for: "${cleanSeed}".`,
-      `Scenario: Performance profiling reveals high JS main-thread blocking time in "${cleanSeed}". Walk through your step-by-step optimization.`
-    ].slice(0, n);
+      `Scenario: Performance profiling reveals high JS main-thread blocking time in "${cleanSeed}". Walk through your step-by-step optimization.`,
+      `How do you architect client state (Zustand/Redux) vs server cache state (TanStack Query) for: "${cleanSeed}"?`,
+      `Explain how you implement route-level code splitting, dynamic imports, and bundle optimization for: "${cleanSeed}"?`,
+      `How do you handle real-time WebSocket event streams and avoid UI thrashing in: "${cleanSeed}"?`,
+      `Describe your automated testing strategy (Unit, Component Integration, Playwright E2E) for: "${cleanSeed}".`,
+      `How do you enforce type safety across backend API responses and frontend models for: "${cleanSeed}"?`
+    ];
   } else if (roleKey === 'backend') {
-    return [
+    pool = [
       `Regarding "${cleanSeed}" — Explain the API schema design, idempotency safeguards, and database transaction boundaries (ACID).`,
       `How would you architect the database indexes, query plan, and Redis caching layer to handle high throughput in: "${cleanSeed}"?`,
       `What concurrency race conditions, deadlocks, and partial failure modes must be guarded against in: "${cleanSeed}"?`,
       `Describe how you implement distributed rate limiting, authentication (JWT/OAuth2), and background worker task queues for: "${cleanSeed}".`,
-      `Scenario: Under 5x peak traffic, the database connection pool saturates for "${cleanSeed}". How do you diagnose and resolve the bottleneck?`
-    ].slice(0, n);
+      `Scenario: Under 5x peak traffic, the database connection pool saturates for "${cleanSeed}". How do you diagnose and resolve the bottleneck?`,
+      `How do you structure database schema migrations with zero downtime while serving live traffic for: "${cleanSeed}"?`,
+      `Explain how you design event-driven messaging with Kafka/RabbitMQ for decoupled services interacting with: "${cleanSeed}".`,
+      `How do you implement distributed tracing (OpenTelemetry) and structured JSON logging to monitor: "${cleanSeed}"?`,
+      `Describe your strategy for securing "${cleanSeed}" against SQL injection, broken object authorization (BOLA), and SSRF.`,
+      `How do you handle data partitioning, sharding, and read-replica replication lag for: "${cleanSeed}"?`
+    ];
   } else {
-    return [
+    pool = [
       `Regarding "${cleanSeed}" — Explain the chunking strategy, embedding model selection, and hybrid vector search pipeline.`,
       `How do you implement semantic caching, prompt templating, and guardrails to minimize latency and token cost for: "${cleanSeed}"?`,
       `How do you architect a multi-step agentic workflow (LangGraph/ReAct) with deterministic tool validation for: "${cleanSeed}"?`,
       `Describe how you benchmark and prevent hallucination rates in production using quantitative evaluation frameworks for: "${cleanSeed}".`,
-      `Scenario: Streaming tokens degrade and experience high TTFT under multi-tenant load for "${cleanSeed}". How do you optimize inference?`
-    ].slice(0, n);
+      `Scenario: Streaming tokens degrade and experience high TTFT under multi-tenant load for "${cleanSeed}". How do you optimize inference?`,
+      `How do you enforce document-level Access Control Lists (ACLs) and metadata filtering in vector retrieval for: "${cleanSeed}"?`,
+      `Explain how you evaluate retrieval precision and context recall (e.g. Ragas) for: "${cleanSeed}".`,
+      `How do you handle prompt injection attacks and malicious jailbreaks in: "${cleanSeed}"?`,
+      `Describe your strategy for fine-tuning or domain adaptation vs Retrieval-Augmented Generation for: "${cleanSeed}".`,
+      `How do you implement rerankers (e.g. Cohere/BGE) to optimize relevance without exceeding latency budgets in: "${cleanSeed}"?`
+    ];
   }
+
+  const result = pool.slice(0, n);
+  while (result.length < n) {
+    const idx = result.length + 1;
+    result.push(`Deep-Dive Scenario #${idx}: In the context of "${cleanSeed}", describe how you measure operational trade-offs, edge-case failure modes, and stakeholder alignment.`);
+  }
+  return result.slice(0, n);
 }
 
 const ROLE_EVAL_LENSES = {
@@ -1049,7 +1205,16 @@ async function synthesizeDashboardQuestions() {
     } else {
       const pool = DASH_ROLE_BANKS[roleKey] || DASH_ROLE_BANKS['ux'];
       questions = pool.slice(0, countVal);
+      while (questions.length < countVal) {
+        const idx = questions.length + 1;
+        questions.push(`Practical Execution Scenario #${idx}: How do you design, validate, and optimize core systems for ${role} under strict production constraints?`);
+      }
     }
+  }
+
+  // Ensure exact countVal is enforced
+  if (questions.length > countVal) {
+    questions = questions.slice(0, countVal);
   }
 
   dashCurrentQs = questions;

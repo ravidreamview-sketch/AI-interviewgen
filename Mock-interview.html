@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600;700&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400;1,700&display=swap');
 
 :root{
   --paper:#F8FAFC;      --paper-2:#FFFFFF;    --sheet:#FFFFFF;
@@ -145,9 +145,9 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
 /* setup stage */
-.setup-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:24px;margin-top:20px}
+.setup-grid{display:grid;grid-template-columns:1.35fr 1fr;gap:24px;margin-top:20px}
 .card{background:var(--paper-2);border:1px solid var(--rule);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow)}
-.card-title{font-size:18px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.card-title{font-size:17.5px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
 .card-title svg{color:#4F46E5;width:20px;height:20px}
 
 /* personas */
@@ -159,7 +159,7 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 .persona-card:hover{border-color:#818CF8;transform:translateY(-2px)}
 .persona-card.selected{border-color:#4F46E5;background:#EEF2FF;box-shadow:0 4px 14px rgba(79, 70, 229, 0.25)}
 [data-theme="dark"] .persona-card.selected{background:rgba(99, 102, 241, 0.2);border-color:#818CF8}
-.p-avatar{width:52px;height:52px;border-radius:50%;margin:0 auto 10px;display:grid;place-items:center;font-size:24px;background:#E0E7FF}
+.p-avatar{width:50px;height:50px;border-radius:50%;margin:0 auto 10px;display:grid;place-items:center;font-size:24px;background:#E0E7FF}
 .p-name{font-weight:700;font-size:14.5px;color:var(--ink)}
 .p-role{font-size:11.5px;color:var(--ink-soft);margin-top:2px}
 
@@ -171,6 +171,32 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 }
 .f-input:focus, .f-select:focus{outline:none;border-color:var(--pen);box-shadow:0 0 0 3px var(--pen-wash)}
 
+/* 3-STEP HARDWARE CALIBRATION CARD */
+.calib-step-list{display:flex;flex-direction:column;gap:12px;margin:16px 0}
+.calib-step-item{
+  background:var(--sheet);border:1px solid var(--rule);border-radius:12px;padding:14px;
+  display:flex;flex-direction:column;gap:8px;
+}
+.cs-head{display:flex;align-items:center;justify-content:space-between;font-size:13.5px;font-weight:700}
+.cs-tag{font-family:var(--f-mono);font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:6px}
+.cs-pending{background:rgba(245,158,11,0.15);color:#F59E0B}
+.cs-ready{background:rgba(16,185,129,0.15);color:#10B981}
+
+.mic-meter-bar-wrap{
+  height:10px;border-radius:99px;background:var(--rule);overflow:hidden;position:relative;margin:4px 0;
+}
+.mic-meter-fill{
+  height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg, #10B981 60%, #F59E0B 85%, #EF4444 100%);
+  transition:width .08s ease;
+}
+
+.calib-btn-sm{
+  padding:8px 14px;border-radius:8px;border:1px solid var(--rule);background:var(--paper-2);
+  font-size:12.5px;font-weight:600;color:var(--ink);display:inline-flex;align-items:center;gap:6px;
+  transition:all .18s;align-self:flex-start;
+}
+.calib-btn-sm:hover{border-color:var(--pen);color:var(--pen)}
+
 .start-btn{
   width:100%;padding:15px;border-radius:12px;border:none;
   background:linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);
@@ -180,20 +206,20 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 .start-btn:hover{filter:brightness(1.08);box-shadow:0 14px 28px -4px rgba(79, 70, 229, 0.55)}
 
 /* live stage */
-.live-container{max-width:880px;margin:20px auto;text-align:center}
-.live-header{display:flex;align-items:center;justify-content:space-between;background:var(--paper-2);padding:14px 22px;border-radius:14px;border:1px solid var(--rule);margin-bottom:20px}
+.live-container{max-width:920px;margin:20px auto;text-align:center}
+.live-header{display:flex;align-items:center;justify-content:space-between;background:var(--paper-2);padding:14px 22px;border-radius:14px;border:1px solid var(--rule);margin-bottom:20px;flex-wrap:wrap;gap:10px}
 .live-stat{display:flex;align-items:center;gap:8px;font-family:var(--f-mono);font-size:13px;font-weight:600}
 .live-stat svg{color:#4F46E5;width:18px;height:18px}
 
-.ai-orb-wrap{margin:30px auto 20px;position:relative;width:150px;height:150px;display:grid;place-items:center}
+.ai-orb-wrap{margin:24px auto 16px;position:relative;width:140px;height:140px;display:grid;place-items:center}
 .ai-orb{
-  width:110px;height:110px;border-radius:50%;
+  width:100px;height:100px;border-radius:50%;
   background:linear-gradient(135deg, #38BDF8 0%, #6366F1 50%, #C084FC 100%);
-  box-shadow:0 0 40px rgba(99, 102, 241, 0.6), inset 0 0 20px rgba(255,255,255,0.4);
-  position:relative;z-index:2;display:grid;place-items:center;color:#FFFFFF;font-size:42px;
-  animation:floatOrb 3s ease-in-out infinite;
+  box-shadow:0 0 36px rgba(99, 102, 241, 0.6), inset 0 0 20px rgba(255,255,255,0.4);
+  position:relative;z-index:2;display:grid;place-items:center;color:#FFFFFF;font-size:38px;
+  animation:floatOrb 3s ease-in-out infinite;transition:transform .3s;
 }
-@keyframes floatOrb{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes floatOrb{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 
 .orb-pulse{
   position:absolute;inset:0;border-radius:50%;
@@ -207,7 +233,7 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 
 /* Real-Time Live Speech Metrics */
 .live-metrics-bar{
-  display:flex;align-items:center;justify-content:center;gap:12px;margin:16px 0 20px;
+  display:flex;align-items:center;justify-content:center;gap:12px;margin:14px 0 18px;
   font-family:var(--f-mono);font-size:12px;flex-wrap:wrap;
 }
 .metric-tag{
@@ -216,18 +242,42 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 }
 .metric-tag b{color:var(--ink)}
 
-.live-q-card{background:var(--paper-2);border:1px solid var(--rule);border-radius:16px;padding:28px;margin-bottom:24px;box-shadow:var(--shadow);text-align:left}
-.live-q-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;background:#EEF2FF;color:#4F46E5;font-family:var(--f-mono);font-size:11.5px;font-weight:700;margin-bottom:12px}
-.live-q-text{font-size:22px;font-weight:600;line-height:1.4;margin:0 0 16px}
-
-.transcript-box{
-  background:var(--paper);border:1px dashed var(--rule);border-radius:12px;padding:16px;
-  min-height:90px;text-align:left;font-size:14.5px;color:var(--ink-soft);margin-top:16px;position:relative;
+/* Thinking / Filler Latency Pill */
+.filler-pill{
+  display:none;align-items:center;gap:8px;padding:6px 16px;border-radius:99px;
+  background:rgba(99, 102, 241, 0.15);border:1px solid rgba(99, 102, 241, 0.35);
+  color:var(--pen);font-family:var(--f-mono);font-size:12px;font-weight:700;margin:0 auto 14px;
 }
-.live-indicator{display:inline-block;width:8px;height:8px;border-radius:50%;background:#EF4444;margin-right:6px;animation:blink 1s infinite}
+.filler-pill.active{display:inline-flex;animation:fadeIn .2s ease}
+.dot-typing{display:inline-flex;gap:4px}
+.dot-typing span{width:5px;height:5px;border-radius:50%;background:var(--pen);animation:blinkDot 1.2s infinite ease-in-out}
+.dot-typing span:nth-child(2){animation-delay:.2s}
+.dot-typing span:nth-child(3){animation-delay:.4s}
+@keyframes blinkDot{0%,80%,100%{transform:scale(0.6);opacity:0.4}40%{transform:scale(1.2);opacity:1}}
+
+.live-q-card{background:var(--paper-2);border:1px solid var(--rule);border-radius:16px;padding:26px;margin-bottom:20px;box-shadow:var(--shadow);text-align:left}
+.live-q-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;background:#EEF2FF;color:#4F46E5;font-family:var(--f-mono);font-size:11.5px;font-weight:700;margin-bottom:12px}
+[data-theme="dark"] .live-q-badge{background:rgba(99,102,241,0.2);color:#818CF8}
+.live-q-text{font-size:21px;font-weight:700;line-height:1.4;margin:0 0 16px}
+
+/* Real-Time Transcript Strip with Clarify Shortcut */
+.transcript-box{
+  background:var(--paper);border:1px solid var(--rule);border-radius:12px;padding:16px;
+  min-height:90px;text-align:left;font-size:14.5px;color:var(--ink);position:relative;
+}
+.transcript-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.transcript-label{font-family:var(--f-mono);font-size:11px;color:var(--label-color);font-weight:700;display:flex;align-items:center;gap:6px}
+.live-indicator{display:inline-block;width:8px;height:8px;border-radius:50%;background:#EF4444;animation:blink 1s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
 
-.live-controls{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:24px}
+.clarify-btn{
+  font-family:var(--f-mono);font-size:11.5px;font-weight:700;color:var(--pen);
+  background:var(--pen-wash);padding:4px 10px;border-radius:6px;border:1px solid rgba(99,102,241,0.3);
+  display:inline-flex;align-items:center;gap:4px;cursor:pointer;transition:all .18s;
+}
+.clarify-btn:hover{background:var(--primary);color:#fff}
+
+.live-controls{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:20px;flex-wrap:wrap}
 .mic-btn{
   width:64px;height:64px;border-radius:50%;
   background:linear-gradient(135deg, #2563EB 0%, #4F46E5 100%);
@@ -243,43 +293,106 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 }
 .action-pill-btn:hover{border-color:#4F46E5;color:#4F46E5}
 
-/* scorecard stage */
-.scorecard-wrap{max-width:960px;margin:20px auto}
+/* EDIT TRANSCRIPT MODAL */
+.modal-backdrop{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:60;
+  backdrop-filter:blur(4px);place-items:center;padding:20px;
+}
+.modal-backdrop.open{display:grid}
+.modal-card{
+  background:var(--paper-2);border:1px solid var(--rule);border-radius:18px;
+  max-width:580px;width:100%;padding:26px;box-shadow:0 20px 50px rgba(0,0,0,0.5);
+  animation:fadeIn .25s ease;
+}
+.modal-title{font-size:18px;font-weight:800;margin:0 0 8px;display:flex;align-items:center;gap:8px}
+.modal-desc{color:var(--ink-soft);font-size:13.5px;margin:0 0 16px}
+.modal-textarea{
+  width:100%;height:130px;padding:12px;border-radius:10px;border:1px solid var(--rule);
+  background:var(--sheet);color:var(--ink);font-family:var(--f-ui);font-size:14px;line-height:1.5;resize:vertical;
+}
+.quick-tags{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 18px}
+.q-tag{
+  font-family:var(--f-mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;
+  background:var(--sheet);border:1px solid var(--rule);color:var(--ink-soft);cursor:pointer;transition:all .15s;
+}
+.q-tag:hover{border-color:var(--pen);color:var(--pen)}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px}
+
+/* SCORECARD STAGE */
+.scorecard-wrap{max-width:980px;margin:20px auto}
 .score-hero{display:grid;grid-template-columns:260px 1fr;gap:24px;margin-bottom:24px}
-.score-circle-card{background:var(--paper-2);border:1px solid var(--rule);border-radius:16px;padding:30px;text-align:center;box-shadow:var(--shadow)}
-.score-big{font-size:56px;font-weight:800;color:#4F46E5;line-height:1;margin:10px 0}
+.score-circle-card{background:var(--paper-2);border:1px solid var(--rule);border-radius:16px;padding:28px 20px;text-align:center;box-shadow:var(--shadow)}
+.score-big{font-size:54px;font-weight:800;color:#4F46E5;line-height:1;margin:10px 0}
 .metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .metric-card{background:var(--paper-2);border:1px solid var(--rule);border-radius:14px;padding:16px;box-shadow:var(--shadow)}
 .metric-header{display:flex;justify-content:space-between;font-size:13.5px;font-weight:600;margin-bottom:8px}
 .progress-bar{width:100%;height:8px;border-radius:99px;background:var(--rule);overflow:hidden}
 .progress-fill{height:100%;border-radius:99px;background:linear-gradient(90deg, #3B82F6, #7C3AED)}
 
-/* STAR competency metrics */
-.star-card{background:var(--paper-2);border:1px solid var(--rule);border-radius:16px;padding:24px;margin-bottom:24px;box-shadow:var(--shadow)}
-.star-pills{display:grid;grid-template-columns:repeat(4, 1fr);gap:12px;margin-top:14px}
-.star-pill{
-  padding:12px;border-radius:10px;background:var(--paper);border:1px solid var(--rule-soft);text-align:center;
+/* STAR Scoring Section */
+.card-section{
+  background:var(--paper-2);border:1px solid var(--rule);border-radius:var(--radius);
+  padding:26px;margin-bottom:24px;box-shadow:var(--shadow);
 }
-.star-pill span{font-family:var(--f-mono);font-size:11px;color:var(--ink-faint);text-transform:uppercase;font-weight:700;display:block;margin-bottom:4px}
-.star-pill b{font-size:18px;font-weight:800;color:#4F46E5}
+.section-title{
+  font-size:18px;font-weight:800;margin:0 0 4px;display:flex;align-items:center;gap:10px;
+}
+.section-sub{color:var(--ink-soft);font-size:13px;margin:0 0 18px}
 
-.qa-review{background:var(--paper-2);border:1px solid var(--rule);border-radius:16px;padding:24px;margin-top:20px;box-shadow:var(--shadow)}
-.qa-item{padding:18px 0;border-bottom:1px solid var(--rule-soft)}
-.qa-item:last-child{border-bottom:none}
-.qa-q{font-weight:700;font-size:16px;margin-bottom:8px;color:var(--ink)}
-.qa-feedback{background:var(--paper);border-radius:10px;padding:14px;margin-top:8px;font-size:13.5px;color:var(--ink-soft);line-height:1.55}
-.qa-feedback b{color:#4F46E5}
-.model-ans{margin-top:8px;padding-top:8px;border-top:1px dashed var(--rule);font-size:13px;color:var(--ink)}
-.model-ans b{color:#059669}
+.star-bars-grid{display:grid;grid-template-columns:repeat(4, 1fr);gap:14px}
+.star-col{
+  background:var(--sheet);border:1px solid var(--rule);border-radius:12px;
+  padding:16px 14px;display:flex;flex-direction:column;
+}
+.star-letter{
+  width:28px;height:28px;border-radius:6px;display:grid;place-items:center;
+  font-family:var(--f-mono);font-size:13px;font-weight:800;margin-bottom:8px;
+}
+.sl-s{background:rgba(59, 130, 246, 0.2);color:#3B82F6}
+.sl-t{background:rgba(16, 185, 129, 0.2);color:#10B981}
+.sl-a{background:rgba(245, 158, 11, 0.2);color:#F59E0B}
+.sl-r{background:rgba(139, 92, 246, 0.2);color:#8B5CF6}
+.star-name{font-weight:700;font-size:13px;color:var(--ink);margin-bottom:4px}
+.star-desc{font-size:11px;color:var(--ink-soft);line-height:1.4;margin-bottom:10px;flex:1}
+.star-score-row{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px}
+.star-score{font-family:var(--f-mono);font-size:18px;font-weight:800;color:var(--ink)}
+.star-tag{font-size:10.5px;font-weight:700;color:#10B981}
+
+/* Company Badges Section */
+.badges-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:14px}
+.badge-card{
+  background:var(--sheet);border:1px solid var(--rule);border-radius:12px;
+  padding:16px;display:flex;align-items:flex-start;gap:12px;
+}
+.b-logo{
+  width:38px;height:38px;border-radius:8px;background:var(--paper-2);
+  border:1px solid var(--rule);display:grid;place-items:center;font-size:18px;flex:none;
+}
+.b-info{flex:1;min-width:0}
+.b-company{font-family:var(--f-mono);font-size:10.5px;color:var(--ink-soft);text-transform:uppercase;font-weight:700}
+.b-value{font-weight:700;font-size:13.5px;color:var(--ink);margin:2px 0 4px}
+.b-match{
+  display:inline-block;padding:2px 6px;border-radius:4px;font-family:var(--f-mono);
+  font-size:10.5px;font-weight:700;background:rgba(16, 185, 129, 0.15);color:#10B981;
+}
+
+/* Exemplar Rewrite Comparison */
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.compare-pane{background:var(--sheet);border:1px solid var(--rule);border-radius:12px;padding:16px}
+.pane-head{display:flex;align-items:center;gap:6px;font-family:var(--f-mono);font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:8px}
+.candidate-head{color:#94A3B8}
+.exemplar-head{color:#10B981}
+.pane-body{font-size:13px;line-height:1.55;color:var(--ink-soft)}
+.pane-body b{color:var(--ink)}
 
 /* responsive */
-@media(max-width:820px){
+@media(max-width:880px){
   .mob-btn{display:grid}
   .sidebar{position:fixed;left:0;top:0;bottom:0;width:280px;z-index:50;transform:translateX(-100%)}
   .sidebar.open{transform:none}
   .scrim.show{display:block}
-  .main{padding:0 20px 24px}
-  .setup-grid,.score-hero,.persona-grid,.star-pills{grid-template-columns:1fr}
+  .main{padding:0 18px 24px}
+  .setup-grid,.score-hero,.persona-grid,.star-bars-grid,.compare-grid{grid-template-columns:1fr}
 }
 @media(max-width:520px){
   .metric-grid{grid-template-columns:1fr}
@@ -333,25 +446,13 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 16 14"/></svg>
         <span>Interview History</span>
       </a>
-      <a class="nav-link" href="Interview history.html">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-        <span>Question Bank</span>
+      <a class="nav-link" href="scorecard.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+        <span>Public Scorecards</span>
       </a>
       <a class="nav-link" href="Company-playbooks.html">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
         <span>Company Playbooks</span>
-      </a>
-    </nav>
-
-    <div class="side-label" style="margin-top:14px">PREFERENCES</div>
-    <nav class="nav">
-      <a class="nav-link" href="Dashboard.html#analytics">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
-        <span>Analytics</span>
-      </a>
-      <a class="nav-link" href="javascript:void(0)" onclick="alert('Model: Gemini 2.5 Flash\nStatus: Operational\nAPI Base: Ready')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-        <span>Model &amp; Settings</span>
       </a>
     </nav>
 
@@ -386,11 +487,11 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
       </div>
     </div>
 
-    <!-- ================== STAGE 1: SETUP ================== -->
+    <!-- ================== STAGE 1: SETUP & 3-STEP CALIBRATION ================== -->
     <div class="stage active" id="stageSetup">
       <header style="margin:20px 0 26px">
         <h1 style="font-size:32px;font-weight:800;margin:0 0 6px">AI Voice Mock Interview Room</h1>
-        <p style="color:var(--ink-soft);margin:0;font-size:15.5px">Practice real-time technical &amp; behavioral interviews with voice synthesis, live transcription, and rubric evaluation.</p>
+        <p style="color:var(--ink-soft);margin:0;font-size:15.5px">Real-time voice simulation with live speech calibration, turn-taking fillers, and verified STAR scorecards.</p>
       </header>
 
       <div class="setup-grid">
@@ -446,37 +547,74 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
               </select>
             </div>
             <div class="f-field">
-              <label class="f-label">Difficulty Mode</label>
-              <select class="f-select" id="mockDiff">
-                <option>Standard / Realistic</option>
-                <option selected>Challenging (Follow-ups)</option>
-                <option>FAANG / High Bar</option>
+              <label class="f-label">Target Company Bar</label>
+              <select class="f-select" id="mockCompany">
+                <option selected>Amazon (Leadership Principles)</option>
+                <option>Google (GCA &amp; Googleyness)</option>
+                <option>Meta (Execution &amp; Scale)</option>
+                <option>Netflix (Context Not Control)</option>
               </select>
             </div>
           </div>
         </div>
 
-        <!-- RIGHT PANEL: MIC CHECK & START -->
+        <!-- RIGHT PANEL: PRE-FLIGHT HARDWARE CALIBRATION -->
         <div>
-          <div class="card" style="margin-bottom:16px;text-align:center">
-            <div style="font-size:36px;margin-bottom:8px">🎙️</div>
-            <div style="font-weight:700;font-size:16px;margin-bottom:4px">Microphone &amp; Audio Check</div>
-            <p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 14px">Speak into your mic to verify sound input before starting.</p>
-            <div style="display:flex;justify-content:center;gap:4px;height:24px;align-items:center;margin-bottom:12px" id="audioMeter">
-              <span style="width:4px;height:12px;background:#4F46E5;border-radius:2px"></span>
-              <span style="width:4px;height:18px;background:#4F46E5;border-radius:2px"></span>
-              <span style="width:4px;height:8px;background:#4F46E5;border-radius:2px"></span>
-              <span style="width:4px;height:22px;background:#6366F1;border-radius:2px"></span>
-              <span style="width:4px;height:14px;background:#6366F1;border-radius:2px"></span>
-              <span style="width:4px;height:6px;background:#4F46E5;border-radius:2px"></span>
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
+              Pre-Flight Hardware Calibration
             </div>
-            <div style="font-family:var(--f-mono);font-size:11px;color:#10B981;font-weight:600">● Mic Ready (Built-in Audio)</div>
-          </div>
+            <p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 12px">
+              Verify your audio input, speaker output, and room acoustics before live voice begins.
+            </p>
 
-          <button class="start-btn" id="startInterviewBtn">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            Start Voice Interview
-          </button>
+            <div class="calib-step-list">
+              <!-- Step 1: Mic Input Level -->
+              <div class="calib-step-item">
+                <div class="cs-head">
+                  <span>1. Microphone Live Level</span>
+                  <span class="cs-tag cs-ready" id="micStatusTag">● Live</span>
+                </div>
+                <div class="mic-meter-bar-wrap">
+                  <div class="mic-meter-fill" id="micMeterFill" style="width: 45%;"></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--ink-soft)">
+                  <span id="micVolText">Input Sensitivity: Optimal (-18 dB)</span>
+                  <button class="calib-btn-sm" onclick="startMicCalibration()">
+                    <span>🎙️ Test Mic</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Step 2: Speaker Output -->
+              <div class="calib-step-item">
+                <div class="cs-head">
+                  <span>2. Speaker Output Test</span>
+                  <span class="cs-tag cs-pending" id="spkStatusTag">Unchecked</span>
+                </div>
+                <div style="font-size:12px;color:var(--ink-soft)">Click to play test chime and confirm you can hear AI voice questions clearly.</div>
+                <button class="calib-btn-sm" onclick="testSpeakerSound()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></svg>
+                  Play Speaker Test Audio
+                </button>
+              </div>
+
+              <!-- Step 3: Background Noise Floor -->
+              <div class="calib-step-item">
+                <div class="cs-head">
+                  <span>3. Background Noise Floor</span>
+                  <span class="cs-tag cs-ready" id="noiseStatusTag">Quiet (24 dB)</span>
+                </div>
+                <div style="font-size:12px;color:var(--ink-soft)">Ambient acoustic scan: Studio Grade. Minimal background interference detected.</div>
+              </div>
+            </div>
+
+            <button class="start-btn" id="startInterviewBtn" style="margin-top:14px">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Start Live Voice Mock Round
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -487,7 +625,7 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
         <div class="live-header">
           <div class="live-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Time: <span id="liveTimer">00:00</span></div>
           <div class="live-stat" id="liveQCount">Question 1 of 5</div>
-          <div class="live-stat" style="color:#10B981">● Connected to Gemini Live Voice</div>
+          <div class="live-stat" style="color:#10B981">● Connected to Gemini Live Voice Engine</div>
         </div>
 
         <div class="ai-orb-wrap">
@@ -497,22 +635,35 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
         <canvas class="wave-canvas" id="waveCanvas"></canvas>
         <div style="font-family:var(--f-mono);font-size:12.5px;color:var(--ink-soft);font-weight:600;margin-top:6px" id="aiStatus">AI Interviewer is speaking...</div>
 
+        <!-- FILLER AUDIO TURN-TAKING LATENCY INDICATOR -->
+        <div class="filler-pill" id="fillerPill">
+          <span class="dot-typing"><span></span><span></span><span></span></span>
+          <span id="fillerText">"Got it... evaluating your architecture approach..."</span>
+        </div>
+
         <!-- REAL-TIME LIVE SPEECH METRICS -->
         <div class="live-metrics-bar">
           <span class="metric-tag">⚡ Pace: <b id="wpmMetric">138 WPM</b></span>
           <span class="metric-tag">🔍 Fillers: <b id="fillerMetric">0 Detected</b></span>
-          <span class="metric-tag">🎯 Tone: <b>Confident</b></span>
+          <span class="metric-tag">🎯 Tone: <b>Confident &amp; Direct</b></span>
         </div>
 
         <div class="live-q-card">
           <div class="live-q-badge" id="liveBadge">Question #1 · Technical Architecture</div>
           <div class="live-q-text" id="liveQuestion">"Can you explain how FastAPI handles asynchronous requests under the hood compared to Django or Flask?"</div>
 
+          <!-- REAL-TIME TRANSCRIPT STRIP WITH INSTANT CLARIFY -->
           <div class="transcript-box">
-            <div style="font-family:var(--f-mono);font-size:11px;color:var(--label-color);font-weight:700;margin-bottom:4px">
-              <span class="live-indicator"></span> YOUR VOICE TRANSCRIPT:
+            <div class="transcript-head">
+              <span class="transcript-label">
+                <span class="live-indicator"></span> LIVE SPEECH TRANSCRIPT:
+              </span>
+              <button class="clarify-btn" onclick="openClarifyModal()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                Edit / Clarify Jargon
+              </button>
             </div>
-            <div id="liveTranscript">Listening for your response... Click the mic button to start speaking.</div>
+            <div id="liveTranscript">Listening for your response... Click the mic button to begin speaking.</div>
           </div>
         </div>
 
@@ -532,22 +683,26 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
       </div>
     </div>
 
-    <!-- ================== STAGE 3: SCORECARD ================== -->
+    <!-- ================== STAGE 3: SCORECARD WITH STAR & COMPANY BADGES ================== -->
     <div class="stage" id="stageScorecard">
       <div class="scorecard-wrap">
-        <header style="display:flex;justify-content:space-between;align-items:center;margin:20px 0">
+        <header style="display:flex;justify-content:space-between;align-items:center;margin:20px 0;flex-wrap:wrap;gap:12px">
           <div>
-            <h1 style="font-size:30px;font-weight:700;margin:0 0 4px">Interview Evaluation &amp; Scorecard</h1>
-            <p style="color:var(--ink-soft);margin:0">Overall AI Performance Assessment for Python Backend Engineer</p>
+            <h1 style="font-size:28px;font-weight:800;margin:0 0 4px">Interview Evaluation &amp; Scorecard</h1>
+            <p style="color:var(--ink-soft);margin:0">Verified AI Assessment for Python Backend Engineer (Senior Lead)</p>
           </div>
-          <div style="display:flex;gap:10px">
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="action-pill-btn" onclick="openShareModal()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+              Share Scorecard
+            </button>
             <button class="action-pill-btn" onclick="window.print()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-              Export Report (PDF)
+              Export PDF
             </button>
             <button class="action-pill-btn" id="retakeBtn" style="background:#4F46E5;color:#fff;border:none">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
-              Retake Interview
+              Retake Round
             </button>
           </div>
         </header>
@@ -560,7 +715,7 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
           </div>
           <div class="metric-grid">
             <div class="metric-card">
-              <div class="metric-header"><span>Technical Accuracy</span><b>92%</b></div>
+              <div class="metric-header"><span>Technical Accuracy &amp; Depth</span><b>92%</b></div>
               <div class="progress-bar"><div class="progress-fill" style="width:92%"></div></div>
             </div>
             <div class="metric-card">
@@ -568,53 +723,188 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
               <div class="progress-bar"><div class="progress-fill" style="width:88%"></div></div>
             </div>
             <div class="metric-card">
-              <div class="metric-header"><span>STAR Structure &amp; Depth</span><b>86%</b></div>
-              <div class="progress-bar"><div class="progress-fill" style="width:86%"></div></div>
-            </div>
-            <div class="metric-card">
-              <div class="metric-header"><span>Confidence &amp; Speech Pace</span><b>90%</b></div>
+              <div class="metric-header"><span>STAR Structure &amp; Depth</span><b>90%</b></div>
               <div class="progress-bar"><div class="progress-fill" style="width:90%"></div></div>
             </div>
-          </div>
-        </div>
-
-        <!-- STAR Competency breakdown -->
-        <div class="star-card">
-          <h3 style="margin:0 0 4px;font-size:16.5px;font-weight:700">STAR Methodology Scoring</h3>
-          <p style="font-size:13px;color:var(--ink-soft);margin:0">Evaluation of candidate problem framing, execution, and impact communication.</p>
-          <div class="star-pills">
-            <div class="star-pill"><span>Situation Framing</span><b>94%</b></div>
-            <div class="star-pill"><span>Task Ownership</span><b>90%</b></div>
-            <div class="star-pill"><span>Action Specifics</span><b>87%</b></div>
-            <div class="star-pill"><span>Quantified Result</span><b>89%</b></div>
-          </div>
-        </div>
-
-        <div class="qa-review">
-          <h2 style="font-size:18px;font-weight:700;margin:0 0 16px">Question-by-Question AI Analysis &amp; Ideal Answers</h2>
-          <div class="qa-item">
-            <div class="qa-q">Q1: How does FastAPI handle async requests with ASGI vs WSGI?</div>
-            <div class="qa-feedback">
-              <b>AI Critique:</b> Strong technical explanation of uvloop and event loops. Mentioning concurrency vs parallelism made the answer stand out.
-              <div class="model-ans"><b>💡 Model Ideal Answer:</b> FastAPI leverages Starlette and Pydantic on top of ASGI (Asynchronous Server Gateway Interface), allowing a single worker thread to handle thousands of concurrent I/O-bound requests via asyncio event loops without blocking worker pools like WSGI.</div>
-            </div>
-          </div>
-          <div class="qa-item">
-            <div class="qa-q">Q2: How do you prevent database connection pool exhaustion under high concurrency?</div>
-            <div class="qa-feedback">
-              <b>AI Critique:</b> Good mention of SQLAlchemy async engines, connection pool sizing, and PgBouncer connection multiplexing.
-              <div class="model-ans"><b>💡 Model Ideal Answer:</b> Use asynchronous drivers (asyncpg), configure pool overflow and timeout bounds, leverage PgBouncer for transaction-level pooling, and ensure sessions are strictly closed inside context managers.</div>
+            <div class="metric-card">
+              <div class="metric-header"><span>Confidence &amp; Speech Pace</span><b>87%</b></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:87%"></div></div>
             </div>
           </div>
         </div>
+
+        <!-- 4-BAR STAR VISUAL BREAKDOWN -->
+        <section class="card-section">
+          <h2 class="section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            STAR Behavioral Scoring Breakdown
+          </h2>
+          <p class="section-sub">Granular evaluation measuring problem framing, leadership ownership, and business metric impact.</p>
+
+          <div class="star-bars-grid">
+            <div class="star-col">
+              <div class="star-letter sl-s">S</div>
+              <div class="star-name">Situation &amp; Task Clarity</div>
+              <div class="star-desc">Problem framing under scale (100k RPS) with clear SLA constraints.</div>
+              <div class="star-score-row"><span class="star-score">94%</span><span class="star-tag">Mastery</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:94%"></div></div>
+            </div>
+            <div class="star-col">
+              <div class="star-letter sl-t">T</div>
+              <div class="star-name">Task Scope &amp; Boundaries</div>
+              <div class="star-desc">Articulated root causes and trade-offs before executing architecture.</div>
+              <div class="star-score-row"><span class="star-score">91%</span><span class="star-tag">Advanced</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:91%"></div></div>
+            </div>
+            <div class="star-col">
+              <div class="star-letter sl-a">A</div>
+              <div class="star-name">Action ("I vs. We" Ownership)</div>
+              <div class="star-desc">Direct personal contribution in async migration and PgBouncer setup.</div>
+              <div class="star-score-row"><span class="star-score">86%</span><span class="star-tag">Proficient</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:86%"></div></div>
+            </div>
+            <div class="star-col">
+              <div class="star-letter sl-r">R</div>
+              <div class="star-name">Measurable Results</div>
+              <div class="star-desc">Quantified impact: 48% reduction in p99 latency with zero connection timeouts.</div>
+              <div class="star-score-row"><span class="star-score">89%</span><span class="star-tag">Strong</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:89%"></div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- COMPANY SPECIFIC EVALUATION BADGES -->
+        <section class="card-section">
+          <h2 class="section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+            Company-Specific Evaluation Badges
+          </h2>
+          <p class="section-sub">Mapped against actual interview rubrics and leadership principles of top tech companies.</p>
+
+          <div class="badges-grid">
+            <div class="badge-card">
+              <div class="b-logo">📦</div>
+              <div class="b-info">
+                <div class="b-company">Amazon LP</div>
+                <div class="b-value">Dive Deep &amp; Ownership</div>
+                <span class="b-match">92% Alignment</span>
+              </div>
+            </div>
+            <div class="badge-card">
+              <div class="b-logo">🔍</div>
+              <div class="b-info">
+                <div class="b-company">Google Bar</div>
+                <div class="b-value">Googleyness &amp; GCA</div>
+                <span class="b-match">90% Alignment</span>
+              </div>
+            </div>
+            <div class="badge-card">
+              <div class="b-logo">♾️</div>
+              <div class="b-info">
+                <div class="b-company">Meta Values</div>
+                <div class="b-value">Focus on Long-Term Impact</div>
+                <span class="b-match">88% Alignment</span>
+              </div>
+            </div>
+            <div class="badge-card">
+              <div class="b-logo">🎬</div>
+              <div class="b-info">
+                <div class="b-company">Netflix Culture</div>
+                <div class="b-value">Context Not Control</div>
+                <span class="b-match">87% Alignment</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SIDE-BY-SIDE EXEMPLAR ANSWER REWRITE -->
+        <section class="card-section">
+          <h2 class="section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Staff / Principal Engineer Exemplar Rewrite
+          </h2>
+          <p class="section-sub">Side-by-side comparison showing how a Staff+ engineer structures the exact same scenario.</p>
+
+          <div style="font-weight:700;font-size:15px;color:var(--ink);margin-top:10px">Q1: How do you prevent database connection pool exhaustion under high concurrency?</div>
+          <div class="compare-grid">
+            <div class="compare-pane">
+              <div class="pane-head candidate-head">Your Actual Transcript</div>
+              <div class="pane-body">"I noticed our SQLAlchemy sessions were staying open too long during traffic spikes. I adjusted the pool size to 50, added PgBouncer in front of PostgreSQL, and wrapped all DB queries inside async context managers so sessions get recycled immediately."</div>
+            </div>
+            <div class="compare-pane" style="border-color:rgba(16, 185, 129, 0.4);background:rgba(16, 185, 129, 0.04)">
+              <div class="pane-head exemplar-head">Staff+ Principal Engineer Exemplar</div>
+              <div class="pane-body" style="color:var(--ink)">"<b>1. Diagnosis:</b> Identified CPU context-switch churn caused by 200+ raw PostgreSQL backends.<br><b>2. Architecture:</b> Deployed PgBouncer in transaction mode (capping server connections to 40) paired with SQLAlchemy asyncpg client pools with 200ms acquire timeouts.<br><b>3. Safeguards:</b> Added circuit breakers via Redis token buckets to protect write pipelines.<br><b>4. Impact:</b> Reduced p99 latency by 68% (from 2.4s to 42ms) under 12k RPS."</div>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
 
   </main>
 </div>
 
+<!-- EDIT / CLARIFY TRANSCRIPT MODAL -->
+<div class="modal-backdrop" id="clarifyModal">
+  <div class="modal-card">
+    <div class="modal-title">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      Edit &amp; Clarify Speech Transcript
+    </div>
+    <div class="modal-desc">
+      Fix misrecognized technical terms, library names, or accents so you aren't penalized by speech-to-text limitations.
+    </div>
+
+    <textarea class="modal-textarea" id="clarifyTextarea"></textarea>
+
+    <div style="font-family:var(--f-mono);font-size:11px;font-weight:700;color:var(--ink-soft);margin-top:10px">QUICK INSERT TECHNICAL JARGON:</div>
+    <div class="quick-tags">
+      <span class="q-tag" onclick="insertTag('FastAPI')">+ FastAPI</span>
+      <span class="q-tag" onclick="insertTag('Kubernetes')">+ Kubernetes</span>
+      <span class="q-tag" onclick="insertTag('PostgreSQL')">+ PostgreSQL</span>
+      <span class="q-tag" onclick="insertTag('AsyncIO / uvloop')">+ AsyncIO / uvloop</span>
+      <span class="q-tag" onclick="insertTag('PgBouncer')">+ PgBouncer</span>
+      <span class="q-tag" onclick="insertTag('Redis Caching')">+ Redis Caching</span>
+      <span class="q-tag" onclick="insertTag('GraphQL & gRPC')">+ GraphQL &amp; gRPC</span>
+    </div>
+
+    <div class="modal-actions">
+      <button class="calib-btn-sm" onclick="closeClarifyModal()">Cancel</button>
+      <button class="action-pill-btn" style="background:#4F46E5;color:#fff;border:none" onclick="saveClarifiedTranscript()">
+        Save &amp; Update Transcript
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- SHARE SCORECARD MODAL -->
+<div class="modal-backdrop" id="shareModal">
+  <div class="modal-card">
+    <div class="modal-title">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" stroke-width="2.5"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+      Share Verified Candidate Scorecard
+    </div>
+    <div class="modal-desc">
+      Your score of <b>89% (Strong Hire)</b> is verified by RaviGenAI Studio. Share your public link with recruiters and mentors.
+    </div>
+
+    <div style="background:var(--sheet);border:1px solid var(--rule);padding:12px;border-radius:10px;font-family:var(--f-mono);font-size:12.5px;color:var(--pen);word-break:break-all;margin-bottom:16px" id="shareUrlBox">
+      http://localhost:8000/scorecard.html?id=RC-9842
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="calib-btn-sm" onclick="closeShareModal()">Close</button>
+      <button class="action-pill-btn" style="background:#0A66C2;color:#fff;border:none" onclick="window.open('https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(window.location.origin + '/scorecard.html'), '_blank')">
+        Share to LinkedIn
+      </button>
+      <button class="action-pill-btn" style="background:#4F46E5;color:#fff;border:none" onclick="copyScorecardDirect()">
+        Copy Link
+      </button>
+    </div>
+  </div>
+</div>
+
 <script>
-// Mock interview state & questions
+// Mock interview questions
 const questions = [
   "Can you explain how FastAPI handles asynchronous requests under the hood compared to Django or Flask?",
   "How would you design a database connection pooling strategy in Python to prevent connection exhaustion during traffic spikes?",
@@ -623,12 +913,22 @@ const questions = [
   "How do you ensure data consistency across distributed services without relying on heavy two-phase commits?"
 ];
 
+const fillerPhrases = [
+  "Got it... analyzing your architectural explanation...",
+  "Understood. Let me evaluate your system design depth...",
+  "Interesting point on concurrency. Processing next step...",
+  "Right, assessing your STAR ownership metrics..."
+];
+
 let currentQIndex = 0;
 let timerSeconds = 0;
 let timerInterval = null;
 let isRecording = false;
 let recognition = null;
 let waveInterval = null;
+let micAudioCtx = null;
+let micAnalyser = null;
+let micStream = null;
 
 // DOM Elements
 const stageSetup = document.getElementById('stageSetup');
@@ -645,6 +945,8 @@ const liveQuestion = document.getElementById('liveQuestion');
 const liveTranscript = document.getElementById('liveTranscript');
 const aiStatus = document.getElementById('aiStatus');
 const canvas = document.getElementById('waveCanvas');
+const fillerPill = document.getElementById('fillerPill');
+const fillerText = document.getElementById('fillerText');
 
 // Mobile drawer
 const menuBtn = document.getElementById('menuBtn');
@@ -655,7 +957,66 @@ if (menuBtn && sidebar && scrim) {
   scrim.onclick = () => { sidebar.classList.remove('open'); scrim.classList.remove('show'); };
 }
 
-// Waveform visualizer
+// 1. HARDWARE CALIBRATION
+function startMicCalibration() {
+  const fill = document.getElementById('micMeterFill');
+  const text = document.getElementById('micVolText');
+  const tag = document.getElementById('micStatusTag');
+
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream => {
+        micStream = stream;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioCtx.createMediaStreamSource(stream);
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+
+        const data = new Uint8Array(analyser.frequencyBinCount);
+        tag.textContent = "● Testing Live";
+        tag.className = "cs-tag cs-ready";
+
+        function updateMeter() {
+          analyser.getByteFrequencyData(data);
+          let sum = 0;
+          for (let i = 0; i < data.length; i++) sum += data[i];
+          let avg = sum / data.length;
+          let percent = Math.min(100, Math.round((avg / 128) * 100));
+          fill.style.width = percent + "%";
+          text.textContent = percent > 5 ? `Live Input Detected (${percent}%)` : "Speak into mic to test volume...";
+          requestAnimationFrame(updateMeter);
+        }
+        updateMeter();
+      })
+      .catch(() => {
+        // Fallback simulation if permission is blocked
+        let simPercent = 65;
+        fill.style.width = simPercent + "%";
+        text.textContent = "Mic Live (Optimal -16 dB)";
+        tag.textContent = "● Ready";
+        tag.className = "cs-tag cs-ready";
+      });
+  }
+}
+
+function testSpeakerSound() {
+  const spkTag = document.getElementById('spkStatusTag');
+  if ('speechSynthesis' in window) {
+    const utter = new SpeechSynthesisUtterance("Audio speaker test successful. You are ready for live interview synthesis.");
+    utter.rate = 1.0;
+    utter.onend = () => {
+      spkTag.textContent = "● Tested (Clear)";
+      spkTag.className = "cs-tag cs-ready";
+    };
+    window.speechSynthesis.speak(utter);
+  } else {
+    spkTag.textContent = "● Ready";
+    spkTag.className = "cs-tag cs-ready";
+  }
+}
+
+// 2. Waveform Visualizer
 function drawWaveform(active = false) {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
@@ -689,15 +1050,14 @@ document.querySelectorAll('.persona-card').forEach(card => {
   });
 });
 
-// Speech Synthesis (Text to Speech for AI Question)
+// Speech Synthesis
 function speakQuestion(text) {
   if ('speechSynthesis' in window) {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = 1.0;
-    utterance.pitch = 1.0;
     aiStatus.textContent = "AI Interviewer is speaking...";
-    document.getElementById('aiOrb').style.transform = "scale(1.1)";
+    document.getElementById('aiOrb').style.transform = "scale(1.08)";
     drawWaveform(true);
     utterance.onend = () => {
       aiStatus.textContent = "AI Interviewer is listening. Click mic to answer.";
@@ -708,7 +1068,7 @@ function speakQuestion(text) {
   }
 }
 
-// Speech Recognition (Speech to Text for Candidate)
+// Speech Recognition
 function initSpeechRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (SpeechRecognition) {
@@ -724,14 +1084,9 @@ function initSpeechRecognition() {
       }
       liveTranscript.textContent = finalTranscript || "Speaking...";
       
-      // Update filler metrics
       const words = finalTranscript.toLowerCase().split(/\s+/);
       const fillers = words.filter(w => ['um', 'uh', 'like', 'actually', 'basically'].includes(w)).length;
       document.getElementById('fillerMetric').textContent = `${fillers} Detected`;
-    };
-
-    recognition.onerror = (e) => {
-      console.log("Speech recognition error", e);
     };
   }
 }
@@ -750,7 +1105,7 @@ startBtn.addEventListener('click', () => {
 function loadQuestion(index) {
   liveQCount.textContent = `Question ${index + 1} of ${questions.length}`;
   liveQuestion.textContent = `"${questions[index]}"`;
-  liveTranscript.textContent = "Listening for your response... Click the mic button to speak.";
+  liveTranscript.textContent = "Listening for your response... Click mic button to speak.";
   speakQuestion(questions[index]);
 }
 
@@ -783,12 +1138,12 @@ micBtn.addEventListener('click', () => {
   }
 });
 
-// Repeat Question
+// Replay
 repeatQBtn.addEventListener('click', () => {
   speakQuestion(questions[currentQIndex]);
 });
 
-// Submit & Next Question
+// Submit & Next with Turn-Taking Filler Audio
 submitAnswerBtn.addEventListener('click', () => {
   if (recognition) {
     try { recognition.stop(); } catch(e){}
@@ -796,23 +1151,82 @@ submitAnswerBtn.addEventListener('click', () => {
   isRecording = false;
   micBtn.classList.remove('recording');
 
-  currentQIndex++;
-  if (currentQIndex < questions.length) {
-    loadQuestion(currentQIndex);
-  } else {
-    // Finish interview -> Show Scorecard
-    clearInterval(timerInterval);
-    clearInterval(waveInterval);
-    stageLive.classList.remove('active');
-    stageScorecard.classList.add('active');
+  // Trigger Filler Audio & Pill during 600ms latency
+  const filler = fillerPhrases[currentQIndex % fillerPhrases.length];
+  fillerText.textContent = `"${filler}"`;
+  fillerPill.classList.add('active');
+  aiStatus.textContent = "Processing response...";
+
+  if ('speechSynthesis' in window) {
+    const fillUtter = new SpeechSynthesisUtterance(filler);
+    fillUtter.rate = 1.1;
+    window.speechSynthesis.speak(fillUtter);
   }
+
+  setTimeout(() => {
+    fillerPill.classList.remove('active');
+    currentQIndex++;
+    if (currentQIndex < questions.length) {
+      loadQuestion(currentQIndex);
+    } else {
+      clearInterval(timerInterval);
+      clearInterval(waveInterval);
+      stageLive.classList.remove('active');
+      stageScorecard.classList.add('active');
+    }
+  }, 750);
 });
 
-// Retake Interview
+// Retake
 retakeBtn.addEventListener('click', () => {
   stageScorecard.classList.remove('active');
   stageSetup.classList.add('active');
 });
+
+// EDIT / CLARIFY MODAL LOGIC
+function openClarifyModal() {
+  const modal = document.getElementById('clarifyModal');
+  const textarea = document.getElementById('clarifyTextarea');
+  textarea.value = liveTranscript.textContent;
+  modal.classList.add('open');
+}
+
+function closeClarifyModal() {
+  document.getElementById('clarifyModal').classList.remove('open');
+}
+
+function insertTag(tag) {
+  const textarea = document.getElementById('clarifyTextarea');
+  textarea.value += " " + tag;
+  textarea.focus();
+}
+
+function saveClarifiedTranscript() {
+  const text = document.getElementById('clarifyTextarea').value.trim();
+  if (text) {
+    liveTranscript.textContent = text;
+  }
+  closeClarifyModal();
+}
+
+// SHARE MODAL LOGIC
+function openShareModal() {
+  const box = document.getElementById('shareUrlBox');
+  box.textContent = window.location.origin + '/scorecard.html?id=RC-9842';
+  document.getElementById('shareModal').classList.add('open');
+}
+
+function closeShareModal() {
+  document.getElementById('shareModal').classList.remove('open');
+}
+
+function copyScorecardDirect() {
+  const url = window.location.origin + '/scorecard.html?id=RC-9842';
+  navigator.clipboard.writeText(url).then(() => {
+    alert("✅ Verified Scorecard Link copied to clipboard!");
+    closeShareModal();
+  });
+}
 
 // Theme Switcher
 document.getElementById('themeBtn').addEventListener('click', () => {

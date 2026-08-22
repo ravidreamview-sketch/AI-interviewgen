@@ -12,7 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 from app.models import InterviewRequest, PageViewPayload, ClickEventPayload
 from app.prompts import interview_prompt
-from app.services import generate_ai_questions, parse_raw_questions
+from app.services import generate_ai_questions, parse_raw_questions, get_fallback_questions
 from app.database import get_db, init_db
 from app.db_models import InterviewHistory, PageViewEvent, ClickEvent
 
@@ -65,20 +65,40 @@ def generate_questions(
     data: InterviewRequest,
     db: Session = Depends(get_db)
 ):
+    target_count = data.number_of_questions or 5
     try:
-        prompt = interview_prompt(data)
-        raw_output = generate_ai_questions(prompt)
-        clean_questions = parse_raw_questions(raw_output)
+        custom_q = getattr(data, "custom_question", None) or ""
+        try:
+            prompt = interview_prompt(data)
+            raw_output = generate_ai_questions(prompt)
+            clean_questions = parse_raw_questions(raw_output, target_count=target_count)
+        except Exception as ai_err:
+            print(f"[AI Generator] LLM unavailable/fallback: {ai_err}")
+            clean_questions = get_fallback_questions(
+                data.role, data.skills, target_count, custom_q
+            )
 
-        if not clean_questions:
-            clean_questions = [q.strip() for q in raw_output.split("\n") if q.strip()]
+        # Strictly enforce target count
+        if len(clean_questions) < target_count:
+            fallback = get_fallback_questions(data.role, data.skills, target_count, custom_q)
+            for q in fallback:
+                if q not in clean_questions:
+                    clean_questions.append(q)
+                if len(clean_questions) >= target_count:
+                    break
+
+        if len(clean_questions) > target_count:
+            clean_questions = clean_questions[:target_count]
+
+        # Format questions consistently as numbered lines
+        formatted_raw = "\n".join([f"{i+1}. {q}" for i, q in enumerate(clean_questions)])
 
         interview = InterviewHistory(
             role=data.role,
             experience=data.experience,
             skills=", ".join(data.skills),
             difficulty=data.difficulty,
-            questions=raw_output,
+            questions=formatted_raw,
             created_at=datetime.utcnow()
         )
 
@@ -90,11 +110,6 @@ def generate_questions(
         res["message"] = "Interview questions generated and saved successfully"
         return res
 
-    except ValueError as ve:
-        raise HTTPException(
-            status_code=400,
-            detail=str(ve)
-        )
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -406,6 +421,14 @@ def serve_history_page():
 def serve_upgrade():
     f = BASE_DIR / "Upgrade-pro.html"
     return FileResponse(f) if f.exists() else HTTPException(404, "Upgrade-pro.html not found")
+
+@app.get("/scorecard", include_in_schema=False)
+@app.get("/Scorecard", include_in_schema=False)
+@app.get("/scorecard.html", include_in_schema=False)
+@app.get("/scorecard/{score_id}", include_in_schema=False)
+def serve_scorecard(score_id: str = None):
+    f = BASE_DIR / "scorecard.html"
+    return FileResponse(f) if f.exists() else HTTPException(404, "scorecard.html not found")
 
 @app.get("/logo.png", include_in_schema=False)
 def serve_logo():
