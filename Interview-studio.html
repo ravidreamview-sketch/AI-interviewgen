@@ -1686,16 +1686,11 @@ function renderQuestions(qs, isStreaming = false){
       li.className='q reveal';
       li.style.animationDelay=(i*40)+'ms';
       const plain=q.replace(/<[^>]+>/g,'');
-      const lensText = getEvalLensText(i, role);
       
       li.innerHTML=`
         <span class="qnum">Q${String(i+1).padStart(2,'0')}</span>
         <div class="qtext">
-          <div>${q}</div>
-          <div class="q-lens">
-            <span class="lens-tag">💡 Gemini 2.5 Evaluation Lens</span>
-            <span class="lens-body">${lensText}</span>
-          </div>
+          <div style="font-size:15px;line-height:1.55;font-weight:500;color:var(--ink)">${q}</div>
         </div>
         <button class="qcopy" title="Copy question" aria-label="Copy question ${i+1}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg>
@@ -1726,16 +1721,11 @@ function renderQuestions(qs, isStreaming = false){
       const li = document.createElement('li');
       li.className = 'q reveal';
       const plain = q.replace(/<[^>]+>/g,'');
-      const lensText = getEvalLensText(i, role);
 
       li.innerHTML = `
         <span class="qnum">Q${String(i+1).padStart(2,'0')}</span>
         <div class="qtext">
-          <div class="q-live-text"><span class="typewriter-txt"></span><span class="type-cursor">|</span></div>
-          <div class="q-lens" style="opacity:0;transition:opacity .35s ease">
-            <span class="lens-tag">💡 Gemini 2.5 Evaluation Lens</span>
-            <span class="lens-body">${lensText}</span>
-          </div>
+          <div class="q-live-text" style="font-size:15px;line-height:1.55;font-weight:500;color:var(--ink)"><span class="typewriter-txt"></span><span class="type-cursor">|</span></div>
         </div>
         <button class="qcopy" title="Copy question" aria-label="Copy question ${i+1}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg>
@@ -1759,7 +1749,6 @@ function renderQuestions(qs, isStreaming = false){
 
       const typeBox = li.querySelector('.typewriter-txt');
       const cursor = li.querySelector('.type-cursor');
-      const lens = li.querySelector('.q-lens');
 
       const words = q.split(' ');
       for (let w = 0; w < words.length; w++) {
@@ -1767,7 +1756,6 @@ function renderQuestions(qs, isStreaming = false){
         await new Promise(r => setTimeout(r, 14));
       }
       cursor?.remove();
-      if(lens) lens.style.opacity = '1';
       await new Promise(r => setTimeout(r, 20));
     }
 
