@@ -208,12 +208,9 @@
     
     let enabledMenus = null;
     try {
-      const token = localStorage.getItem('candidate_token');
       const headers = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-
-      const primaryEndpoint = API_BASE ? `${API_BASE}/api/public/menus` : '/api/public/menus';
-      const fallbackEndpoint = API_BASE ? `${API_BASE}/api/candidate/menus` : '/api/candidate/menus';
+      const primaryEndpoint = API_BASE ? `${API_BASE}/public/menus` : '/public/menus';
+      const fallbackEndpoint = API_BASE ? `${API_BASE}/api/public/menus` : '/api/public/menus';
 
       let res = await fetch(primaryEndpoint + '?t=' + Date.now(), {
         method: 'GET',
@@ -234,23 +231,11 @@
         enabledMenus = data.menus || [];
       }
     } catch (err) {
-      console.warn('[Dynamic Menu] Using safe public fallback due to network notice:', err);
+      console.warn('[Dynamic Menu] Error fetching public menus:', err);
     }
 
-    // Safe fallback configuration containing only approved public items
-    if (!enabledMenus || !Array.isArray(enabledMenus) || enabledMenus.length === 0) {
-      enabledMenus = [
-        { name: 'Dashboard', route: 'Dashboard.html' },
-        { name: 'Generate Questions', route: 'Interview-studio.html' },
-        { name: 'AI Mock Interview', route: 'Mock-interview.html' },
-        { name: 'Answer Evaluator', route: 'Interview-studio.html' },
-        { name: 'Resume & JD Match', route: 'Resume-match.html' },
-        { name: 'Interview History', route: 'Interview history.html' },
-        { name: 'Public Scorecards', route: 'scorecard.html' },
-        { name: 'Company Playbooks', route: 'Company-playbooks.html' },
-        { name: 'Live Analytics', route: 'Analytics.html' },
-        { name: 'Model & Settings', route: 'javascript:void(0)' }
-      ];
+    if (!enabledMenus || !Array.isArray(enabledMenus)) {
+      return;
     }
 
     const enabledRoutes = enabledMenus.map(m => (m.route || '').toLowerCase());

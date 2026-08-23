@@ -91,7 +91,7 @@ def direct_candidate_login(
 ):
     return candidate_login(payload, request, response, db)
 
-from app.admin_routes import candidate_logout
+from app.admin_routes import candidate_logout, get_public_menus
 
 @app.post("/api/candidate/logout", include_in_schema=False)
 @app.post("/candidate/logout", include_in_schema=False)
@@ -101,6 +101,11 @@ def direct_candidate_logout(
     response: Response
 ):
     return candidate_logout(request, response)
+
+@app.get("/api/public/menus", include_in_schema=False)
+@app.get("/public/menus", include_in_schema=False)
+def direct_get_public_menus(db: Session = Depends(get_db)):
+    return get_public_menus(db)
 
 
 def format_interview_response(interview: InterviewHistory) -> dict:
