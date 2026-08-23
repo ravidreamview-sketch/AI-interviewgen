@@ -91,6 +91,17 @@ def direct_candidate_login(
 ):
     return candidate_login(payload, request, response, db)
 
+from app.admin_routes import candidate_logout
+
+@app.post("/api/candidate/logout", include_in_schema=False)
+@app.post("/candidate/logout", include_in_schema=False)
+@app.post("/logout", include_in_schema=False)
+def direct_candidate_logout(
+    request: Request,
+    response: Response
+):
+    return candidate_logout(request, response)
+
 
 def format_interview_response(interview: InterviewHistory) -> dict:
     skills_list = [s.strip() for s in (interview.skills or "").split(",") if s.strip()]

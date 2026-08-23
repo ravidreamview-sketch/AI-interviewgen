@@ -1732,14 +1732,25 @@ def candidate_login(
 
 
 @candidate_router.post("/candidate/logout", tags=["Candidate Auth"])
+@candidate_router.post("/logout", tags=["Candidate Auth"])
 def candidate_logout(
     request: Request,
     response: Response
 ):
     """
-    Clears the candidate_session cookie.
+    Clears the candidate_session cookie securely.
     """
-    response.delete_cookie(key="candidate_session", path="/")
+    is_secure = is_request_https(request)
+    response.set_cookie(
+        key="candidate_session",
+        value="",
+        httponly=True,
+        secure=is_secure,
+        samesite="lax",
+        max_age=0,
+        expires=0,
+        path="/"
+    )
     return {"success": True, "message": "Successfully logged out."}
 
 

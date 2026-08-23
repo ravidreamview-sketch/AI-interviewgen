@@ -3523,10 +3523,19 @@
         : '<circle cx="12" cy="12" r="4.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.5 4.5l2 2M17.5 17.5l2 2M19.5 4.5l-2 2M6.5 17.5l-2 2"/>';
     });
 
-    function handleLogout(e) {
+    async function handleLogout(e) {
       if (e) e.stopPropagation();
       if (confirm("Are you sure you want to log out from Ravi GenAI Studio?")) {
-        window.location.href = "Login.html";
+        try {
+          await fetch('/candidate/logout', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          });
+        } catch (err) {}
+        localStorage.removeItem('candidate_token');
+        localStorage.removeItem('candidate_user');
+        window.location.replace('/');
       }
     }
 

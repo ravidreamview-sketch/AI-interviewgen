@@ -326,14 +326,22 @@ a{color:inherit;text-decoration:none}
 <script>
 async function loadCandidateDashboard() {
   try {
-    const res = await fetch('/api/candidate/me', {
+    let res = await fetch('/candidate/me', {
       headers: {
         'X-Requested-With': 'XMLHttpRequest'
       }
     });
 
+    if (res.status === 404) {
+      res = await fetch('/api/candidate/me', {
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      });
+    }
+
     if (!res.ok) {
-      window.location.href = '/candidate/login';
+      window.location.replace('/');
       return;
     }
 
@@ -348,7 +356,7 @@ async function loadCandidateDashboard() {
     loadRecentHistory();
   } catch (err) {
     console.error('Candidate Auth verification error:', err);
-    window.location.href = '/candidate/login';
+    window.location.replace('/');
   }
 }
 
@@ -388,11 +396,17 @@ async function loadRecentHistory() {
 
 async function handleCandidateLogout() {
   try {
-    await fetch('/api/admin/logout', { method: 'POST' });
-  } catch (e) {}
+    await fetch('/candidate/logout', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    });
+  } catch (err) {}
   localStorage.removeItem('candidate_token');
   localStorage.removeItem('candidate_user');
-  window.location.href = '/candidate/login';
+  window.location.replace('/');
 }
 
 document.addEventListener('DOMContentLoaded', loadCandidateDashboard);

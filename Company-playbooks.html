@@ -433,10 +433,19 @@ document.getElementById('themeBtn').addEventListener('click', () => {
   root.setAttribute('data-theme', currentTheme === 'dark' ? 'light' : 'dark');
 });
 
-function handleLogout(e) {
+async function handleLogout(e) {
   if (e) e.stopPropagation();
   if (confirm("Are you sure you want to log out from Ravi GenAI Studio?")) {
-    window.location.href = "Login.html";
+    try {
+      await fetch('/candidate/logout', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      });
+    } catch (err) {}
+    localStorage.removeItem('candidate_token');
+    localStorage.removeItem('candidate_user');
+    window.location.replace('/');
   }
 }
 </script>
