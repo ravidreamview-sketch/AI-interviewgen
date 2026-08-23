@@ -177,14 +177,187 @@
     } catch (e) {}
   }
 
-  // Initialize listeners
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', trackPageView);
-  } else {
-    trackPageView();
+  // Universal Page Router (works on both http:// server and file:// protocols)
+  window.navTo = function (htmlPage, e) {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    if (window.location.protocol === 'file:') {
+      window.location.href = htmlPage;
+    } else {
+      const routes = {
+        'Dashboard.html': '/candidate/dashboard',
+        'Interview-studio.html': '/candidate/interview-studio',
+        'Mock-interview.html': '/candidate/mock-interview',
+        'Resume-match.html': '/candidate/resume-match',
+        'Interview history.html': '/candidate/history',
+        'scorecard.html': '/scorecard',
+        'Company-playbooks.html': '/candidate/company-playbooks',
+        'Analytics.html': '/analytics',
+        'Upgrade-pro.html': '/upgrade-pro',
+        'Candidate-login.html': '/candidate/login',
+        'Login.html': '/login',
+        'Admin.html': '/admin'
+      };
+      const cleanName = decodeURIComponent((htmlPage || '').split('/').pop().split('?')[0].split('#')[0]);
+      window.location.href = routes[cleanName] || (htmlPage.startsWith('/') ? htmlPage : '/' + htmlPage);
+    }
+  };
+
+  // Dynamic Candidate Menu Fetcher & Sidebar Filter
+  async function loadDynamicCandidateSidebar() {
+    if (window.location.pathname.startsWith('/admin')) return;
+    
+    let enabledMenus = null;
+    try {
+      const token = localStorage.getItem('candidate_token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const primaryEndpoint = API_BASE ? `${API_BASE}/api/public/menus` : '/api/public/menus';
+      const fallbackEndpoint = API_BASE ? `${API_BASE}/api/candidate/menus` : '/api/candidate/menus';
+
+      let res = await fetch(primaryEndpoint + '?t=' + Date.now(), {
+        method: 'GET',
+        headers: headers,
+        credentials: 'include'
+      });
+
+      if (!res.ok) {
+        res = await fetch(fallbackEndpoint + '?t=' + Date.now(), {
+          method: 'GET',
+          headers: headers,
+          credentials: 'include'
+        });
+      }
+
+      if (res.ok) {
+        const data = await res.json();
+        enabledMenus = data.menus || [];
+      }
+    } catch (err) {
+      console.warn('[Dynamic Menu] Using safe public fallback due to network notice:', err);
+    }
+
+    // Safe fallback configuration containing only approved public items
+    if (!enabledMenus || !Array.isArray(enabledMenus) || enabledMenus.length === 0) {
+      enabledMenus = [
+        { name: 'Dashboard', route: 'Dashboard.html' },
+        { name: 'Generate Questions', route: 'Interview-studio.html' },
+        { name: 'AI Mock Interview', route: 'Mock-interview.html' },
+        { name: 'Answer Evaluator', route: 'Interview-studio.html' },
+        { name: 'Resume & JD Match', route: 'Resume-match.html' },
+        { name: 'Interview History', route: 'Interview history.html' },
+        { name: 'Public Scorecards', route: 'scorecard.html' },
+        { name: 'Company Playbooks', route: 'Company-playbooks.html' },
+        { name: 'Live Analytics', route: 'Analytics.html' },
+        { name: 'Model & Settings', route: 'javascript:void(0)' }
+      ];
+    }
+
+    const enabledRoutes = enabledMenus.map(m => (m.route || '').toLowerCase());
+    const enabledNames = enabledMenus.map(m => (m.name || m.label || '').toLowerCase());
+
+    // Filter sidebar navigation links
+    const links = document.querySelectorAll('.nav-link, aside a, .sidebar a, nav a');
+    links.forEach(link => {
+      const href = (link.getAttribute('href') || '').toLowerCase();
+      const text = (link.innerText || link.textContent || '').toLowerCase().trim();
+      const cleanHref = href.split('/').pop().split('?')[0].split('#')[0];
+
+      if (!href || href === 'javascript:void(0)' || href.startsWith('#')) {
+        const isMatch = enabledNames.some(n => n && (text.includes(n) || n.includes(text)));
+        if (!isMatch && (text.includes('model') || text.includes('settings'))) {
+          link.style.display = 'none';
+        } else {
+          link.style.display = '';
+        }
+        return;
+      }
+
+      const isMatch = enabledRoutes.some(r => r && (r === cleanHref || cleanHref.includes(r) || r.includes(cleanHref))) ||
+                      enabledNames.some(n => n && (text.includes(n) || n.includes(text)));
+
+      if (!isMatch && (cleanHref.endsWith('.html') || href.startsWith('/candidate/'))) {
+        link.style.display = 'none';
+      } else {
+        link.style.display = '';
+      }
+    });
+
+    // Hide empty section headers (.side-label) if all links under that nav section are hidden
+    document.querySelectorAll('.side-label').forEach(label => {
+      const nextNav = label.nextElementSibling;
+      if (nextNav && (nextNav.classList.contains('nav') || nextNav.tagName.toLowerCase() === 'nav')) {
+        const visibleLinks = Array.from(nextNav.querySelectorAll('.nav-link')).filter(l => l.style.display !== 'none');
+        if (visibleLinks.length === 0) {
+          label.style.display = 'none';
+          nextNav.style.display = 'none';
+        } else {
+          label.style.display = '';
+          nextNav.style.display = '';
+        }
+      }
+    });
+
+    // Also sync dashboard cards for disabled features
+    const cards = document.querySelectorAll('.grid-3 .card, .card');
+    cards.forEach(card => {
+      const cardLink = card.querySelector('a[href]');
+      if (cardLink) {
+        const href = (cardLink.getAttribute('href') || '').toLowerCase();
+        const cleanHref = href.split('/').pop().split('?')[0].split('#')[0];
+        if (cleanHref.endsWith('.html') || href.startsWith('/candidate/')) {
+          const isMatch = enabledRoutes.some(r => r && (r === cleanHref || cleanHref.includes(r) || r.includes(cleanHref)));
+          if (!isMatch) {
+            card.style.display = 'none';
+          } else {
+            card.style.display = '';
+          }
+        }
+      }
+    });
   }
 
-  document.addEventListener('click', trackClick, { capture: true });
+  // Initialize listeners
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () {
+      trackPageView();
+      loadDynamicCandidateSidebar();
+    });
+  } else {
+    trackPageView();
+    loadDynamicCandidateSidebar();
+  }
+
+  document.addEventListener('click', function (e) {
+    const a = e.target.closest('a[href]');
+    if (a) {
+      const href = a.getAttribute('href');
+      if (href && !href.startsWith('#') && !href.startsWith('javascript:') && !href.startsWith('http://') && !href.startsWith('https://')) {
+        const cleanName = decodeURIComponent(href.split('/').pop().split('?')[0].split('#')[0]);
+        if (cleanName.endsWith('.html') || routesMap[cleanName]) {
+          e.preventDefault();
+          window.navTo(cleanName);
+          return;
+        }
+      }
+    }
+    trackClick(e);
+  }, { capture: true });
+
+  const routesMap = {
+    'Dashboard.html': true,
+    'Interview-studio.html': true,
+    'Mock-interview.html': true,
+    'Resume-match.html': true,
+    'Interview history.html': true,
+    'scorecard.html': true,
+    'Company-playbooks.html': true,
+    'Analytics.html': true,
+    'Upgrade-pro.html': true,
+    'Candidate-login.html': true,
+    'Login.html': true,
+    'Admin.html': true
+  };
 
   // Expose global tracker helper
   window.AIAnalytics = {

@@ -35,3 +35,153 @@ class ClickEventPayload(BaseModel):
     browser: Optional[str] = None
     os: Optional[str] = None
     device_type: Optional[str] = None
+
+
+# ==============================================================================
+# ADMIN AUTH & RBAC MODELS
+# ==============================================================================
+
+class AdminLoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class CandidateLoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class UserCreateRequest(BaseModel):
+    email: str
+    password: str = Field(..., min_length=6)
+    full_name: Optional[str] = Field(None, description="Candidate or User Full Name")
+    role: Optional[str] = Field("candidate", description="super_admin | admin | candidate")
+    plan_tier: Optional[str] = Field("free", description="free | pro | enterprise")
+    is_active: Optional[bool] = True
+
+
+class UserUpdateRequest(BaseModel):
+    email: Optional[str] = None
+    full_name: Optional[str] = None
+    password: Optional[str] = Field(None, min_length=6)
+    role: Optional[str] = Field(None, description="super_admin | admin | candidate")
+    plan_tier: Optional[str] = Field(None, description="free | pro | enterprise")
+    is_active: Optional[bool] = None
+
+
+class UserResponse(BaseModel):
+    id: int
+    email: str
+    full_name: Optional[str] = None
+    role: str
+    plan_tier: str
+    is_active: bool
+    created_at: str
+    last_login: Optional[str] = None
+
+
+class AuditLogResponse(BaseModel):
+    id: int
+    user_id: Optional[int] = None
+    admin_email: Optional[str] = None
+    action: str
+    resource: str
+    previous_value: Optional[str] = None
+    new_value: Optional[str] = None
+    timestamp: str
+    ip_address: Optional[str] = None
+    request_id: Optional[str] = None
+
+
+class RoleDefinitionResponse(BaseModel):
+    role: str
+    title: str
+    description: str
+    permissions: List[str]
+
+
+class SystemConfigItem(BaseModel):
+    config_key: str
+    config_value: str
+    updated_at: str
+
+
+# ==============================================================================
+# PROMPT MANAGEMENT MODULE SCHEMAS
+# ==============================================================================
+
+class PromptCreateRequest(BaseModel):
+    name: str = Field(..., min_length=2)
+    description: Optional[str] = None
+    category: str = Field("Interview Questions")
+    role: Optional[str] = "General Tech"
+    difficulty: Optional[str] = "Hard"
+    system_prompt: Optional[str] = None
+    user_prompt: str = Field(..., min_length=5)
+    variables: Optional[str] = None
+    model: Optional[str] = "gemini-1.5-flash"
+    temperature: Optional[float] = Field(0.7, ge=0.0, le=2.0)
+    max_tokens: Optional[int] = Field(1024, ge=64, le=8192)
+    status: Optional[str] = Field("draft", description="draft | active | archived")
+    change_summary: Optional[str] = "Initial prompt creation"
+
+
+class PromptUpdateRequest(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    category: Optional[str] = None
+    role: Optional[str] = None
+    difficulty: Optional[str] = None
+    system_prompt: Optional[str] = None
+    user_prompt: Optional[str] = None
+    variables: Optional[str] = None
+    model: Optional[str] = None
+    temperature: Optional[float] = Field(None, ge=0.0, le=2.0)
+    max_tokens: Optional[int] = Field(None, ge=64, le=8192)
+    status: Optional[str] = Field(None, description="draft | active | archived")
+    change_summary: Optional[str] = None
+
+
+class PromptTestRequest(BaseModel):
+    test_variables: Optional[dict] = Field(default_factory=dict)
+
+
+class PromptResponse(BaseModel):
+    id: int
+    name: str
+    description: Optional[str] = None
+    category: str
+    role: Optional[str] = None
+    difficulty: Optional[str] = None
+    system_prompt: Optional[str] = None
+    user_prompt: str
+    variables: Optional[str] = None
+    model: str
+    temperature: float
+    max_tokens: int
+    version: int
+    status: str
+    created_at: str
+    updated_at: str
+    is_active: bool
+
+
+class PromptVersionResponse(BaseModel):
+    id: int
+    prompt_id: int
+    version: int
+    name: str
+    description: Optional[str] = None
+    category: str
+    role: Optional[str] = None
+    difficulty: Optional[str] = None
+    system_prompt: Optional[str] = None
+    user_prompt: str
+    variables: Optional[str] = None
+    model: str
+    temperature: float
+    max_tokens: int
+    status: str
+    change_summary: Optional[str] = None
+    changed_by_email: Optional[str] = None
+    created_at: str

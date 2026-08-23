@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -14,7 +15,9 @@ from app.models import InterviewRequest, PageViewPayload, ClickEventPayload
 from app.prompts import interview_prompt
 from app.services import generate_ai_questions, parse_raw_questions, get_fallback_questions
 from app.database import get_db, init_db
-from app.db_models import InterviewHistory, PageViewEvent, ClickEvent
+from app.db_models import UserAccount, InterviewHistory, PageViewEvent, ClickEvent
+from app.admin_routes import admin_router, candidate_router
+from app.auth_deps import get_current_user
 
 
 @asynccontextmanager
@@ -23,6 +26,20 @@ async def lifespan(app: FastAPI):
     init_db()
     yield
 
+# Configure trusted CORS origins for local dev and production
+DEFAULT_ALLOWED_ORIGINS = [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000"
+]
+
+env_origins = os.environ.get("ADMIN_ALLOWED_ORIGINS", "")
+if env_origins:
+    custom_origins = [o.strip() for o in env_origins.split(",") if o.strip()]
+    ALLOWED_ORIGINS = list(set(DEFAULT_ALLOWED_ORIGINS + custom_origins))
+else:
+    ALLOWED_ORIGINS = DEFAULT_ALLOWED_ORIGINS
 
 app = FastAPI(
     title="Ravi — AI Interview Question Generator API",
@@ -32,11 +49,15 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
+
+# Mount Super Admin & Candidate API routers
+app.include_router(admin_router)
+app.include_router(candidate_router)
 
 
 def format_interview_response(interview: InterviewHistory) -> dict:
@@ -60,12 +81,54 @@ def format_interview_response(interview: InterviewHistory) -> dict:
     }
 
 
+from app.admin_routes import _get_stored_menus
+
+def check_feature_enabled(feature_key: str, db: Session):
+    """
+    Backend Security Guard: Verifies if a feature/route is currently enabled in database Menu Management.
+    If disabled by Super Admin, raises HTTP 403 Forbidden.
+    """
+    try:
+        menus = _get_stored_menus(db)
+        key_raw = (feature_key or "").lower().replace("%20", " ")
+        key_clean = key_raw.replace(".html", "").strip().split("/")[-1].replace("-", " ")
+        
+        for m in menus:
+            m_route_raw = (m.get("route") or "").lower()
+            m_route_clean = m_route_raw.replace(".html", "").strip().split("/")[-1].replace("-", " ")
+            m_name_raw = (m.get("name") or "").lower()
+            m_name_clean = m_name_raw.replace("-", " ")
+            m_id = (m.get("id") or "").lower()
+            
+            is_match = (
+                m_id == key_raw or
+                key_raw in m_route_raw or
+                m_route_raw in key_raw or
+                key_raw in m_name_raw or
+                (m_route_clean and (m_route_clean == key_clean or m_route_clean in key_clean or key_clean in m_route_clean)) or
+                (m_name_clean and (m_name_clean == key_clean or m_name_clean in key_clean or key_clean in m_name_clean))
+            )
+            
+            if is_match:
+                if (m.get("status") or "").lower() == "disabled":
+                    raise HTTPException(
+                        status_code=403,
+                        detail=f"Feature '{m.get('name')}' is currently disabled by administrator."
+                    )
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[Feature Guard Warning] {e}")
+
+
 @app.post("/generate")
 @app.post("/api/generate")
 def generate_questions(
     data: InterviewRequest,
+    current_user: UserAccount = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    check_feature_enabled("Interview-studio.html", db)
     target_count = data.number_of_questions or 5
     try:
         custom_q = getattr(data, "custom_question", None) or ""
@@ -128,6 +191,8 @@ def generate_questions(
         res["message"] = "Interview questions generated and saved successfully"
         return res
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -137,9 +202,12 @@ def generate_questions(
 
 @app.get("/history")
 def get_history(db: Session = Depends(get_db)):
+    check_feature_enabled("Interview history.html", db)
     try:
         interviews = db.query(InterviewHistory).order_by(InterviewHistory.id.desc()).all()
         return [format_interview_response(item) for item in interviews]
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -364,11 +432,23 @@ def clear_analytics(db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Failed to clear analytics: {str(e)}")
 
 
+# ---------- SUPER ADMIN PORTAL (PHASE 1) ----------
+@app.get("/admin", include_in_schema=False)
+@app.get("/Admin", include_in_schema=False)
+@app.get("/Admin.html", include_in_schema=False)
+@app.get("/admin/{subpath:path}", include_in_schema=False)
+def serve_admin_portal(subpath: str = ""):
+    f = BASE_DIR / "Admin.html"
+    return FileResponse(f) if f.exists() else HTTPException(404, "Admin.html not found")
+
+
 # ---------- FRONTEND PAGES & ASSETS ----------
 
 @app.get("/analytics", include_in_schema=False)
 @app.get("/Analytics", include_in_schema=False)
 @app.get("/Analytics.html", include_in_schema=False)
+@app.get("/candidate/analytics", include_in_schema=False)
+@app.get("/candidate/Analytics.html", include_in_schema=False)
 def serve_analytics():
     f = BASE_DIR / "Analytics.html"
     return FileResponse(f) if f.exists() else HTTPException(404, "Analytics.html not found")
@@ -379,67 +459,116 @@ def serve_tracker_script():
     return FileResponse(f, media_type="application/javascript") if f.exists() else HTTPException(404, "analytics-tracker.js not found")
 
 @app.get("/", include_in_schema=False)
+@app.get("/candidate/login", include_in_schema=False)
 @app.get("/login", include_in_schema=False)
 @app.get("/Login", include_in_schema=False)
 @app.get("/Login.html", include_in_schema=False)
 @app.get("/index.html", include_in_schema=False)
 def serve_login():
+    cand_f = BASE_DIR / "Candidate-login.html"
+    if cand_f.exists():
+        return FileResponse(cand_f)
     f = BASE_DIR / "Login.html"
     return FileResponse(f) if f.exists() else HTTPException(404, "Login.html not found")
 
+@app.get("/candidate", include_in_schema=False)
+@app.get("/candidate/", include_in_schema=False)
+@app.get("/candidate/dashboard", include_in_schema=False)
+@app.get("/candidate/Dashboard.html", include_in_schema=False)
+@app.get("/candidate/Candidate-dashboard.html", include_in_schema=False)
 @app.get("/dashboard", include_in_schema=False)
 @app.get("/Dashboard", include_in_schema=False)
 @app.get("/Dashboard.html", include_in_schema=False)
-def serve_dashboard():
-    f = BASE_DIR / "Dashboard.html"
-    return FileResponse(f) if f.exists() else HTTPException(404, "Dashboard.html not found")
+def serve_candidate_dashboard(db: Session = Depends(get_db)):
+    check_feature_enabled("Dashboard.html", db)
+    f = BASE_DIR / "Candidate-dashboard.html"
+    if not f.exists():
+        f = BASE_DIR / "Dashboard.html"
+    return FileResponse(f) if f.exists() else HTTPException(404, "Candidate dashboard not found")
 
+@app.get("/candidate/evaluator", include_in_schema=False)
+@app.get("/evaluator", include_in_schema=False)
+def serve_evaluator(db: Session = Depends(get_db)):
+    check_feature_enabled("Interview-studio.html", db)
+    f = BASE_DIR / "Interview-studio.html"
+    return FileResponse(f) if f.exists() else HTTPException(404, "Interview-studio.html not found")
+
+@app.get("/admin", include_in_schema=False)
+@app.get("/admin/dashboard", include_in_schema=False)
+@app.get("/admin/prompts", include_in_schema=False)
+@app.get("/admin/users", include_in_schema=False)
+@app.get("/Admin.html", include_in_schema=False)
+def serve_admin_page():
+    f = BASE_DIR / "Admin.html"
+    return FileResponse(f) if f.exists() else HTTPException(404, "Admin.html not found")
+
+@app.get("/candidate/interview-studio", include_in_schema=False)
+@app.get("/candidate/Interview-studio.html", include_in_schema=False)
 @app.get("/studio", include_in_schema=False)
 @app.get("/Studio", include_in_schema=False)
 @app.get("/Interview-studio", include_in_schema=False)
 @app.get("/interview-studio", include_in_schema=False)
 @app.get("/Interview-studio.html", include_in_schema=False)
-def serve_studio():
+def serve_studio(db: Session = Depends(get_db)):
+    check_feature_enabled("Interview-studio.html", db)
     f = BASE_DIR / "Interview-studio.html"
     return FileResponse(f) if f.exists() else HTTPException(404, "Interview-studio.html not found")
 
+@app.get("/candidate/mock-interview", include_in_schema=False)
+@app.get("/candidate/Mock-interview.html", include_in_schema=False)
 @app.get("/mock-interview", include_in_schema=False)
 @app.get("/Mock-interview", include_in_schema=False)
 @app.get("/Mock-interview.html", include_in_schema=False)
-def serve_mock():
+def serve_mock(db: Session = Depends(get_db)):
+    check_feature_enabled("Mock-interview.html", db)
     f = BASE_DIR / "Mock-interview.html"
     return FileResponse(f) if f.exists() else HTTPException(404, "Mock-interview.html not found")
 
+@app.get("/candidate/resume-match", include_in_schema=False)
+@app.get("/candidate/Resume-match.html", include_in_schema=False)
 @app.get("/resume-match", include_in_schema=False)
 @app.get("/Resume-match", include_in_schema=False)
 @app.get("/Resume-match.html", include_in_schema=False)
-def serve_resume():
+def serve_resume_match(db: Session = Depends(get_db)):
+    check_feature_enabled("Resume-match.html", db)
     f = BASE_DIR / "Resume-match.html"
     return FileResponse(f) if f.exists() else HTTPException(404, "Resume-match.html not found")
 
+@app.get("/candidate/company-playbooks", include_in_schema=False)
+@app.get("/candidate/Company-playbooks.html", include_in_schema=False)
 @app.get("/company-playbooks", include_in_schema=False)
 @app.get("/Company-playbooks", include_in_schema=False)
 @app.get("/Company-playbooks.html", include_in_schema=False)
-def serve_playbooks():
+def serve_company_playbooks(db: Session = Depends(get_db)):
+    check_feature_enabled("Company-playbooks.html", db)
     f = BASE_DIR / "Company-playbooks.html"
     return FileResponse(f) if f.exists() else HTTPException(404, "Company-playbooks.html not found")
 
+@app.get("/candidate/history", include_in_schema=False)
+@app.get("/candidate/Interview history.html", include_in_schema=False)
+@app.get("/candidate/Interview%20history.html", include_in_schema=False)
 @app.get("/history-page", include_in_schema=False)
 @app.get("/Interview-history", include_in_schema=False)
 @app.get("/interview-history", include_in_schema=False)
 @app.get("/Interview history.html", include_in_schema=False)
 @app.get("/Interview%20history.html", include_in_schema=False)
-def serve_history_page():
+def serve_history_page(db: Session = Depends(get_db)):
+    check_feature_enabled("Interview history.html", db)
     f = BASE_DIR / "Interview history.html"
     return FileResponse(f) if f.exists() else HTTPException(404, "Interview history.html not found")
 
+@app.get("/candidate/upgrade-pro", include_in_schema=False)
+@app.get("/candidate/Upgrade-pro.html", include_in_schema=False)
 @app.get("/upgrade-pro", include_in_schema=False)
 @app.get("/Upgrade-pro", include_in_schema=False)
 @app.get("/Upgrade-pro.html", include_in_schema=False)
-def serve_upgrade():
+def serve_upgrade(db: Session = Depends(get_db)):
+    check_feature_enabled("Upgrade-pro.html", db)
     f = BASE_DIR / "Upgrade-pro.html"
     return FileResponse(f) if f.exists() else HTTPException(404, "Upgrade-pro.html not found")
 
+@app.get("/candidate/scorecard", include_in_schema=False)
+@app.get("/candidate/scorecard.html", include_in_schema=False)
 @app.get("/scorecard", include_in_schema=False)
 @app.get("/Scorecard", include_in_schema=False)
 @app.get("/scorecard.html", include_in_schema=False)
@@ -448,7 +577,14 @@ def serve_scorecard(score_id: str = None):
     f = BASE_DIR / "scorecard.html"
     return FileResponse(f) if f.exists() else HTTPException(404, "scorecard.html not found")
 
+@app.get("/analytics-tracker.js", include_in_schema=False)
+@app.get("/candidate/analytics-tracker.js", include_in_schema=False)
+def serve_analytics_tracker():
+    f = BASE_DIR / "analytics-tracker.js"
+    return FileResponse(f) if f.exists() else HTTPException(404, "analytics-tracker.js not found")
+
 @app.get("/logo.png", include_in_schema=False)
+@app.get("/candidate/logo.png", include_in_schema=False)
 def serve_logo():
     f = BASE_DIR / "logo.png"
     return FileResponse(f) if f.exists() else HTTPException(404, "logo.png not found")

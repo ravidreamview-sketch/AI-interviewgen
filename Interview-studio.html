@@ -2510,7 +2510,7 @@
 
       <div class="side-label">WORKSPACE</div>
       <nav class="nav">
-        <a class="nav-link" href="Dashboard.html">
+        <a class="nav-link" href="/candidate/dashboard">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <rect x="3" y="3" width="7" height="9" rx="1.5" />
             <rect x="14" y="3" width="7" height="5" rx="1.5" />
@@ -2519,7 +2519,7 @@
           </svg>
           <span>Dashboard</span>
         </a>
-        <a class="nav-link active" href="Interview-studio.html">
+        <a class="nav-link active" href="/candidate/interview-studio">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
             <polyline points="14 2 14 8 20 8" />
@@ -2528,7 +2528,7 @@
           </svg>
           <span>Generate Questions</span>
         </a>
-        <a class="nav-link" href="Mock-interview.html">
+        <a class="nav-link" href="/candidate/mock-interview">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" />
             <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8" />
@@ -2536,14 +2536,14 @@
           <span>AI Mock Interview</span>
           <span class="nav-badge new">VOICE</span>
         </a>
-        <a class="nav-link" href="Interview-studio.html">
+        <a class="nav-link" href="/candidate/interview-studio">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M9 11l3 3L22 4" />
             <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
           </svg>
           <span>Answer Evaluator</span>
         </a>
-        <a class="nav-link" href="Resume-match.html">
+        <a class="nav-link" href="/candidate/resume-match">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
             <polyline points="14 2 14 8 20 8" />
@@ -2558,21 +2558,21 @@
 
       <div class="side-label" style="margin-top:14px">LIBRARY</div>
       <nav class="nav">
-        <a class="nav-link" href="Interview history.html">
+        <a class="nav-link" href="/candidate/history">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <circle cx="12" cy="12" r="9" />
             <polyline points="12 6 12 12 16 14" />
           </svg>
           <span>Interview History</span>
         </a>
-        <a class="nav-link" href="scorecard.html">
+        <a class="nav-link" href="/scorecard">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
             <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
           </svg>
           <span>Public Scorecards</span>
         </a>
-        <a class="nav-link" href="Company-playbooks.html">
+        <a class="nav-link" href="/candidate/company-playbooks">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
             <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16" />
@@ -2583,7 +2583,7 @@
 
       <div class="side-label" style="margin-top:14px">PREFERENCES</div>
       <nav class="nav">
-        <a class="nav-link" href="Analytics.html">
+        <a class="nav-link" href="/analytics">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M18 20V10M12 20V4M6 20v-6" />
           </svg>
@@ -2602,7 +2602,7 @@
       </nav>
 
       <div class="side-foot">
-        <div class="upgrade" onclick="location.href='Upgrade-pro.html'">
+        <div class="upgrade" onclick="location.href='/upgrade-pro'">
           <div class="u-top"><span class="star">✦</span> Go Pro <span class="u-chev"><svg width="14" height="14"
                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <path d="M9 6l6 6-6 6" />
@@ -2636,7 +2636,7 @@
             <path d="M4 7h16M4 12h16M4 17h16" />
           </svg>
         </button>
-        <span class="crumb">Dashboard / Generate</span>
+        <span class="crumb"><a href="Dashboard.html" style="color:inherit;text-decoration:none">WORKSPACE</a> / GENERATE QUESTIONS</span>
         <div class="top-actions">
           <button class="icon-btn" id="themeBtn" aria-label="Toggle theme">
             <svg id="sunMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -2648,10 +2648,7 @@
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
               <polyline points="16 17 21 12 16 7" />
               <line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
           </button>
-          <button class="pro-btn" onclick="location.href='Upgrade-pro.html'"><span class="star">✦</span>
-            Upgrade</button>
         </div>
       </div>
 
@@ -3197,15 +3194,10 @@
                   <path d="M12 7v5l3 2" />
                 </svg></span>
               <span class="ct">Recent papers</span>
-            </div>
             <div class="hist" id="hist">
               <!-- Dynamically populated from backend /history -->
             </div>
-            <a class="hist-all" href="Interview history.html" id="viewAllHistBtn">
-              View all history
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M9 6l6 6-6 6" />
-              </svg>
+          </aside>
 
       <div class="foot">© 2026 Ravi GenAI Studio — built for the hot seat.</div>
     </main>

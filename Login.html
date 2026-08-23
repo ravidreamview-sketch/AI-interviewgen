@@ -384,6 +384,8 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 
     <!-- AUTH FORM -->
     <form id="authForm" onsubmit="handleAuth(event)">
+      <div id="loginAlert" style="display:none;padding:10px 14px;border-radius:8px;background:rgba(239, 68, 68, 0.12);color:#EF4444;font-size:13px;margin-bottom:16px;font-weight:600;text-align:center"></div>
+
       <div class="form-group" id="nameGroup" style="display:none">
         <label class="form-label" for="fullName">Full Name</label>
         <div class="input-control">
@@ -400,7 +402,7 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
           <span class="input-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
           </span>
-          <input class="form-input" type="email" id="email" required placeholder="name@company.com" value="ravi@genai-studio.dev">
+          <input class="form-input" type="email" id="email" required placeholder="name@company.com">
         </div>
       </div>
 
@@ -410,7 +412,7 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
           <span class="input-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
           </span>
-          <input class="form-input" type="password" id="password" required placeholder="••••••••" value="password123">
+          <input class="form-input" type="password" id="password" required placeholder="••••••••">
           <span class="eye-toggle" id="eyeToggle" onclick="togglePassword()">
             <svg id="eyeSvg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </span>
@@ -426,7 +428,7 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
       </div>
 
       <button class="submit-btn" type="submit" id="submitBtn">
-        <span>🚀 Start Free Voice Mock Interview</span>
+        <span>🚀 Sign In to Candidate Workspace</span>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </button>
     </form>
@@ -504,20 +506,50 @@ function togglePassword() {
   pwd.type = pwd.type === 'password' ? 'text' : 'password';
 }
 
-function handleAuth(e) {
+async function handleAuth(e) {
   e.preventDefault();
   const btn = document.getElementById('submitBtn');
+  const alertBox = document.getElementById('loginAlert');
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+
+  btn.disabled = true;
   btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><circle cx="12" cy="12" r="10"/></svg> Authenticating...`;
-  setTimeout(() => {
-    window.location.href = 'Dashboard.html';
-  }, 600);
+  alertBox.style.display = 'none';
+
+  try {
+    const res = await fetch('/api/candidate/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alertBox.textContent = data.detail || 'Invalid email or password.';
+      alertBox.style.display = 'block';
+      return;
+    }
+
+    // Success -> redirect directly to Candidate Interview Studio Workspace (Public Page)
+    window.location.href = window.location.protocol === 'file:' ? 'Interview-studio.html' : '/candidate/interview-studio';
+
+  } catch (err) {
+    alertBox.textContent = 'Server connection error. Please try again.';
+    alertBox.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span>🚀 Sign In to Candidate Workspace</span>';
+  }
 }
 
 function demoLogin(provider) {
   const btn = document.getElementById('submitBtn');
   btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><circle cx="12" cy="12" r="10"/></svg> Connecting ${provider}...`;
   setTimeout(() => {
-    window.location.href = 'Dashboard.html';
+    window.location.href = window.location.protocol === 'file:' ? 'Interview-studio.html' : '/candidate/interview-studio';
   }, 600);
 }
 

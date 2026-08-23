@@ -509,7 +509,7 @@ function handleAuth(e) {
   const btn = document.getElementById('submitBtn');
   btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><circle cx="12" cy="12" r="10"/></svg> Authenticating...`;
   setTimeout(() => {
-    window.location.href = 'Dashboard.html';
+    window.location.href = window.location.protocol === 'file:' ? 'Interview-studio.html' : '/candidate/interview-studio';
   }, 600);
 }
 
@@ -517,7 +517,7 @@ function demoLogin(provider) {
   const btn = document.getElementById('submitBtn');
   btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><circle cx="12" cy="12" r="10"/></svg> Connecting ${provider}...`;
   setTimeout(() => {
-    window.location.href = 'Dashboard.html';
+    window.location.href = window.location.protocol === 'file:' ? 'Interview-studio.html' : '/candidate/interview-studio';
   }, 600);
 }
 
