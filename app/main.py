@@ -93,6 +93,17 @@ def direct_candidate_login(
 ):
     return candidate_login(payload, request, response, db)
 
+@app.post("/api/admin/login", include_in_schema=False)
+@app.post("/admin/login", include_in_schema=False)
+@app.post("/admin/api/login", include_in_schema=False)
+def direct_admin_login(
+    payload: AdminLoginRequest,
+    request: Request,
+    response: Response,
+    db: Session = Depends(get_db)
+):
+    return admin_login(payload, request, response, db)
+
 from app.admin_routes import candidate_logout, get_public_menus, is_candidate_menu_enabled
 
 @app.post("/api/candidate/logout", include_in_schema=False)
