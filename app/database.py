@@ -17,20 +17,21 @@ if raw_db_url:
     if DATABASE_URL.startswith("sqlite"):
         engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
     else:
-        # PostgreSQL with robust connection pooling
+        # PostgreSQL with serverless-optimized connection pooling
         engine = create_engine(
             DATABASE_URL,
             pool_pre_ping=True,
-            pool_size=10,
-            max_overflow=20
+            pool_size=5,
+            max_overflow=10
         )
 else:
     if is_production:
-        # Fallback to ephemeral /tmp SQLite on Vercel if DATABASE_URL is not set yet, so process does not crash
-        tmp_db_path = os.path.join(tempfile.gettempdir(), "interview.db")
-        DATABASE_URL = f"sqlite:///{tmp_db_path}"
-        engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-        print("[DB WARNING] Running in serverless without DATABASE_URL. Using /tmp/interview.db fallback. Set DATABASE_URL in Vercel for PostgreSQL persistence.")
+        # Critical guard: Do not silently use ephemeral SQLite in production Vercel
+        raise RuntimeError(
+            "CRITICAL CONFIGURATION ERROR: Running in Vercel/Production environment without DATABASE_URL. "
+            "Ephemeral SQLite is disabled in production to prevent data loss. "
+            "Please configure DATABASE_URL (e.g., Supabase / Neon PostgreSQL) in your Vercel Project Settings."
+        )
     else:
         # Local development SQLite
         DATABASE_URL = "sqlite:///./interview.db"
@@ -52,22 +53,23 @@ def init_db():
     from app import db_models  # noqa: F401
     Base.metadata.create_all(bind=engine)
 
-    # Automatic schema migration: ensure created_at column exists in interview_history
-    with engine.connect() as conn:
-        try:
-            result = conn.execute(text("PRAGMA table_info(interview_history)"))
-            columns = [row[1] for row in result.fetchall()]
-            if "created_at" not in columns:
-                conn.execute(text("ALTER TABLE interview_history ADD COLUMN created_at DATETIME"))
-                conn.commit()
+    # Automatic schema migration: ensure created_at column exists in interview_history (SQLite fallback)
+    if engine.dialect.name == "sqlite":
+        with engine.connect() as conn:
+            try:
+                result = conn.execute(text("PRAGMA table_info(interview_history)"))
+                columns = [row[1] for row in result.fetchall()]
+                if "created_at" not in columns:
+                    conn.execute(text("ALTER TABLE interview_history ADD COLUMN created_at DATETIME"))
+                    conn.commit()
 
-            result_ua = conn.execute(text("PRAGMA table_info(user_accounts)"))
-            columns_ua = [row[1] for row in result_ua.fetchall()]
-            if "full_name" not in columns_ua:
-                conn.execute(text("ALTER TABLE user_accounts ADD COLUMN full_name VARCHAR"))
-                conn.commit()
-        except Exception as e:
-            print(f"[DB] Migration check notice: {e}")
+                result_ua = conn.execute(text("PRAGMA table_info(user_accounts)"))
+                columns_ua = [row[1] for row in result_ua.fetchall()]
+                if "full_name" not in columns_ua:
+                    conn.execute(text("ALTER TABLE user_accounts ADD COLUMN full_name VARCHAR"))
+                    conn.commit()
+            except Exception as e:
+                print(f"[DB] SQLite migration check notice: {e}")
 
     # Provision or rotate Super Admin account strictly from environment variables
     from app.security import hash_password, verify_password
