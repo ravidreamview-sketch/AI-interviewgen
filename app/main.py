@@ -105,7 +105,9 @@ def direct_admin_login(
 ):
     return admin_login(payload, request, response, db)
 
-from app.admin_routes import candidate_logout, get_public_menus, is_candidate_menu_enabled
+from app.admin_routes import candidate_logout, get_public_menus, is_candidate_menu_enabled, update_menu
+from app.auth_deps import get_current_user
+from app.db_models import UserAccount
 
 @app.post("/api/candidate/logout", include_in_schema=False)
 @app.post("/candidate/logout", include_in_schema=False)
@@ -122,6 +124,18 @@ def direct_candidate_logout(
 @app.get("/public-menus", include_in_schema=False)
 def direct_get_public_menus(db: Session = Depends(get_db)):
     return get_public_menus(db)
+
+@app.patch("/api/admin/menus/{menu_id}", include_in_schema=False)
+@app.patch("/admin/api/menus/{menu_id}", include_in_schema=False)
+@app.patch("/api/menus/{menu_id}", include_in_schema=False)
+def direct_update_menu(
+    menu_id: str,
+    payload: dict,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: UserAccount = Depends(get_current_user)
+):
+    return update_menu(menu_id, payload, request, db, current_user)
 
 def check_menu_access_or_block(menu_key: str, db: Session):
     if not is_candidate_menu_enabled(menu_key, db):
