@@ -108,8 +108,8 @@ def init_db():
                     db.commit()
                     print(f"[DB Bootstrap] Synchronized Super Admin credentials from environment variables.")
 
-        # Provision default candidate account if no candidate user exists
-        existing_candidate = db.query(db_models.UserAccount).filter(db_models.UserAccount.role == "candidate").first()
+        # Provision default candidate account candidate@example.com if not present
+        existing_candidate = db.query(db_models.UserAccount).filter(db_models.UserAccount.email == "candidate@example.com").first()
         if not existing_candidate:
             cand_user = db_models.UserAccount(
                 email="candidate@example.com",
@@ -122,6 +122,10 @@ def init_db():
             db.add(cand_user)
             db.commit()
             print("[DB Bootstrap] Provisioned default Candidate account (candidate@example.com / CandidatePass123!).")
+        else:
+            existing_candidate.password_hash = hash_password("CandidatePass123!")
+            existing_candidate.is_active = True
+            db.commit()
 
         # Seed initial production prompts if table is empty
         try:

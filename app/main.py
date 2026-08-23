@@ -55,9 +55,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount Super Admin & Candidate API routers
-app.include_router(admin_router)
-app.include_router(candidate_router)
+# Mount Super Admin & Candidate API routers with dual prefix support for Vercel serverless compatibility
+app.include_router(admin_router, prefix="/api/admin")
+app.include_router(admin_router, prefix="/admin/api")
+
+app.include_router(candidate_router, prefix="/api")
+app.include_router(candidate_router, prefix="")
 
 
 def format_interview_response(interview: InterviewHistory) -> dict:

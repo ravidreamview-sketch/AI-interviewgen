@@ -40,8 +40,8 @@ from app.auth_deps import (
     clear_failed_login_attempts
 )
 
-admin_router = APIRouter(prefix="/api/admin", tags=["Admin Portal"])
-candidate_router = APIRouter(prefix="/api", tags=["Candidate Auth"])
+admin_router = APIRouter(tags=["Admin Portal"])
+candidate_router = APIRouter(tags=["Candidate Auth"])
 
 
 # ------------------------------------------------------------------------------
