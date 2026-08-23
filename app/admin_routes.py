@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request, Query
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, func
 from datetime import datetime, timedelta
@@ -881,6 +882,46 @@ def _save_stored_menus(db: Session, menus: List[dict]):
     db.commit()
 
 
+def is_candidate_menu_enabled(identifier: str, db: Session) -> bool:
+    """
+    Backend Feature Guard:
+    Checks if a candidate feature/menu is active in navigation_menus (SystemConfig in DB).
+    `identifier` can be a name (e.g. 'Dashboard', 'Interview Studio', 'Generate Questions', 'AI Mock Interview', 'Resume & JD Match', 'Session History')
+    or a filename/path (e.g. 'Dashboard.html', 'Interview-studio.html', 'Mock-interview.html', 'Resume-match.html', 'Interview history.html').
+    Returns True if active, False if status == "disabled".
+    """
+    clean_id = (identifier or "").strip().lower()
+    if not clean_id:
+        return True
+        
+    menus = _get_stored_menus(db)
+    for m in menus:
+        name = (m.get("name") or "").strip().lower()
+        label = (m.get("label") or "").strip().lower()
+        route = (m.get("route") or "").strip().lower()
+        clean_route = route.split('/').pop().split('?')[0].split('#')[0].lower()
+        
+        matches = [
+            clean_id == name,
+            clean_id == label,
+            clean_id == route,
+            clean_id == clean_route,
+            clean_id in name if len(clean_id) > 3 else False,
+            clean_id in label if len(clean_id) > 3 else False,
+            name in clean_id if len(name) > 3 else False,
+            label in clean_id if len(label) > 3 else False,
+            clean_route.replace('.html', '') in clean_id,
+            clean_id.replace('.html', '') in clean_route
+        ]
+        
+        if any(matches):
+            status = (m.get("status") or "active").lower()
+            if status == "disabled":
+                return False
+                
+    return True
+
+
 @candidate_router.get("/public/menus")
 @candidate_router.get("/public-menus")
 def get_public_menus(
@@ -913,11 +954,18 @@ def get_public_menus(
         menu_copy["visible_to_candidates"] = True
         permitted_menus.append(menu_copy)
         
-    return {
-        "success": True,
-        "total": len(permitted_menus),
-        "menus": permitted_menus
-    }
+    res = JSONResponse(
+        status_code=200,
+        content={
+            "success": True,
+            "total": len(permitted_menus),
+            "menus": permitted_menus
+        }
+    )
+    res.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    res.headers["Pragma"] = "no-cache"
+    res.headers["Expires"] = "0"
+    return res
 
 
 @candidate_router.get("/candidate/menus")

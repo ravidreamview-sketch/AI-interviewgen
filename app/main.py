@@ -91,7 +91,7 @@ def direct_candidate_login(
 ):
     return candidate_login(payload, request, response, db)
 
-from app.admin_routes import candidate_logout, get_public_menus
+from app.admin_routes import candidate_logout, get_public_menus, is_candidate_menu_enabled
 
 @app.post("/api/candidate/logout", include_in_schema=False)
 @app.post("/candidate/logout", include_in_schema=False)
@@ -108,6 +108,36 @@ def direct_candidate_logout(
 @app.get("/public-menus", include_in_schema=False)
 def direct_get_public_menus(db: Session = Depends(get_db)):
     return get_public_menus(db)
+
+def check_menu_access_or_block(menu_key: str, db: Session):
+    if not is_candidate_menu_enabled(menu_key, db):
+        content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feature Disabled — Ravi GenAI Studio</title>
+  <style>
+    body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0F172A; color: #F8FAFC; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; text-align: center; }}
+    .box {{ background: #1E293B; border: 1px solid #334155; border-radius: 16px; padding: 40px 30px; max-width: 480px; width: 100%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); }}
+    h1 {{ font-size: 24px; color: #EF4444; margin-bottom: 12px; font-weight: 700; }}
+    p {{ color: #94A3B8; font-size: 15px; line-height: 1.6; margin-bottom: 24px; }}
+    a {{ display: inline-block; background: #4F46E5; color: #FFFFFF; padding: 12px 24px; border-radius: 8px; font-weight: 600; text-decoration: none; transition: background 0.2s; }}
+    a:hover {{ background: #4338CA; }}
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>🚫 Feature Temporarily Disabled</h1>
+    <p>The <strong>{menu_key}</strong> module is currently disabled by the Super Admin in Menu Management.</p>
+    <a href="/">Return to Home</a>
+  </div>
+</body>
+</html>"""
+        res = HTMLResponse(content=content, status_code=403)
+        res.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        return res
+    return None
 
 
 def format_interview_response(interview: InterviewHistory) -> dict:
@@ -566,11 +596,15 @@ def serve_login():
 @app.get("/Dashboard", include_in_schema=False)
 @app.get("/Dashboard.html", include_in_schema=False)
 def serve_candidate_dashboard(db: Session = Depends(get_db)):
+    block_res = check_menu_access_or_block("Dashboard", db)
+    if block_res: return block_res
     return get_html_response("Candidate-dashboard.html", db)
 
 @app.get("/candidate/evaluator", include_in_schema=False)
 @app.get("/evaluator", include_in_schema=False)
 def serve_evaluator(db: Session = Depends(get_db)):
+    block_res = check_menu_access_or_block("Interview Studio", db)
+    if block_res: return block_res
     return get_html_response("Interview-studio.html", db)
 
 @app.get("/admin", include_in_schema=False)
@@ -591,6 +625,8 @@ def serve_admin_page():
 @app.get("/interview-studio", include_in_schema=False)
 @app.get("/Interview-studio.html", include_in_schema=False)
 def serve_studio(db: Session = Depends(get_db)):
+    block_res = check_menu_access_or_block("Interview Studio", db)
+    if block_res: return block_res
     return get_html_response("Interview-studio.html", db)
 
 @app.get("/candidate/mock-interview", include_in_schema=False)
@@ -599,6 +635,8 @@ def serve_studio(db: Session = Depends(get_db)):
 @app.get("/Mock-interview", include_in_schema=False)
 @app.get("/Mock-interview.html", include_in_schema=False)
 def serve_mock(db: Session = Depends(get_db)):
+    block_res = check_menu_access_or_block("AI Mock Interview", db)
+    if block_res: return block_res
     return get_html_response("Mock-interview.html", db)
 
 @app.get("/candidate/resume-match", include_in_schema=False)
@@ -607,6 +645,8 @@ def serve_mock(db: Session = Depends(get_db)):
 @app.get("/Resume-match", include_in_schema=False)
 @app.get("/Resume-match.html", include_in_schema=False)
 def serve_resume_match(db: Session = Depends(get_db)):
+    block_res = check_menu_access_or_block("Resume & JD Match", db)
+    if block_res: return block_res
     return get_html_response("Resume-match.html", db)
 
 @app.get("/candidate/company-playbooks", include_in_schema=False)
@@ -615,6 +655,8 @@ def serve_resume_match(db: Session = Depends(get_db)):
 @app.get("/Company-playbooks", include_in_schema=False)
 @app.get("/Company-playbooks.html", include_in_schema=False)
 def serve_company_playbooks(db: Session = Depends(get_db)):
+    block_res = check_menu_access_or_block("Company Playbooks", db)
+    if block_res: return block_res
     return get_html_response("Company-playbooks.html", db)
 
 @app.get("/candidate/history", include_in_schema=False)
@@ -626,6 +668,8 @@ def serve_company_playbooks(db: Session = Depends(get_db)):
 @app.get("/Interview history.html", include_in_schema=False)
 @app.get("/Interview%20history.html", include_in_schema=False)
 def serve_history_page(db: Session = Depends(get_db)):
+    block_res = check_menu_access_or_block("Session History", db)
+    if block_res: return block_res
     return get_html_response("Interview history.html", db)
 
 @app.get("/candidate/upgrade-pro", include_in_schema=False)
@@ -634,6 +678,8 @@ def serve_history_page(db: Session = Depends(get_db)):
 @app.get("/Upgrade-pro", include_in_schema=False)
 @app.get("/Upgrade-pro.html", include_in_schema=False)
 def serve_upgrade(db: Session = Depends(get_db)):
+    block_res = check_menu_access_or_block("Upgrade Pro", db)
+    if block_res: return block_res
     return get_html_response("Upgrade-pro.html", db)
 
 @app.get("/candidate/scorecard", include_in_schema=False)
@@ -642,7 +688,9 @@ def serve_upgrade(db: Session = Depends(get_db)):
 @app.get("/Scorecard", include_in_schema=False)
 @app.get("/scorecard.html", include_in_schema=False)
 @app.get("/scorecard/{score_id}", include_in_schema=False)
-def serve_scorecard(score_id: str = None):
+def serve_scorecard(score_id: str = None, db: Session = Depends(get_db)):
+    block_res = check_menu_access_or_block("Public Scorecards", db)
+    if block_res: return block_res
     return get_html_response("scorecard.html")
 
 @app.get("/analytics-tracker.js", include_in_schema=False)
