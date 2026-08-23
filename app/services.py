@@ -6,46 +6,59 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def get_groq_client():
-    api_key = os.getenv("GROQ_API_KEY")
-    if not api_key:
-        raise ValueError(
-            "GROQ_API_KEY environment variable is not set. "
-            "Please create a .env file with GROQ_API_KEY=your_key or set it in your environment."
-        )
-    from groq import Groq
-    return Groq(api_key=api_key)
-
+import json
+import urllib.request
+import urllib.error
 
 def generate_ai_questions(prompt: str) -> str:
-    client = get_groq_client()
-    models_to_try = [
-        "llama-3.3-70b-versatile",
-        "llama-3.1-8b-instant",
-        "llama-3.2-11b-vision-preview",
-        "llama-3.2-3b-preview",
-        "mixtral-8x7b-32768",
-        "gemma2-9b-it"
-    ]
-    last_err = None
-    for model_name in models_to_try:
+    # 1. Try Gemini API if GEMINI_API_KEY is available
+    gemini_key = os.getenv("GEMINI_API_KEY")
+    if gemini_key:
         try:
-            response = client.chat.completions.create(
-                model=model_name,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
-                temperature=0.6,
-                max_tokens=3000,
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}"
+            payload = {
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {"temperature": 0.65, "maxOutputTokens": 3000}
+            }
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json"}
             )
-            return response.choices[0].message.content
-        except Exception as e:
-            last_err = e
-            continue
-    raise last_err or RuntimeError("Failed to generate AI questions with available Groq models")
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                text = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                if text:
+                    return text
+        except Exception as gemini_err:
+            print(f"[AI Service] Gemini request error: {gemini_err}. Attempting Groq...")
+
+    # 2. Try Groq API if GROQ_API_KEY is available
+    groq_key = os.getenv("GROQ_API_KEY")
+    if groq_key:
+        try:
+            from groq import Groq
+            client = Groq(api_key=groq_key)
+            models_to_try = [
+                "llama-3.3-70b-versatile",
+                "llama-3.1-8b-instant",
+                "mixtral-8x7b-32768"
+            ]
+            for model_name in models_to_try:
+                try:
+                    response = client.chat.completions.create(
+                        model=model_name,
+                        messages=[{"role": "user", "content": prompt}],
+                        temperature=0.6,
+                        max_tokens=3000,
+                    )
+                    return response.choices[0].message.content
+                except Exception:
+                    continue
+        except Exception as groq_err:
+            print(f"[AI Service] Groq request error: {groq_err}")
+
+    raise RuntimeError("No LLM API keys configured (set GEMINI_API_KEY or GROQ_API_KEY in .env)")
 
 
 # Rich fallback questions bank (25+ questions per discipline)

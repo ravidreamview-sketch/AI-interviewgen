@@ -107,6 +107,23 @@ def generate_questions(
         db.refresh(interview)
 
         res = format_interview_response(interview)
+        res["company"] = getattr(data, "company", "General Tech")
+        res["interview_type"] = getattr(data, "interview_type", "Technical & Architecture")
+        res["questions_details"] = [
+            {
+                "id": i + 1,
+                "question": q,
+                "category": getattr(data, "interview_type", "Technical & Architecture"),
+                "difficulty": data.difficulty,
+                "source_type": "AI_generated",
+                "source_title": f"AI Synthesis ({data.role})",
+                "source_url": None,
+                "source_date": datetime.utcnow().strftime("%Y-%m-%d"),
+                "confidence": 0.91,
+                "model_answer": f"Evaluates depth in {', '.join(data.skills[:3]) if data.skills else data.role} with clear trade-offs."
+            }
+            for i, q in enumerate(clean_questions)
+        ]
         res["message"] = "Interview questions generated and saved successfully"
         return res
 

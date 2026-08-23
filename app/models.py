@@ -6,7 +6,9 @@ class InterviewRequest(BaseModel):
     experience: str
     skills: List[str]
     difficulty: str
-    number_of_questions: int = Field(..., ge=1, le=50)
+    number_of_questions: int = Field(5, ge=1, le=50)
+    company: Optional[str] = Field("General Tech", description="Target company bar (e.g. Google, Amazon, Meta, Microsoft)")
+    interview_type: Optional[str] = Field("Technical & Architecture", description="Interview round format")
     custom_question: Optional[str] = Field(None, description="Optional specific focus question, case study, or seed prompt to branch related questions from")
 
 

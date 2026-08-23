@@ -4,6 +4,8 @@ def interview_prompt(data):
     skills_str = ", ".join(data.skills or [])
     exp = data.experience or "3-5 Years"
     diff = data.difficulty or "Medium"
+    company = getattr(data, "company", None) or "General Tech"
+    interview_type = getattr(data, "interview_type", None) or "Technical & Architecture"
     num_q = data.number_of_questions or 5
     custom_q = getattr(data, "custom_question", None) or ""
 
@@ -16,10 +18,12 @@ STRICT REQUIREMENT: Ensure all generated questions directly probe, expand, and b
 """
 
     format_instruction = f"""
-CRITICAL COUNT & OUTPUT FORMAT:
+CRITICAL REQUIREMENTS:
+- Target Company Bar: {company}
+- Interview Round / Format: {interview_type}
 - You MUST generate EXACTLY {num_q} interview questions (numbered sequentially from 1 to {num_q}).
 - Return ONLY the numbered list of {num_q} questions.
-- Do NOT output any introductory text, section headers, category labels (e.g., do not write 'User Research:' or 'Coding:'), markdown formatting asterisks around the whole question, or concluding notes.
+- Do NOT output any introductory text, section headers, or markdown formatting asterisks around the whole question.
 - Format every question on its own line:
 1. [First question text]
 2. [Second question text]
