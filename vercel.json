@@ -2,7 +2,11 @@
   "rewrites": [
     { "source": "/generate", "destination": "/api/generate" },
     { "source": "/track", "destination": "/api/track" },
+    { "source": "/history", "destination": "/api/history" },
+    { "source": "/history/(.*)", "destination": "/api/history" },
     { "source": "/api/analytics/track", "destination": "/api/track" },
-    { "source": "/api/analytics/click", "destination": "/api/track" }
+    { "source": "/api/analytics/click", "destination": "/api/track" },
+    { "source": "/api/analytics/stats", "destination": "/api/stats" },
+    { "source": "/api/analytics/clear", "destination": "/api/stats" }
   ]
 }

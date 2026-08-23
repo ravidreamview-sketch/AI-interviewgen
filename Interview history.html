@@ -1511,9 +1511,11 @@
       $('#statDiff').textContent = topDiff;
     }
 
+    const API_BASE = (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') || window.location.protocol === 'file:') ? 'http://127.0.0.1:8000' : '';
+
     async function loadHistory() {
       try {
-        const res = await fetch("http://127.0.0.1:8000/history");
+        const res = await fetch(`${API_BASE}/history`);
         if (!res.ok) throw new Error("HTTP " + res.status);
         const data = await res.json();
 
@@ -1539,8 +1541,7 @@
         updateStats();
         render();
       } catch (err) {
-        console.warn("Could not fetch history from backend:", err.message);
-        toast("Backend offline: Showing demo history records");
+        console.warn("Backend API offline, loading demo ledger:", err.message);
         loadDemoFallback();
       }
     }
@@ -1652,7 +1653,7 @@
     /* ---------- interactions & API deletion ---------- */
     async function deleteSitting(id, role) {
       try {
-        const res = await fetch(`http://127.0.0.1:8000/history/${id}`, { method: "DELETE" });
+        const res = await fetch(`${API_BASE}/history/${id}`, { method: "DELETE" });
         if (res.ok) {
           toast(`Removed "${role}" from record`);
         } else {
