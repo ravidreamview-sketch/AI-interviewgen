@@ -6,6 +6,8 @@
 <title>Ravi — AI Voice Mock Interview Room</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Supabase Realtime Client CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600;700&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400;1,700&display=swap');
 
@@ -736,7 +738,6 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
         <!-- 4-BAR STAR VISUAL BREAKDOWN -->
         <section class="card-section">
           <h2 class="section-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             STAR Behavioral Scoring Breakdown
           </h2>
           <p class="section-sub">Granular evaluation measuring problem framing, leadership ownership, and business metric impact.</p>
@@ -1173,9 +1174,42 @@ submitAnswerBtn.addEventListener('click', () => {
       clearInterval(waveInterval);
       stageLive.classList.remove('active');
       stageScorecard.classList.add('active');
+      pushMockScorecardToSupabase();
     }
   }, 750);
 });
+
+const SUPABASE_CONFIG = {
+  url: window.ENV_SUPABASE_URL || localStorage.getItem('SUPABASE_URL') || 'https://xyzcompany.supabase.co',
+  anonKey: window.ENV_SUPABASE_ANON_KEY || localStorage.getItem('SUPABASE_ANON_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummyKey'
+};
+
+async function pushMockScorecardToSupabase() {
+  if (typeof supabase !== 'undefined' && SUPABASE_CONFIG.url && !SUPABASE_CONFIG.url.includes('xyzcompany')) {
+    try {
+      const sb = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+      const role = document.getElementById('mockRole')?.value || 'Python Backend Engineer';
+      const comp = document.getElementById('mockCompany')?.value || 'FAANG Tier';
+      const persona = document.querySelector('.persona-card.selected')?.dataset.persona || 'Alex (Tech Lead)';
+
+      await sb.from('mock_interviews').insert([{
+        role: role,
+        company_target: comp,
+        interviewer_persona: persona,
+        score: 89.00,
+        technical_accuracy: 92.00,
+        communication_clarity: 88.00,
+        star_depth: 90.00,
+        confidence_score: 87.00,
+        duration_seconds: timerSeconds || 300,
+        status: 'completed'
+      }]);
+      console.log('⚡ [Supabase Realtime] Pushed completed mock session to database');
+    } catch (e) {
+      console.warn('Supabase mock sync notice:', e.message);
+    }
+  }
+}
 
 // Retake
 retakeBtn.addEventListener('click', () => {
@@ -1241,6 +1275,42 @@ function handleLogout(e) {
     window.location.href = "Login.html";
   }
 }
+
+function initMockFromUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  const company = params.get('company');
+  const role = params.get('role');
+  const exp = params.get('exp');
+  const diff = params.get('diff');
+
+  if (role) {
+    const roleInput = document.getElementById('mockRole');
+    if (roleInput) roleInput.value = role;
+  }
+  if (company) {
+    const compSel = document.getElementById('mockCompany');
+    if (compSel) {
+      for (let opt of compSel.options) {
+        if (opt.text.toLowerCase().includes(company.toLowerCase())) {
+          compSel.value = opt.value;
+          break;
+        }
+      }
+    }
+  }
+  if (exp) {
+    const expSel = document.getElementById('mockExp');
+    if (expSel) {
+      for (let opt of expSel.options) {
+        if (opt.text.toLowerCase().includes(exp.toLowerCase())) {
+          expSel.value = opt.value;
+          break;
+        }
+      }
+    }
+  }
+}
+initMockFromUrlParams();
 </script>
 <script src="analytics-tracker.js"></script>
 </body>

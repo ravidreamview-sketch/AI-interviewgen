@@ -6,6 +6,8 @@
 <title>Ravi — Resume &amp; JD Matcher</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Supabase Realtime Client CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400;1,700&display=swap');
 
@@ -393,6 +395,11 @@ Requirements:
           <div class="q-tag-label">Project Verification: Microservices Scale</div>
           <div class="q-text-line">3. "In your FastAPI microservices project, what specific strategies did you implement to handle database connection pooling and query bottlenecks under peak concurrency?"</div>
         </div>
+
+        <button onclick="launchInStudio()" style="margin-top:16px;padding:11px 20px;border-radius:10px;font-weight:700;font-size:13.5px;background:var(--primary-grad);color:#fff;display:inline-flex;align-items:center;gap:8px;cursor:pointer;border:none;box-shadow:0 4px 14px rgba(79,70,229,0.35);transition:all .18s">
+          <span>⚡ Compose Full Question Paper in Studio</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
       </div>
     </div>
 
@@ -414,6 +421,17 @@ function handleLogout(e) {
   }
 }
 
+function launchInStudio() {
+  const params = new URLSearchParams({
+    role: 'Senior Backend Developer',
+    exp: '4 Years',
+    diff: 'Hard',
+    skills: 'FastAPI, PostgreSQL, Redis, Kafka, Kubernetes, Docker',
+    customQ: 'How do you architect an event-driven data pipeline using Apache Kafka to ensure ordered message processing and at-least-once delivery?'
+  });
+  window.location.href = `Interview-studio.html?${params.toString()}`;
+}
+
 // File upload handler
 const fileInput = document.getElementById('fileInput');
 const dropText = document.getElementById('dropText');
@@ -422,6 +440,33 @@ fileInput.addEventListener('change', (e) => {
     dropText.textContent = `✓ Attached: ${e.target.files[0].name}`;
   }
 });
+
+const SUPABASE_CONFIG = {
+  url: window.ENV_SUPABASE_URL || localStorage.getItem('SUPABASE_URL') || 'https://xyzcompany.supabase.co',
+  anonKey: window.ENV_SUPABASE_ANON_KEY || localStorage.getItem('SUPABASE_ANON_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummyKey'
+};
+
+async function pushResumeScanToSupabase() {
+  if (typeof supabase !== 'undefined' && SUPABASE_CONFIG.url && !SUPABASE_CONFIG.url.includes('xyzcompany')) {
+    try {
+      const sb = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+      await sb.from('resume_scans').insert([{
+        candidate_name: 'Ravi Chandran',
+        target_role: 'Senior Backend Engineer',
+        match_score: 84.00,
+        matched_skills: ['Python', 'FastAPI', 'PostgreSQL', 'Redis', 'Docker'],
+        missing_skills: ['Kafka', 'Kubernetes'],
+        gap_questions: [
+          "How would you architect an event-driven data pipeline using Apache Kafka to ensure ordered message processing and at-least-once delivery?",
+          "How have you managed container rolling updates, liveness/readiness probes, and horizontal pod autoscaling under spiky load?"
+        ]
+      }]);
+      console.log('⚡ [Supabase Realtime] Pushed resume scan record to database');
+    } catch (e) {
+      console.warn('Supabase scan sync notice:', e.message);
+    }
+  }
+}
 
 // Match Trigger
 document.getElementById('matchBtn').addEventListener('click', () => {
@@ -432,6 +477,7 @@ document.getElementById('matchBtn').addEventListener('click', () => {
     btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Analyze Skill Fit & Generate Gap Questions`;
     document.getElementById('resultsPanel').classList.add('active');
     document.getElementById('resultsPanel').scrollIntoView({ behavior: 'smooth' });
+    pushResumeScanToSupabase();
   }, 700);
 });
 
