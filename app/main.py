@@ -128,6 +128,10 @@ def direct_get_public_menus(db: Session = Depends(get_db)):
 @app.patch("/api/admin/menus/{menu_id}", include_in_schema=False)
 @app.patch("/admin/api/menus/{menu_id}", include_in_schema=False)
 @app.patch("/api/menus/{menu_id}", include_in_schema=False)
+@app.post("/api/admin/menus/{menu_id}", include_in_schema=False)
+@app.post("/admin/api/menus/{menu_id}", include_in_schema=False)
+@app.put("/api/admin/menus/{menu_id}", include_in_schema=False)
+@app.put("/admin/api/menus/{menu_id}", include_in_schema=False)
 def direct_update_menu(
     menu_id: str,
     payload: dict,
