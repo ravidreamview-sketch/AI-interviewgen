@@ -60,12 +60,27 @@ app.add_middleware(
 @app.middleware("http")
 async def fix_vercel_path_middleware(request: Request, call_next):
     path = request.scope.get("path", "")
-    if path.startswith("/api/index.py"):
-        clean_path = path.replace("/api/index.py", "", 1)
-        request.scope["path"] = clean_path if clean_path else "/"
+    
+    # Vercel sets x-matched-path header to the requested rewrite route
+    x_matched_path = request.headers.get("x-matched-path")
+    x_rewrite_path = request.headers.get("x-rewrite-path")
+    x_forwarded_path = request.headers.get("x-forwarded-path")
+    
+    real_path = x_matched_path or x_rewrite_path or x_forwarded_path
+    
+    if real_path and real_path != "/api/index.py" and not real_path.startswith("/api/index.py"):
+        request.scope["path"] = real_path
+    elif path.startswith("/api/index.py/"):
+        request.scope["path"] = path[len("/api/index.py"):]
+    elif path.startswith("/api/index.py"):
+        clean = path.replace("/api/index.py", "", 1)
+        if clean:
+            request.scope["path"] = clean
     elif path.startswith("/index.py"):
-        clean_path = path.replace("/index.py", "", 1)
-        request.scope["path"] = clean_path if clean_path else "/"
+        clean = path.replace("/index.py", "", 1)
+        if clean:
+            request.scope["path"] = clean
+
     return await call_next(request)
 
 # Mount Super Admin & Candidate API routers with dual prefix support for Vercel serverless compatibility
