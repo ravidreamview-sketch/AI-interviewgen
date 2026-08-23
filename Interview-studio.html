@@ -576,9 +576,11 @@ input[type=range]::-moz-range-thumb{
   .menu-btn{display:grid}
   .scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .3s;z-index:40}
   .scrim.show{opacity:1;pointer-events:auto}
+  .steps-row{grid-template-columns:repeat(2, minmax(0, 1fr));gap:6px}
 }
 @media(max-width:560px){
   .fgrid{grid-template-columns:1fr}
+  .steps-row{grid-template-columns:1fr;gap:6px}
   .q{grid-template-columns:40px 1fr auto}
   .sheet{margin:12px}
   .sheet-stamp{display:none}

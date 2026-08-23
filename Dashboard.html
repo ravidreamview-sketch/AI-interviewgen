@@ -153,6 +153,72 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 }
 .preset-tag:hover{border-color:var(--pen);color:var(--pen);transform:translateY(-1px);background:var(--pen-wash)}
 
+/* candidate journey pipeline */
+.journey-pipeline{
+  background:var(--paper-2);border:1px solid var(--rule);border-radius:var(--radius);
+  padding:18px 20px;margin-bottom:24px;box-shadow:var(--shadow);overflow:hidden;
+}
+.journey-title{
+  font-family:var(--f-mono);font-size:11px;font-weight:700;color:var(--label-color);
+  text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;display:flex;align-items:center;gap:6px;
+}
+.journey-grid{
+  display:grid;grid-template-columns:repeat(4, minmax(0, 1fr));gap:12px;width:100%;
+}
+.journey-step{
+  display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;
+  background:var(--paper);border:1px solid var(--rule);transition:all .18s;
+  min-width:0;text-decoration:none;
+}
+.journey-step:hover{
+  border-color:var(--pen);transform:translateY(-1px);background:var(--paper-2);
+  box-shadow:0 4px 12px rgba(99, 102, 241, 0.12);
+}
+.journey-step.highlight{
+  background:var(--pen-wash);border:1.5px solid #818CF8;
+}
+.journey-step-icon{font-size:20px;flex:none;line-height:1}
+.journey-step-info{min-width:0;flex:1;overflow:hidden}
+.journey-step-name{
+  font-weight:700;font-size:13px;color:var(--ink);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.journey-step.highlight .journey-step-name{
+  color:#4F46E5;font-weight:800;
+}
+[data-theme="dark"] .journey-step.highlight .journey-step-name{
+  color:#A5B4FC;
+}
+.journey-step-desc{
+  font-size:11.5px;color:var(--ink-soft);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.journey-step.highlight .journey-step-desc{
+  color:#6366F1;
+}
+[data-theme="dark"] .journey-step.highlight .journey-step-desc{
+  color:#C7D2FE;
+}
+
+/* next action banner */
+.action-banner{
+  display:flex;align-items:center;justify-content:space-between;
+  background:linear-gradient(135deg, rgba(79,70,229,0.08) 0%, rgba(124,58,237,0.05) 100%);
+  border:1px solid rgba(99,102,241,0.3);border-radius:12px;padding:14px 20px;margin-bottom:24px;
+  flex-wrap:wrap;gap:14px;min-width:0;overflow:hidden;
+}
+.action-banner-left{display:flex;align-items:center;gap:12px;min-width:0;flex:1}
+.action-banner-icon{font-size:24px;flex:none}
+.action-banner-text{min-width:0;flex:1}
+.action-banner-title{font-size:14px;color:var(--ink);display:block;margin-bottom:2px;font-weight:700}
+.action-banner-desc{font-size:12.5px;color:var(--ink-soft)}
+.action-banner-btn{
+  padding:8px 16px;border-radius:8px;background:#4F46E5;color:#FFFFFF;font-weight:700;
+  font-size:13px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;flex:none;
+  transition:all .18s;
+}
+.action-banner-btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+
 /* stats grid */
 .stats-grid{display:grid;grid-template-columns:repeat(4, 1fr);gap:16px;margin-bottom:28px}
 .stat-card{
@@ -264,6 +330,7 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 
 @media(max-width:1180px){
   .dash-synth-grid{grid-template-columns:1fr 1fr 1fr}
+  .journey-grid{grid-template-columns:repeat(2, minmax(0, 1fr));gap:10px}
 }
 @media(max-width:1024px){
   .stats-grid{grid-template-columns:repeat(2, 1fr)}
@@ -281,6 +348,9 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
   .dash-synth-grid{grid-template-columns:1fr 1fr}
 }
 @media(max-width:600px){
+  .journey-grid{grid-template-columns:minmax(0, 1fr);gap:8px}
+  .action-banner{flex-direction:column;align-items:flex-start}
+  .action-banner-btn{width:100%;justify-content:center}
   .dash-synth-grid{grid-template-columns:1fr;gap:12px}
   #dashSynthesizeBtn{width:100%;justify-content:center}
 }
@@ -406,52 +476,52 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
     </div>
 
     <!-- PRIMARY CANDIDATE JOURNEY PIPELINE -->
-    <div style="background:var(--paper-2);border:1px solid var(--rule);border-radius:var(--radius);padding:18px 22px;margin-bottom:24px;box-shadow:var(--shadow)">
-      <div style="font-family:var(--f-mono);font-size:11px;font-weight:700;color:var(--label-color);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px">
+    <div class="journey-pipeline">
+      <div class="journey-title">
         🚀 Complete Candidate Preparation Journey:
       </div>
-      <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:12px">
-        <a href="Resume-match.html" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:var(--paper);border:1px solid var(--rule);transition:all .18s" class="preset-tag">
-          <span style="font-size:18px">📄</span>
-          <div>
-            <div style="font-weight:700;font-size:13px;color:var(--ink)">1. Match Resume</div>
-            <div style="font-size:11.5px;color:var(--ink-soft)">Scan skill gaps</div>
+      <div class="journey-grid">
+        <a href="Resume-match.html" class="journey-step">
+          <span class="journey-step-icon">📄</span>
+          <div class="journey-step-info">
+            <div class="journey-step-name">1. Match Resume</div>
+            <div class="journey-step-desc">Scan skill gaps</div>
           </div>
         </a>
-        <a href="Interview-studio.html" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:var(--paper);border:1px solid var(--rule);transition:all .18s" class="preset-tag">
-          <span style="font-size:18px">⚡</span>
-          <div>
-            <div style="font-weight:700;font-size:13px;color:var(--ink)">2. Compose Paper</div>
-            <div style="font-size:11.5px;color:var(--ink-soft)">Tailored questions</div>
+        <a href="Interview-studio.html" class="journey-step">
+          <span class="journey-step-icon">⚡</span>
+          <div class="journey-step-info">
+            <div class="journey-step-name">2. Compose Paper</div>
+            <div class="journey-step-desc">Tailored questions</div>
           </div>
         </a>
-        <a href="Mock-interview.html" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:#EEF2FF;border:1.5px solid #818CF8;transition:all .18s" class="preset-tag">
-          <span style="font-size:18px">🎙️</span>
-          <div>
-            <div style="font-weight:800;font-size:13px;color:#4F46E5">3. Live Voice Mock</div>
-            <div style="font-size:11.5px;color:#6366F1">Practice speaking</div>
+        <a href="Mock-interview.html" class="journey-step highlight">
+          <span class="journey-step-icon">🎙️</span>
+          <div class="journey-step-info">
+            <div class="journey-step-name">3. Live Voice Mock</div>
+            <div class="journey-step-desc">Practice speaking</div>
           </div>
         </a>
-        <a href="Interview history.html" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:var(--paper);border:1px solid var(--rule);transition:all .18s" class="preset-tag">
-          <span style="font-size:18px">📊</span>
-          <div>
-            <div style="font-weight:700;font-size:13px;color:var(--ink)">4. Review &amp; Repeat</div>
-            <div style="font-size:11.5px;color:var(--ink-soft)">STAR scorecard</div>
+        <a href="Interview history.html" class="journey-step">
+          <span class="journey-step-icon">📊</span>
+          <div class="journey-step-info">
+            <div class="journey-step-name">4. Review &amp; Repeat</div>
+            <div class="journey-step-desc">STAR scorecard</div>
           </div>
         </a>
       </div>
     </div>
 
     <!-- RECOMMENDED NEXT ACTION ALERT -->
-    <div style="display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg, rgba(79,70,229,0.08) 0%, rgba(124,58,237,0.05) 100%);border:1px solid rgba(99,102,241,0.3);border-radius:12px;padding:14px 20px;margin-bottom:24px;flex-wrap:wrap;gap:14px">
-      <div style="display:flex;align-items:center;gap:12px">
-        <span style="font-size:24px">🎯</span>
-        <div>
-          <b style="font-size:14px;color:var(--ink)">Recommended Next Action: Practice High Concurrency &amp; Async I/O</b>
-          <div style="font-size:12.5px;color:var(--ink-soft)">Your current readiness score is 88%. A 5-minute voice session with Alex (Tech Lead) will bring you into the Top 3% percentile.</div>
+    <div class="action-banner">
+      <div class="action-banner-left">
+        <span class="action-banner-icon">🎯</span>
+        <div class="action-banner-text">
+          <b class="action-banner-title">Recommended Next Action: Practice High Concurrency &amp; Async I/O</b>
+          <div class="action-banner-desc">Your current readiness score is 88%. A 5-minute voice session with Alex (Tech Lead) will bring you into the Top 3% percentile.</div>
         </div>
       </div>
-      <a href="Mock-interview.html" style="padding:8px 16px;border-radius:8px;background:#4F46E5;color:#FFFFFF;font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:6px">
+      <a href="Mock-interview.html" class="action-banner-btn">
         ▶ Launch 5-Min Drill
       </a>
     </div>
