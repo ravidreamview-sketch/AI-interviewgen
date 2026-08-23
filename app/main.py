@@ -31,7 +31,8 @@ DEFAULT_ALLOWED_ORIGINS = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
     "http://localhost:3000",
-    "http://127.0.0.1:3000"
+    "http://127.0.0.1:3000",
+    "https://ai-interviewgen.vercel.app"
 ]
 
 env_origins = os.environ.get("ADMIN_ALLOWED_ORIGINS", "")
@@ -50,6 +51,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
@@ -61,6 +63,22 @@ app.include_router(admin_router, prefix="/admin/api")
 
 app.include_router(candidate_router, prefix="/api")
 app.include_router(candidate_router, prefix="")
+
+from fastapi import Response
+from app.admin_routes import candidate_login, admin_login
+from app.models import CandidateLoginRequest, AdminLoginRequest
+
+@app.post("/api/candidate/login", include_in_schema=False)
+@app.post("/candidate/login", include_in_schema=False)
+@app.post("/api/login", include_in_schema=False)
+@app.post("/login", include_in_schema=False)
+def direct_candidate_login(
+    payload: CandidateLoginRequest,
+    request: Request,
+    response: Response,
+    db: Session = Depends(get_db)
+):
+    return candidate_login(payload, request, response, db)
 
 
 def format_interview_response(interview: InterviewHistory) -> dict:
