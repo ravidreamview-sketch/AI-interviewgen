@@ -1,5 +1,11 @@
 {
   "rewrites": [
+    { "source": "/candidate/login", "destination": "/api/index.py" },
+    { "source": "/candidate/logout", "destination": "/api/index.py" },
+    { "source": "/candidate/me", "destination": "/api/index.py" },
+    { "source": "/admin/login", "destination": "/api/index.py" },
+    { "source": "/admin/logout", "destination": "/api/index.py" },
+    { "source": "/admin/me", "destination": "/api/index.py" },
     { "source": "/api/candidate/login", "destination": "/api/index.py" },
     { "source": "/api/admin/login", "destination": "/api/index.py" },
     { "source": "/api/public/menus", "destination": "/api/index.py" },
