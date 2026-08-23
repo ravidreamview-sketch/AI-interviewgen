@@ -61,25 +61,22 @@ app.add_middleware(
 async def fix_vercel_path_middleware(request: Request, call_next):
     path = request.scope.get("path", "")
     
-    # Vercel sets x-matched-path header to the requested rewrite route
-    x_matched_path = request.headers.get("x-matched-path")
-    x_rewrite_path = request.headers.get("x-rewrite-path")
-    x_forwarded_path = request.headers.get("x-forwarded-path")
-    
-    real_path = x_matched_path or x_rewrite_path or x_forwarded_path
-    
-    if real_path and real_path != "/api/index.py" and not real_path.startswith("/api/index.py"):
-        request.scope["path"] = real_path
-    elif path.startswith("/api/index.py/"):
-        request.scope["path"] = path[len("/api/index.py"):]
-    elif path.startswith("/api/index.py"):
-        clean = path.replace("/api/index.py", "", 1)
+    if path.startswith("/api/index.py"):
+        clean = path[len("/api/index.py"):]
         if clean:
             request.scope["path"] = clean
+        else:
+            x_matched = request.headers.get("x-matched-path")
+            if x_matched and x_matched != "/api/index.py":
+                request.scope["path"] = x_matched
     elif path.startswith("/index.py"):
-        clean = path.replace("/index.py", "", 1)
+        clean = path[len("/index.py"):]
         if clean:
             request.scope["path"] = clean
+        else:
+            x_matched = request.headers.get("x-matched-path")
+            if x_matched and x_matched != "/index.py":
+                request.scope["path"] = x_matched
 
     return await call_next(request)
 
