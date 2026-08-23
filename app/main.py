@@ -57,15 +57,55 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/api/debug-status", include_in_schema=False)
+@app.get("/debug-status", include_in_schema=False)
+def debug_status(request: Request, db: Session = Depends(get_db)):
+    db_ok = False
+    db_error = None
+    try:
+        db.execute(text("SELECT 1"))
+        db_ok = True
+    except Exception as e:
+        db_error = str(e)
+        
+    routes = [getattr(r, 'path', str(r)) for r in app.routes if hasattr(r, 'path')]
+    headers = dict(request.headers)
+    scope_path = request.scope.get("path")
+    
+    return {
+        "status": "online",
+        "db_ok": db_ok,
+        "db_error": db_error,
+        "scope_path": scope_path,
+        "x_matched_path": headers.get("x-matched-path"),
+        "x_forwarded_path": headers.get("x-forwarded-path"),
+        "total_routes": len(routes),
+        "sample_routes": routes[:20]
+    }
+
 @app.middleware("http")
 async def fix_vercel_path_middleware(request: Request, call_next):
     path = request.scope.get("path", "")
+    
+    x_matched = request.headers.get("x-matched-path")
+    x_forwarded = request.headers.get("x-forwarded-path")
+    
     if path.startswith("/api/index.py"):
         clean = path[len("/api/index.py"):]
-        request.scope["path"] = clean if clean else "/"
+        if clean:
+            request.scope["path"] = clean
+        elif x_forwarded and x_forwarded != "/api/index.py":
+            request.scope["path"] = x_forwarded
+        elif x_matched and x_matched != "/api/index.py":
+            request.scope["path"] = x_matched
     elif path.startswith("/index.py"):
         clean = path[len("/index.py"):]
-        request.scope["path"] = clean if clean else "/"
+        if clean:
+            request.scope["path"] = clean
+        elif x_forwarded and x_forwarded != "/index.py":
+            request.scope["path"] = x_forwarded
+        elif x_matched and x_matched != "/index.py":
+            request.scope["path"] = x_matched
 
     return await call_next(request)
 
