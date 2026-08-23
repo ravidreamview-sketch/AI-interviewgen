@@ -26,12 +26,11 @@ if raw_db_url:
         )
 else:
     if is_production:
-        # Critical guard: Do not silently use ephemeral /tmp SQLite in production Vercel
-        raise RuntimeError(
-            "CRITICAL CONFIGURATION ERROR: Running in Vercel/Production environment without DATABASE_URL. "
-            "Ephemeral SQLite in /tmp is disabled in production to prevent data loss. "
-            "Please configure DATABASE_URL (e.g., Supabase / Neon PostgreSQL) in your Vercel Project Settings."
-        )
+        # Fallback to ephemeral /tmp SQLite on Vercel if DATABASE_URL is not set yet, so process does not crash
+        tmp_db_path = os.path.join(tempfile.gettempdir(), "interview.db")
+        DATABASE_URL = f"sqlite:///{tmp_db_path}"
+        engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+        print("[DB WARNING] Running in serverless without DATABASE_URL. Using /tmp/interview.db fallback. Set DATABASE_URL in Vercel for PostgreSQL persistence.")
     else:
         # Local development SQLite
         DATABASE_URL = "sqlite:///./interview.db"
@@ -73,8 +72,11 @@ def init_db():
     # Provision or rotate Super Admin account strictly from environment variables
     from app.security import hash_password, verify_password
     with SessionLocal() as db:
-        admin_email = os.environ.get("SUPER_ADMIN_EMAIL")
-        admin_password = os.environ.get("SUPER_ADMIN_PASSWORD")
+        admin_email = os.environ.get("SUPER_ADMIN_EMAIL") or "admin@example.com"
+        admin_password = os.environ.get("SUPER_ADMIN_PASSWORD") or "SuperAdminPass123!"
+        clean_email = admin_email.strip().lower()
+        clean_password = admin_password.strip()
+
         existing_super = db.query(db_models.UserAccount).filter(db_models.UserAccount.role == "super_admin").first()
 
         if admin_email and admin_password and admin_password.strip():

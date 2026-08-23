@@ -1,14 +1,15 @@
 {
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index.py" },
-    { "source": "/candidate/(.*)", "destination": "/api/index.py" },
-    { "source": "/candidate", "destination": "/api/index.py" },
-    { "source": "/admin/(.*)", "destination": "/api/index.py" },
-    { "source": "/admin", "destination": "/api/index.py" },
-    { "source": "/generate", "destination": "/api/index.py" },
-    { "source": "/track", "destination": "/api/index.py" },
-    { "source": "/history", "destination": "/api/index.py" },
-    { "source": "/history/(.*)", "destination": "/api/index.py" },
-    { "source": "/(.*)", "destination": "/api/index.py" }
+    { "source": "/candidate", "destination": "/Candidate-dashboard.html" },
+    { "source": "/candidate/dashboard", "destination": "/Candidate-dashboard.html" },
+    { "source": "/candidate/interview-studio", "destination": "/Interview-studio.html" },
+    { "source": "/candidate/mock-interview", "destination": "/Mock-interview.html" },
+    { "source": "/candidate/evaluator", "destination": "/Interview-studio.html" },
+    { "source": "/candidate/resume-match", "destination": "/Resume-match.html" },
+    { "source": "/candidate/history", "destination": "/Interview history.html" },
+    { "source": "/admin", "destination": "/Admin.html" },
+    { "source": "/admin/(.*)", "destination": "/Admin.html" },
+    { "source": "/", "destination": "/Candidate-login.html" }
   ]
 }
