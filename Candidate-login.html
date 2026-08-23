@@ -260,10 +260,10 @@ async function handleCandidateLogin(event) {
       return;
     }
 
-    // Save token and user details
-    if (data.token) {
-      localStorage.setItem('candidate_token', data.token);
-      localStorage.setItem('candidate_user', JSON.stringify(data.user || {}));
+    // Store user details without storing tokens in localStorage
+    localStorage.removeItem('candidate_token');
+    if (data.user) {
+      localStorage.setItem('candidate_user', JSON.stringify(data.user));
     }
 
     // Redirect directly to Candidate Interview Studio Workspace (Public Page)

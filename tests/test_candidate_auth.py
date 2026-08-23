@@ -129,7 +129,7 @@ class TestCandidateAuthentication(unittest.TestCase):
         self.assertEqual(login_res.status_code, 200)
         data = login_res.json()
         self.assertTrue(data["success"])
-        self.assertIn("token", data)
+        self.assertNotIn("token", data)
         self.assertEqual(data["user"]["email"], "login_candidate@ravigenai.com")
         self.assertEqual(data["role"], "candidate")
 
@@ -148,7 +148,7 @@ class TestCandidateAuthentication(unittest.TestCase):
         })
         self.assertEqual(res.status_code, 200)
         self.assertIn("candidate_session", res.cookies)
-        self.assertIsNotNone(res.json()["token"])
+        self.assertNotIn("token", res.json())
 
     def test_6_candidate_can_access_candidate_dashboard_me(self):
         token = self.get_admin_token()
@@ -159,14 +159,15 @@ class TestCandidateAuthentication(unittest.TestCase):
             "role": "candidate"
         })
         
+        client.cookies.clear()
         login_res = client.post("/api/candidate/login", json={
             "email": "dashboard_cand@ravigenai.com",
             "password": "DashboardPass123!"
         })
-        cand_token = login_res.json()["token"]
+        self.assertEqual(login_res.status_code, 200)
+        self.assertIn("candidate_session", login_res.cookies)
         
-        cand_headers = {"Authorization": f"Bearer {cand_token}"}
-        me_res = client.get("/api/candidate/me", headers=cand_headers)
+        me_res = client.get("/api/candidate/me")
         self.assertEqual(me_res.status_code, 200)
         self.assertEqual(me_res.json()["user"]["email"], "dashboard_cand@ravigenai.com")
 
@@ -179,13 +180,14 @@ class TestCandidateAuthentication(unittest.TestCase):
             "role": "candidate"
         })
         
+        client.cookies.clear()
         login_res = client.post("/api/candidate/login", json={
             "email": "restricted_cand@ravigenai.com",
             "password": "RestrictedPass123!"
         })
-        cand_token = login_res.json()["token"]
+        self.assertEqual(login_res.status_code, 200)
         
-        cand_headers = {"Authorization": f"Bearer {cand_token}", "X-Requested-With": "XMLHttpRequest"}
+        cand_headers = {"X-Requested-With": "XMLHttpRequest"}
         admin_users_res = client.get("/api/admin/users", headers=cand_headers)
         self.assertEqual(admin_users_res.status_code, 403)
         self.assertIn("Admin privileges required", admin_users_res.json()["detail"])
@@ -199,12 +201,13 @@ class TestCandidateAuthentication(unittest.TestCase):
             "role": "candidate"
         })
         
+        client.cookies.clear()
         login_res = client.post("/api/candidate/login", json={
             "email": "no_admin_api@ravigenai.com",
             "password": "NoAdminApiPass123!"
         })
-        cand_token = login_res.json()["token"]
-        cand_headers = {"Authorization": f"Bearer {cand_token}", "X-Requested-With": "XMLHttpRequest"}
+        self.assertEqual(login_res.status_code, 200)
+        cand_headers = {"X-Requested-With": "XMLHttpRequest"}
         
         for endpoint in ["/api/admin/users", "/api/admin/roles", "/api/admin/audit-logs", "/api/admin/dashboard-stats"]:
             res = client.get(endpoint, headers=cand_headers)
@@ -260,12 +263,13 @@ class TestCandidateAuthentication(unittest.TestCase):
         })
         cand_id = create_res.json()["user"]["id"]
         
+        client.cookies.clear()
         login_res = client.post("/api/candidate/login", json={
             "email": "self_promo@ravigenai.com",
             "password": "CandidatePass123!"
         })
-        cand_token = login_res.json()["token"]
-        cand_headers = {"Authorization": f"Bearer {cand_token}", "X-Requested-With": "XMLHttpRequest"}
+        self.assertEqual(login_res.status_code, 200)
+        cand_headers = {"X-Requested-With": "XMLHttpRequest"}
         
         patch_res = client.patch(f"/api/admin/users/{cand_id}", headers=cand_headers, json={
             "role": "super_admin"
@@ -281,12 +285,13 @@ class TestCandidateAuthentication(unittest.TestCase):
             "role": "candidate"
         })
         
+        client.cookies.clear()
         login_res = client.post("/api/candidate/login", json={
             "email": "cand_a@ravigenai.com",
             "password": "Password123!"
         })
-        cand_token = login_res.json()["token"]
-        cand_headers = {"Authorization": f"Bearer {cand_token}", "X-Requested-With": "XMLHttpRequest"}
+        self.assertEqual(login_res.status_code, 200)
+        cand_headers = {"X-Requested-With": "XMLHttpRequest"}
         
         res = client.get("/api/admin/users?search=superadmin", headers=cand_headers)
         self.assertEqual(res.status_code, 403)
@@ -306,14 +311,14 @@ class TestCandidateAuthentication(unittest.TestCase):
             "role": "candidate"
         })
         
+        client.cookies.clear()
         login_res = client.post("/api/candidate/login", json={
             "email": "generator_cand@ravigenai.com",
             "password": "Password123!"
         })
-        cand_token = login_res.json()["token"]
-        cand_headers = {"Authorization": f"Bearer {cand_token}"}
+        self.assertEqual(login_res.status_code, 200)
         
-        gen_res = client.post("/api/generate", headers=cand_headers, json={
+        gen_res = client.post("/api/generate", json={
             "role": "Software Engineer",
             "skills": ["Python", "FastAPI"],
             "number_of_questions": 3

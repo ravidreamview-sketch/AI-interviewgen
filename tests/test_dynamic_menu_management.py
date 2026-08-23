@@ -85,7 +85,7 @@ class TestDynamicMenuManagement(unittest.TestCase):
             "password": "CandidatePass123!"
         })
         self.assertEqual(res.status_code, 200)
-        return res.json()["token"]
+        return res.cookies.get("candidate_session")
 
     def test_01_enabled_menu_appears_for_candidate(self):
         cand_token = self.get_candidate_token()

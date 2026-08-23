@@ -167,7 +167,6 @@ def candidate_login(
     return {
         "success": True,
         "message": f"Welcome back, {user.email}",
-        "token": token,
         "user": serialize_user(user),
         "role": user.role,
         "permissions": ROLE_PERMISSIONS.get(user.role, {}).get("permissions", [])
