@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "api/index.py": {
+      "includeFiles": "*.html"
+    }
+  },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index.py" },
     { "source": "/candidate", "destination": "/Candidate-dashboard.html" },
@@ -9,7 +14,10 @@
     { "source": "/candidate/resume-match", "destination": "/Resume-match.html" },
     { "source": "/candidate/history", "destination": "/Interview history.html" },
     { "source": "/admin", "destination": "/Admin.html" },
-    { "source": "/admin/(.*)", "destination": "/Admin.html" },
+    { "source": "/admin/dashboard", "destination": "/Admin.html" },
+    { "source": "/admin/menu-management", "destination": "/Admin.html" },
+    { "source": "/admin/users", "destination": "/Admin.html" },
+    { "source": "/admin/roles-permissions", "destination": "/Admin.html" },
     { "source": "/", "destination": "/Candidate-login.html" }
   ]
 }

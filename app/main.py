@@ -495,8 +495,10 @@ def serve_evaluator(db: Session = Depends(get_db)):
 
 @app.get("/admin", include_in_schema=False)
 @app.get("/admin/dashboard", include_in_schema=False)
-@app.get("/admin/prompts", include_in_schema=False)
+@app.get("/admin/menu-management", include_in_schema=False)
 @app.get("/admin/users", include_in_schema=False)
+@app.get("/admin/roles-permissions", include_in_schema=False)
+@app.get("/admin/prompts", include_in_schema=False)
 @app.get("/Admin.html", include_in_schema=False)
 def serve_admin_page():
     f = BASE_DIR / "Admin.html"
