@@ -104,6 +104,8 @@ def direct_candidate_logout(
 
 @app.get("/api/public/menus", include_in_schema=False)
 @app.get("/public/menus", include_in_schema=False)
+@app.get("/api/public-menus", include_in_schema=False)
+@app.get("/public-menus", include_in_schema=False)
 def direct_get_public_menus(db: Session = Depends(get_db)):
     return get_public_menus(db)
 
