@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ravi GenAI Studio — Sign In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400;1,700&display=swap');
+
+:root{
+  --paper:#F8FAFC;      --paper-2:#FFFFFF;    --sheet:#FFFFFF;
+  --ink:#0F172A;        --ink-soft:#475569;   --ink-faint:#94A3B8;
+  --board:#0B0F19;      --board-2:#1E1B4B;    --board-ink:#F8FAFC;
+  --primary:#4F46E5;    --primary-grad:linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);
+  --pen:#4F46E5;        --pen-soft:#6366F1;   --pen-wash:#EEF2FF;
+  --label-color:#2563EB;
+  --rule:#E2E8F0;       --rule-soft:#F1F5F9;
+  --gold:#F59E0B;       --pass:#10B981;       --pass-wash:#ECFDF5;
+  --shadow:0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0,0,0,0.03);
+  --radius:16px;
+  --f-disp:"Roboto",system-ui,-apple-system,sans-serif;
+  --f-ui:"Roboto",system-ui,-apple-system,sans-serif;
+  --f-mono:"Roboto Mono",ui-monospace,monospace;
+}
+[data-theme="dark"]{
+  --paper:#070A12;      --paper-2:#0E1424;    --sheet:#131D33;
+  --ink:#F8FAFC;        --ink-soft:#94A3B8;   --ink-faint:#64748B;
+  --board:#04070D;      --board-2:#111827;    --board-ink:#F8FAFC;
+  --primary:#6366F1;    --primary-grad:linear-gradient(135deg, #3B82F6 0%, #6366F1 50%, #8B5CF6 100%);
+  --pen:#818CF8;        --pen-soft:#A5B4FC;   --pen-wash:rgba(99, 102, 241, 0.15);
+  --label-color:#60A5FA;
+  --rule:#1E293B;       --rule-soft:#151F32;
+  --gold:#FBBF24;       --pass:#34D399;       --pass-wash:rgba(16, 185, 129, 0.15);
+  --shadow:0 14px 40px -10px rgba(0, 0, 0, 0.6);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100vh;height:100%}
+body{
+  background:var(--paper-2);color:var(--ink);
+  font-family:var(--f-ui);font-size:15px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  position:relative;overflow-x:hidden;
+  transition:background .3s ease,color .3s ease;
+}
+::selection{background:var(--primary);color:#fff}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:none}
+
+/* background ambient glow */
+.bg-glow{
+  position:fixed;width:600px;height:600px;border-radius:50%;
+  filter:blur(140px);opacity:0.25;pointer-events:none;z-index:0;
+}
+.glow-1{top:-100px;left:-100px;background:radial-gradient(circle, #2563EB, transparent 70%)}
+.glow-2{bottom:-100px;right:-100px;background:radial-gradient(circle, #7C3AED, transparent 70%)}
+
+/* theme switcher top right */
+.theme-btn-float{
+  position:fixed;top:24px;right:24px;width:42px;height:42px;
+  border-radius:12px;border:1px solid var(--rule);background:var(--paper-2);
+  color:var(--ink-soft);display:grid;place-items:center;z-index:30;
+  box-shadow:var(--shadow);transition:all .18s;
+}
+.theme-btn-float:hover{color:var(--ink);border-color:var(--primary);transform:scale(1.05)}
+.theme-btn-float svg{width:20px;height:20px;stroke-width:1.8}
+
+/* main auth container - full bleed */
+.auth-wrapper{
+  position:relative;z-index:10;
+  width:100vw;min-height:100vh;margin:0;padding:0;
+  background:var(--paper-2);border:none;border-radius:0;
+  box-shadow:none;overflow:hidden;
+  display:grid;grid-template-columns:1.15fr 1fr;
+}
+
+/* left showcase column */
+.auth-showcase{
+  background:linear-gradient(145deg, #0B0F19 0%, #151A2E 50%, #1E1B4B 100%);
+  padding:56px 64px;color:#FFFFFF;display:flex;flex-direction:column;justify-content:space-between;
+  position:relative;overflow:hidden;border-right:1px solid rgba(255,255,255,0.08);
+}
+.showcase-bg-circles{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:440px;height:440px;border-radius:50%;border:1px dashed rgba(99, 102, 241, 0.2);
+  pointer-events:none;animation:spin 60s linear infinite;
+}
+@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+
+.brand-row{display:flex;align-items:center;gap:14px;position:relative;z-index:2}
+.brand-row .logo-img{
+  width:52px;height:52px;border-radius:50%;object-fit:cover;
+  box-shadow:0 0 24px rgba(59, 130, 246, 0.55);
+  border:2px solid rgba(99, 102, 241, 0.6);
+}
+.brand-title{font-size:23px;font-weight:800;letter-spacing:-.02em}
+.brand-grad{
+  background:linear-gradient(135deg, #38BDF8 0%, #818CF8 50%, #C084FC 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.brand-sub{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#94A3B8}
+
+.showcase-slider{
+  margin:auto 0;padding:24px 0;position:relative;z-index:2;
+  min-height:380px;display:flex;flex-direction:column;justify-content:center;
+}
+.slide{
+  display:none;opacity:0;transform:translateY(12px);
+}
+.slide.active{
+  display:flex;flex-direction:column;opacity:1;transform:translateY(0);animation:slideFade .5s cubic-bezier(.16,1,.3,1) forwards;
+}
+@keyframes slideFade{
+  from{opacity:0;transform:translateY(14px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.slide h2{font-size:32px;font-weight:800;line-height:1.2;margin:0 0 14px;letter-spacing:-.02em}
+.slide p{color:#94A3B8;font-size:15.5px;line-height:1.6;margin:0 0 26px;max-width:44ch}
+
+.feature-list{display:flex;flex-direction:column;gap:18px}
+.feat-item{display:flex;align-items:flex-start;gap:14px}
+.feat-icon{
+  width:36px;height:36px;border-radius:10px;
+  background:rgba(99, 102, 241, 0.2);color:#818CF8;
+  display:grid;place-items:center;font-size:17px;flex:none;
+}
+.feat-text{font-size:14.5px;color:#CBD5E1;line-height:1.45}
+.feat-text b{color:#FFFFFF;display:block;margin-bottom:2px}
+
+.slider-nav{
+  display:flex;align-items:center;gap:8px;margin-top:24px;position:relative;z-index:3;
+}
+.slider-dot{
+  width:26px;height:4px;border-radius:99px;background:rgba(255,255,255,0.22);
+  cursor:pointer;transition:all .3s ease;
+}
+.slider-dot.active{
+  width:46px;background:linear-gradient(90deg, #38BDF8, #818CF8);
+  box-shadow:0 0 14px rgba(129, 140, 248, 0.6);
+}
+
+.showcase-foot{position:relative;z-index:2;display:flex;align-items:center;gap:14px;padding-top:20px}
+.avatar-group{display:flex}
+.av-mini{width:34px;height:34px;border-radius:50%;border:2px solid #0B0F19;margin-left:-8px}
+.av-mini:first-child{margin-left:0}
+.showcase-foot-text{font-size:13px;color:#94A3B8}
+.showcase-foot-text b{color:#FFFFFF}
+
+/* right form column */
+.auth-form-wrap{
+  padding:56px 64px;display:flex;flex-direction:column;justify-content:center;
+  max-width:540px;width:100%;margin:0 auto;
+}
+.form-head{margin-bottom:28px}
+.form-head h1{font-size:26px;font-weight:800;margin:0 0 6px;letter-spacing:-.02em}
+.form-head p{color:var(--ink-soft);font-size:14.5px;margin:0}
+
+/* auth tabs */
+.auth-tabs{display:flex;border-bottom:1px solid var(--rule);margin-bottom:24px;gap:20px}
+.auth-tab{
+  padding:10px 0;font-weight:600;font-size:14.5px;color:var(--ink-faint);
+  position:relative;cursor:pointer;transition:all .18s;
+}
+.auth-tab.active{color:var(--pen);font-weight:700}
+.auth-tab.active::after{
+  content:"";position:absolute;bottom:-1px;left:0;right:0;height:2.5px;
+  border-radius:2px;background:var(--primary-grad);
+}
+
+/* 1-click developer oauth buttons at bottom */
+.oauth-section{margin-top:8px;margin-bottom:4px}
+.oauth-badge-label{
+  font-family:var(--f-mono);font-size:10.5px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--pen);margin-bottom:10px;display:flex;align-items:center;gap:6px;
+}
+.oauth-btn-primary{
+  width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--rule);
+  background:var(--paper);color:var(--ink);font-weight:700;font-size:14px;
+  display:flex;align-items:center;gap:12px;margin-bottom:10px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.04);transition:all .18s;cursor:pointer;
+}
+.oauth-btn-primary:hover{
+  border-color:var(--pen);background:var(--paper-2);transform:translateY(-1px);
+  box-shadow:0 6px 16px rgba(99, 102, 241, 0.2);
+}
+.oauth-btn-primary svg{width:20px;height:20px;flex:none}
+.oauth-btn-primary .oauth-tag{
+  margin-left:auto;font-family:var(--f-mono);font-size:10px;font-weight:700;
+  padding:2px 7px;border-radius:4px;background:var(--pen-wash);color:var(--pen);
+}
+
+.divider{
+  display:flex;align-items:center;gap:14px;margin:20px 0;
+  font-family:var(--f-mono);font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.08em;
+}
+.divider::before, .divider::after{content:"";flex:1;height:1px;background:var(--rule)}
+
+/* input fields */
+.form-group{margin-bottom:18px}
+.form-label{display:block;font-family:var(--f-mono);font-size:11.5px;font-weight:700;text-transform:uppercase;color:var(--ink-soft);margin-bottom:7px}
+.input-control{position:relative}
+.input-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--ink-faint);display:grid;place-items:center;pointer-events:none}
+.input-icon svg{width:18px;height:18px;stroke-width:1.8}
+.form-input{
+  width:100%;padding:12px 14px 12px 42px;border-radius:12px;border:1px solid var(--rule);
+  background:var(--paper);color:var(--ink);font-family:var(--f-ui);font-size:14.5px;transition:all .18s;
+}
+.form-input:focus{outline:none;border-color:var(--pen);box-shadow:0 0 0 3px var(--pen-wash)}
+.eye-toggle{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--ink-faint);cursor:pointer;padding:4px}
+.eye-toggle:hover{color:var(--ink)}
+
+.form-options{display:flex;align-items:center;justify-content:space-between;margin:14px 0 24px;font-size:13.5px}
+.remember-me{display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--ink-soft)}
+.remember-me input{accent-color:var(--primary);width:16px;height:16px;cursor:pointer}
+.forgot-link{color:var(--pen);font-weight:600}
+.forgot-link:hover{text-decoration:underline}
+
+.submit-btn{
+  width:100%;padding:14px;border-radius:12px;
+  background:linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);
+  color:#FFFFFF;font-weight:700;font-size:15.5px;border:none;
+  box-shadow:0 8px 24px rgba(79, 70, 229, 0.4);display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:all .18s;cursor:pointer;
+}
+.submit-btn:hover{filter:brightness(1.08);box-shadow:0 12px 28px rgba(79, 70, 229, 0.5);transform:translateY(-1px)}
+
+.form-foot{text-align:center;margin-top:22px;font-size:13.5px;color:var(--ink-soft)}
+.form-foot a{color:var(--pen);font-weight:700}
+.form-foot a:hover{text-decoration:underline}
+
+@media(max-width:880px){
+  .auth-wrapper{grid-template-columns:1fr;max-width:100%;width:100vw}
+  .auth-showcase{display:none}
+  .auth-form-wrap{padding:48px 24px}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-glow glow-1"></div>
+<div class="bg-glow glow-2"></div>
+
+<button class="theme-btn-float" id="themeBtn" aria-label="Toggle Theme">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 12.8A8 8 0 1111.2 3 6.2 6.2 0 0021 12.8z"/></svg>
+</button>
+
+<div class="auth-wrapper">
+
+  <!-- LEFT SHOWCASE HERO WITH AUTO SLIDER -->
+  <div class="auth-showcase" id="showcaseBox">
+    <div class="showcase-bg-circles"></div>
+
+    <div class="brand-row">
+      <img class="logo-img" src="logo.png" alt="Ravi GenAI Studio Logo">
+      <div>
+        <div class="brand-title"><span class="brand-grad">RaviGenAI</span></div>
+        <div class="brand-sub">Studio</div>
+      </div>
+    </div>
+
+    <!-- SLIDES CONTAINER -->
+    <div class="showcase-slider">
+      <!-- SLIDE 1 -->
+      <div class="slide active" data-slide="0">
+        <h2>Master Your Next Technical Interview.</h2>
+        <p>AI-powered question composition, live voice simulations, and deep resume-gap targeting designed for modern engineers.</p>
+
+        <div class="feature-list">
+          <div class="feat-item">
+            <div class="feat-icon">⚡</div>
+            <div class="feat-text">
+              <b>Surgical Question Papers</b>
+              Tailored exam compositions by stack, level, and difficulty.
+            </div>
+          </div>
+          <div class="feat-item">
+            <div class="feat-icon">🎙️</div>
+            <div class="feat-text">
+              <b>Live Voice AI Mock Room</b>
+              Real-time conversational mock rounds with live Speech-to-Text.
+            </div>
+          </div>
+          <div class="feat-item">
+            <div class="feat-icon">📄</div>
+            <div class="feat-text">
+              <b>Resume &amp; JD Gap Engine</b>
+              Automatic skill gap extraction and candidate verification questions.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 2 -->
+      <div class="slide" data-slide="1">
+        <h2>Practice Real Audio Mock Interviews.</h2>
+        <p>Conversational voice rounds with adaptive AI interviewers, live Speech-to-Text transcription, and instant rubric grading.</p>
+
+        <div class="feature-list">
+          <div class="feat-item">
+            <div class="feat-icon">🗣️</div>
+            <div class="feat-text">
+              <b>Live Speech-to-Text &amp; TTS</b>
+              Natural voice questions with real-time word-by-word transcript.
+            </div>
+          </div>
+          <div class="feat-item">
+            <div class="feat-icon">🧠</div>
+            <div class="feat-text">
+              <b>Alex, Elena &amp; Marcus Personas</b>
+              Choose between Lead Engineer, Principal Architect, or HR Manager.
+            </div>
+          </div>
+          <div class="feat-item">
+            <div class="feat-icon">📊</div>
+            <div class="feat-text">
+              <b>STAR &amp; Technical Rubric Scorecards</b>
+              Detailed breakdown across clarity, pace, depth, and confidence.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 3 -->
+      <div class="slide" data-slide="2">
+        <h2>Target Top Tech Company Playbooks.</h2>
+        <p>Engineered from authentic interview evaluation rubrics and question bars of Google, Amazon, Meta, and Microsoft.</p>
+
+        <div class="feature-list">
+          <div class="feat-item">
+            <div class="feat-icon">🏢</div>
+            <div class="feat-text">
+              <b>FAANG &amp; Top Tech Presets</b>
+              Google GCA, Amazon 16 Leadership Principles, and Meta Scale.
+            </div>
+          </div>
+          <div class="feat-item">
+            <div class="feat-icon">🎯</div>
+            <div class="feat-text">
+              <b>Resume &amp; JD Missing Skill Radar</b>
+              Pinpoint qualification gaps and practice custom probing questions.
+            </div>
+          </div>
+          <div class="feat-item">
+            <div class="feat-icon">📑</div>
+            <div class="feat-text">
+              <b>Instant PDF Question Papers</b>
+              Export and share clean formatted question papers with 1 click.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDER DOTS NAVIGATION -->
+      <div class="slider-nav">
+        <div class="slider-dot active" onclick="goToSlide(0)" title="Slide 1"></div>
+        <div class="slider-dot" onclick="goToSlide(1)" title="Slide 2"></div>
+        <div class="slider-dot" onclick="goToSlide(2)" title="Slide 3"></div>
+      </div>
+    </div>
+
+    <div class="showcase-foot">
+      <div class="avatar-group">
+        <img class="av-mini" alt="User 1" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><rect width='40' height='40' fill='%233B82F6'/><circle cx='20' cy='15' r='8' fill='%23FFFFFF'/><path d='M6 38c0-8 6-13 14-13s14 5 14 13z' fill='%23FFFFFF'/></svg>">
+        <img class="av-mini" alt="User 2" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><rect width='40' height='40' fill='%237C3AED'/><circle cx='20' cy='15' r='8' fill='%23FFFFFF'/><path d='M6 38c0-8 6-13 14-13s14 5 14 13z' fill='%23FFFFFF'/></svg>">
+        <img class="av-mini" alt="User 3" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><rect width='40' height='40' fill='%2310B981'/><circle cx='20' cy='15' r='8' fill='%23FFFFFF'/><path d='M6 38c0-8 6-13 14-13s14 5 14 13z' fill='%23FFFFFF'/></svg>">
+      </div>
+      <div class="showcase-foot-text">Trusted by <b>1,400+</b> engineers &amp; recruiters</div>
+    </div>
+  </div>
+
+  <!-- RIGHT AUTH FORM -->
+  <div class="auth-form-wrap">
+    <div class="form-head">
+      <h1 id="formTitle">Welcome Back</h1>
+      <p id="formSubtitle">Enter your credentials to access your studio dashboard</p>
+    </div>
+
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tabSignIn">Sign In</div>
+      <div class="auth-tab" id="tabSignUp">Create Account</div>
+    </div>
+
+    <!-- AUTH FORM -->
+    <form id="authForm" onsubmit="handleAuth(event)">
+      <div class="form-group" id="nameGroup" style="display:none">
+        <label class="form-label" for="fullName">Full Name</label>
+        <div class="input-control">
+          <span class="input-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </span>
+          <input class="form-input" type="text" id="fullName" placeholder="e.g. Ravi Chandran">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="email">Email Address</label>
+        <div class="input-control">
+          <span class="input-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </span>
+          <input class="form-input" type="email" id="email" required placeholder="name@company.com" value="ravi@genai-studio.dev">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <div class="input-control">
+          <span class="input-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          </span>
+          <input class="form-input" type="password" id="password" required placeholder="••••••••" value="password123">
+          <span class="eye-toggle" id="eyeToggle" onclick="togglePassword()">
+            <svg id="eyeSvg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </span>
+        </div>
+      </div>
+
+      <div class="form-options">
+        <label class="remember-me">
+          <input type="checkbox" checked>
+          <span>Remember me</span>
+        </label>
+        <a class="forgot-link" href="javascript:void(0)" onclick="alert('Password reset link has been dispatched to your email address.')">Forgot password?</a>
+      </div>
+
+      <button class="submit-btn" type="submit" id="submitBtn">
+        <span>🚀 Start Free Voice Mock Interview</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </form>
+
+    <div class="divider">or continue with 1-click social</div>
+
+    <!-- PROMINENT 1-CLICK OAUTH SECTION (BOTTOM) -->
+    <div class="oauth-section">
+      <div class="oauth-badge-label">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Instant 1-Click Developer Sign In
+      </div>
+
+      <button class="oauth-btn-primary" onclick="demoLogin('GitHub')">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+        <span>Continue with GitHub</span>
+        <span class="oauth-tag">Recommended</span>
+      </button>
+
+      <button class="oauth-btn-primary" onclick="demoLogin('Google')">
+        <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.04 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/></svg>
+        <span>Continue with Google</span>
+        <span class="oauth-tag">1-Click</span>
+      </button>
+    </div>
+
+    <div class="form-foot">
+      <span id="footText">Don't have an account?</span>
+      <a href="javascript:void(0)" id="switchLink" onclick="toggleTab()">Create an account</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let isSignUp = false;
+
+function toggleTab() {
+  isSignUp = !isSignUp;
+  const tabIn = document.getElementById('tabSignIn');
+  const tabUp = document.getElementById('tabSignUp');
+  const nameGroup = document.getElementById('nameGroup');
+  const formTitle = document.getElementById('formTitle');
+  const formSubtitle = document.getElementById('formSubtitle');
+  const submitBtn = document.getElementById('submitBtn');
+  const footText = document.getElementById('footText');
+  const switchLink = document.getElementById('switchLink');
+
+  if (isSignUp) {
+    tabUp.classList.add('active');
+    tabIn.classList.remove('active');
+    nameGroup.style.display = 'block';
+    formTitle.textContent = 'Create Account';
+    formSubtitle.textContent = 'Get started with free AI question papers & voice mock simulations';
+    submitBtn.innerHTML = `<span>Create Free Account &amp; Practice</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
+    footText.textContent = 'Already have an account?';
+    switchLink.textContent = 'Sign in';
+  } else {
+    tabIn.classList.add('active');
+    tabUp.classList.remove('active');
+    nameGroup.style.display = 'none';
+    formTitle.textContent = 'Welcome Back';
+    formSubtitle.textContent = 'Enter your credentials to access your studio dashboard';
+    submitBtn.innerHTML = `<span>🚀 Start Free Voice Mock Interview</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
+    footText.textContent = "Don't have an account?";
+    switchLink.textContent = 'Create an account';
+  }
+}
+
+document.getElementById('tabSignIn').addEventListener('click', () => { if(isSignUp) toggleTab(); });
+document.getElementById('tabSignUp').addEventListener('click', () => { if(!isSignUp) toggleTab(); });
+
+function togglePassword() {
+  const pwd = document.getElementById('password');
+  pwd.type = pwd.type === 'password' ? 'text' : 'password';
+}
+
+function handleAuth(e) {
+  e.preventDefault();
+  const btn = document.getElementById('submitBtn');
+  btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><circle cx="12" cy="12" r="10"/></svg> Authenticating...`;
+  setTimeout(() => {
+    window.location.href = window.location.protocol === 'file:' ? 'Interview-studio.html' : '/candidate/interview-studio';
+  }, 600);
+}
+
+function demoLogin(provider) {
+  const btn = document.getElementById('submitBtn');
+  btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><circle cx="12" cy="12" r="10"/></svg> Connecting ${provider}...`;
+  setTimeout(() => {
+    window.location.href = window.location.protocol === 'file:' ? 'Interview-studio.html' : '/candidate/interview-studio';
+  }, 600);
+}
+
+// Auto Slider Logic
+let currentSlide = 0;
+const totalSlides = 3;
+let slideInterval;
+
+function showSlide(index) {
+  const slides = document.querySelectorAll('.slide');
+  const dots = document.querySelectorAll('.slider-dot');
+
+  slides.forEach((s, i) => {
+    s.classList.toggle('active', i === index);
+  });
+  dots.forEach((d, i) => {
+    d.classList.toggle('active', i === index);
+  });
+  currentSlide = index;
+}
+
+function nextSlide() {
+  const next = (currentSlide + 1) % totalSlides;
+  showSlide(next);
+}
+
+function goToSlide(index) {
+  showSlide(index);
+  resetSliderTimer();
+}
+
+function startSlider() {
+  slideInterval = setInterval(nextSlide, 4500);
+}
+
+function resetSliderTimer() {
+  clearInterval(slideInterval);
+  startSlider();
+}
+
+// Pause on hover
+const showcaseBox = document.getElementById('showcaseBox');
+if (showcaseBox) {
+  showcaseBox.addEventListener('mouseenter', () => clearInterval(slideInterval));
+  showcaseBox.addEventListener('mouseleave', () => startSlider());
+}
+
+startSlider();
+
+// Theme Switcher
+document.getElementById('themeBtn').addEventListener('click', () => {
+  const root = document.documentElement;
+  const currentTheme = root.getAttribute('data-theme');
+  root.setAttribute('data-theme', currentTheme === 'dark' ? 'light' : 'dark');
+});
+</script>
+<script src="analytics-tracker.js"></script>
+</body>
+</html>

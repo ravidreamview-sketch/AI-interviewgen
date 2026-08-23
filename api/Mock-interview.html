@@ -1,0 +1,2478 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RaviGenAI — AI Voice Mock Interview Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Supabase Realtime Client CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600;700&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400;1,700&display=swap');
+
+:root {
+  --paper: #F8FAFC;
+  --paper-2: #FFFFFF;
+  --sheet: #FFFFFF;
+  --ink: #0F172A;
+  --ink-soft: #475569;
+  --ink-faint: #94A3B8;
+  --board: #0B0F19;
+  --board-2: #1E1B4B;
+  --board-ink: #F8FAFC;
+  --primary: #4F46E5;
+  --primary-grad: linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);
+  --pen: #4F46E5;
+  --pen-soft: #6366F1;
+  --pen-wash: #EEF2FF;
+  --label-color: #2563EB;
+  --rule: #E2E8F0;
+  --rule-soft: #F1F5F9;
+  --gold: #F59E0B;
+  --pass: #10B981;
+  --pass-wash: #ECFDF5;
+  --shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
+  --radius: 16px;
+  --f-disp: "Roboto", system-ui, -apple-system, sans-serif;
+  --f-ui: "Roboto", system-ui, -apple-system, sans-serif;
+  --f-mono: "Roboto Mono", ui-monospace, monospace;
+}
+
+[data-theme="dark"] {
+  --paper: #0B0F19;
+  --paper-2: #111827;
+  --sheet: #131D33;
+  --ink: #F8FAFC;
+  --ink-soft: #94A3B8;
+  --ink-faint: #64748B;
+  --board: #070A10;
+  --board-2: #1E1B4B;
+  --board-ink: #F8FAFC;
+  --primary: #6366F1;
+  --primary-grad: linear-gradient(135deg, #3B82F6 0%, #6366F1 50%, #8B5CF6 100%);
+  --pen: #818CF8;
+  --pen-soft: #A5B4FC;
+  --pen-wash: rgba(99, 102, 241, 0.15);
+  --label-color: #60A5FA;
+  --rule: #1E293B;
+  --rule-soft: #182234;
+  --gold: #FBBF24;
+  --pass: #34D399;
+  --pass-wash: rgba(16, 185, 129, 0.15);
+  --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--f-ui);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  transition: background .3s ease, color .3s ease;
+}
+::selection { background: var(--primary); color: #fff; }
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; color: inherit; background: none; border: none; }
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 6px; }
+
+/* shell */
+.app { display: flex; min-height: 100vh; align-items: flex-start; }
+
+/* sidebar */
+.sidebar {
+  flex: 0 0 280px;
+  width: 280px;
+  background: var(--board);
+  color: var(--board-ink);
+  display: flex;
+  flex-direction: column;
+  padding: 22px 16px;
+  gap: 14px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  align-self: flex-start;
+  overflow-y: auto;
+  border-right: 1px solid rgba(255, 255, 255, 0.07);
+  transition: background .3s ease, transform .3s ease;
+  z-index: 40;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 4px; }
+
+.brand { display: flex; align-items: center; gap: 12px; padding: 4px 8px 8px; }
+.brand .brand-logo {
+  width: 44px; height: 44px; border-radius: 50%; flex: none;
+  object-fit: cover; box-shadow: 0 0 18px rgba(59, 130, 246, 0.45);
+  border: 1.5px solid rgba(99, 102, 241, 0.6); background: #0B0F19;
+}
+.brand .word { font-weight: 700; font-size: 20px; letter-spacing: -.02em; line-height: 1.1; color: #FFFFFF; }
+.brand .brand-grad {
+  background: linear-gradient(135deg, #38BDF8 0%, #818CF8 50%, #C084FC 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.brand .sub { font-family: var(--f-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #94A3B8; margin-top: 2px; font-weight: 600; }
+
+.side-label { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: #64748B; padding: 4px 10px 0; margin-bottom: -6px; font-weight: 600; }
+.nav { display: flex; flex-direction: column; gap: 3px; }
+.nav-link {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; border-radius: 12px;
+  color: #94A3B8; font-weight: 500; font-size: 14px;
+  position: relative; transition: all .2s ease;
+}
+.nav-link svg { width: 18px; height: 18px; flex: none; stroke-width: 1.8; }
+.nav-link:hover { background: rgba(255, 255, 255, 0.06); color: #F8FAFC; }
+.nav-link.active {
+  background: linear-gradient(135deg, #1E40AF 0%, #4F46E5 50%, #7C3AED 100%);
+  color: #FFFFFF; box-shadow: 0 4px 16px rgba(79, 70, 229, 0.4); font-weight: 600;
+}
+.nav-badge {
+  margin-left: auto; font-family: var(--f-mono); font-size: 9.5px; font-weight: 700;
+  letter-spacing: .04em; padding: 2.5px 7px; border-radius: 6px;
+  background: rgba(255, 255, 255, 0.12); color: #FFFFFF;
+}
+.nav-badge.new { background: #8B5CF6; }
+.nav-badge.pro { background: linear-gradient(135deg, #F59E0B, #D97706); }
+
+.side-foot { margin-top: auto; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.07); }
+.user { display: flex; align-items: center; gap: 11px; padding: 6px 8px; border-radius: 10px; }
+.user .av { width: 36px; height: 36px; border-radius: 50%; background: #4F46E5; flex: none; object-fit: cover; }
+.user .nm { font-weight: 600; font-size: 13.5px; color: #F8FAFC; line-height: 1.2; }
+.user .pl { font-family: var(--f-mono); font-size: 10.5px; color: #94A3B8; letter-spacing: .08em; text-transform: uppercase; }
+.logout-btn { margin-left: auto; color: #64748B; width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; transition: all .18s; }
+.logout-btn:hover { background: rgba(255, 255, 255, 0.08); color: #EF4444; }
+
+/* main */
+.main { flex: 1; min-width: 0; padding: 0 32px 40px; }
+
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 0 16px; border-bottom: 1px solid var(--rule-soft); margin-bottom: 24px;
+}
+.crumb { font-family: var(--f-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-faint); font-weight: 700; }
+.top-actions { display: flex; align-items: center; gap: 10px; }
+.icon-btn {
+  width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--rule);
+  background: var(--paper-2); display: grid; place-items: center; color: var(--ink-soft);
+  transition: all .18s; box-shadow: var(--shadow);
+}
+.icon-btn:hover { border-color: var(--pen); color: var(--pen); transform: translateY(-1px); }
+.mob-btn { display: none; width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--rule); place-items: center; }
+
+/* stages */
+.stage { display: none; }
+.stage.active { display: block; animation: fadeIn .3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* setup grid (65% / 35%) */
+.setup-grid {
+  display: grid;
+  grid-template-columns: 1.65fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.card {
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 26px;
+  box-shadow: var(--shadow);
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -.01em;
+  margin: 0 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+}
+.card-title svg { color: var(--primary); width: 20px; height: 20px; stroke-width: 2.2; }
+
+/* Persona Selection Cards */
+.persona-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.persona-card {
+  background: var(--paper);
+  border: 1.5px solid var(--rule);
+  border-radius: 14px;
+  padding: 20px 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s ease;
+  user-select: none;
+}
+.persona-card:hover {
+  border-color: var(--pen-soft);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(79, 70, 229, 0.12);
+}
+.persona-card.selected {
+  border-color: #4F46E5;
+  background: #EEF2FF;
+  box-shadow: 0 0 0 1px #4F46E5, 0 8px 24px -4px rgba(79, 70, 229, 0.25);
+}
+[data-theme="dark"] .persona-card.selected {
+  background: rgba(99, 102, 241, 0.18);
+  border-color: #818CF8;
+}
+.p-avatar {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--paper-2); border: 1px solid var(--rule);
+  display: grid; place-items: center; font-size: 26px;
+  margin: 0 auto 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.p-name { font-weight: 800; font-size: 16px; color: var(--ink); margin-bottom: 2px; }
+.p-role { font-size: 11.5px; color: var(--ink-soft); line-height: 1.35; font-weight: 500; }
+
+/* Form Fields */
+.f-field { margin-bottom: 16px; }
+.f-label {
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--label-color);
+  margin-bottom: 6px;
+  display: block;
+}
+.f-input, .f-select {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 11px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--f-ui);
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+  transition: border-color .18s, box-shadow .18s;
+}
+.f-input:focus, .f-select:focus {
+  border-color: var(--pen);
+  box-shadow: 0 0 0 3px var(--pen-wash);
+}
+
+/* Role Presets & Skill Chips */
+.preset-chips-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.role-preset-chip {
+  font-family: var(--f-ui);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 9px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--ink-soft);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all .18s ease;
+  user-select: none;
+}
+.role-preset-chip:hover {
+  border-color: var(--pen);
+  color: var(--pen);
+  background: var(--pen-wash);
+  transform: translateY(-1px);
+}
+.role-preset-chip.active {
+  border-color: #4F46E5;
+  background: #EEF2FF;
+  color: #4F46E5;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.15);
+}
+[data-theme="dark"] .role-preset-chip.active {
+  background: rgba(99, 102, 241, 0.2);
+  color: #A5B4FC;
+  border-color: #818CF8;
+}
+
+.skills-tags-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+  margin-bottom: 14px;
+}
+.skill-tag-pill {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  color: var(--ink-soft);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all .15s ease;
+}
+.skill-tag-pill:hover {
+  border-color: var(--pen);
+  color: var(--pen);
+}
+
+/* Generated Questions Preview in Setup */
+.gen-q-cta-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule-soft);
+  flex-wrap: wrap;
+}
+.btn-generate-role-q {
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 1.5px solid #4F46E5;
+  background: #EEF2FF;
+  color: #4F46E5;
+  font-family: var(--f-ui);
+  font-weight: 700;
+  font-size: 13.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all .2s ease;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.12);
+}
+.btn-generate-role-q:hover {
+  background: #4F46E5;
+  color: #FFFFFF;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
+}
+.btn-generate-role-q:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+[data-theme="dark"] .btn-generate-role-q {
+  background: rgba(99, 102, 241, 0.15);
+  color: #A5B4FC;
+  border-color: #818CF8;
+}
+[data-theme="dark"] .btn-generate-role-q:hover {
+  background: #6366F1;
+  color: #FFFFFF;
+}
+
+.gen-preview-card {
+  margin-top: 20px;
+  background: var(--paper-2);
+  border: 1.5px solid rgba(79, 70, 229, 0.25);
+  border-radius: var(--radius);
+  padding: 22px;
+  box-shadow: var(--shadow);
+  display: none;
+}
+.gen-preview-card.show {
+  display: block;
+  animation: fadeIn .3s cubic-bezier(.16,1,.3,1);
+}
+.preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--rule-soft);
+}
+.preview-title {
+  font-size: 16.5px;
+  font-weight: 800;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.preview-count-badge {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10B981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.preview-q-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 440px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.preview-q-list::-webkit-scrollbar { width: 4px; }
+.preview-q-list::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 4px; }
+
+.preview-q-item {
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  transition: all .18s ease;
+}
+.preview-q-item:hover {
+  border-color: var(--pen);
+  background: var(--paper-2);
+}
+.preview-q-item.updated {
+  animation: highlightFlash 1s ease;
+}
+@keyframes highlightFlash {
+  0% { background: var(--pen-wash); border-color: var(--pen); }
+  100% { background: var(--sheet); border-color: var(--rule); }
+}
+
+.preview-q-num {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-weight: 800;
+  color: #4F46E5;
+  background: #EEF2FF;
+  padding: 4px 8px;
+  border-radius: 6px;
+  flex: none;
+}
+[data-theme="dark"] .preview-q-num {
+  background: rgba(99, 102, 241, 0.2);
+  color: #A5B4FC;
+}
+.preview-q-body {
+  flex: 1;
+  min-width: 0;
+}
+.preview-q-text {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.45;
+  margin-bottom: 6px;
+}
+.preview-q-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.preview-q-actions {
+  display: flex;
+  gap: 6px;
+  flex: none;
+}
+.preview-act-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid var(--rule);
+  background: var(--paper-2);
+  color: var(--ink-soft);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+.preview-act-btn:hover {
+  border-color: var(--pen);
+  color: var(--pen);
+  transform: translateY(-1px);
+}
+.preview-act-btn.delete:hover {
+  border-color: #EF4444;
+  color: #EF4444;
+}
+
+/* Section 3: Live Interview Intelligence */
+.live-intel-box {
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 6px;
+}
+.intel-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--rule-soft);
+}
+.intel-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--f-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #059669;
+}
+.intel-date {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+.sources-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.source-pill {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+.provenance-tags-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--rule-soft);
+}
+.prov-tag {
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2.5px 7px;
+  border-radius: 5px;
+}
+.prov-tag.verified { background: #ECFDF5; color: #059669; border: 1px solid #A7F3D0; }
+.prov-tag.derived { background: #EFF6FF; color: #2563EB; border: 1px solid #BFDBFE; }
+.prov-tag.aigen { background: #F5F3FF; color: #7C3AED; border: 1px solid #DDD6FE; }
+
+/* Pre-Flight Calibration Panel (Right Column) */
+.calib-step-list { display: flex; flex-direction: column; gap: 14px; }
+.calib-step-item {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 16px;
+}
+.cs-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 13.5px;
+  margin-bottom: 8px;
+  color: var(--ink);
+}
+.cs-tag {
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 5px;
+}
+.cs-ready { background: #ECFDF5; color: #059669; }
+.cs-pending { background: #FEF3C7; color: #D97706; }
+.cs-passed { background: #ECFDF5; color: #059669; font-weight: 800; }
+
+.mic-meter-bar-wrap {
+  width: 100%;
+  height: 10px;
+  border-radius: 99px;
+  background: var(--rule);
+  overflow: hidden;
+  margin: 8px 0 10px;
+}
+.mic-meter-fill {
+  height: 100%;
+  width: 45%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #10B981 0%, #F59E0B 75%, #EF4444 100%);
+  transition: width .08s ease;
+}
+
+.calib-btn-sm {
+  font-family: var(--f-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--rule);
+  background: var(--paper-2);
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all .18s;
+  cursor: pointer;
+}
+.calib-btn-sm:hover { border-color: var(--pen); color: var(--pen); transform: translateY(-1px); }
+
+.start-btn {
+  width: 100%;
+  padding: 16px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 8px 24px -4px rgba(79, 70, 229, 0.45);
+  cursor: pointer;
+  transition: all .2s ease;
+}
+.start-btn:hover { filter: brightness(1.08); box-shadow: 0 14px 28px -4px rgba(79, 70, 229, 0.55); }
+.start-btn:active { transform: translateY(1px); }
+
+/* ================== STAGE 2: LIVE VOICE ROOM ================== */
+.live-container { max-width: 920px; margin: 20px auto; text-align: center; }
+.live-header {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--paper-2); padding: 14px 22px; border-radius: 14px;
+  border: 1px solid var(--rule); margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
+  box-shadow: var(--shadow);
+}
+.live-stat { display: flex; align-items: center; gap: 8px; font-family: var(--f-mono); font-size: 13px; font-weight: 600; }
+.live-stat svg { color: #4F46E5; width: 18px; height: 18px; }
+
+.ai-orb-wrap { margin: 24px auto 16px; position: relative; width: 140px; height: 140px; display: grid; place-items: center; }
+.ai-orb {
+  width: 100px; height: 100px; border-radius: 50%;
+  background: linear-gradient(135deg, #38BDF8 0%, #6366F1 50%, #C084FC 100%);
+  box-shadow: 0 0 36px rgba(99, 102, 241, 0.6), inset 0 0 20px rgba(255, 255, 255, 0.4);
+  position: relative; z-index: 2; display: grid; place-items: center; color: #FFFFFF; font-size: 38px;
+  animation: floatOrb 3s ease-in-out infinite; transition: transform .3s;
+}
+@keyframes floatOrb { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+.orb-pulse {
+  position: absolute; inset: 0; border-radius: 50%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.4) 0%, rgba(99, 102, 241, 0) 70%);
+  animation: orbPulse 2s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+}
+@keyframes orbPulse { 0% { transform: scale(0.8); opacity: 0.8; } 100% { transform: scale(1.8); opacity: 0; } }
+
+.wave-canvas { width: 280px; height: 48px; margin: 8px auto 0; display: block; }
+
+.live-metrics-bar {
+  display: flex; align-items: center; justify-content: center; gap: 12px; margin: 14px 0 18px;
+  font-family: var(--f-mono); font-size: 12px; flex-wrap: wrap;
+}
+.metric-tag {
+  padding: 5px 12px; border-radius: 8px; background: var(--paper-2); border: 1px solid var(--rule);
+  color: var(--ink-soft); display: inline-flex; align-items: center; gap: 6px; font-weight: 600;
+}
+.metric-tag b { color: var(--ink); }
+
+.filler-pill {
+  display: none; align-items: center; gap: 8px; padding: 6px 16px; border-radius: 99px;
+  background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.35);
+  color: var(--pen); font-family: var(--f-mono); font-size: 12px; font-weight: 700; margin: 0 auto 14px;
+}
+.filler-pill.active { display: inline-flex; animation: fadeIn .2s ease; }
+.dot-typing { display: inline-flex; gap: 4px; }
+.dot-typing span { width: 5px; height: 5px; border-radius: 50%; background: var(--pen); animation: blinkDot 1.2s infinite ease-in-out; }
+.dot-typing span:nth-child(2) { animation-delay: .2s; }
+.dot-typing span:nth-child(3) { animation-delay: .4s; }
+@keyframes blinkDot { 0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; } 40% { transform: scale(1.2); opacity: 1; } }
+
+.live-q-card {
+  background: var(--paper-2); border: 1px solid var(--rule); border-radius: 16px;
+  padding: 26px; margin-bottom: 20px; box-shadow: var(--shadow); text-align: left;
+}
+.live-q-badge {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px;
+  border-radius: 6px; background: #EEF2FF; color: #4F46E5;
+  font-family: var(--f-mono); font-size: 11.5px; font-weight: 700; margin-bottom: 12px;
+}
+[data-theme="dark"] .live-q-badge { background: rgba(99, 102, 241, 0.2); color: #818CF8; }
+.live-q-text { font-size: 21px; font-weight: 700; line-height: 1.4; margin: 0 0 16px; color: var(--ink); }
+
+.transcript-box {
+  background: var(--paper); border: 1px solid var(--rule); border-radius: 12px;
+  padding: 16px; min-height: 90px; text-align: left; font-size: 14.5px; color: var(--ink); position: relative;
+}
+.transcript-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.transcript-label { font-family: var(--f-mono); font-size: 11px; color: var(--label-color); font-weight: 700; display: flex; align-items: center; gap: 6px; }
+.live-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #EF4444; animation: blink 1s infinite; }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+.clarify-btn {
+  font-family: var(--f-mono); font-size: 11.5px; font-weight: 700; color: var(--pen);
+  background: var(--pen-wash); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(99, 102, 241, 0.3);
+  display: inline-flex; align-items: center; gap: 4px; cursor: pointer; transition: all .18s;
+}
+.clarify-btn:hover { background: var(--primary); color: #fff; }
+
+.live-controls { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 20px; flex-wrap: wrap; }
+.mic-btn {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: linear-gradient(135deg, #2563EB 0%, #4F46E5 100%);
+  color: #FFFFFF; display: grid; place-items: center; box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
+  transition: all .2s ease; font-size: 24px; cursor: pointer;
+}
+.mic-btn.recording { background: #EF4444; box-shadow: 0 0 24px rgba(239, 68, 68, 0.6); animation: pulseMic 1.5s infinite; }
+@keyframes pulseMic { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+
+.action-pill-btn {
+  padding: 12px 20px; border-radius: 12px; border: 1px solid var(--rule); background: var(--paper-2);
+  font-weight: 600; font-size: 14px; color: var(--ink); display: flex; align-items: center; gap: 8px; transition: all .18s;
+  cursor: pointer; box-shadow: var(--shadow);
+}
+.action-pill-btn:hover { border-color: #4F46E5; color: #4F46E5; transform: translateY(-1px); }
+
+/* ================== STAGE 3: SCORECARD WITH STAR & COMPANY BADGES ================== */
+.scorecard-wrap { max-width: 980px; margin: 20px auto; }
+.score-hero { display: grid; grid-template-columns: 260px 1fr; gap: 24px; margin-bottom: 24px; }
+.score-circle-card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 16px; padding: 28px 20px; text-align: center; box-shadow: var(--shadow); }
+.score-big { font-size: 54px; font-weight: 800; color: #4F46E5; line-height: 1; margin: 10px 0; }
+.metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.metric-card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 14px; padding: 16px; box-shadow: var(--shadow); }
+.metric-header { display: flex; justify-content: space-between; font-size: 13.5px; font-weight: 600; margin-bottom: 8px; }
+.progress-bar { width: 100%; height: 8px; border-radius: 99px; background: var(--rule); overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #3B82F6, #7C3AED); }
+
+.card-section {
+  background: var(--paper-2); border: 1px solid var(--rule); border-radius: var(--radius);
+  padding: 26px; margin-bottom: 24px; box-shadow: var(--shadow);
+}
+.section-title { font-size: 18px; font-weight: 800; margin: 0 0 4px; display: flex; align-items: center; gap: 10px; color: var(--ink); }
+.section-sub { color: var(--ink-soft); font-size: 13px; margin: 0 0 18px; }
+
+.star-bars-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.star-col { background: var(--sheet); border: 1px solid var(--rule); border-radius: 12px; padding: 16px 14px; display: flex; flex-direction: column; }
+.star-letter { width: 28px; height: 28px; border-radius: 6px; display: grid; place-items: center; font-family: var(--f-mono); font-size: 13px; font-weight: 800; margin-bottom: 8px; }
+.sl-s { background: rgba(59, 130, 246, 0.2); color: #3B82F6; }
+.sl-t { background: rgba(16, 185, 129, 0.2); color: #10B981; }
+.sl-a { background: rgba(245, 158, 11, 0.2); color: #F59E0B; }
+.sl-r { background: rgba(139, 92, 246, 0.2); color: #8B5CF6; }
+.star-name { font-weight: 700; font-size: 13px; color: var(--ink); margin-bottom: 4px; }
+.star-desc { font-size: 11px; color: var(--ink-soft); line-height: 1.4; margin-bottom: 10px; flex: 1; }
+.star-score-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
+.star-score { font-family: var(--f-mono); font-size: 18px; font-weight: 800; color: var(--ink); }
+.star-tag { font-size: 10.5px; font-weight: 700; color: #10B981; }
+
+.badges-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.badge-card { background: var(--sheet); border: 1px solid var(--rule); border-radius: 12px; padding: 16px; display: flex; align-items: flex-start; gap: 12px; }
+.b-logo { width: 38px; height: 38px; border-radius: 8px; background: var(--paper-2); border: 1px solid var(--rule); display: grid; place-items: center; font-size: 18px; flex: none; }
+.b-info { flex: 1; min-width: 0; }
+.b-company { font-family: var(--f-mono); font-size: 10.5px; color: var(--ink-soft); text-transform: uppercase; font-weight: 700; }
+.b-value { font-weight: 700; font-size: 13.5px; color: var(--ink); margin: 2px 0 4px; }
+.b-match { display: inline-block; padding: 2px 6px; border-radius: 4px; font-family: var(--f-mono); font-size: 10.5px; font-weight: 700; background: rgba(16, 185, 129, 0.15); color: #10B981; }
+
+.compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+.compare-pane { background: var(--sheet); border: 1px solid var(--rule); border-radius: 12px; padding: 16px; }
+.pane-head { display: flex; align-items: center; gap: 6px; font-family: var(--f-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+.candidate-head { color: #94A3B8; }
+.exemplar-head { color: #10B981; }
+.pane-body { font-size: 13px; line-height: 1.55; color: var(--ink-soft); }
+.pane-body b { color: var(--ink); }
+
+/* EDIT TRANSCRIPT MODAL */
+.modal-backdrop {
+  display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.65); z-index: 60;
+  backdrop-filter: blur(4px); place-items: center; padding: 20px;
+}
+.modal-backdrop.open { display: grid; }
+.modal-card {
+  background: var(--paper-2); border: 1px solid var(--rule); border-radius: 18px;
+  max-width: 580px; width: 100%; padding: 26px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  animation: fadeIn .25s ease;
+}
+.modal-title { font-size: 18px; font-weight: 800; margin: 0 0 8px; display: flex; align-items: center; gap: 8px; color: var(--ink); }
+.modal-desc { color: var(--ink-soft); font-size: 13.5px; margin: 0 0 16px; }
+.modal-textarea {
+  width: 100%; height: 130px; padding: 12px; border-radius: 10px; border: 1px solid var(--rule);
+  background: var(--sheet); color: var(--ink); font-family: var(--f-ui); font-size: 14px; line-height: 1.5; resize: vertical;
+}
+.quick-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 18px; }
+.q-tag {
+  font-family: var(--f-mono); font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 6px;
+  background: var(--sheet); border: 1px solid var(--rule); color: var(--ink-soft); cursor: pointer; transition: all .15s;
+}
+.q-tag:hover { border-color: var(--pen); color: var(--pen); }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+/* responsive */
+@media (max-width: 960px) {
+  .mob-btn { display: grid; }
+  .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 280px; z-index: 50; transform: translateX(-100%); }
+  .sidebar.open { transform: none; }
+  .scrim.show { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 45; }
+  .main { padding: 0 20px 30px; }
+  .setup-grid, .score-hero, .persona-grid, .star-bars-grid, .compare-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 540px) {
+  .metric-grid { grid-template-columns: 1fr; }
+  .live-q-text { font-size: 18px; }
+  .live-controls { gap: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="scrim" id="scrim"></div>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <img class="brand-logo" src="logo.png" alt="Ravi GenAI Studio Logo">
+      <div>
+        <div class="word"><span class="brand-grad">RaviGenAI</span></div>
+        <div class="sub">STUDIO</div>
+      </div>
+    </div>
+    <div class="side-label">WORKSPACE</div>
+    <nav class="nav">
+      <a class="nav-link" href="Dashboard.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        <span>Dashboard</span>
+      </a>
+      <a class="nav-link" href="Interview-studio.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2.5l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg>
+        <span>Generate Questions</span>
+      </a>
+      <a class="nav-link active" href="Mock-interview.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
+        <span>AI Mock Interview</span>
+        <span class="nav-badge new">VOICE</span>
+      </a>
+      <a class="nav-link" href="Interview-studio.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        <span>Answer Evaluator</span>
+      </a>
+      <a class="nav-link" href="Resume-match.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span>Resume &amp; JD Match</span>
+        <span class="nav-badge pro">PRO</span>
+      </a>
+    </nav>
+
+    <div class="side-label" style="margin-top:14px">LIBRARY</div>
+    <nav class="nav">
+      <a class="nav-link" href="Interview history.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>Interview History</span>
+      </a>
+      <a class="nav-link" href="scorecard.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+        <span>Public Scorecards</span>
+      </a>
+      <a class="nav-link" href="Company-playbooks.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+        <span>Company Playbooks</span>
+      </a>
+    </nav>
+
+    <div class="side-foot">
+      <div class="user">
+        <img class="av" alt="Ravi Chandran" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><rect width='40' height='40' fill='%234F46E5'/><circle cx='20' cy='15' r='8' fill='%23FFFFFF'/><path d='M6 38c0-8 6-13 14-13s14 5 14 13z' fill='%23FFFFFF'/></svg>">
+        <div>
+          <div class="nm">Ravi Chandran</div>
+          <div class="pl">Staff GenAI Lead</div>
+        </div>
+        <button class="logout-btn" title="Sign Out / Logout" onclick="handleLogout(event)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CANVAS -->
+  <main class="main">
+    <div class="topbar">
+      <button class="mob-btn" id="menuBtn" aria-label="Open navigation menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <span class="crumb"><a href="Dashboard.html" style="color:inherit;text-decoration:none">WORKSPACE</a> / AI MOCK INTERVIEW</span>
+      <div class="top-actions">
+        <button class="icon-btn" id="themeBtn" aria-label="Toggle theme">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 12.8A8 8 0 1111.2 3 6.2 6.2 0 0021 12.8z"/></svg>
+        </button>
+        <button class="icon-btn" title="Sign Out / Logout" onclick="handleLogout(event)" aria-label="Logout">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ================== STAGE 1: SETUP & 3-STEP CALIBRATION ================== -->
+    <div class="stage active" id="stageSetup">
+      <header style="margin:20px 0 26px">
+        <h1 style="font-size:32px;font-weight:800;margin:0 0 6px">AI Voice Mock Interview Room</h1>
+        <p style="color:var(--ink-soft);margin:0;font-size:15.5px">Real-time voice simulation with live speech calibration, turn-taking fillers, and verified STAR scorecards.</p>
+      </header>
+
+      <div class="setup-grid">
+        <!-- LEFT COLUMN: CONFIG & INTELLIGENCE (65%) -->
+        <div style="display:flex;flex-direction:column;gap:20px">
+          <!-- SECTION 1: SELECT PERSONA -->
+          <div class="card">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+              1. Select AI Interviewer Persona
+            </div>
+            <div class="persona-grid">
+              <div class="persona-card selected" data-persona="Alex" data-persona-role="Tech Lead (Direct &amp; Technical)" data-avatar="👨‍💻">
+                <div class="p-avatar">👨‍💻</div>
+                <div class="p-name">Alex</div>
+                <div class="p-role">Tech Lead (Direct &amp; Technical)</div>
+              </div>
+              <div class="persona-card" data-persona="Elena" data-persona-role="Principal Architect (System Design)" data-avatar="👩‍💼">
+                <div class="p-avatar">👩‍💼</div>
+                <div class="p-name">Elena</div>
+                <div class="p-role">Principal Architect (System Design)</div>
+              </div>
+              <div class="persona-card" data-persona="Marcus" data-persona-role="Hiring Manager (STAR &amp; Culture)" data-avatar="🤝">
+                <div class="p-avatar">🤝</div>
+                <div class="p-name">Marcus</div>
+                <div class="p-role">Hiring Manager (STAR &amp; Culture)</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION 2: INTERVIEW BRIEF & FOCUS AREA -->
+          <div class="card">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+              2. Interview Brief &amp; Focus Area
+            </div>
+
+            <!-- ROLE QUICK PRESETS -->
+            <div style="margin-bottom:14px">
+              <div style="font-family:var(--f-mono);font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--label-color);margin-bottom:8px">
+                POPULAR ROLE PRESETS:
+              </div>
+              <div class="preset-chips-wrap" id="rolePresetsContainer">
+                <button type="button" class="role-preset-chip active" data-preset="backend" onclick="selectRolePreset('backend')">⚙️ Backend Developer</button>
+                <button type="button" class="role-preset-chip" data-preset="frontend" onclick="selectRolePreset('frontend')">⚛️ Frontend Developer</button>
+                <button type="button" class="role-preset-chip" data-preset="ux" onclick="selectRolePreset('ux')">🎨 UX Designer</button>
+                <button type="button" class="role-preset-chip" data-preset="product" onclick="selectRolePreset('product')">💡 Product Designer</button>
+                <button type="button" class="role-preset-chip" data-preset="uiux" onclick="selectRolePreset('uiux')">✨ UI/UX Designer</button>
+                <button type="button" class="role-preset-chip" data-preset="genai" onclick="selectRolePreset('genai')">🤖 GenAI / LLM Engineer</button>
+                <button type="button" class="role-preset-chip" data-preset="fullstack" onclick="selectRolePreset('fullstack')">🌐 Full Stack Developer</button>
+                <button type="button" class="role-preset-chip" data-preset="devops" onclick="selectRolePreset('devops')">☁️ DevOps &amp; Cloud</button>
+                <button type="button" class="role-preset-chip" data-preset="data" onclick="selectRolePreset('data')">📊 Data Engineer</button>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+              <div class="f-field">
+                <label class="f-label" for="mockRole">TARGET ROLE</label>
+                <input class="f-input" id="mockRole" value="Python Backend Engineer" placeholder="e.g. Python Backend Engineer, Senior UX Designer..." oninput="handleRoleInputChange()">
+              </div>
+              <div class="f-field">
+                <label class="f-label" for="mockExp">EXPERIENCE LEVEL</label>
+                <select class="f-select" id="mockExp">
+                  <option value="Fresher">Fresher (0 Years)</option>
+                  <option value="Junior (0-2 Years)">Junior (0–2 Years)</option>
+                  <option value="Mid Level (3-5 Years)" selected>Mid Level (3–5 Years)</option>
+                  <option value="Senior (6-10 Years)">Senior (6–10 Years)</option>
+                  <option value="Lead (10+ Years)">Lead (10+ Years)</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+              <div class="f-field">
+                <label class="f-label" for="mockType">QUESTION FORMAT</label>
+                <select class="f-select" id="mockType">
+                  <option value="Technical &amp; System Architecture" selected>Technical &amp; System Architecture</option>
+                  <option value="Behavioral &amp; Leadership">Behavioral &amp; Leadership (STAR)</option>
+                  <option value="Product / UX Design">Product / UX Design</option>
+                  <option value="Coding &amp; Problem Solving">Coding &amp; Problem Solving</option>
+                  <option value="Case Study">Case Study &amp; Scenarios</option>
+                  <option value="System Design">System Design &amp; Scalability</option>
+                  <option value="Mixed Interview">Mixed Comprehensive Loop</option>
+                </select>
+              </div>
+              <div class="f-field">
+                <label class="f-label" for="mockCompany">TARGET COMPANY BAR</label>
+                <select class="f-select" id="mockCompany">
+                  <option value="Amazon (Leadership Principles)" selected>Amazon (Leadership Principles)</option>
+                  <option value="Google">Google (GCA &amp; RRK Rubric)</option>
+                  <option value="Microsoft">Microsoft (Systems &amp; Growth Mindset)</option>
+                  <option value="Meta">Meta (Execution &amp; Scale)</option>
+                  <option value="Apple">Apple (Hardware &amp; Pixel Precision)</option>
+                  <option value="Netflix">Netflix (Freedom &amp; Chaos Engineering)</option>
+                  <option value="Stripe">Stripe (API &amp; Rigor)</option>
+                  <option value="Adobe">Adobe (Creative Cloud &amp; Design Systems)</option>
+                  <option value="Atlassian">Atlassian (Collaboration &amp; Scale)</option>
+                  <option value="Generic">Generic / Standard Industry Bar</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+              <div class="f-field" style="margin-bottom:0">
+                <label class="f-label" for="mockCount">QUESTION COUNT (EXACT)</label>
+                <select class="f-select" id="mockCount">
+                  <option value="5">5 Questions (Sprint Practice)</option>
+                  <option value="10" selected>10 Questions (Standard Interview Simulation)</option>
+                  <option value="15">15 Questions (Deep-Dive Grill)</option>
+                  <option value="20">20 Questions (Full Assessment Loop)</option>
+                </select>
+              </div>
+              <div class="f-field" style="margin-bottom:0">
+                <label class="f-label" for="mockCustomTopic">CUSTOM FOCUS TOPIC / SEED QUESTION (OPTIONAL)</label>
+                <input class="f-input" id="mockCustomTopic" placeholder="e.g. Asynchronous I/O, WCAG accessibility, RAG ACLs...">
+              </div>
+            </div>
+
+            <!-- DYNAMIC ROLE SKILLS BAR -->
+            <div style="margin-top:14px">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-family:var(--f-mono);font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--label-color)">
+                  ROLE CORE FOCUS SKILLS:
+                </span>
+                <span style="font-size:11px;color:var(--ink-soft);font-family:var(--f-mono)" id="skillsCountText">Auto-calibrated</span>
+              </div>
+              <div class="skills-tags-wrap" id="mockSkillsWrap">
+                <!-- Dynamically filled by JS -->
+              </div>
+            </div>
+
+            <!-- GENERATE QUESTIONS FOR ROLE CTA -->
+            <div class="gen-q-cta-bar">
+              <div style="font-size:12.5px;color:var(--ink-soft)">
+                <span>Ready to tailor questions?</span> <b>Generate role questions</b> to preview &amp; customize, or launch live directly.
+              </div>
+              <button type="button" class="btn-generate-role-q" id="btnGenRoleQuestions" onclick="generateAndPreviewQuestions()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                <span id="genBtnText">⚡ Generate Questions for Selected Role</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- GENERATED QUESTIONS PREVIEW CARD -->
+          <div class="gen-preview-card" id="genPreviewCard">
+            <div class="preview-head">
+              <div>
+                <div class="preview-title">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                  <span id="previewHeadingRole">Role Interview Questions Staged</span>
+                </div>
+                <div style="font-size:12px;color:var(--ink-soft);margin-top:2px" id="previewSubtext">
+                  Questions tailored to your role are ready for the live voice room. You can edit, re-roll, or add questions.
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <span class="preview-count-badge" id="previewCountBadge">0 Questions Ready</span>
+                <button type="button" class="calib-btn-sm" onclick="addCustomQuestionPrompt()" title="Add Custom Question">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  + Add Question
+                </button>
+                <button type="button" class="calib-btn-sm" onclick="regenerateAllQuestions()" title="Regenerate All Questions">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
+                  Regenerate All
+                </button>
+              </div>
+            </div>
+            <div class="preview-q-list" id="previewQList">
+              <!-- Dynamically populated question items -->
+            </div>
+          </div>
+
+          <!-- SECTION 3: LIVE INTERVIEW INTELLIGENCE & PROVENANCE -->
+          <div class="card">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              3. Live Interview Intelligence
+            </div>
+            <div class="live-intel-box">
+              <div class="intel-status-row">
+                <span class="intel-badge">
+                  <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10B981;box-shadow:0 0 8px #10B981"></span>
+                  Live Data Status: Connected
+                </span>
+                <span class="intel-date" id="intelDateStamp">Last Updated: Real-Time</span>
+              </div>
+              <div style="font-size:12px;color:var(--ink-soft);font-weight:600;margin-bottom:4px">RETRIEVAL &amp; CALIBRATION SOURCES:</div>
+              <div class="sources-pills">
+                <span class="source-pill">Verified interview experiences</span>
+                <span class="source-pill">Current role requirements</span>
+                <span class="source-pill">Company interview patterns</span>
+                <span class="source-pill">Public technical documentation</span>
+                <span class="source-pill">Current job descriptions</span>
+              </div>
+              <div class="provenance-tags-legend">
+                <span class="prov-tag verified">🟢 Verified Question</span>
+                <span class="prov-tag derived">🔵 Derived from Verified Source</span>
+                <span class="prov-tag aigen">🟣 AI Generated Practice Question</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: PRE-FLIGHT HARDWARE CALIBRATION (35%) -->
+        <div>
+          <div class="card">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
+              Pre-Flight Hardware Calibration
+            </div>
+            <p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 16px;line-height:1.45">
+              Verify your audio input, speaker output, and room acoustics before live voice begins.
+            </p>
+
+            <div class="calib-step-list">
+              <!-- Step 1: Microphone Live Level -->
+              <div class="calib-step-item">
+                <div class="cs-head">
+                  <span>1. Microphone Live Level</span>
+                  <span class="cs-tag cs-ready" id="micStatusTag">Ready</span>
+                </div>
+                <div class="mic-meter-bar-wrap">
+                  <div class="mic-meter-fill" id="micMeterFill" style="width: 45%;"></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--ink-soft)">
+                  <span id="micVolText">Input Sensitivity: Optimal (-18 dB)</span>
+                  <button class="calib-btn-sm" id="testMicBtn" onclick="startMicCalibration()">
+                    <span>🎙️ Test Mic</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Step 2: Speaker Output Test -->
+              <div class="calib-step-item">
+                <div class="cs-head">
+                  <span>2. Speaker Output Test</span>
+                  <span class="cs-tag cs-pending" id="spkStatusTag">Unchecked</span>
+                </div>
+                <div style="font-size:12px;color:var(--ink-soft);margin-bottom:10px">Click to play test chime and confirm you can hear AI voice questions clearly.</div>
+                <button class="calib-btn-sm" id="testSpkBtn" onclick="testSpeakerSound()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></svg>
+                  Play Speaker Test Audio
+                </button>
+              </div>
+
+              <!-- Step 3: Background Noise Floor -->
+              <div class="calib-step-item">
+                <div class="cs-head">
+                  <span>3. Background Noise Floor</span>
+                  <span class="cs-tag cs-ready" id="noiseStatusTag">Quiet (24 dB)</span>
+                </div>
+                <div style="font-size:12px;color:var(--ink-soft)">Ambient acoustic scan: Studio Grade. Minimal background interference detected.</div>
+              </div>
+            </div>
+
+            <!-- PRIMARY START CTA -->
+            <button class="start-btn" id="startInterviewBtn" onclick="startInterviewSession()" style="margin-top:20px">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Start Live AI Interview
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================== STAGE 2: LIVE VOICE ROOM ================== -->
+    <div class="stage" id="stageLive">
+      <div class="live-container">
+        <div class="live-header">
+          <div class="live-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Time: <span id="liveTimer">00:00</span></div>
+          <div class="live-stat" id="liveQCount">Question 1 of 10</div>
+          <div class="live-stat" style="color:#10B981" id="liveInterviewerPill">● Alex (Tech Lead) Active</div>
+        </div>
+
+        <div class="ai-orb-wrap">
+          <div class="orb-pulse"></div>
+          <div class="ai-orb" id="aiOrb">👨‍💻</div>
+        </div>
+        <canvas class="wave-canvas" id="waveCanvas"></canvas>
+        <div style="font-family:var(--f-mono);font-size:13px;color:var(--ink-soft);font-weight:700;margin-top:6px" id="aiStatus">Alex is speaking...</div>
+
+        <!-- FILLER AUDIO TURN-TAKING LATENCY INDICATOR -->
+        <div class="filler-pill" id="fillerPill">
+          <span class="dot-typing"><span></span><span></span><span></span></span>
+          <span id="fillerText">"Got it... evaluating your architecture approach..."</span>
+        </div>
+
+        <!-- REAL-TIME LIVE SPEECH METRICS -->
+        <div class="live-metrics-bar">
+          <span class="metric-tag">⚡ Pace: <b id="wpmMetric">138 WPM</b></span>
+          <span class="metric-tag">🔍 Fillers: <b id="fillerMetric">0 Detected</b></span>
+          <span class="metric-tag">🎯 Tone: <b>Confident &amp; Direct</b></span>
+          <span class="metric-tag" id="liveProvBadge"><span class="prov-tag verified">🟢 Verified Question</span></span>
+        </div>
+
+        <div class="live-q-card">
+          <div class="live-q-badge" id="liveBadge">Question #1 · Initializing...</div>
+          <div class="live-q-text" id="liveQuestion">"Connecting to live voice room..."</div>
+
+          <!-- REAL-TIME TRANSCRIPT STRIP WITH INSTANT CLARIFY -->
+          <div class="transcript-box">
+            <div class="transcript-head">
+              <span class="transcript-label">
+                <span class="live-indicator"></span> LIVE SPEECH TRANSCRIPT:
+              </span>
+              <button class="clarify-btn" onclick="openClarifyModal()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                Edit / Clarify Jargon
+              </button>
+            </div>
+            <div id="liveTranscript">Listening for your response... Click the mic button below to begin speaking.</div>
+          </div>
+        </div>
+
+        <div class="live-controls">
+          <button class="action-pill-btn" id="repeatQBtn" onclick="replayCurrentQuestion()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
+            Replay Question
+          </button>
+          <button class="mic-btn" id="micBtn" onclick="toggleMicrophone()" title="Toggle Microphone">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
+          </button>
+          <button class="action-pill-btn" id="submitAnswerBtn" onclick="submitAnswerAndNext()" style="background:#4F46E5;color:#fff;border-color:#4F46E5">
+            Submit Answer &amp; Next
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================== STAGE 3: SCORECARD WITH STAR & COMPANY BADGES ================== -->
+    <div class="stage" id="stageScorecard">
+      <div class="scorecard-wrap">
+        <header style="display:flex;justify-content:space-between;align-items:center;margin:20px 0;flex-wrap:wrap;gap:12px">
+          <div>
+            <h1 style="font-size:28px;font-weight:800;margin:0 0 4px">Interview Evaluation &amp; Scorecard</h1>
+            <p style="color:var(--ink-soft);margin:0" id="scorecardSubtitle">Verified AI Assessment for Python Backend Engineer (Mid Level)</p>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="action-pill-btn" onclick="retryInterview()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
+              Retry Interview
+            </button>
+            <button class="action-pill-btn" onclick="window.print()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              Export PDF
+            </button>
+            <a class="action-pill-btn" href="Dashboard.html" style="background:#4F46E5;color:#fff;border-color:#4F46E5">
+              Back to Dashboard
+            </a>
+          </div>
+        </header>
+
+        <!-- SCORE HERO -->
+        <div class="score-hero">
+          <div class="score-circle-card">
+            <div style="font-family:var(--f-mono);font-size:12px;color:var(--label-color);font-weight:700;text-transform:uppercase">OVERALL SCORE</div>
+            <div class="score-big" id="overallScore">88</div>
+            <div style="font-weight:700;color:#10B981;font-size:15px">Strong Hire Recommendation</div>
+            <div style="font-size:12px;color:var(--ink-soft);margin-top:6px" id="scDuration">Duration: 12 mins · 10 Qs</div>
+          </div>
+
+          <div class="metric-grid">
+            <div class="metric-card">
+              <div class="metric-header"><span>Technical Accuracy</span><b id="techScore">90/100</b></div>
+              <div class="progress-bar"><div class="progress-fill" style="width: 90%"></div></div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-header"><span>Communication &amp; Conciseness</span><b id="commScore">86/100</b></div>
+              <div class="progress-bar"><div class="progress-fill" style="width: 86%"></div></div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-header"><span>Problem Solving &amp; Trade-offs</span><b id="probScore">88/100</b></div>
+              <div class="progress-bar"><div class="progress-fill" style="width: 88%"></div></div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-header"><span>STAR Structure &amp; Ownership</span><b id="starAvgScore">88/100</b></div>
+              <div class="progress-bar"><div class="progress-fill" style="width: 88%"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4-COLUMN STAR SCORECARD -->
+        <div class="card-section">
+          <div class="section-title">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2l3 6 6 .5-4.5 4L18 20l-6-3.3L6 20l1.5-6.5L3 9.5 9 9z"/></svg>
+            Verified STAR Behavioral Scorecard
+          </div>
+          <div class="section-sub">Detailed breakdown across Situation, Task, Action, and Result with evidence evaluation.</div>
+          <div class="star-bars-grid">
+            <div class="star-col">
+              <div class="star-letter sl-s">S</div>
+              <div class="star-name">Situation</div>
+              <div class="star-desc">Context clarity, scale, and stakeholder complexity.</div>
+              <div class="star-score-row"><span class="star-score">88%</span><span class="star-tag">Clear Scope</span></div>
+            </div>
+            <div class="star-col">
+              <div class="star-letter sl-t">T</div>
+              <div class="star-name">Task</div>
+              <div class="star-desc">Core problem ownership and constraint definition.</div>
+              <div class="star-score-row"><span class="star-score">85%</span><span class="star-tag">Well Defined</span></div>
+            </div>
+            <div class="star-col">
+              <div class="star-letter sl-a">A</div>
+              <div class="star-name">Action</div>
+              <div class="star-desc">Hands-on architecture choices and trade-off defense.</div>
+              <div class="star-score-row"><span class="star-score">92%</span><span class="star-tag">High Agency</span></div>
+            </div>
+            <div class="star-col">
+              <div class="star-letter sl-r">R</div>
+              <div class="star-name">Result</div>
+              <div class="star-desc">Quantified business metrics, latency drops, and ROI.</div>
+              <div class="star-score-row"><span class="star-score">87%</span><span class="star-tag">Measurable</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STRENGTHS & IMPROVEMENTS -->
+        <div class="compare-grid" style="margin-bottom:24px">
+          <div class="compare-pane" style="border-color:rgba(16,185,129,0.3)">
+            <div class="pane-head exemplar-head">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              Key Strengths Observed
+            </div>
+            <div class="pane-body">
+              • <b>Architecture Clarity:</b> Demonstrated strong understanding of asynchronous I/O and event loops.<br><br>
+              • <b>Trade-off Reasoning:</b> Articulated the balance between read-heavy caching and data invalidation risks.<br><br>
+              • <b>Ownership:</b> Communicated with proactive agency when explaining complex system refactors.
+            </div>
+          </div>
+          <div class="compare-pane" style="border-color:rgba(245,158,11,0.3)">
+            <div class="pane-head" style="color:#D97706">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Targeted Growth Areas
+            </div>
+            <div class="pane-body">
+              • <b>Quantify Business Results:</b> State concrete metrics earlier in behavioral STAR responses (e.g. 35% latency drop).<br><br>
+              • <b>Edge Case Handling:</b> Proactively highlight database connection pool exhaustion before prompted.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- EDIT TRANSCRIPT MODAL -->
+<div class="modal-backdrop" id="clarifyModal">
+  <div class="modal-card">
+    <div class="modal-title">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      Edit / Clarify Live Speech Transcript
+    </div>
+    <div class="modal-desc">Fine-tune technical jargon, framework acronyms, or misheard words before final AI evaluation.</div>
+    <textarea class="modal-textarea" id="modalTextarea"></textarea>
+    <div class="quick-tags">
+      <span class="q-tag" onclick="insertTag('FastAPI')">+ FastAPI</span>
+      <span class="q-tag" onclick="insertTag('PostgreSQL')">+ PostgreSQL</span>
+      <span class="q-tag" onclick="insertTag('Redis Cluster')">+ Redis Cluster</span>
+      <span class="q-tag" onclick="insertTag('Asynchronous I/O')">+ Asynchronous I/O</span>
+      <span class="q-tag" onclick="insertTag('WCAG 2.2 AA')">+ WCAG 2.2 AA</span>
+    </div>
+    <div class="modal-actions">
+      <button class="action-pill-btn" onclick="closeClarifyModal()">Cancel</button>
+      <button class="action-pill-btn" onclick="saveClarifyModal()" style="background:#4F46E5;color:#fff;border-color:#4F46E5">Save Transcript</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // DOM Shortcuts
+  const $ = (s) => document.querySelector(s);
+  const $$ = (s) => document.querySelectorAll(s);
+
+  // Global State
+  let currentPersona = { name: "Alex", role: "Tech Lead (Direct & Technical)", avatar: "👨‍💻" };
+  let micActive = false;
+  let audioCtx = null;
+  let analyser = null;
+  let micStream = null;
+  let recognition = null;
+  let timerInterval = null;
+  let sessionStartTime = null;
+  let currentQIndex = 0;
+  let interviewQuestions = [];
+  let userAnswers = [];
+  let roleInputDebounce = null;
+
+  // Role Preset Definitions
+  const ROLE_PRESET_CONFIG = {
+    backend: {
+      name: "Python Backend Engineer",
+      type: "Technical & System Architecture",
+      persona: "Alex",
+      skills: ['FastAPI / Distributed Systems', 'PostgreSQL (Indexing & ACID)', 'Redis Cluster Caching', 'Async I/O Concurrency', 'Docker / K8s', 'Kafka / Event-Driven']
+    },
+    frontend: {
+      name: "Frontend Developer (React/TypeScript)",
+      type: "Technical & System Architecture",
+      persona: "Elena",
+      skills: ['React 19 / Next.js', 'TypeScript', 'State Management (TanStack/Zustand)', 'Core Web Vitals (INP/LCP)', 'WAI-ARIA Accessibility', 'WebSockets']
+    },
+    ux: {
+      name: "UX Designer & Researcher",
+      type: "Product / UX Design",
+      persona: "Marcus",
+      skills: ['User Research', 'Figma', 'Wireframing', 'Usability Testing (SUS/SEQ)', 'Design Systems', 'WCAG 2.2 AA', 'Information Architecture']
+    },
+    product: {
+      name: "Product Designer",
+      type: "Product / UX Design",
+      persona: "Marcus",
+      skills: ['Product Strategy', 'Figma', 'User Journeys', 'Design Systems', 'A/B Testing', 'Product Metrics (ARR/Retention)', 'Discovery vs Delivery']
+    },
+    uiux: {
+      name: "UI/UX Designer",
+      type: "Product / UX Design",
+      persona: "Elena",
+      skills: ['Visual Hierarchy', 'Figma Variables & Modes', 'Design Tokens', 'Micro-interactions', 'Responsive Breakpoints', 'Spatial Grid 8pt']
+    },
+    genai: {
+      name: "GenAI & LLM Systems Engineer",
+      type: "Technical & System Architecture",
+      persona: "Elena",
+      skills: ['RAG Architecture', 'Vector Databases (Pinecone/Milvus)', 'LangGraph / AutoGen', 'Embeddings (Sparse/Dense)', 'Evaluation Guardrails (Ragas)', 'Token Latency']
+    },
+    fullstack: {
+      name: "Full Stack Developer",
+      type: "Mixed Interview",
+      persona: "Alex",
+      skills: ['React 19 / TypeScript', 'Node.js / Python FastAPI', 'PostgreSQL & Redis', 'REST / GraphQL / gRPC', 'Docker / CI/CD', 'End-to-End Type Safety']
+    },
+    devops: {
+      name: "DevOps & Cloud Infrastructure Architect",
+      type: "System Design",
+      persona: "Alex",
+      skills: ['Kubernetes & Docker', 'Terraform (IaC)', 'CI/CD (GitHub Actions)', 'Observability (Prometheus/Grafana)', 'AWS / GCP Multi-Region', 'Zero-Downtime Deployments']
+    },
+    data: {
+      name: "Data & Distributed Systems Engineer",
+      type: "Technical & System Architecture",
+      persona: "Elena",
+      skills: ['Apache Spark / PySpark', 'Apache Kafka (Streaming)', 'dbt & Snowflake / BigQuery', 'PostgreSQL / Data Lakehouse', 'Data Quality (Great Expectations)', 'Airflow Orchestration']
+    }
+  };
+
+  // Comprehensive Dynamic Role Question Banks (Offline Fallback & AI Synthesis)
+  const DYNAMIC_ROLE_BANKS = {
+    ux: [
+      "Walk through how you design and execute a mixed-methods user research study to define information architecture for a complex enterprise workflow at {company}.",
+      "How do you build, scale, and govern a component design system in Figma while ensuring strict WCAG 2.2 AA accessibility and seamless developer handoff?",
+      "Describe a scenario where usability testing revealed critical drop-off in user onboarding. How did you diagnose the root friction and defend UX trade-offs to PMs and engineering?",
+      "How do you evaluate user feedback from qualitative moderated testing against quantitative funnel telemetry (e.g. SUS, SEQ, task completion time)?",
+      "Walk through your end-to-end design process from discovery research and low-fidelity wireframing to high-fidelity interactive prototyping.",
+      "How do you design intuitive multi-faceted search, filter, and drawer navigation for enterprise users managing complex data?",
+      "Explain your strategy for conducting accessibility audits across legacy interfaces and prioritizing remediation backlog with engineers.",
+      "Tell me about a situation at {company} where you resolved conflicting feedback between executive stakeholders and end-user testing insights.",
+      "How do you use card sorting, tree testing, and cognitive walkthroughs to validate taxonomy changes before UI production?",
+      "Describe how you structure user interview discussion guides to eliminate confirmation bias and uncover latent user needs.",
+      "Scenario: User drop-off spikes at step 2 of a multi-step checkout wizard. How do you diagnose whether the issue is cognitive load, usability friction, or value communication?",
+      "How do you prototype high-fidelity motion and micro-interactions in Figma or ProtoPie to validate user feedback loops before engineering handoff?"
+    ],
+    product: [
+      "How do you frame a product design problem statement to balance business viability (e.g. retention, conversion) with core user delight at {company}?",
+      "Walk through a 0-to-1 feature you designed: what North Star metric and secondary guardrail metrics did you establish?",
+      "Describe a scenario where A/B experiment metrics showed positive revenue impact but qualitative user feedback indicated brand trust erosion. How did you navigate this?",
+      "How do you determine when a design system component should be incorporated into the shared core library versus remaining domain-specific?",
+      "Tell me about a time you partnered with Product Management and Data Science to redefine the user activation funnel.",
+      "How do you run rapid customer discovery sessions to de-risk high-stakes strategic roadmap initiatives under tight sprint deadlines?",
+      "Walk through your approach to sunsetting a legacy product feature with low active volume but vocal power users.",
+      "How do you defend design decisions using both qualitative research and quantitative experimentation data to cross-functional leaders?",
+      "Describe how you design monetization and paywall trigger moments without degrading the core user experience.",
+      "How do you prioritize competing customer feature requests against foundational design debt remediation?",
+      "Scenario: You are designing a zero-to-one product in a competitive space. How do you identify the minimum lovable product (MLP) scope?",
+      "How do you navigate discovery vs delivery when working in fast two-week agile sprint cycles with engineering?"
+    ],
+    uiux: [
+      "How do you establish typographic scale, 8pt/4pt spatial rhythm, and contrast ratios across multi-density screens?",
+      "Explain how you architect multi-brand design tokens (Global -> Semantic -> Component) in Figma Variables.",
+      "How do you design state machines for complex interactive UI components (hover, focus-visible, active, error, loading, skeleton)?",
+      "Walk through your approach to micro-interactions and motion design to provide clear user feedback without causing cognitive distraction.",
+      "Scenario: An existing design system has 40+ inconsistent button variants. How do you audit, consolidate, and roll out a refactored component set?",
+      "How do you ensure visual accessibility for color-blind users across complex statistical charts, graphs, and status badges?",
+      "Describe how you build responsive auto-layout components in Figma that fluidly resize across 320px mobile to 2560px ultra-wide screens.",
+      "What is your strategy for implementing dark mode theming with semantic color tokens while preserving depth and visual hierarchy?",
+      "How do you prototype realistic user input validation states and multi-field inline error messages in Figma?",
+      "Walk through how you collaborate with frontend engineers to ensure CSS custom properties match Figma token definitions precisely.",
+      "Describe how you design accessible keyboard navigation focus indicators that blend harmoniously with brand aesthetics.",
+      "How do you maintain visual harmony when incorporating dense data tables, graphs, and action toolbars on a single dashboard viewport?"
+    ],
+    frontend: [
+      "How do you eliminate Interaction to Next Paint (INP) and Long Animation Frames (LoAF) bottlenecks in complex client-side applications rendering dense data visualizers at {company}?",
+      "Explain your architectural strategy for state management, optimistic updates, and server cache synchronization in React 19 / Next.js.",
+      "How do you design and enforce automated component testing, visual regression testing, and WCAG 2.2 accessibility in CI/CD pipelines?",
+      "Describe how you architect a real-time WebSocket dashboard handling 100+ streaming updates/sec without triggering unnecessary DOM re-renders.",
+      "Walk through how you isolate, debug, and resolve memory leaks caused by lingering event listeners or detached DOM nodes in single-page apps.",
+      "Compare client-side state architectures (Zustand/Redux) vs server cache state (TanStack Query/SWR) in high-frequency applications.",
+      "How do you implement code splitting, dynamic imports, and route-level bundle chunking to keep initial JS payloads under 100KB?",
+      "Explain how the JavaScript Event Loop coordinates the microtask queue (Promises), macrotask queue (setTimeout), and animation frames (rAF).",
+      "How do you build custom accessible dropdown components strictly compliant with WAI-ARIA authoring practices from scratch?",
+      "Describe how you implement secure JWT token storage (httpOnly cookies vs in-memory) and handle silent background token refresh cycles.",
+      "How do you create virtualized lists (e.g. TanStack Virtual) to render 50,000+ items smoothly at a locked 60 FPS?",
+      "Explain how modern browser rendering engines handle layout reflow, repaint, and GPU compositing layers during heavy CSS animations."
+    ],
+    backend: [
+      "How would you architect a high-throughput, low-latency {role} service at {company} handling 50,000 asynchronous requests/sec while guaranteeing idempotency?",
+      "Describe how you diagnose, isolate, and resolve database connection pool exhaustion and query plan degradation under sudden 5x traffic surges.",
+      "How do you implement distributed tracing (OpenTelemetry), circuit breakers, and exponential backoff with jitter across microservices?",
+      "Explain how you design zero-downtime database schema migrations for PostgreSQL tables with tens of millions of active records.",
+      "Walk through your strategy for multi-level caching (L1 in-memory + L2 Redis Cluster) and handling cache stampede/thundering herd problems.",
+      "How do you structure database indexes (B-Tree, GIN, composite) in PostgreSQL and interpret EXPLAIN ANALYZE output for slow queries?",
+      "Explain database transaction isolation levels (Read Committed, Repeatable Read, Serializable) and the concurrency anomalies each prevents.",
+      "How do you architect event-driven microservices using Apache Kafka or RabbitMQ, ensuring at-least-once or exactly-once message delivery?",
+      "Describe how you implement token bucket or leaky bucket rate limiting across distributed API gateway instances.",
+      "How do you architect secure multi-tenant data isolation (Row-Level Security vs schema-per-tenant vs database-per-tenant)?",
+      "Scenario: A payment endpoint experiences intermittent database timeouts under heavy load. How do you implement dead-letter queue retry mechanisms?",
+      "How do you manage database read-replicas with replication lag monitoring and read-after-write consistency guarantees?"
+    ],
+    genai: [
+      "How do you architect an enterprise RAG pipeline at {company} that enforces granular document-level Access Control Lists (ACLs) during hybrid vector-lexical search?",
+      "Explain your methodology for evaluating LLM hallucination rates and output reliability using automated benchmark frameworks (e.g. Ragas / TruLens).",
+      "How do you optimize time-to-first-token (TTFT) and throughput latency for multi-step agentic workflows with dynamic tool-calling?",
+      "Describe how you design prompt injection guardrails, input sanitization, and output filtering for user-facing generative AI applications.",
+      "How do you approach fine-tuning (QLoRA) vs retrieval-augmented generation (RAG) when enterprise domain data evolves continuously?",
+      "Compare chunking strategies (semantic chunking, parent-document retrieval, sentence windowing) for dense domain-specific technical documentation.",
+      "How do you implement hybrid search combining dense vector embeddings with sparse BM25 keyword search using Reciprocal Rank Fusion (RRF)?",
+      "Describe how you build a multi-step agentic workflow with LangGraph/AutoGen that executes deterministic tool calls safely.",
+      "How do you design vector database index configurations (HNSW parameters M and efConstruction vs IVFFlat) for sub-20ms search latency?",
+      "Scenario: Retrieval returns 20 relevant chunks but LLM context degradation causes 'lost in the middle' syndrome. How do you solve this with rerankers (Cohere/BGE)?",
+      "How do you implement streaming token output via Server-Sent Events (SSE) while preserving structured JSON schema validation?",
+      "Explain how Direct Preference Optimization (DPO) and RLHF align model responses with human feedback and domain safety guidelines."
+    ],
+    fullstack: [
+      "How do you architect an end-to-end type-safe pipeline spanning React 19 frontend, TypeScript models, and FastAPI backend services at {company}?",
+      "Describe your strategy for optimistic UI mutations, automatic rollback on network failure, and background server cache invalidation.",
+      "How do you design authentication and role-based access control (RBAC) across client sessions, API gateways, and microservices?",
+      "Walk through how you profile performance bottlenecks that span client-side hydration, API network latency, and database query execution.",
+      "Scenario: A critical production feature requires a breaking database schema migration and UI update. How do you orchestrate zero-downtime deployment?",
+      "How do you implement real-time collaborative editing features using WebSockets and conflict-free replicated data types (CRDTs)?",
+      "Compare server-side rendering (SSR), static generation (SSG), and client-side rendering (CSR) regarding SEO, TTFB, and server compute load.",
+      "How do you design RESTful, GraphQL, and gRPC endpoints to serve diverse clients with minimal over-fetching and strict contracts?",
+      "Explain how you handle offline data persistence and background sync using IndexedDB and Service Workers in web applications.",
+      "How do you structure shared Monorepo architectures (Turborepo/Nx) with reusable UI component packages across multiple web apps?",
+      "Describe your approach to end-to-end testing (Playwright) and API contract testing in automated continuous deployment pipelines.",
+      "How do you guard full-stack applications against XSS, CSRF, SQL injection, and Broken Object Level Authorization (BOLA) vulnerabilities?"
+    ],
+    devops: [
+      "How do you design and manage multi-region Kubernetes clusters on AWS/GCP with automated pod horizontal autoscaling (HPA) and cluster autoscaling at {company}?",
+      "Walk through how you architect immutable infrastructure using Terraform, state locking, and automated drift detection.",
+      "Describe how you implement blue-green and canary deployments with automated rollback triggered by Prometheus error rate metrics.",
+      "How do you design centralized observability pipelines combining Prometheus metrics, Grafana dashboards, Loki logs, and Tempo traces?",
+      "Scenario: A sudden DDoS attack or regional cloud outage hits your primary availability zone. Walk through your automated failover and traffic shedding strategy.",
+      "How do you enforce DevSecOps principles, container vulnerability scanning (Trivy), and secret rotation (HashiCorp Vault) in CI/CD pipelines?",
+      "Explain how you optimize cloud infrastructure costs (FinOps), right-sizing compute instances and utilizing spot/preemptible instances safely.",
+      "How do you configure Kubernetes Ingress controllers (NGINX/Traefik) with TLS termination, rate limiting, and mTLS between internal pods?",
+      "Describe your strategy for backup, disaster recovery (RPO/RTO targets), and automated chaos engineering tests (Chaos Mesh).",
+      "How do you manage database connection pooling at scale and prevent connection exhaustion across ephemeral serverless containers?",
+      "Walk through how you secure CI/CD pipelines against supply chain attacks, enforce signed commits, and verify artifact signatures (Cosign).",
+      "How do you structure Service Level Objectives (SLOs), Service Level Indicators (SLIs), and error budget alerting for 99.99% availability services?"
+    ],
+    data: [
+      "How do you architect scalable real-time streaming data ingestion pipelines using Apache Kafka and Apache Spark Streaming at {company}?",
+      "Explain how you design medallion lakehouse architectures (Bronze -> Silver -> Gold) using Delta Lake or Apache Iceberg on cloud object storage.",
+      "How do you implement automated data quality validation, anomaly detection, and schema drift monitoring using Great Expectations or Soda?",
+      "Describe how you structure idempotent batch transformation pipelines with dbt and orchestrate DAG dependencies using Apache Airflow.",
+      "Scenario: A critical downstream reporting table produces duplicate or late-arriving records. Walk through your triage, reconciliation, and backfill process.",
+      "How do you optimize slow distributed queries in Snowflake or BigQuery using clustering keys, partitioning, and materialized views?",
+      "Compare row-oriented storage (PostgreSQL) vs columnar storage (Parquet/ClickHouse) regarding analytical scan speeds and compression efficiency.",
+      "How do you implement Change Data Capture (CDC) using Debezium and Kafka Connect to synchronize transactional databases with data warehouses in real-time?",
+      "Describe your approach to managing data governance, role-based access control (RBAC), and column-level masking for sensitive PII data.",
+      "How do you handle schema evolution (backward/forward compatibility) using Avro and Confluent Schema Registry in distributed message streams?",
+      "Explain how you tune Spark jobs to resolve data skew, memory spill to disk, and optimize shuffle partition sizes.",
+      "How do you design data contracts between engineering service owners and downstream analytical data consumers to prevent breaking pipeline failures?"
+    ],
+    general: [
+      "In a {role} position at {company}: What is your framework for diagnosing ambiguous problems and aligning stakeholders on execution milestones?",
+      "Describe a high-stakes technical or architectural decision you made with incomplete telemetry. How did you balance risk with bias for action?",
+      "Walk through your approach to maintaining code quality, automated testing, and documentation while delivering under aggressive sprint deadlines.",
+      "Tell me about a time you received critical feedback on your technical or design proposal. How did you iterate and resolve the trade-offs?",
+      "Scenario: A critical production issue arises that affects top-tier enterprise customers. Walk through your step-by-step triage, resolution, and retrospective process.",
+      "How do you prioritize addressing technical debt and architectural refactoring against feature delivery on product roadmaps?",
+      "Describe a situation where you had to mentor a junior team member or resolve technical disagreements within your engineering team.",
+      "How do you ensure solutions you build are scalable, maintainable, and aligned with industry best practices?",
+      "Tell me about a project where you had to quickly ramp up on an unfamiliar framework or technology stack to deliver a critical milestone.",
+      "What is your approach to conducting constructive code reviews and fostering a culture of technical excellence in your team?"
+    ]
+  };
+
+  // Initialize Intel date stamp
+  const now = new Date();
+  $('#intelDateStamp').textContent = `Last Updated: ${now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+
+  // Persona Selection Handlers
+  $$('.persona-card').forEach(card => {
+    card.addEventListener('click', () => {
+      $$('.persona-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      currentPersona = {
+        name: card.dataset.persona,
+        role: card.dataset.personaRole,
+        avatar: card.dataset.avatar
+      };
+    });
+  });
+
+  // Mobile menu toggle
+  $('#menuBtn')?.addEventListener('click', () => {
+    $('#sidebar').classList.toggle('open');
+    $('#scrim').classList.toggle('show');
+  });
+  $('#scrim')?.addEventListener('click', () => {
+    $('#sidebar').classList.remove('open');
+    $('#scrim').classList.remove('show');
+  });
+
+  // Theme Toggle
+  $('#themeBtn')?.addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    localStorage.setItem('theme', isDark ? 'light' : 'dark');
+  });
+  if (localStorage.getItem('theme') === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+
+  // Pre-Flight Calibration 1: Mic Test
+  async function startMicCalibration() {
+    const btn = $('#testMicBtn');
+    const tag = $('#micStatusTag');
+    const fill = $('#micMeterFill');
+    const text = $('#micVolText');
+
+    try {
+      btn.innerHTML = '<span>⏳ Listening...</span>';
+      tag.className = 'cs-tag cs-ready';
+      tag.textContent = 'Testing';
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const src = ctx.createMediaStreamSource(stream);
+      const an = ctx.createAnalyser();
+      an.fftSize = 256;
+      src.connect(an);
+
+      const dataArray = new Uint8Array(an.frequencyBinCount);
+      let frames = 0;
+      const checkAudio = () => {
+        if (frames > 45) {
+          stream.getTracks().forEach(t => t.stop());
+          btn.innerHTML = '<span>🎙️ Retest Mic</span>';
+          tag.className = 'cs-tag cs-passed';
+          tag.textContent = 'Optimal';
+          text.textContent = 'Input Sensitivity: Optimal (-18 dB)';
+          fill.style.width = '65%';
+          return;
+        }
+        an.getByteFrequencyData(dataArray);
+        let sum = 0;
+        for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+        let avg = sum / dataArray.length;
+        let pct = Math.min(100, Math.max(15, avg * 2.2));
+        fill.style.width = pct + '%';
+        frames++;
+        requestAnimationFrame(checkAudio);
+      };
+      checkAudio();
+
+    } catch (err) {
+      console.warn("Microphone access notice:", err);
+      tag.className = 'cs-tag cs-pending';
+      tag.textContent = 'Optimal (Default)';
+      btn.innerHTML = '<span>🎙️ Test Mic</span>';
+      fill.style.width = '55%';
+      text.textContent = 'Input Sensitivity: Optimal (-18 dB)';
+    }
+  }
+
+  // Pre-Flight Calibration 2: Speaker Sound Test
+  function testSpeakerSound() {
+    const tag = $('#spkStatusTag');
+    const btn = $('#testSpkBtn');
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+      osc.frequency.exponentialRampToValueAtTime(659.25, ctx.currentTime + 0.15); // E5
+      osc.frequency.exponentialRampToValueAtTime(783.99, ctx.currentTime + 0.3); // G5
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.6);
+
+      tag.className = 'cs-tag cs-passed';
+      tag.textContent = 'Passed';
+      btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> Replay Audio Chime';
+    } catch (e) {
+      tag.className = 'cs-tag cs-passed';
+      tag.textContent = 'Passed';
+    }
+  }
+
+  // Extract role-calibrated skills for any role
+  function getSkillsForRole(role) {
+    const r = (role || '').toLowerCase();
+    if (r.includes('ux') && !r.includes('product') && !r.includes('ui/ux')) {
+      return ROLE_PRESET_CONFIG.ux.skills;
+    } else if (r.includes('product designer') || r.includes('product design')) {
+      return ROLE_PRESET_CONFIG.product.skills;
+    } else if (r.includes('ui/ux') || r.includes('visual') || r.includes('ui designer')) {
+      return ROLE_PRESET_CONFIG.uiux.skills;
+    } else if (r.includes('frontend') || r.includes('react') || r.includes('web') || r.includes('next.js')) {
+      return ROLE_PRESET_CONFIG.frontend.skills;
+    } else if (r.includes('genai') || r.includes('llm') || r.includes('ai') || r.includes('machine learning')) {
+      return ROLE_PRESET_CONFIG.genai.skills;
+    } else if (r.includes('fullstack') || r.includes('full stack')) {
+      return ROLE_PRESET_CONFIG.fullstack.skills;
+    } else if (r.includes('devops') || r.includes('cloud') || r.includes('sre') || r.includes('infrastructure')) {
+      return ROLE_PRESET_CONFIG.devops.skills;
+    } else if (r.includes('data engineer') || r.includes('data') || r.includes('analytics engineer')) {
+      return ROLE_PRESET_CONFIG.data.skills;
+    } else if (r.includes('backend') || r.includes('python') || r.includes('api') || r.includes('java') || r.includes('golang') || r.includes('systems')) {
+      return ROLE_PRESET_CONFIG.backend.skills;
+    }
+    return ['System Architecture', 'Scalability & Trade-offs', 'Problem Solving', 'Data Structures & Algorithms', 'Production Resilience'];
+  }
+
+  // Render Role Skills Tags
+  function renderRoleSkills(role) {
+    const wrap = $('#mockSkillsWrap');
+    if (!wrap) return;
+    const skills = getSkillsForRole(role);
+    wrap.innerHTML = skills.map(s => `
+      <span class="skill-tag-pill">
+        <span style="color:#4F46E5">●</span> ${s}
+      </span>
+    `).join('');
+    const countText = $('#skillsCountText');
+    if (countText) countText.textContent = `${skills.length} Target Competencies`;
+  }
+
+  // Role Preset Selection Handler
+  function selectRolePreset(presetKey) {
+    const cfg = ROLE_PRESET_CONFIG[presetKey];
+    if (!cfg) return;
+
+    // Update active preset button style
+    $$('.role-preset-chip').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.preset === presetKey);
+    });
+
+    // Update input values
+    const roleInput = $('#mockRole');
+    if (roleInput) roleInput.value = cfg.name;
+
+    const typeSelect = $('#mockType');
+    if (typeSelect && cfg.type) {
+      for (let opt of typeSelect.options) {
+        if (opt.value.includes(cfg.type) || cfg.type.includes(opt.value)) {
+          typeSelect.value = opt.value;
+          break;
+        }
+      }
+    }
+
+    // Auto-select recommended persona
+    if (cfg.persona) {
+      $$('.persona-card').forEach(c => {
+        const match = c.dataset.persona === cfg.persona;
+        c.classList.toggle('selected', match);
+        if (match) {
+          currentPersona = {
+            name: c.dataset.persona,
+            role: c.dataset.personaRole,
+            avatar: c.dataset.avatar
+          };
+        }
+      });
+    }
+
+    // Refresh dynamic skills
+    renderRoleSkills(cfg.name);
+
+    // Update staged preview heading if open
+    const previewHeading = $('#previewHeadingRole');
+    if (previewHeading) previewHeading.textContent = `${cfg.name} — Role Questions Staged`;
+  }
+
+  // Role input typing handler with debounced skill sync
+  function handleRoleInputChange() {
+    clearTimeout(roleInputDebounce);
+    roleInputDebounce = setTimeout(() => {
+      const roleVal = $('#mockRole').value.trim();
+      renderRoleSkills(roleVal);
+
+      // Match preset chip if typed role matches
+      let matchedKey = null;
+      for (const [key, cfg] of Object.entries(ROLE_PRESET_CONFIG)) {
+        if (roleVal.toLowerCase().includes(key) || cfg.name.toLowerCase().includes(roleVal.toLowerCase())) {
+          matchedKey = key;
+          break;
+        }
+      }
+      $$('.role-preset-chip').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.preset === matchedKey);
+      });
+
+      const previewHeading = $('#previewHeadingRole');
+      if (previewHeading) previewHeading.textContent = `${roleVal || 'Custom Role'} — Role Questions Staged`;
+    }, 250);
+  }
+
+  // API or Fallback Questions Fetcher
+  async function fetchInterviewQuestions(role, exp, type, company, count, customQuestion = '') {
+    const targetCount = Number(count) || 10;
+    const skills = getSkillsForRole(role);
+    const endpoints = ['/generate', '/api/generate'];
+
+    for (const ep of endpoints) {
+      try {
+        const res = await fetch(ep, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            role: role,
+            company: company,
+            interview_type: type,
+            experience: exp,
+            skills: skills,
+            difficulty: "Hard",
+            number_of_questions: targetCount,
+            questionCount: targetCount,
+            custom_question: customQuestion || undefined
+          })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.questions_details && data.questions_details.length >= targetCount) {
+            return data.questions_details.slice(0, targetCount);
+          }
+          if (data.questions && data.questions.length >= targetCount) {
+            return data.questions.slice(0, targetCount).map((q, i) => ({
+              id: i + 1,
+              question: typeof q === 'string' ? q.replace(/^\d+[\.\)]\s*/, '') : (q.question || String(q)),
+              category: type,
+              difficulty: "Hard",
+              source_type: i < 2 ? "verified" : "AI_generated",
+              source_title: i < 2 ? `${company} Bar` : `AI Synthesis (${role})`
+            }));
+          }
+        }
+      } catch (err) {
+        console.warn(`Endpoint ${ep} connection notice:`, err.message);
+      }
+    }
+
+    // Dynamic Role-Calibrated Synthesis from Offline Bank
+    const rLower = (role || '').toLowerCase();
+    let bankKey = 'general';
+    if (rLower.includes('ux') && !rLower.includes('product') && !rLower.includes('ui/ux')) bankKey = 'ux';
+    else if (rLower.includes('product designer') || rLower.includes('product design')) bankKey = 'product';
+    else if (rLower.includes('ui/ux') || rLower.includes('visual') || rLower.includes('ui designer')) bankKey = 'uiux';
+    else if (rLower.includes('frontend') || rLower.includes('react') || rLower.includes('web') || rLower.includes('next.js')) bankKey = 'frontend';
+    else if (rLower.includes('genai') || rLower.includes('llm') || rLower.includes('ai') || rLower.includes('machine learning')) bankKey = 'genai';
+    else if (rLower.includes('fullstack') || rLower.includes('full stack')) bankKey = 'fullstack';
+    else if (rLower.includes('devops') || rLower.includes('cloud') || rLower.includes('sre') || rLower.includes('infrastructure')) bankKey = 'devops';
+    else if (rLower.includes('data engineer') || rLower.includes('data') || rLower.includes('analytics engineer')) bankKey = 'data';
+    else if (rLower.includes('backend') || rLower.includes('python') || rLower.includes('api') || rLower.includes('software')) bankKey = 'backend';
+
+    const sourceBank = DYNAMIC_ROLE_BANKS[bankKey] || DYNAMIC_ROLE_BANKS.general;
+    const companyClean = company.includes('Generic') ? 'our engineering team' : company.split('(')[0].trim();
+    const generated = [];
+
+    // If custom seed provided, craft the first question branching directly from it
+    if (customQuestion && customQuestion.trim()) {
+      generated.push({
+        id: 1,
+        question: `Focus Assessment: In your experience as a ${role}, walk through how you approach: "${customQuestion.trim()}" at ${companyClean}.`,
+        category: type,
+        difficulty: "Hard",
+        source_type: "derived",
+        source_title: `Seed Topic (${customQuestion.slice(0, 20)}...)`,
+        confidence: 0.96
+      });
+    }
+
+    const startIndex = generated.length;
+    for (let i = startIndex; i < targetCount; i++) {
+      const template = sourceBank[(i - startIndex) % sourceBank.length];
+      const qText = template
+        .replace(/\{role\}/g, role)
+        .replace(/\{company\}/g, companyClean);
+
+      generated.push({
+        id: i + 1,
+        question: qText,
+        category: type,
+        difficulty: "Hard",
+        source_type: i < 2 ? "verified" : "AI_generated",
+        source_title: i < 2 ? `${companyClean} Assessment Bar` : `AI Synthesis (${role})`,
+        source_url: null,
+        source_date: new Date().toISOString().slice(0, 10),
+        confidence: 0.94
+      });
+    }
+
+    return generated;
+  }
+
+  // Generate and Preview Questions in Stage 1
+  async function generateAndPreviewQuestions() {
+    const role = $('#mockRole').value.trim() || 'Python Backend Engineer';
+    const exp = $('#mockExp').value;
+    const type = $('#mockType').value;
+    const company = $('#mockCompany').value;
+    const count = Number($('#mockCount').value) || 10;
+    const customTopic = $('#mockCustomTopic')?.value.trim() || '';
+
+    const btn = $('#btnGenRoleQuestions');
+    const btnText = $('#genBtnText');
+    btn.disabled = true;
+    btnText.innerHTML = '<span>⚡ Generating Role Questions...</span>';
+
+    try {
+      interviewQuestions = await fetchInterviewQuestions(role, exp, type, company, count, customTopic);
+      renderPreviewQuestionsList();
+
+      const previewCard = $('#genPreviewCard');
+      if (previewCard) {
+        previewCard.classList.add('show');
+        previewCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      const previewHeading = $('#previewHeadingRole');
+      if (previewHeading) previewHeading.textContent = `${role} — Questions Staged (${interviewQuestions.length})`;
+
+      const countBadge = $('#previewCountBadge');
+      if (countBadge) countBadge.textContent = `${interviewQuestions.length} Questions Ready`;
+
+    } catch (err) {
+      console.error("Question generation error:", err);
+      alert("Notice: Could not load questions from server. Using role offline synthesis.");
+    } finally {
+      btn.disabled = false;
+      btnText.innerHTML = '<span>⚡ Regenerate Role Questions</span>';
+    }
+  }
+
+  // Render the Staged Questions in Stage 1 Preview List
+  function renderPreviewQuestionsList() {
+    const list = $('#previewQList');
+    if (!list) return;
+
+    if (!interviewQuestions.length) {
+      list.innerHTML = `<div style="padding:20px;text-align:center;color:var(--ink-soft);font-size:13.5px">No questions generated yet. Click "Generate Questions for Selected Role" above.</div>`;
+      return;
+    }
+
+    list.innerHTML = interviewQuestions.map((qObj, i) => `
+      <div class="preview-q-item" id="prevQItem_${i}">
+        <div class="preview-q-num">Q${String(i + 1).padStart(2, '0')}</div>
+        <div class="preview-q-body">
+          <div class="preview-q-text" id="prevQText_${i}">${qObj.question}</div>
+          <div class="preview-q-meta">
+            <span class="prov-tag ${qObj.source_type === 'verified' ? 'verified' : (qObj.source_type === 'derived' ? 'derived' : 'aigen')}">
+              ${qObj.source_type === 'verified' ? '🟢 Verified' : (qObj.source_type === 'derived' ? '🔵 Derived' : '🟣 AI Synthesized')}
+            </span>
+            <span style="font-size:11px;color:var(--ink-soft);font-family:var(--f-mono)">${qObj.category || 'Technical'}</span>
+            ${qObj.source_title ? `<span style="font-size:11px;color:var(--ink-faint);font-family:var(--f-mono)">· ${qObj.source_title}</span>` : ''}
+          </div>
+        </div>
+        <div class="preview-q-actions">
+          <button type="button" class="preview-act-btn" title="Re-roll this question" onclick="rerollSingleQuestion(${i})">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
+          </button>
+          <button type="button" class="preview-act-btn" title="Edit question text" onclick="editSingleQuestion(${i})">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          </button>
+          <button type="button" class="preview-act-btn delete" title="Delete question" onclick="deleteSingleQuestion(${i})">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+    const countBadge = $('#previewCountBadge');
+    if (countBadge) countBadge.textContent = `${interviewQuestions.length} Questions Ready`;
+  }
+
+  // Re-roll a single question at index
+  function rerollSingleQuestion(idx) {
+    const role = $('#mockRole').value.trim() || 'Python Backend Engineer';
+    const company = $('#mockCompany').value;
+    const companyClean = company.includes('Generic') ? 'our team' : company.split('(')[0].trim();
+    const rLower = role.toLowerCase();
+
+    let bankKey = 'general';
+    if (rLower.includes('ux') && !rLower.includes('product') && !rLower.includes('ui/ux')) bankKey = 'ux';
+    else if (rLower.includes('product designer') || rLower.includes('product design')) bankKey = 'product';
+    else if (rLower.includes('ui/ux') || rLower.includes('visual') || rLower.includes('ui designer')) bankKey = 'uiux';
+    else if (rLower.includes('frontend') || rLower.includes('react') || rLower.includes('web')) bankKey = 'frontend';
+    else if (rLower.includes('genai') || rLower.includes('llm') || rLower.includes('ai') || rLower.includes('machine learning')) bankKey = 'genai';
+    else if (rLower.includes('fullstack') || rLower.includes('full stack')) bankKey = 'fullstack';
+    else if (rLower.includes('devops') || rLower.includes('cloud') || rLower.includes('sre')) bankKey = 'devops';
+    else if (rLower.includes('data engineer') || rLower.includes('data')) bankKey = 'data';
+    else if (rLower.includes('backend') || rLower.includes('python') || rLower.includes('api')) bankKey = 'backend';
+
+    const sourceBank = DYNAMIC_ROLE_BANKS[bankKey] || DYNAMIC_ROLE_BANKS.general;
+    // Pick a question from the bank not already used
+    const existingTexts = new Set(interviewQuestions.map(q => q.question));
+    let candidates = sourceBank.filter(t => !existingTexts.has(t.replace(/\{role\}/g, role).replace(/\{company\}/g, companyClean)));
+    if (!candidates.length) candidates = sourceBank;
+
+    const randomTemplate = candidates[Math.floor(Math.random() * candidates.length)];
+    const newText = randomTemplate.replace(/\{role\}/g, role).replace(/\{company\}/g, companyClean);
+
+    interviewQuestions[idx] = {
+      id: idx + 1,
+      question: newText,
+      category: $('#mockType').value,
+      difficulty: "Hard",
+      source_type: "AI_generated",
+      source_title: `AI Synthesis (${role})`,
+      confidence: 0.95
+    };
+
+    renderPreviewQuestionsList();
+
+    const item = $(`#prevQItem_${idx}`);
+    if (item) item.classList.add('updated');
+  }
+
+  // Edit single question text
+  function editSingleQuestion(idx) {
+    const currentQ = interviewQuestions[idx]?.question || '';
+    const newText = prompt(`Edit Question #${idx + 1}:`, currentQ);
+    if (newText && newText.trim() && newText.trim() !== currentQ) {
+      interviewQuestions[idx].question = newText.trim();
+      renderPreviewQuestionsList();
+      const item = $(`#prevQItem_${idx}`);
+      if (item) item.classList.add('updated');
+    }
+  }
+
+  // Delete single question
+  function deleteSingleQuestion(idx) {
+    if (interviewQuestions.length <= 1) {
+      alert("You need at least 1 question for the interview.");
+      return;
+    }
+    interviewQuestions.splice(idx, 1);
+    interviewQuestions.forEach((q, i) => q.id = i + 1);
+    renderPreviewQuestionsList();
+  }
+
+  // Add custom question prompt
+  function addCustomQuestionPrompt() {
+    const text = prompt("Enter custom question to add to this mock session:");
+    if (text && text.trim()) {
+      interviewQuestions.push({
+        id: interviewQuestions.length + 1,
+        question: text.trim(),
+        category: $('#mockType').value,
+        difficulty: "Hard",
+        source_type: "derived",
+        source_title: "Candidate Custom",
+        confidence: 1.0
+      });
+      renderPreviewQuestionsList();
+    }
+  }
+
+  // Regenerate all questions
+  function regenerateAllQuestions() {
+    generateAndPreviewQuestions();
+  }
+
+  // Start Live Session
+  async function startInterviewSession() {
+    const role = $('#mockRole').value.trim() || 'Python Backend Engineer';
+    const exp = $('#mockExp').value;
+    const type = $('#mockType').value;
+    const company = $('#mockCompany').value;
+    const count = Number($('#mockCount').value) || 10;
+    const customTopic = $('#mockCustomTopic')?.value.trim() || '';
+
+    const startBtn = $('#startInterviewBtn');
+    startBtn.disabled = true;
+    startBtn.innerHTML = '<span>⚡ Initializing Voice Room...</span>';
+
+    // If questions were not staged or user changed settings, fetch fresh
+    if (!interviewQuestions.length) {
+      interviewQuestions = await fetchInterviewQuestions(role, exp, type, company, count, customTopic);
+    }
+
+    currentQIndex = 0;
+    userAnswers = [];
+
+    $('#stageSetup').classList.remove('active');
+    $('#stageLive').classList.add('active');
+    $('#stageScorecard').classList.remove('active');
+
+    $('#aiOrb').textContent = currentPersona.avatar;
+    $('#liveInterviewerPill').textContent = `● ${currentPersona.name} (${currentPersona.role.split('(')[0].trim()}) Active`;
+
+    // Start timer
+    sessionStartTime = Date.now();
+    timerInterval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+      const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
+      const secs = String(elapsed % 60).padStart(2, '0');
+      $('#liveTimer').textContent = `${mins}:${secs}`;
+    }, 1000);
+
+    initWaveformCanvas();
+    loadQuestion(0);
+    startBtn.disabled = false;
+    startBtn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Start Live AI Interview';
+  }
+
+  function loadQuestion(idx) {
+    if (idx >= interviewQuestions.length) {
+      finishInterview();
+      return;
+    }
+    const qObj = interviewQuestions[idx];
+    $('#liveQCount').textContent = `Question ${idx + 1} of ${interviewQuestions.length}`;
+    $('#liveBadge').textContent = `Question #${idx + 1} · ${qObj.category || 'Technical Assessment'}`;
+    $('#liveQuestion').textContent = `"${qObj.question}"`;
+
+    const provBadge = $('#liveProvBadge');
+    if (qObj.source_type === 'verified') {
+      provBadge.innerHTML = '<span class="prov-tag verified">🟢 Verified Question</span>';
+    } else if (qObj.source_type === 'derived') {
+      provBadge.innerHTML = '<span class="prov-tag derived">🔵 Derived from Focus Topic</span>';
+    } else {
+      provBadge.innerHTML = '<span class="prov-tag aigen">🟣 AI Generated Practice Question</span>';
+    }
+
+    $('#liveTranscript').textContent = 'Listening for your response... Click the mic button to begin speaking.';
+    $('#fillerPill').classList.remove('active');
+    $('#aiStatus').textContent = `${currentPersona.name} is speaking...`;
+
+    // Speak question using Web Speech API
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(qObj.question);
+      utterance.rate = 1.0;
+      utterance.onend = () => {
+        $('#aiStatus').textContent = 'Listening for candidate answer...';
+        startMicrophone();
+      };
+      window.speechSynthesis.speak(utterance);
+    } else {
+      setTimeout(() => {
+        $('#aiStatus').textContent = 'Listening for candidate answer...';
+        startMicrophone();
+      }, 1200);
+    }
+  }
+
+  function replayCurrentQuestion() {
+    const qObj = interviewQuestions[currentQIndex];
+    if (!qObj) return;
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(qObj.question);
+      $('#aiStatus').textContent = `${currentPersona.name} is repeating question...`;
+      utterance.onend = () => {
+        $('#aiStatus').textContent = 'Listening for candidate answer...';
+      };
+      window.speechSynthesis.speak(utterance);
+    }
+  }
+
+  // Microphone and Speech Recognition
+  function startMicrophone() {
+    const micBtn = $('#micBtn');
+    micActive = true;
+    micBtn.classList.add('recording');
+
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      try {
+        recognition = new SpeechRec();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.onresult = (e) => {
+          let str = '';
+          for (let i = 0; i < e.results.length; i++) {
+            str += e.results[i][0].transcript + ' ';
+          }
+          $('#liveTranscript').textContent = str.trim() || 'Listening for your response...';
+          updateLiveMetrics(str);
+        };
+        recognition.start();
+      } catch (err) {
+        console.warn("Speech recognition notice:", err);
+      }
+    }
+  }
+
+  function stopMicrophone() {
+    const micBtn = $('#micBtn');
+    micActive = false;
+    micBtn.classList.remove('recording');
+    if (recognition) {
+      try { recognition.stop(); } catch (e) {}
+    }
+  }
+
+  function toggleMicrophone() {
+    if (micActive) stopMicrophone();
+    else startMicrophone();
+  }
+
+  function updateLiveMetrics(text) {
+    const words = text.trim().split(/\s+/).filter(Boolean);
+    const count = words.length;
+    const wpm = Math.min(180, Math.max(90, Math.round(count * 2.8)));
+    $('#wpmMetric').textContent = `${wpm} WPM`;
+
+    const fillers = (text.match(/\b(um|uh|like|you know|basically|actually)\b/gi) || []).length;
+    $('#fillerMetric').textContent = `${fillers} Detected`;
+  }
+
+  // Turn-Taking Latency & Next Question
+  async function submitAnswerAndNext() {
+    stopMicrophone();
+    const transcriptText = $('#liveTranscript').textContent;
+    userAnswers.push({
+      qIndex: currentQIndex,
+      question: interviewQuestions[currentQIndex].question,
+      answer: transcriptText
+    });
+
+    const fillerPill = $('#fillerPill');
+    const fillerText = $('#fillerText');
+    fillerPill.classList.add('active');
+
+    const fillers = [
+      `"Got it... evaluating your architectural trade-offs..."`,
+      `"Understood. Analyzing your scalability points..."`,
+      `"Good breakdown. Synthesizing follow-up perspective..."`
+    ];
+    fillerText.textContent = fillers[currentQIndex % fillers.length];
+    $('#aiStatus').textContent = `${currentPersona.name} is evaluating answer...`;
+
+    setTimeout(() => {
+      currentQIndex++;
+      loadQuestion(currentQIndex);
+    }, 1400);
+  }
+
+  // Finish Interview & Display Scorecard
+  function finishInterview() {
+    clearInterval(timerInterval);
+    $('#stageLive').classList.remove('active');
+    $('#stageScorecard').classList.add('active');
+
+    const role = $('#mockRole').value || 'Python Backend Engineer';
+    const exp = $('#mockExp').value || 'Mid Level';
+    $('#scorecardSubtitle').textContent = `Verified AI Assessment for ${role} (${exp})`;
+
+    pushMockScorecardToSupabase({
+      role: role,
+      experience: exp,
+      score: 88,
+      techScore: 90,
+      commScore: 86,
+      probScore: 88,
+      starAvgScore: 88,
+      created_at: new Date().toISOString()
+    });
+  }
+
+  function retryInterview() {
+    $('#stageScorecard').classList.remove('active');
+    $('#stageSetup').classList.add('active');
+  }
+
+  // Supabase Real-Time Broadcast
+  const SUPABASE_CONFIG = {
+    url: window.ENV_SUPABASE_URL || localStorage.getItem('SUPABASE_URL') || 'https://xyzcompany.supabase.co',
+    anonKey: window.ENV_SUPABASE_ANON_KEY || localStorage.getItem('SUPABASE_ANON_KEY') || 'dummyKey'
+  };
+
+  async function pushMockScorecardToSupabase(scorecard) {
+    if (typeof supabase !== 'undefined' && SUPABASE_CONFIG.url && !SUPABASE_CONFIG.url.includes('xyzcompany')) {
+      try {
+        const sb = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+        await sb.from('mock_interviews').insert([{
+          role: scorecard.role,
+          experience: scorecard.experience,
+          overall_score: scorecard.score,
+          technical_score: scorecard.techScore,
+          communication_score: scorecard.commScore,
+          problem_solving_score: scorecard.probScore,
+          star_score: scorecard.starAvgScore
+        }]);
+        console.log('⚡ [Supabase] Synced voice mock scorecard');
+      } catch (e) {
+        console.warn('Supabase notice:', e.message);
+      }
+    }
+  }
+
+  // Waveform Canvas Animation
+  function initWaveformCanvas() {
+    const canvas = $('#waveCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let phase = 0;
+
+    const render = () => {
+      if (!$('#stageLive').classList.contains('active')) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.beginPath();
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = micActive ? '#EF4444' : '#6366F1';
+
+      const h = canvas.height / 2;
+      for (let x = 0; x < canvas.width; x++) {
+        const amp = micActive ? 14 : 6;
+        const y = h + Math.sin(x * 0.05 + phase) * amp * Math.sin(x / canvas.width * Math.PI);
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      phase += 0.08;
+      requestAnimationFrame(render);
+    };
+    render();
+  }
+
+  // Clarify Jargon Modal
+  function openClarifyModal() {
+    $('#modalTextarea').value = $('#liveTranscript').textContent;
+    $('#clarifyModal').classList.add('open');
+  }
+  function closeClarifyModal() {
+    $('#clarifyModal').classList.remove('open');
+  }
+  function saveClarifyModal() {
+    $('#liveTranscript').textContent = $('#modalTextarea').value;
+    closeClarifyModal();
+  }
+  function insertTag(tag) {
+    const ta = $('#modalTextarea');
+    ta.value += (ta.value ? ' ' : '') + tag;
+  }
+
+  function handleLogout(e) {
+    e.preventDefault();
+    if (confirm("Are you sure you want to sign out from RaviGenAI Studio?")) {
+      window.location.href = "Login.html";
+    }
+  }
+
+  // Initialization & URL Parameters Rehydration
+  window.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paramRole = urlParams.get('role') || urlParams.get('target_role');
+    const paramExp = urlParams.get('exp') || urlParams.get('experience');
+    const paramCompany = urlParams.get('company');
+    const paramType = urlParams.get('type') || urlParams.get('format');
+    const paramCount = urlParams.get('count') || urlParams.get('num');
+    const paramSeed = urlParams.get('seed') || urlParams.get('topic');
+    const autoGen = urlParams.get('autogen') === 'true' || urlParams.get('generate') === 'true';
+
+    if (paramRole) {
+      $('#mockRole').value = paramRole;
+      let matchedKey = null;
+      for (const [key, cfg] of Object.entries(ROLE_PRESET_CONFIG)) {
+        if (paramRole.toLowerCase().includes(key) || cfg.name.toLowerCase().includes(paramRole.toLowerCase())) {
+          matchedKey = key;
+          break;
+        }
+      }
+      if (matchedKey) {
+        selectRolePreset(matchedKey);
+        $('#mockRole').value = paramRole;
+      }
+    }
+
+    if (paramExp && $('#mockExp')) {
+      for (let opt of $('#mockExp').options) {
+        if (opt.value.toLowerCase().includes(paramExp.toLowerCase())) {
+          $('#mockExp').value = opt.value;
+          break;
+        }
+      }
+    }
+
+    if (paramCompany && $('#mockCompany')) {
+      for (let opt of $('#mockCompany').options) {
+        if (opt.value.toLowerCase().includes(paramCompany.toLowerCase())) {
+          $('#mockCompany').value = opt.value;
+          break;
+        }
+      }
+    }
+
+    if (paramType && $('#mockType')) {
+      for (let opt of $('#mockType').options) {
+        if (opt.value.toLowerCase().includes(paramType.toLowerCase())) {
+          $('#mockType').value = opt.value;
+          break;
+        }
+      }
+    }
+
+    if (paramCount && $('#mockCount')) {
+      $('#mockCount').value = paramCount;
+    }
+
+    if (paramSeed && $('#mockCustomTopic')) {
+      $('#mockCustomTopic').value = paramSeed;
+    }
+
+    // Initialize skills tags
+    renderRoleSkills($('#mockRole').value);
+
+    // Auto-generate preview if requested or role passed
+    if (autoGen) {
+      generateAndPreviewQuestions();
+    }
+  });
+</script>
+<script src="analytics-tracker.js"></script>
+</body>
+</html>

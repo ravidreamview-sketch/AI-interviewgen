@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Dict, Any, List
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from sqlalchemy import func, desc
 from sqlalchemy.orm import Session
 
@@ -461,6 +461,40 @@ def serve_tracker_script():
     f = BASE_DIR / "analytics-tracker.js"
     return FileResponse(f, media_type="application/javascript") if f.exists() else HTTPException(404, "analytics-tracker.js not found")
 
+def get_html_response(filename: str, db: Session = None):
+    """
+    Robustly serves HTML files in Vercel Serverless environment.
+    Searches multiple candidate paths and falls back to string content reading before 404.
+    """
+    if db:
+        check_feature_enabled(filename, db)
+    
+    paths_to_try = [
+        BASE_DIR / filename,
+        BASE_DIR / "api" / filename,
+        Path(__file__).resolve().parent.parent / filename,
+        Path(__file__).resolve().parent.parent / "api" / filename,
+        Path(__file__).resolve().parent / filename,
+        Path("/var/task") / filename,
+        Path("/var/task/api") / filename,
+        Path(os.getcwd()) / filename,
+        Path(os.getcwd()) / "api" / filename,
+    ]
+    for p in paths_to_try:
+        if p.exists() and p.is_file():
+            try:
+                with open(p, "r", encoding="utf-8") as file_obj:
+                    return HTMLResponse(content=file_obj.read(), media_type="text/html", status_code=200)
+            except Exception as read_err:
+                print(f"[HTML Load Warning] {p}: {read_err}")
+                
+    f = BASE_DIR / filename
+    if f.exists():
+        return FileResponse(f)
+        
+    raise HTTPException(status_code=404, detail=f"{filename} not found")
+
+
 @app.get("/", include_in_schema=False)
 @app.get("/Candidate-login.html", include_in_schema=False)
 @app.get("/candidate/login", include_in_schema=False)
@@ -469,11 +503,7 @@ def serve_tracker_script():
 @app.get("/Login.html", include_in_schema=False)
 @app.get("/index.html", include_in_schema=False)
 def serve_login():
-    cand_f = BASE_DIR / "Candidate-login.html"
-    if cand_f.exists():
-        return FileResponse(cand_f)
-    f = BASE_DIR / "Login.html"
-    return FileResponse(f) if f.exists() else HTTPException(404, "Login.html not found")
+    return get_html_response("Candidate-login.html")
 
 @app.get("/candidate", include_in_schema=False)
 @app.get("/candidate/", include_in_schema=False)
@@ -485,18 +515,12 @@ def serve_login():
 @app.get("/Dashboard", include_in_schema=False)
 @app.get("/Dashboard.html", include_in_schema=False)
 def serve_candidate_dashboard(db: Session = Depends(get_db)):
-    check_feature_enabled("Dashboard.html", db)
-    f = BASE_DIR / "Candidate-dashboard.html"
-    if not f.exists():
-        f = BASE_DIR / "Dashboard.html"
-    return FileResponse(f) if f.exists() else HTTPException(404, "Candidate dashboard not found")
+    return get_html_response("Candidate-dashboard.html", db)
 
 @app.get("/candidate/evaluator", include_in_schema=False)
 @app.get("/evaluator", include_in_schema=False)
 def serve_evaluator(db: Session = Depends(get_db)):
-    check_feature_enabled("Interview-studio.html", db)
-    f = BASE_DIR / "Interview-studio.html"
-    return FileResponse(f) if f.exists() else HTTPException(404, "Interview-studio.html not found")
+    return get_html_response("Interview-studio.html", db)
 
 @app.get("/admin", include_in_schema=False)
 @app.get("/admin/dashboard", include_in_schema=False)
@@ -506,8 +530,7 @@ def serve_evaluator(db: Session = Depends(get_db)):
 @app.get("/admin/prompts", include_in_schema=False)
 @app.get("/Admin.html", include_in_schema=False)
 def serve_admin_page():
-    f = BASE_DIR / "Admin.html"
-    return FileResponse(f) if f.exists() else HTTPException(404, "Admin.html not found")
+    return get_html_response("Admin.html")
 
 @app.get("/candidate/interview-studio", include_in_schema=False)
 @app.get("/candidate/Interview-studio.html", include_in_schema=False)
@@ -517,9 +540,7 @@ def serve_admin_page():
 @app.get("/interview-studio", include_in_schema=False)
 @app.get("/Interview-studio.html", include_in_schema=False)
 def serve_studio(db: Session = Depends(get_db)):
-    check_feature_enabled("Interview-studio.html", db)
-    f = BASE_DIR / "Interview-studio.html"
-    return FileResponse(f) if f.exists() else HTTPException(404, "Interview-studio.html not found")
+    return get_html_response("Interview-studio.html", db)
 
 @app.get("/candidate/mock-interview", include_in_schema=False)
 @app.get("/candidate/Mock-interview.html", include_in_schema=False)
@@ -527,9 +548,7 @@ def serve_studio(db: Session = Depends(get_db)):
 @app.get("/Mock-interview", include_in_schema=False)
 @app.get("/Mock-interview.html", include_in_schema=False)
 def serve_mock(db: Session = Depends(get_db)):
-    check_feature_enabled("Mock-interview.html", db)
-    f = BASE_DIR / "Mock-interview.html"
-    return FileResponse(f) if f.exists() else HTTPException(404, "Mock-interview.html not found")
+    return get_html_response("Mock-interview.html", db)
 
 @app.get("/candidate/resume-match", include_in_schema=False)
 @app.get("/candidate/Resume-match.html", include_in_schema=False)
@@ -537,9 +556,7 @@ def serve_mock(db: Session = Depends(get_db)):
 @app.get("/Resume-match", include_in_schema=False)
 @app.get("/Resume-match.html", include_in_schema=False)
 def serve_resume_match(db: Session = Depends(get_db)):
-    check_feature_enabled("Resume-match.html", db)
-    f = BASE_DIR / "Resume-match.html"
-    return FileResponse(f) if f.exists() else HTTPException(404, "Resume-match.html not found")
+    return get_html_response("Resume-match.html", db)
 
 @app.get("/candidate/company-playbooks", include_in_schema=False)
 @app.get("/candidate/Company-playbooks.html", include_in_schema=False)
@@ -547,9 +564,7 @@ def serve_resume_match(db: Session = Depends(get_db)):
 @app.get("/Company-playbooks", include_in_schema=False)
 @app.get("/Company-playbooks.html", include_in_schema=False)
 def serve_company_playbooks(db: Session = Depends(get_db)):
-    check_feature_enabled("Company-playbooks.html", db)
-    f = BASE_DIR / "Company-playbooks.html"
-    return FileResponse(f) if f.exists() else HTTPException(404, "Company-playbooks.html not found")
+    return get_html_response("Company-playbooks.html", db)
 
 @app.get("/candidate/history", include_in_schema=False)
 @app.get("/candidate/Interview history.html", include_in_schema=False)
@@ -560,9 +575,7 @@ def serve_company_playbooks(db: Session = Depends(get_db)):
 @app.get("/Interview history.html", include_in_schema=False)
 @app.get("/Interview%20history.html", include_in_schema=False)
 def serve_history_page(db: Session = Depends(get_db)):
-    check_feature_enabled("Interview history.html", db)
-    f = BASE_DIR / "Interview history.html"
-    return FileResponse(f) if f.exists() else HTTPException(404, "Interview history.html not found")
+    return get_html_response("Interview history.html", db)
 
 @app.get("/candidate/upgrade-pro", include_in_schema=False)
 @app.get("/candidate/Upgrade-pro.html", include_in_schema=False)
@@ -570,9 +583,7 @@ def serve_history_page(db: Session = Depends(get_db)):
 @app.get("/Upgrade-pro", include_in_schema=False)
 @app.get("/Upgrade-pro.html", include_in_schema=False)
 def serve_upgrade(db: Session = Depends(get_db)):
-    check_feature_enabled("Upgrade-pro.html", db)
-    f = BASE_DIR / "Upgrade-pro.html"
-    return FileResponse(f) if f.exists() else HTTPException(404, "Upgrade-pro.html not found")
+    return get_html_response("Upgrade-pro.html", db)
 
 @app.get("/candidate/scorecard", include_in_schema=False)
 @app.get("/candidate/scorecard.html", include_in_schema=False)
@@ -581,8 +592,7 @@ def serve_upgrade(db: Session = Depends(get_db)):
 @app.get("/scorecard.html", include_in_schema=False)
 @app.get("/scorecard/{score_id}", include_in_schema=False)
 def serve_scorecard(score_id: str = None):
-    f = BASE_DIR / "scorecard.html"
-    return FileResponse(f) if f.exists() else HTTPException(404, "scorecard.html not found")
+    return get_html_response("scorecard.html")
 
 @app.get("/analytics-tracker.js", include_in_schema=False)
 @app.get("/candidate/analytics-tracker.js", include_in_schema=False)

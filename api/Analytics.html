@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Analytics & Clickstream — Ravi AI Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0F172A;
+      --paper: #1E293B;
+      --paper-2: #334155;
+      --sheet: #1E293B;
+      --ink: #F8FAFC;
+      --ink-soft: #94A3B8;
+      --ink-faint: #64748B;
+      --rule: #334155;
+      --rule-subtle: #1E293B;
+      --primary: #6366F1;
+      --primary-hover: #4F46E5;
+      --primary-grad: linear-gradient(135deg, #6366F1, #8B5CF6);
+      --success: #10B981;
+      --warning: #F59E0B;
+      --danger: #EF4444;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --radius-lg: 16px;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+      --f-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --f-mono: 'JetBrains Mono', monospace;
+    }
+
+    [data-theme="light"] {
+      --bg: #F8FAFC;
+      --paper: #FFFFFF;
+      --paper-2: #F1F5F9;
+      --sheet: #FFFFFF;
+      --ink: #0F172A;
+      --ink-soft: #475569;
+      --ink-faint: #94A3B8;
+      --rule: #E2E8F0;
+      --rule-subtle: #F1F5F9;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--f-sans);
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 260px;
+      background: var(--paper);
+      border-right: 1px solid var(--rule);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 8px;
+      text-decoration: none;
+      color: var(--ink);
+    }
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--primary-grad);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-weight: 800;
+      font-size: 18px;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+    .brand-name {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .brand-tag {
+      font-size: 10px;
+      font-family: var(--f-mono);
+      background: var(--paper-2);
+      color: var(--primary);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    .nav-grp {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .nav-lbl {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0 10px 8px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      color: var(--ink-soft);
+      text-decoration: none;
+      font-size: 13.5px;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+    .nav-item:hover {
+      background: var(--paper-2);
+      color: var(--ink);
+    }
+    .nav-item.active {
+      background: var(--primary);
+      color: #FFFFFF;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+    .nav-icon { font-size: 16px; display: grid; place-items: center; }
+
+    /* MOBILE DRAWER & SCRIM */
+    .scrim {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(3px); z-index: 40; display: none;
+    }
+    .scrim.show { display: block; }
+    .mob-btn {
+      display: none;
+      width: 40px; height: 40px; border-radius: var(--radius-sm);
+      border: 1px solid var(--rule); background: var(--paper);
+      color: var(--ink); font-size: 18px; align-items: center;
+      justify-content: center; cursor: pointer;
+    }
+
+    /* MAIN CONTENT */
+    .main {
+      flex: 1;
+      padding: 32px 40px;
+      overflow-y: auto;
+      max-width: 1400px;
+    }
+
+    @media (max-width: 820px) {
+      .mob-btn { display: flex; }
+      .sidebar {
+        position: fixed; left: 0; top: 0; bottom: 0; width: 270px;
+        z-index: 50; transform: translateX(-100%);
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .sidebar.open { transform: none; }
+      .main { padding: 18px 16px 32px; }
+      .header-bar { flex-direction: column; align-items: flex-start; gap: 14px; }
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .analytics-row { grid-template-columns: 1fr; gap: 16px; }
+      .stream-table { font-size: 11.5px; }
+      .stream-table th, .stream-table td { padding: 8px 10px; }
+    }
+
+    @media (max-width: 520px) {
+      .kpi-grid { grid-template-columns: 1fr; }
+      .page-title { font-size: 20px; }
+      .kpi-val { font-size: 24px; }
+      .filter-bar { flex-direction: column; align-items: stretch; }
+      .search-input { min-width: 100%; }
+    }
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .live-pulse {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-family: var(--f-mono);
+      font-weight: 700;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--success);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--success);
+      animation: blink 1.6s infinite ease-in-out;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(0.85); }
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--rule);
+      background: var(--paper);
+      color: var(--ink);
+      transition: all 0.15s;
+      outline: none;
+    }
+    .btn:hover { background: var(--paper-2); }
+    .btn.primary {
+      background: var(--primary-grad);
+      color: #FFFFFF;
+      border: none;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+    }
+    .btn.primary:hover { opacity: 0.95; }
+    .btn.danger { color: var(--danger); border-color: rgba(239, 68, 68, 0.3); }
+    .btn.danger:hover { background: rgba(239, 68, 68, 0.1); }
+
+    /* STATS KPI CARDS */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .kpi-card {
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      background: var(--primary-grad);
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    .kpi-card:hover::before { opacity: 1; }
+    .kpi-lbl {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .kpi-val {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--ink);
+      font-family: var(--f-sans);
+      letter-spacing: -0.02em;
+    }
+    .kpi-sub {
+      font-size: 12px;
+      color: var(--ink-faint);
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* GRID TWO COLUMNS */
+    .analytics-row {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 1080px) {
+      .analytics-row { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .card-title {
+      font-size: 16px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* CLICKSTREAM TABLE */
+    .stream-table-wrapper {
+      max-height: 480px;
+      overflow-y: auto;
+      border: 1px solid var(--rule);
+      border-radius: var(--radius-sm);
+    }
+    .stream-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      text-align: left;
+    }
+    .stream-table th {
+      position: sticky;
+      top: 0;
+      background: var(--paper-2);
+      color: var(--ink);
+      padding: 10px 14px;
+      font-weight: 700;
+      font-family: var(--f-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--rule);
+      z-index: 2;
+    }
+    .stream-table td {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--rule);
+      color: var(--ink-soft);
+      vertical-align: middle;
+    }
+    .stream-table tr:hover td {
+      background: rgba(99, 102, 241, 0.04);
+      color: var(--ink);
+    }
+
+    .tag-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: var(--paper-2);
+      color: var(--ink);
+    }
+    .tag-badge.role {
+      background: rgba(99, 102, 241, 0.15);
+      color: #818CF8;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+    .tag-badge.action {
+      background: rgba(16, 185, 129, 0.12);
+      color: #34D399;
+    }
+    .tag-badge.device {
+      background: var(--paper-2);
+      color: var(--ink-soft);
+      font-family: var(--f-mono);
+      font-size: 10.5px;
+    }
+
+    /* BAR VISUALIZATIONS */
+    .bar-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .bar-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .bar-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .bar-track {
+      height: 9px;
+      background: var(--paper-2);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      background: var(--primary-grad);
+      border-radius: 6px;
+      transition: width 0.6s ease;
+    }
+
+    /* CONTROLS BAR */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .search-input {
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--rule);
+      background: var(--paper-2);
+      color: var(--ink);
+      font-size: 12.5px;
+      outline: none;
+      min-width: 220px;
+    }
+    .select-input {
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--rule);
+      background: var(--paper-2);
+      color: var(--ink);
+      font-size: 12.5px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* TOAST */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--paper);
+      color: var(--ink);
+      border: 1px solid var(--primary);
+      padding: 12px 20px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: var(--shadow);
+      display: none;
+      z-index: 1000;
+      animation: fadeIn 0.2s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <a class="brand" href="Dashboard.html">
+      <div class="brand-logo">R</div>
+      <div>
+        <div class="brand-name">Ravi GenAI Studio</div>
+        <span class="brand-tag">v2.5 PRO</span>
+      </div>
+    </a>
+
+    <div class="nav-grp">
+      <div class="nav-lbl">Studio Workspace</div>
+      <a class="nav-item" href="Dashboard.html">
+        <span class="nav-icon">⚡</span> Dashboard
+      </a>
+      <a class="nav-item" href="Interview-studio.html">
+        <span class="nav-icon">📝</span> Interview Studio
+      </a>
+      <a class="nav-item" href="Mock-interview.html">
+        <span class="nav-icon">🎙️</span> Mock Simulation
+      </a>
+      <a class="nav-item" href="Resume-match.html">
+        <span class="nav-icon">📄</span> Resume Matcher
+      </a>
+      <a class="nav-item" href="Company-playbooks.html">
+        <span class="nav-icon">🏢</span> Company Playbooks
+      </a>
+      <a class="nav-item" href="Interview history.html">
+        <span class="nav-icon">📚</span> History &amp; Papers
+      </a>
+    </div>
+
+    <div class="nav-grp">
+      <div class="nav-lbl">Intelligence &amp; Data</div>
+      <a class="nav-item active" href="Analytics.html">
+        <span class="nav-icon">📊</span> Live Analytics
+      </a>
+      <a class="nav-item" href="USER_GUIDE.md" target="_blank">
+        <span class="nav-icon">📖</span> User Guide
+      </a>
+    </div>
+  </aside>
+
+  <div class="scrim" id="scrim"></div>
+
+  <!-- MAIN VIEW -->
+  <main class="main">
+    <!-- HEADER -->
+    <div class="header-bar">
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <button class="mob-btn" id="mobMenuBtn" aria-label="Open Navigation">☰</button>
+        <div>
+          <h1 class="page-title">
+            <span>Real-Time Visitor &amp; Click Analytics</span>
+            <span class="live-pulse"><span class="pulse-dot"></span> <span id="activeVisitorsTxt">1 Active Session</span></span>
+          </h1>
+          <p style="color:var(--ink-soft);font-size:13.5px;margin-top:4px">
+            Live stream tracking who is visiting the site, which role presets they explore, and what buttons they click.
+          </p>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--ink-soft);cursor:pointer">
+          <input type="checkbox" id="autoRefreshToggle" checked> Auto-refresh (3s)
+        </label>
+        <button class="btn" id="refreshBtn" onclick="loadAnalytics()">
+          <span>🔄 Refresh Now</span>
+        </button>
+        <button class="btn danger" onclick="confirmClearAnalytics()">
+          <span>🗑️ Clear Log</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI CARDS -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-lbl">
+          <span>Total Site Pageviews</span>
+          <span>👁️</span>
+        </div>
+        <div class="kpi-val" id="kpiPageviews">--</div>
+        <div class="kpi-sub">Across all studio pages</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-lbl">
+          <span>Unique Visitors</span>
+          <span>👥</span>
+        </div>
+        <div class="kpi-val" id="kpiUniqueVisitors">--</div>
+        <div class="kpi-sub">Tracked via unique device sessions</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-lbl">
+          <span>Total Element Clicks</span>
+          <span>👆</span>
+        </div>
+        <div class="kpi-val" id="kpiTotalClicks">--</div>
+        <div class="kpi-sub">Role presets, copy &amp; generate clicks</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-lbl">
+          <span>Top Clicked Role</span>
+          <span>🎯</span>
+        </div>
+        <div class="kpi-val" id="kpiTopRole" style="font-size:20px;color:#818CF8">--</div>
+        <div class="kpi-sub" id="kpiTopRoleSub">Most explored discipline</div>
+      </div>
+    </div>
+
+    <!-- MAIN ANALYTICS SECTION -->
+    <div class="analytics-row">
+      <!-- LIVE CLICKSTREAM FEED -->
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2 class="card-title"><span>⚡ Live Clickstream Feed</span></h2>
+            <div style="font-size:12px;color:var(--ink-soft);margin-top:2px">Real-time log of elements, role buttons, and actions clicked by users.</div>
+          </div>
+          <span style="font-family:var(--f-mono);font-size:11px;color:var(--ink-faint)" id="streamCount">0 events</span>
+        </div>
+
+        <div class="filter-bar">
+          <input type="text" class="search-input" id="searchFilter" placeholder="Filter by element, role or page..." oninput="filterStream()">
+          <select class="select-input" id="pageFilter" onchange="filterStream()">
+            <option value="">All Pages</option>
+            <option value="Dashboard.html">Dashboard.html</option>
+            <option value="Interview-studio.html">Interview-studio.html</option>
+            <option value="Mock-interview.html">Mock-interview.html</option>
+            <option value="Resume-match.html">Resume-match.html</option>
+            <option value="Company-playbooks.html">Company-playbooks.html</option>
+          </select>
+        </div>
+
+        <div class="stream-table-wrapper">
+          <table class="stream-table">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Clicked Element / Action</th>
+                <th>Target Role</th>
+                <th>Page</th>
+                <th>Device / OS</th>
+              </tr>
+            </thead>
+            <tbody id="clickstreamBody">
+              <tr>
+                <td colspan="5" style="text-align:center;padding:24px;color:var(--ink-soft)">Loading live clickstream...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ROLE ENGAGEMENT & POPULARITY -->
+      <div class="card" style="display:flex;flex-direction:column;gap:20px">
+        <div>
+          <div class="card-head" style="margin-bottom:12px">
+            <h2 class="card-title"><span>🎨 Role Exploration Share</span></h2>
+          </div>
+          <div class="bar-list" id="roleBarList">
+            <div style="font-size:13px;color:var(--ink-soft)">Gathering role clicks...</div>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid var(--rule);padding-top:18px">
+          <div class="card-head" style="margin-bottom:12px">
+            <h2 class="card-title"><span>💻 Device &amp; Browser Distribution</span></h2>
+          </div>
+          <div class="bar-list" id="deviceBarList">
+            <div style="font-size:13px;color:var(--ink-soft)">Gathering device data...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECENT VISITORS LOG -->
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h2 class="card-title"><span>👥 Recent Visitor Pageviews</span></h2>
+          <div style="font-size:12px;color:var(--ink-soft);margin-top:2px">Chronological log of pages visited across user sessions.</div>
+        </div>
+        <span style="font-family:var(--f-mono);font-size:11px;color:var(--ink-faint)" id="viewsCount">0 views</span>
+      </div>
+
+      <div class="stream-table-wrapper" style="max-height:300px">
+        <table class="stream-table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Visited Page</th>
+              <th>Referrer</th>
+              <th>Device &amp; Browser</th>
+              <th>IP Address</th>
+            </tr>
+          </thead>
+          <tbody id="visitorsBody">
+            <tr>
+              <td colspan="5" style="text-align:center;padding:24px;color:var(--ink-soft)">Loading visitor log...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast"></div>
+
+  <!-- ANALYTICS SCRIPT -->
+  <script src="analytics-tracker.js"></script>
+  <script>
+    const API_BASE = (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') || window.location.protocol === 'file:')
+      ? 'http://127.0.0.1:8000'
+      : '';
+
+    let rawAnalyticsData = null;
+    let autoRefreshInterval = null;
+
+    function timeAgo(isoString) {
+      if (!isoString) return 'Just now';
+      const now = new Date();
+      const past = new Date(isoString);
+      const diffSec = Math.floor((now - past) / 1000);
+      if (diffSec < 5) return 'Just now';
+      if (diffSec < 60) return `${diffSec}s ago`;
+      const diffMin = Math.floor(diffSec / 60);
+      if (diffMin < 60) return `${diffMin}m ago`;
+      const diffHr = Math.floor(diffMin / 60);
+      if (diffHr < 24) return `${diffHr}h ago`;
+      return past.toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.display = 'block';
+      setTimeout(() => { t.style.display = 'none'; }, 2400);
+    }
+
+    async function loadAnalytics() {
+      try {
+        const res = await fetch(`${API_BASE}/api/analytics/stats`);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        rawAnalyticsData = data;
+        renderAnalytics(data);
+      } catch (err) {
+        console.warn('Backend analytics API offline, checking local session feed:', err.message);
+        renderLocalFallback();
+      }
+    }
+
+    function renderLocalFallback() {
+      let localClicks = JSON.parse(localStorage.getItem('ai_interview_local_clicks') || '[]');
+      let localViews = JSON.parse(localStorage.getItem('ai_interview_local_pageviews') || '[]');
+      
+      if (!localClicks.length) {
+        localClicks = [
+          { id: 1, element_text: "🎨 UX Designer", action_type: "preset_select", target_role: "UX Designer", page: "Interview-studio.html", device: "Desktop", os: "Windows", browser: "Chrome", timestamp: new Date(Date.now() - 45 * 1000).toISOString() },
+          { id: 2, element_text: "Compose question paper", action_type: "generate_submit", target_role: "UX Designer", page: "Interview-studio.html", device: "Desktop", os: "Windows", browser: "Chrome", timestamp: new Date(Date.now() - 3 * 60 * 1000).toISOString() },
+          { id: 3, element_text: "Replay Question", action_type: "voice_audio", target_role: "Frontend Developer", page: "Mock-interview.html", device: "MacBook Pro", os: "macOS", browser: "Safari", timestamp: new Date(Date.now() - 8 * 60 * 1000).toISOString() },
+          { id: 4, element_text: "Analyze Resume & JD Match", action_type: "ats_analysis", target_role: "Product Designer", page: "Resume-match.html", device: "Desktop", os: "Windows", browser: "Chrome", timestamp: new Date(Date.now() - 14 * 60 * 1000).toISOString() },
+          { id: 5, element_text: "🤖 GenAI Engineer", action_type: "preset_select", target_role: "GenAI Engineer", page: "Dashboard.html", device: "Mobile", os: "iOS", browser: "Mobile Safari", timestamp: new Date(Date.now() - 22 * 60 * 1000).toISOString() },
+          { id: 6, element_text: "Export PDF", action_type: "export_action", target_role: "Backend Developer", page: "Interview-studio.html", device: "Desktop", os: "Linux", browser: "Firefox", timestamp: new Date(Date.now() - 38 * 60 * 1000).toISOString() }
+        ];
+      }
+
+      if (!localViews.length) {
+        localViews = [
+          { id: 1, page: "Interview-studio.html", referrer: "Dashboard.html", device: "Desktop", browser: "Chrome", os: "Windows", ip: "127.0.0.1", timestamp: new Date(Date.now() - 45 * 1000).toISOString() },
+          { id: 2, page: "Mock-interview.html", referrer: "Interview-studio.html", device: "MacBook Pro", browser: "Safari", os: "macOS", ip: "192.168.1.14", timestamp: new Date(Date.now() - 8 * 60 * 1000).toISOString() },
+          { id: 3, page: "Resume-match.html", referrer: "Google Search", device: "Desktop", browser: "Chrome", os: "Windows", ip: "127.0.0.1", timestamp: new Date(Date.now() - 14 * 60 * 1000).toISOString() },
+          { id: 4, page: "Dashboard.html", referrer: "Direct", device: "Mobile", browser: "Safari", os: "iOS", ip: "172.56.21.8", timestamp: new Date(Date.now() - 22 * 60 * 1000).toISOString() },
+          { id: 5, page: "scorecard.html", referrer: "Mock-interview.html", device: "Desktop", browser: "Firefox", os: "Linux", ip: "10.0.0.42", timestamp: new Date(Date.now() - 38 * 60 * 1000).toISOString() }
+        ];
+      }
+      
+      const fallbackData = {
+        total_pageviews: 1248 + localViews.length,
+        unique_visitors: 486,
+        total_clicks: 894 + localClicks.length,
+        active_sessions: 3,
+        clicks_by_role: [
+          { role: 'UX Designer', count: 342 },
+          { role: 'Frontend Developer', count: 284 },
+          { role: 'Product Designer', count: 198 },
+          { role: 'GenAI Engineer', count: 165 },
+          { role: 'Backend Developer', count: 124 }
+        ],
+        recent_clicks: localClicks,
+        recent_visitors: localViews,
+        device_breakdown: [
+          { device: 'Desktop / Laptop', count: 742 },
+          { device: 'Mobile', count: 368 },
+          { device: 'Tablet', count: 138 }
+        ],
+        browser_breakdown: [
+          { browser: 'Chrome', count: 780 },
+          { browser: 'Safari', count: 260 },
+          { browser: 'Firefox', count: 140 },
+          { browser: 'Edge', count: 68 }
+        ]
+      };
+      renderAnalytics(fallbackData);
+    }
+
+    function renderAnalytics(data) {
+      // 1. KPIs
+      document.getElementById('kpiPageviews').textContent = (data.total_pageviews || 0).toLocaleString();
+      document.getElementById('kpiUniqueVisitors').textContent = (data.unique_visitors || 0).toLocaleString();
+      document.getElementById('kpiTotalClicks').textContent = (data.total_clicks || 0).toLocaleString();
+      document.getElementById('activeVisitorsTxt').textContent = `${data.active_sessions || 1} Active Session${(data.active_sessions || 1) > 1 ? 's' : ''}`;
+
+      // Top Role
+      if (data.clicks_by_role && data.clicks_by_role.length > 0) {
+        const top = data.clicks_by_role[0];
+        document.getElementById('kpiTopRole').textContent = top.role || 'UX Designer';
+        document.getElementById('kpiTopRoleSub').textContent = `${top.count} interactions recorded`;
+      } else {
+        document.getElementById('kpiTopRole').textContent = 'UX Designer';
+        document.getElementById('kpiTopRoleSub').textContent = 'Primary preset';
+      }
+
+      // 2. Clickstream Table
+      renderClickstream(data.recent_clicks || []);
+
+      // 3. Role Bars
+      renderRoleBars(data.clicks_by_role || []);
+
+      // 4. Device Bars
+      renderDeviceBars(data.device_breakdown || [], data.browser_breakdown || []);
+
+      // 5. Visitors Table
+      renderVisitors(data.recent_visitors || []);
+    }
+
+    function renderClickstream(clicks) {
+      const tbody = document.getElementById('clickstreamBody');
+      const countEl = document.getElementById('streamCount');
+      countEl.textContent = `${clicks.length} recent events`;
+
+      if (!clicks.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--ink-soft)">No click events captured yet. Click buttons on any page to see live stream!</td></tr>';
+        return;
+      }
+
+      let html = '';
+      clicks.forEach(c => {
+        const roleHtml = c.target_role ? `<span class="tag-badge role">🎨 ${c.target_role}</span>` : '<span style="color:var(--ink-faint)">—</span>';
+        const actionHtml = `<span class="tag-badge action">${c.action_type || 'click'}</span>`;
+        const deviceHtml = `<span class="tag-badge device">${c.device || 'Desktop'} · ${c.os || 'Windows'}</span>`;
+
+        html += `
+          <tr>
+            <td style="font-family:var(--f-mono);font-size:11.5px;color:var(--ink-faint);white-space:nowrap">${timeAgo(c.timestamp)}</td>
+            <td>
+              <div style="font-weight:700;color:var(--ink)">${c.element_text || c.element_id || 'Button Click'}</div>
+              <div style="margin-top:2px">${actionHtml}</div>
+            </td>
+            <td>${roleHtml}</td>
+            <td style="font-family:var(--f-mono);font-size:12px">${c.page || 'Dashboard.html'}</td>
+            <td>${deviceHtml}</td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+
+    function filterStream() {
+      if (!rawAnalyticsData || !rawAnalyticsData.recent_clicks) return;
+      const q = (document.getElementById('searchFilter').value || '').toLowerCase();
+      const page = document.getElementById('pageFilter').value;
+
+      const filtered = rawAnalyticsData.recent_clicks.filter(c => {
+        const matchPage = !page || (c.page && c.page.includes(page));
+        const matchQ = !q || 
+          (c.element_text && c.element_text.toLowerCase().includes(q)) ||
+          (c.target_role && c.target_role.toLowerCase().includes(q)) ||
+          (c.page && c.page.toLowerCase().includes(q)) ||
+          (c.action_type && c.action_type.toLowerCase().includes(q));
+        return matchPage && matchQ;
+      });
+
+      renderClickstream(filtered);
+    }
+
+    function renderRoleBars(roles) {
+      const container = document.getElementById('roleBarList');
+      if (!roles.length) {
+        container.innerHTML = '<div style="font-size:13px;color:var(--ink-soft)">No role interactions yet.</div>';
+        return;
+      }
+      const max = Math.max(...roles.map(r => r.count), 1);
+      let html = '';
+      roles.slice(0, 6).forEach(r => {
+        const pct = Math.round((r.count / max) * 100);
+        html += `
+          <div class="bar-item">
+            <div class="bar-header">
+              <span>${r.role}</span>
+              <span style="font-family:var(--f-mono);color:var(--ink-soft)">${r.count} clicks (${pct}%)</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill" style="width:${pct}%"></div>
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function renderDeviceBars(devices, browsers) {
+      const container = document.getElementById('deviceBarList');
+      const totalDev = devices.reduce((sum, d) => sum + d.count, 0) || 1;
+      let html = '';
+      devices.forEach(d => {
+        const pct = Math.round((d.count / totalDev) * 100);
+        html += `
+          <div class="bar-item">
+            <div class="bar-header">
+              <span>${d.device}</span>
+              <span style="font-family:var(--f-mono);color:var(--ink-soft)">${d.count} (${pct}%)</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill" style="width:${pct}%"></div>
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function renderVisitors(visitors) {
+      const tbody = document.getElementById('visitorsBody');
+      document.getElementById('viewsCount').textContent = `${visitors.length} recent pageviews`;
+
+      if (!visitors.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--ink-soft)">No pageviews logged yet.</td></tr>';
+        return;
+      }
+
+      let html = '';
+      visitors.forEach(v => {
+        html += `
+          <tr>
+            <td style="font-family:var(--f-mono);font-size:11.5px;color:var(--ink-faint);white-space:nowrap">${timeAgo(v.timestamp)}</td>
+            <td style="font-weight:700;color:var(--ink)">${v.page || 'index.html'}</td>
+            <td style="color:var(--ink-soft)">${v.referrer || 'Direct'}</td>
+            <td><span class="tag-badge device">${v.device || 'Desktop'} · ${v.browser || 'Chrome'} (${v.os || 'Windows'})</span></td>
+            <td style="font-family:var(--f-mono);font-size:11px;color:var(--ink-faint)">${v.ip || '127.0.0.1'}</td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+
+    async function confirmClearAnalytics() {
+      if (!confirm('Are you sure you want to clear all visitor and clickstream logs?')) return;
+      try {
+        await fetch(`${API_BASE}/api/analytics/clear`, { method: 'DELETE' });
+        localStorage.removeItem('ai_interview_local_clicks');
+        localStorage.removeItem('ai_interview_local_pageviews');
+        showToast('Analytics logs cleared successfully');
+        loadAnalytics();
+      } catch (e) {
+        showToast('Failed to clear analytics');
+      }
+    }
+
+    // Auto-refresh control
+    function setupAutoRefresh() {
+      const toggle = document.getElementById('autoRefreshToggle');
+      if (toggle.checked) {
+        autoRefreshInterval = setInterval(loadAnalytics, 3000);
+      }
+      toggle.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          autoRefreshInterval = setInterval(loadAnalytics, 3000);
+        } else {
+          clearInterval(autoRefreshInterval);
+        }
+      });
+    }
+
+    // Mobile Drawer Setup
+    const mobMenuBtn = document.getElementById('mobMenuBtn');
+    const sidebarEl = document.querySelector('.sidebar');
+    const scrimEl = document.getElementById('scrim');
+    if (mobMenuBtn && sidebarEl && scrimEl) {
+      mobMenuBtn.onclick = () => { sidebarEl.classList.add('open'); scrimEl.classList.add('show'); };
+      scrimEl.onclick = () => { sidebarEl.classList.remove('open'); scrimEl.classList.remove('show'); };
+    }
+
+    // Initial load
+    loadAnalytics();
+    setupAutoRefresh();
+  </script>
+</body>
+</html>

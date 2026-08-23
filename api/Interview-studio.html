@@ -1,0 +1,4921 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ravi — GenAI Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Supabase Realtime Client CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400;1,700&display=swap');
+
+    :root {
+      --paper: #F8FAFC;
+      --paper-2: #FFFFFF;
+      --sheet: #FFFFFF;
+      --ink: #0F172A;
+      --ink-soft: #475569;
+      --ink-faint: #94A3B8;
+      --board: #0B0F19;
+      --board-2: #1E1B4B;
+      --board-ink: #F8FAFC;
+      --primary: #4F46E5;
+      --primary-grad: linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);
+      --pen: #4F46E5;
+      --pen-soft: #6366F1;
+      --pen-wash: #EEF2FF;
+      --label-color: #2563EB;
+      --rule: #E2E8F0;
+      --rule-soft: #F1F5F9;
+      --gold: #F59E0B;
+      --pass: #10B981;
+      --pass-wash: #ECFDF5;
+      --shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
+      --radius: 16px;
+      --f-disp: "Roboto", system-ui, -apple-system, sans-serif;
+      --f-ui: "Roboto", system-ui, -apple-system, sans-serif;
+      --f-mono: "Roboto Mono", ui-monospace, monospace;
+    }
+
+    [data-theme="dark"] {
+      --paper: #0B0F19;
+      --paper-2: #111827;
+      --sheet: #131D33;
+      --ink: #F8FAFC;
+      --ink-soft: #94A3B8;
+      --ink-faint: #64748B;
+      --board: #070A10;
+      --board-2: #1E1B4B;
+      --board-ink: #F8FAFC;
+      --primary: #6366F1;
+      --primary-grad: linear-gradient(135deg, #3B82F6 0%, #6366F1 50%, #8B5CF6 100%);
+      --pen: #818CF8;
+      --pen-soft: #A5B4FC;
+      --pen-wash: rgba(99, 102, 241, 0.15);
+      --label-color: #60A5FA;
+      --rule: #1E293B;
+      --rule-soft: #182234;
+      --gold: #FBBF24;
+      --pass: #34D399;
+      --pass-wash: rgba(16, 185, 129, 0.15);
+      --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--f-ui);
+      font-size: 15px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      transition: background .3s ease, color .3s ease;
+    }
+
+    ::selection {
+      background: var(--primary);
+      color: #fff
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      color: inherit;
+      background: none;
+      border: none
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+      border-radius: 6px
+    }
+
+    /* ---------- shell ---------- */
+    .app {
+      display: flex;
+      min-height: 100vh;
+      align-items: flex-start
+    }
+
+    /* ---------- sidebar ---------- */
+    .sidebar {
+      flex: 0 0 270px;
+      width: 270px;
+      background: var(--board);
+      color: var(--board-ink);
+      display: flex;
+      flex-direction: column;
+      padding: 22px 16px;
+      gap: 14px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      align-self: flex-start;
+      overflow-y: auto;
+      border-right: 1px solid rgba(255, 255, 255, .07);
+      transition: background .3s ease;
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 4px
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, .12);
+      border-radius: 4px
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 4px 8px 8px
+    }
+
+    .brand .brand-logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      flex: none;
+      object-fit: cover;
+      box-shadow: 0 0 18px rgba(59, 130, 246, 0.45);
+      border: 1.5px solid rgba(99, 102, 241, 0.6);
+      background: #0B0F19;
+    }
+
+    .brand .word {
+      font-weight: 700;
+      font-size: 20px;
+      letter-spacing: -.02em;
+      line-height: 1.1;
+      color: #FFFFFF
+    }
+
+    .brand .brand-grad {
+      background: linear-gradient(135deg, #38BDF8 0%, #818CF8 50%, #C084FC 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand .sub {
+      font-family: var(--f-mono);
+      font-size: 11px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: #94A3B8;
+      margin-top: 2px;
+      font-weight: 600
+    }
+
+    .side-label {
+      font-family: var(--f-mono);
+      font-size: 10.5px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: #64748B;
+      padding: 4px 10px 0;
+      margin-bottom: -6px;
+      font-weight: 600
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 3px
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      color: #94A3B8;
+      font-weight: 500;
+      font-size: 14px;
+      position: relative;
+      transition: all .2s ease;
+    }
+
+    .nav-link svg {
+      width: 18px;
+      height: 18px;
+      flex: none;
+      stroke-width: 1.8
+    }
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, .06);
+      color: #F8FAFC
+    }
+
+    .nav-link.active {
+      background: linear-gradient(135deg, #1E40AF 0%, #4F46E5 50%, #7C3AED 100%);
+      color: #FFFFFF;
+      box-shadow: 0 4px 16px rgba(79, 70, 229, 0.4);
+      font-weight: 600;
+    }
+
+    .nav-link.active::before {
+      display: none
+    }
+
+    .nav-badge {
+      margin-left: auto;
+      font-family: var(--f-mono);
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      padding: 2.5px 7px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, .12);
+      color: #FFFFFF;
+    }
+
+    .nav-badge.new {
+      background: #7C3AED;
+      color: #FFFFFF
+    }
+
+    .nav-badge.pro {
+      background: #6366F1;
+      color: #FFFFFF;
+      border: none
+    }
+
+    .nav-sep {
+      height: 1px;
+      background: rgba(255, 255, 255, .08);
+      margin: 2px 8px
+    }
+
+    .side-foot {
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px
+    }
+
+    .upgrade {
+      background: linear-gradient(145deg, #0F172A 0%, #1E1B4B 100%);
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      border-radius: 14px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: transform .18s, border-color .18s;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .upgrade:hover {
+      transform: translateY(-1px);
+      border-color: rgba(99, 102, 241, 0.6)
+    }
+
+    .upgrade .u-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 15px;
+      color: #FFFFFF
+    }
+
+    .upgrade .u-top .star {
+      color: #818CF8;
+      font-size: 16px
+    }
+
+    .upgrade .u-top .u-chev {
+      margin-left: auto;
+      color: #818CF8;
+      display: grid;
+      place-items: center
+    }
+
+    .upgrade p {
+      margin: 4px 0 0;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #94A3B8
+    }
+
+    .user {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 6px 4px
+    }
+
+    .user .av {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      flex: none;
+      object-fit: cover;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, .14)
+    }
+
+    .user .nm {
+      font-weight: 600;
+      font-size: 13.5px;
+      line-height: 1.2;
+      color: #FFFFFF
+    }
+
+    .user .pl {
+      font-family: var(--f-mono);
+      font-size: 10px;
+      letter-spacing: .06em;
+      color: #64748B;
+      text-transform: uppercase;
+      margin-top: 2px
+    }
+
+    .logout-btn {
+      margin-left: auto;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: #94A3B8;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      cursor: pointer;
+      transition: all .18s;
+      flex: none;
+    }
+
+    .logout-btn:hover {
+      color: #EF4444;
+      background: rgba(239, 68, 68, 0.18);
+      border-color: rgba(239, 68, 68, 0.4);
+      transform: scale(1.05)
+    }
+
+    .logout-btn svg {
+      width: 16px;
+      height: 16px;
+      stroke-width: 2
+    }
+
+    /* ---------- main ---------- */
+    .main {
+      flex: 1 1 0;
+      min-width: 0;
+      padding: 0 42px 24px;
+      max-width: 1320px
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 22px 0 8px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: linear-gradient(var(--paper) 72%, transparent);
+    }
+
+    .crumb {
+      font-family: var(--f-mono);
+      font-size: 11px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      font-weight: 600
+    }
+
+    .top-actions {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--rule);
+      background: var(--paper-2);
+      color: var(--ink-soft);
+      transition: background .18s, color .18s, border-color .18s, box-shadow .18s;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+
+    .icon-btn:hover {
+      color: var(--ink);
+      border-color: var(--pen);
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15)
+    }
+
+    .icon-btn svg {
+      width: 19px;
+      height: 19px;
+      stroke-width: 1.7
+    }
+
+    .pro-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 18px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);
+      color: #FFFFFF;
+      font-weight: 600;
+      font-size: 13.5px;
+      border: none;
+      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+      transition: filter .18s, transform .1s, box-shadow .18s;
+    }
+
+    .pro-btn:hover {
+      filter: brightness(1.08);
+      box-shadow: 0 6px 20px rgba(79, 70, 229, 0.45)
+    }
+
+    .pro-btn:active {
+      transform: translateY(1px)
+    }
+
+    .pro-btn .star {
+      color: #FDE047
+    }
+
+    .page-head {
+      margin: 20px 0 26px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 30px;
+    }
+
+    .page-head-left {
+      flex: 1;
+      min-width: 0
+    }
+
+    .page-head-hero {
+      flex: 0 0 340px;
+      display: flex;
+      justify-content: flex-end
+    }
+
+    .hero-bot-wrap {
+      width: 100%;
+      max-width: 340px
+    }
+
+    .hero-svg {
+      width: 100%;
+      height: auto;
+      display: block
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--f-mono);
+      font-size: 11px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: #7C3AED;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 18px;
+      height: 2px;
+      background: #7C3AED;
+      border-radius: 2px
+    }
+
+    h1 {
+      font-family: var(--f-disp);
+      font-weight: 700;
+      letter-spacing: -.025em;
+      font-size: clamp(30px, 4vw, 44px);
+      line-height: 1.08;
+      margin: 0;
+    }
+
+    h1 em {
+      font-style: normal;
+      font-weight: 700;
+      background: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .lede {
+      margin: 12px 0 0;
+      color: var(--ink-soft);
+      font-size: 15.5px;
+      max-width: 52ch;
+      line-height: 1.55
+    }
+
+    /* ---------- layout grids ---------- */
+    .studio-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 22px;
+      align-items: start
+    }
+
+    .studio-main-col {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      min-width: 0
+    }
+
+    .studio-side-col {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      min-width: 0
+    }
+
+    .grid-top,
+    .grid-bottom {
+      display: contents
+    }
+
+    /* ---------- cards & form ---------- */
+    .card {
+      background: var(--paper-2);
+      border: 1px solid var(--rule);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--rule-soft);
+    }
+
+    .card-head .ci {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      background: #EEF2FF;
+      color: #4F46E5;
+      flex: none;
+    }
+
+    .card-head .ci svg {
+      width: 17px;
+      height: 17px;
+      stroke-width: 1.8
+    }
+
+    .card-head .ct {
+      font-family: var(--f-disp);
+      font-weight: 700;
+      font-size: 18.5px
+    }
+
+    .form {
+      padding: 22px
+    }
+
+    /* Role Presets Section */
+    .preset-section {
+      margin-bottom: 18px
+    }
+
+    .preset-label {
+      font-family: var(--f-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink-faint);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .preset-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center
+    }
+
+    .chip {
+      padding: 7px 13px;
+      border-radius: 10px;
+      border: 1px solid var(--rule);
+      background: var(--paper);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .18s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+    }
+
+    .chip:hover {
+      border-color: var(--pen);
+      color: var(--pen);
+      background: var(--pen-wash);
+      transform: translateY(-1px);
+      box-shadow: 0 3px 10px rgba(99, 102, 241, 0.15);
+    }
+
+    .chip.active {
+      border-color: var(--pen);
+      background: var(--pen-wash);
+      color: var(--pen);
+      font-weight: 700;
+    }
+
+    .fgrid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px
+    }
+
+    .field.full {
+      grid-column: 1 / -1
+    }
+
+    .label {
+      font-family: var(--f-mono);
+      font-size: 11px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--label-color);
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .label .n {
+      color: var(--label-color);
+      font-weight: 800
+    }
+
+    .control {
+      position: relative
+    }
+
+    .control .lead {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--ink-faint);
+      pointer-events: none;
+    }
+
+    .control .lead svg {
+      width: 17px;
+      height: 17px;
+      stroke-width: 1.8;
+      display: block
+    }
+
+    .input,
+    .select {
+      width: 100%;
+      padding: 11px 14px 11px 40px;
+      border-radius: 11px;
+      border: 1px solid var(--rule);
+      background: var(--sheet);
+      color: var(--ink);
+      font-family: var(--f-ui);
+      font-size: 14.5px;
+      transition: border-color .18s, box-shadow .18s;
+    }
+
+    .input:focus,
+    .select:focus {
+      outline: none;
+      border-color: var(--pen);
+      box-shadow: 0 0 0 3px var(--pen-wash);
+    }
+
+    .select {
+      appearance: none;
+      padding-right: 38px;
+      cursor: pointer
+    }
+
+    .chev-d {
+      position: absolute;
+      right: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      color: var(--ink-faint)
+    }
+
+    .chev-d svg {
+      width: 16px;
+      height: 16px;
+      stroke-width: 1.8
+    }
+
+    /* ---------- Professional Custom Dropdown UI ---------- */
+    .custom-select-wrap {
+      position: relative;
+      width: 100%
+    }
+
+    .custom-select-trigger {
+      width: 100%;
+      padding: 11px 14px 11px 40px;
+      border-radius: 11px;
+      border: 1px solid var(--rule);
+      background: var(--sheet);
+      color: var(--ink);
+      font-family: var(--f-ui);
+      font-size: 14.5px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: border-color .18s, box-shadow .18s, background .18s;
+      text-align: left;
+      user-select: none;
+    }
+
+    .custom-select-trigger:hover {
+      border-color: #818CF8;
+      background: var(--paper-2);
+    }
+
+    .custom-select-wrap.open .custom-select-trigger {
+      border-color: var(--pen);
+      box-shadow: 0 0 0 3px var(--pen-wash);
+      background: var(--paper);
+    }
+
+    .custom-select-trigger .c-val {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .custom-select-trigger .c-chev {
+      color: var(--ink-faint);
+      display: grid;
+      place-items: center;
+      transition: transform .2s ease;
+      margin-left: 8px;
+    }
+
+    .custom-select-trigger .c-chev svg {
+      width: 16px;
+      height: 16px;
+      stroke-width: 2.2
+    }
+
+    .custom-select-wrap.open .custom-select-trigger .c-chev {
+      transform: rotate(180deg);
+      color: var(--pen);
+    }
+
+    .custom-select-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      z-index: 60;
+      background: var(--paper-2);
+      border: 1px solid var(--rule);
+      border-radius: 14px;
+      box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.18), 0 4px 10px -2px rgba(0, 0, 0, 0.08);
+      padding: 6px;
+      display: none;
+      flex-direction: column;
+      gap: 3px;
+      max-height: 280px;
+      overflow-y: auto;
+      transform-origin: top;
+      animation: dropdownPop .18s cubic-bezier(.16, 1, .3, 1);
+    }
+
+    [data-theme="dark"] .custom-select-menu {
+      background: #1E293B;
+      border-color: rgba(255, 255, 255, 0.12);
+      box-shadow: 0 18px 36px -6px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.06);
+    }
+
+    @keyframes dropdownPop {
+      from {
+        opacity: 0;
+        transform: translateY(-6px) scale(0.98)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1)
+      }
+    }
+
+    .custom-select-wrap.open .custom-select-menu {
+      display: flex
+    }
+
+    .c-opt {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 9px;
+      cursor: pointer;
+      transition: background .15s, color .15s;
+      color: var(--ink);
+      user-select: none;
+    }
+
+    .c-opt:hover {
+      background: var(--pen-wash);
+      color: var(--pen);
+    }
+
+    [data-theme="dark"] .c-opt:hover {
+      background: rgba(99, 102, 241, 0.18);
+      color: #C7D2FE;
+    }
+
+    .c-opt.selected {
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.12) 0%, rgba(124, 58, 237, 0.08) 100%);
+      color: var(--pen);
+      font-weight: 700;
+    }
+
+    [data-theme="dark"] .c-opt.selected {
+      background: rgba(99, 102, 241, 0.25);
+      color: #A5B4FC;
+    }
+
+    .c-opt-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px
+    }
+
+    .c-opt-title {
+      font-size: 13.5px;
+      font-weight: 600;
+      line-height: 1.2
+    }
+
+    .c-opt-sub {
+      font-size: 11px;
+      color: var(--ink-soft);
+      font-family: var(--f-ui);
+      font-weight: 400
+    }
+
+    [data-theme="dark"] .c-opt-sub {
+      color: #94A3B8
+    }
+
+    .c-opt.selected .c-opt-sub {
+      color: var(--pen);
+      opacity: 0.85
+    }
+
+    [data-theme="dark"] .c-opt.selected .c-opt-sub {
+      color: #C7D2FE
+    }
+
+    .c-opt-check {
+      width: 16px;
+      height: 16px;
+      display: grid;
+      place-items: center;
+      color: var(--pen);
+      opacity: 0;
+      transition: opacity .15s;
+      flex: none;
+    }
+
+    .c-opt-check svg {
+      width: 14px;
+      height: 14px;
+      stroke-width: 2.5
+    }
+
+    .c-opt.selected .c-opt-check {
+      opacity: 1
+    }
+
+    .tagbox {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      align-items: center;
+      padding: 7px 10px 7px 40px;
+      min-height: 46px;
+      border-radius: 11px;
+      border: 1px solid var(--rule);
+      background: var(--sheet);
+      transition: border-color .18s, box-shadow .18s;
+      cursor: text;
+    }
+
+    .tagbox.focus {
+      border-color: var(--pen);
+      box-shadow: 0 0 0 3px var(--pen-wash)
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3.5px 8px 3.5px 10px;
+      border-radius: 7px;
+      background: #EEF2FF;
+      color: #4F46E5;
+      border: 1px solid #C7D2FE;
+      font-family: var(--f-mono);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    [data-theme="dark"] .tag {
+      background: rgba(99, 102, 241, 0.18);
+      color: #A5B4FC;
+      border-color: rgba(99, 102, 241, 0.35)
+    }
+
+    .tag button {
+      color: #4F46E5;
+      opacity: .7;
+      display: grid;
+      place-items: center;
+      border-radius: 4px;
+      line-height: 0;
+      padding: 2px
+    }
+
+    [data-theme="dark"] .tag button {
+      color: #A5B4FC
+    }
+
+    .tag button:hover {
+      opacity: 1;
+      background: rgba(79, 70, 229, .14)
+    }
+
+    .tag button svg {
+      width: 12px;
+      height: 12px;
+      stroke-width: 2.4
+    }
+
+    .tagbox input {
+      flex: 1;
+      min-width: 90px;
+      border: none;
+      background: none;
+      outline: none;
+      font-family: var(--f-ui);
+      font-size: 14px;
+      color: var(--ink);
+      padding: 4px 0
+    }
+
+    .tagbox input::placeholder {
+      color: var(--ink-faint)
+    }
+
+    .count-row {
+      display: flex;
+      align-items: center;
+      gap: 14px
+    }
+
+    .count-row .num {
+      font-family: var(--f-disp);
+      font-weight: 700;
+      font-size: 30px;
+      line-height: 1;
+      min-width: 52px;
+      padding: 6px 0;
+      color: var(--ink);
+    }
+
+    .stepper {
+      display: flex;
+      gap: 6px
+    }
+
+    .stepper button {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      border: 1px solid var(--rule);
+      background: var(--sheet);
+      font-size: 20px;
+      color: var(--ink-soft);
+      display: grid;
+      place-items: center;
+      transition: border-color .18s, color .18s;
+    }
+
+    .stepper button:hover {
+      border-color: var(--pen);
+      color: var(--pen)
+    }
+
+    .range {
+      flex: 1
+    }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 5px;
+      border-radius: 99px;
+      background: var(--rule);
+      outline: none
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #6366F1;
+      cursor: pointer;
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+      transition: transform .12s, background .12s;
+    }
+
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.12);
+      background: #4F46E5
+    }
+
+    input[type=range]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border: none;
+      border-radius: 50%;
+      background: #6366F1;
+      cursor: pointer;
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+    }
+
+    /* Specific Seed Inspiration Pills */
+    .seed-section {
+      margin-top: 10px
+    }
+
+    .seed-label {
+      font-size: 11px;
+      font-family: var(--f-mono);
+      color: var(--ink-faint);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .seed-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px
+    }
+
+    .seed-pill {
+      font-size: 11.5px;
+      font-family: var(--f-mono);
+      padding: 5px 10px;
+      border-radius: 8px;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      color: var(--ink-soft);
+      cursor: pointer;
+      transition: all .18s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+    }
+
+    .seed-pill:hover {
+      border-color: var(--pen);
+      color: var(--pen);
+      background: var(--pen-wash);
+      transform: translateY(-1px)
+    }
+
+    .generate {
+      margin-top: 22px;
+      width: 100%;
+      padding: 15px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);
+      color: #FFFFFF;
+      font-weight: 600;
+      font-size: 15.5px;
+      letter-spacing: .01em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 10px 25px -4px rgba(79, 70, 229, 0.45);
+      transition: filter .18s, transform .1s, box-shadow .18s;
+    }
+
+    .generate:hover {
+      filter: brightness(1.08);
+      box-shadow: 0 14px 28px -4px rgba(79, 70, 229, 0.55)
+    }
+
+    .generate:active {
+      transform: translateY(1px)
+    }
+
+    .generate svg {
+      width: 19px;
+      height: 19px;
+      stroke-width: 1.9
+    }
+
+    .generate.busy {
+      pointer-events: none;
+      opacity: .85
+    }
+
+    .spin {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, .4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    /* ---------- tips ---------- */
+    .tips {
+      padding: 22px
+    }
+
+    .tips .th {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-family: var(--f-disp);
+      font-weight: 700;
+      font-size: 17.5px;
+      margin-bottom: 4px
+    }
+
+    .tips .th svg {
+      width: 18px;
+      height: 18px;
+      color: #7C3AED;
+      stroke-width: 1.8
+    }
+
+    .tips .thh {
+      font-family: var(--f-mono);
+      font-size: 10.5px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: #8B5CF6;
+      margin-bottom: 16px;
+      font-weight: 700
+    }
+
+    .tip {
+      display: flex;
+      gap: 12px;
+      padding: 12px 0;
+      border-top: 1px solid var(--rule-soft)
+    }
+
+    .tip:first-of-type {
+      border-top: none
+    }
+
+    .tip .tn {
+      font-family: var(--f-mono);
+      font-size: 12px;
+      color: #2563EB;
+      font-weight: 700;
+      flex: none;
+      padding-top: 1px
+    }
+
+    .tip p {
+      margin: 0;
+      font-size: 13.5px;
+      line-height: 1.5;
+      color: var(--ink-soft)
+    }
+
+    .tip b {
+      color: var(--ink);
+      font-weight: 600
+    }
+
+    /* ---------- question paper (signature) ---------- */
+    .paper-card {
+      background: var(--paper-2);
+      border: 1px solid var(--rule);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden
+    }
+
+    .paper-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--rule-soft);
+      flex-wrap: wrap
+    }
+
+    .paper-toolbar .ci {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      background: #EEF2FF;
+      color: #4F46E5;
+      flex: none
+    }
+
+    .paper-toolbar .ci svg {
+      width: 17px;
+      height: 17px;
+      stroke-width: 1.8
+    }
+
+    .paper-toolbar .ct {
+      font-family: var(--f-disp);
+      font-weight: 700;
+      font-size: 18.5px
+    }
+
+    .paper-toolbar .ha {
+      margin-left: auto;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap
+    }
+
+    .ghost-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 13px;
+      border-radius: 9px;
+      border: 1px solid var(--rule);
+      background: var(--sheet);
+      font-weight: 600;
+      font-size: 12.5px;
+      color: var(--ink-soft);
+      transition: background .18s, border-color .18s, color .18s, box-shadow .18s;
+    }
+
+    .ghost-btn:hover {
+      background: #EEF2FF;
+      border-color: #818CF8;
+      color: #4F46E5
+    }
+
+    [data-theme="dark"] .ghost-btn:hover {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: #818CF8;
+      color: #A5B4FC
+    }
+
+    .ghost-btn svg {
+      width: 15px;
+      height: 15px;
+      stroke-width: 1.8
+    }
+
+    .sheet {
+      background: var(--sheet);
+      margin: 18px;
+      border-radius: 12px;
+      border: 1px solid var(--rule-soft);
+      position: relative;
+      overflow: hidden
+    }
+
+    .sheet-head {
+      padding: 26px 30px 20px 30px;
+      border-bottom: 2px solid var(--rule);
+      position: relative
+    }
+
+    .sheet-title {
+      font-family: var(--f-disp);
+      font-weight: 700;
+      font-size: 26px;
+      letter-spacing: -.01em;
+      line-height: 1.1
+    }
+
+    .sheet-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 10px;
+      margin-top: 14px;
+      font-family: var(--f-mono);
+      font-size: 11px;
+      letter-spacing: .03em
+    }
+
+    .sheet-meta span {
+      padding: 4px 9px;
+      border-radius: 7px;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      color: var(--ink-soft)
+    }
+
+    .sheet-meta span b {
+      color: var(--ink);
+      font-weight: 600
+    }
+
+    .sheet-stamp {
+      position: absolute;
+      top: 24px;
+      right: 28px;
+      font-family: var(--f-mono);
+      font-size: 10px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: #6366F1;
+      border: 1.5px solid #6366F1;
+      border-radius: 8px;
+      padding: 6px 10px;
+      transform: rotate(3deg);
+      opacity: .9;
+      font-weight: 700;
+    }
+
+    .qlist {
+      padding: 6px 0 12px;
+      margin: 0;
+      list-style: none
+    }
+
+    .q {
+      display: grid;
+      grid-template-columns: 56px 1fr auto;
+      align-items: baseline;
+      padding: 17px 30px 17px 0;
+      border-bottom: 1px solid var(--rule-soft);
+      position: relative;
+    }
+
+    .q:last-child {
+      border-bottom: none
+    }
+
+    .qnum {
+      grid-column: 1;
+      text-align: center;
+      font-family: var(--f-mono);
+      font-weight: 700;
+      font-size: 12.5px;
+      color: #4F46E5;
+      padding-top: 4px;
+    }
+
+    [data-theme="dark"] .qnum {
+      color: #818CF8
+    }
+
+    .qtext {
+      grid-column: 2;
+      font-family: var(--f-disp);
+      font-weight: 400;
+      font-size: 16.5px;
+      line-height: 1.5;
+      color: var(--ink);
+      padding-right: 14px;
+      position: relative;
+      overflow-wrap: anywhere;
+    }
+
+    .qtext code {
+      font-family: var(--f-mono);
+      font-size: .86em;
+      background: #EEF2FF;
+      color: #4F46E5;
+      padding: 1px 6px;
+      border-radius: 5px
+    }
+
+    [data-theme="dark"] .qtext code {
+      background: rgba(99, 102, 241, 0.2);
+      color: #A5B4FC
+    }
+
+    .qtext::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 14px;
+      bottom: -2px;
+      height: 2px;
+      background: var(--primary-grad);
+      opacity: .6;
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform .35s cubic-bezier(.2, .7, .2, 1)
+    }
+
+    .q:hover .qtext::after {
+      transform: scaleX(1)
+    }
+
+    .qcopy {
+      grid-column: 3;
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: var(--ink-faint);
+      border: 1px solid transparent;
+      opacity: 0;
+      transition: opacity .18s, color .18s, border-color .18s;
+    }
+
+    .q:hover .qcopy {
+      opacity: 1
+    }
+
+    .qcopy:hover {
+      color: var(--pen);
+      border-color: var(--rule)
+    }
+
+    .qcopy svg {
+      width: 16px;
+      height: 16px;
+      stroke-width: 1.8
+    }
+
+    .qcopy.done {
+      color: #10B981;
+      opacity: 1
+    }
+
+    /* Typewriter Live Streaming */
+    .type-cursor {
+      display: inline-block;
+      color: #4F46E5;
+      font-weight: 700;
+      animation: blink .6s infinite;
+      margin-left: 2px
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0
+      }
+    }
+
+    /* Provenance & Verified Badges */
+    .q-meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px 8px;
+      margin-top: 8px;
+    }
+
+    .q-provenance-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-family: var(--f-mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .02em;
+    }
+
+    .q-provenance-badge.verified {
+      background: #ECFDF5;
+      color: #059669;
+      border: 1px solid #A7F3D0;
+    }
+
+    [data-theme="dark"] .q-provenance-badge.verified {
+      background: rgba(16, 185, 129, 0.16);
+      color: #34D399;
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .q-provenance-badge.ai-gen {
+      background: #EEF2FF;
+      color: #4F46E5;
+      border: 1px solid #C7D2FE;
+    }
+
+    [data-theme="dark"] .q-provenance-badge.ai-gen {
+      background: rgba(99, 102, 241, 0.16);
+      color: #A5B4FC;
+      border-color: rgba(99, 102, 241, 0.3);
+    }
+
+    .q-cat-chip {
+      font-family: var(--f-mono);
+      font-size: 10.5px;
+      padding: 2px 7px;
+      border-radius: 5px;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      color: var(--ink-soft);
+      font-weight: 600;
+    }
+
+    .q-confidence-tag {
+      font-family: var(--f-mono);
+      font-size: 10px;
+      color: #10B981;
+      font-weight: 700;
+    }
+
+    .q-source-link {
+      font-family: var(--f-mono);
+      font-size: 11px;
+      color: var(--pen);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      transition: opacity .15s;
+    }
+
+    .q-source-link:hover {
+      opacity: 0.8;
+    }
+
+    .q-model-answer-box {
+      margin-top: 8px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: var(--paper);
+      border: 1px solid var(--rule-soft);
+      font-size: 12px;
+      color: var(--ink-soft);
+      line-height: 1.45;
+    }
+
+    .q-model-answer-box b {
+      color: var(--ink);
+    }
+
+    /* ---------- preset chips & ai stepper ---------- */
+    .preset-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px
+    }
+
+    .chip {
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 600;
+      border: 1px solid var(--rule);
+      background: var(--paper);
+      color: var(--ink-soft);
+      cursor: pointer;
+      transition: all .18s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chip:hover {
+      border-color: var(--pen);
+      color: var(--pen);
+      background: var(--pen-wash)
+    }
+
+    .chip.active-preset {
+      border-color: var(--pen);
+      background: var(--pen-wash);
+      color: var(--pen)
+    }
+
+    /* AI Stepper Progress Modal/Box */
+    .ai-stepper {
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(124, 58, 237, 0.05) 100%);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 18px;
+      animation: fadeIn .3s ease;
+    }
+
+    .stepper-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px
+    }
+
+    .stepper-spinner {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2.5px solid rgba(99, 102, 241, 0.25);
+      border-top-color: #4F46E5;
+      animation: spin .8s linear infinite;
+      flex: none;
+    }
+
+    .stepper-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink)
+    }
+
+    .stepper-sub {
+      font-size: 11.5px;
+      color: var(--ink-soft);
+      font-family: var(--f-mono)
+    }
+
+    .steps-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px
+    }
+
+    .s-step {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--ink-faint);
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: var(--paper-2);
+      border: 1px solid var(--rule-soft);
+      transition: all .3s ease;
+    }
+
+    .s-step.active {
+      color: #4F46E5;
+      border-color: #818CF8;
+      background: #EEF2FF
+    }
+
+    [data-theme="dark"] .s-step.active {
+      background: rgba(99, 102, 241, 0.2);
+      color: #A5B4FC
+    }
+
+    .s-step.done {
+      color: #10B981;
+      border-color: #34D399;
+      background: var(--pass-wash)
+    }
+
+    .s-step .s-num {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-family: var(--f-mono);
+      font-size: 10px;
+      background: rgba(0, 0, 0, 0.06);
+    }
+
+    /* Skeleton Loading Shimmer */
+    .skeleton-box {
+      padding: 20px 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px
+    }
+
+    .sk-item {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start
+    }
+
+    .sk-num {
+      width: 36px;
+      height: 20px;
+      border-radius: 6px;
+      background: var(--rule);
+      animation: shimmer 1.5s infinite linear
+    }
+
+    .sk-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px
+    }
+
+    .sk-line {
+      height: 16px;
+      border-radius: 6px;
+      background: var(--rule);
+      animation: shimmer 1.5s infinite linear
+    }
+
+    .sk-line.short {
+      width: 60%
+    }
+
+    @keyframes shimmer {
+      0% {
+        opacity: .5
+      }
+
+      50% {
+        opacity: 1
+      }
+
+      100% {
+        opacity: .5
+      }
+    }
+
+    /* AI Explainability Lens */
+    .q-lens {
+      margin-top: 8px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: var(--pen-wash);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      font-size: 12.5px;
+      line-height: 1.45;
+      color: var(--ink-soft);
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .lens-tag {
+      font-family: var(--f-mono);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--label-color);
+      letter-spacing: .06em;
+      text-transform: uppercase
+    }
+
+    .lens-body {
+      color: var(--ink);
+      font-size: 12.5px
+    }
+
+    /* empty + reveal states */
+    .q-empty {
+      padding: 56px 30px;
+      text-align: center;
+      color: var(--ink-faint)
+    }
+
+    .q-empty .qe-mark {
+      font-family: var(--f-disp);
+      font-size: 56px;
+      color: var(--rule);
+      line-height: 1
+    }
+
+    .q-empty p {
+      margin: 14px auto 0;
+      max-width: 34ch;
+      font-size: 14px;
+      line-height: 1.55
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(8px);
+      animation: rise .5s forwards
+    }
+
+    @keyframes rise {
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    /* ---------- history sidebar widget ---------- */
+    .hist {
+      padding: 8px 8px 12px
+    }
+
+    .hist-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      transition: background .18s, border-color .18s;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .hist-item:hover {
+      background: var(--paper);
+      border-color: var(--rule)
+    }
+
+    .hist-item .hi-top {
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .hi-role {
+      font-family: var(--f-disp);
+      font-weight: 600;
+      font-size: 15.5px;
+      letter-spacing: -.01em
+    }
+
+    .hi-chev {
+      margin-left: auto;
+      color: var(--ink-faint);
+      transition: transform .18s
+    }
+
+    .hist-item:hover .hi-chev {
+      transform: translateX(3px);
+      color: var(--pen)
+    }
+
+    .hi-meta {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 5px;
+      font-family: var(--f-mono);
+      font-size: 11px;
+      color: var(--ink-soft)
+    }
+
+    .hi-badge {
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: #EEF2FF;
+      color: #4F46E5;
+      font-weight: 600
+    }
+
+    [data-theme="dark"] .hi-badge {
+      background: rgba(99, 102, 241, 0.2);
+      color: #A5B4FC
+    }
+
+    .hi-badge.hard {
+      background: rgba(245, 158, 11, .16);
+      color: var(--gold)
+    }
+
+    .hi-badge.brutal {
+      background: rgba(239, 68, 68, .16);
+      color: #EF4444
+    }
+
+    .hi-date {
+      margin-top: 6px;
+      font-family: var(--f-mono);
+      font-size: 10.5px;
+      color: var(--ink-faint);
+      letter-spacing: .04em
+    }
+
+    .hist-sep {
+      height: 1px;
+      background: var(--rule-soft);
+      margin: 2px 14px
+    }
+
+    .hist-all {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin: 8px;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--rule);
+      font-weight: 600;
+      font-size: 13.5px;
+      color: #4F46E5;
+      transition: background .18s, border-color .18s;
+      text-decoration: none;
+      background: var(--paper);
+    }
+
+    .hist-all:hover {
+      background: #EEF2FF;
+      border-color: #818CF8
+    }
+
+    [data-theme="dark"] .hist-all {
+      color: #A5B4FC
+    }
+
+    [data-theme="dark"] .hist-all:hover {
+      background: rgba(99, 102, 241, 0.15)
+    }
+
+    .foot {
+      margin-top: 24px;
+      padding: 16px 0;
+      border-top: 1px solid var(--rule);
+      font-family: var(--f-mono);
+      font-size: 11px;
+      letter-spacing: .05em;
+      color: var(--ink-faint);
+      text-align: center
+    }
+
+    /* ---------- toast ---------- */
+    .toast {
+      position: fixed;
+      bottom: 26px;
+      left: 50%;
+      transform: translate(-50%, 20px);
+      background: #0F172A;
+      color: #FFFFFF;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 13.5px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 18px 40px -18px rgba(0, 0, 0, .6);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s, transform .25s;
+      z-index: 60;
+      border: 1px solid rgba(255, 255, 255, .1);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0)
+    }
+
+    .toast svg {
+      width: 17px;
+      height: 17px;
+      color: #818CF8;
+      stroke-width: 2
+    }
+
+    /* ---------- share modal (question package) ---------- */
+    .share-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(6px);
+      z-index: 70;
+      display: none;
+      place-items: center;
+      padding: 20px;
+      animation: fadeIn .2s ease;
+    }
+
+    .share-modal-backdrop.open {
+      display: grid
+    }
+
+    .share-modal {
+      background: var(--paper-2);
+      border: 1px solid var(--rule);
+      border-radius: 20px;
+      max-width: 540px;
+      width: 100%;
+      padding: 24px;
+      box-shadow: var(--shadow);
+      position: relative;
+      animation: modalScale .25s cubic-bezier(.16, 1, .3, 1);
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    @keyframes modalScale {
+      from {
+        transform: scale(0.92);
+        opacity: 0
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1
+      }
+    }
+
+    .share-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px
+    }
+
+    .share-head h3 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .close-modal-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: var(--ink-soft);
+      cursor: pointer;
+      transition: all .18s;
+      background: var(--paper);
+      border: 1px solid var(--rule)
+    }
+
+    .close-modal-btn:hover {
+      background: var(--rule-soft);
+      color: var(--ink)
+    }
+
+    .pkg-hero-banner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: var(--pen-wash);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      margin-bottom: 14px;
+      font-size: 12.5px;
+      color: var(--pen);
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .pkg-preview-card {
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .pkg-preview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pkg-title {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--ink)
+    }
+
+    .pkg-badge-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap
+    }
+
+    .pkg-badge {
+      font-size: 11px;
+      font-family: var(--f-mono);
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: var(--paper-2);
+      border: 1px solid var(--rule);
+      color: var(--ink-soft);
+    }
+
+    .pkg-badge.primary {
+      background: var(--primary-grad);
+      color: #fff;
+      border: none
+    }
+
+    .pkg-preview-content {
+      max-height: 135px;
+      overflow-y: auto;
+      font-size: 12.5px;
+      color: var(--ink-soft);
+      background: var(--paper-2);
+      border: 1px solid var(--rule-soft);
+      border-radius: 8px;
+      padding: 10px 12px;
+      line-height: 1.5;
+      font-family: var(--f-ui);
+      white-space: pre-line;
+    }
+
+    .pkg-preview-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .pkg-btn-sm {
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--rule);
+      background: var(--paper-2);
+      color: var(--ink);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all .18s;
+    }
+
+    .pkg-btn-sm:hover {
+      background: var(--pen-wash);
+      border-color: var(--pen);
+      color: var(--pen)
+    }
+
+    .share-channels-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 12px
+    }
+
+    .share-channel-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .18s;
+      text-decoration: none;
+    }
+
+    .share-channel-btn:hover {
+      border-color: var(--primary);
+      transform: translateY(-1px);
+      background: var(--pen-wash)
+    }
+
+    .share-channel-icon {
+      font-size: 24px;
+      flex: none
+    }
+
+    .share-channel-info {
+      display: flex;
+      flex-direction: column;
+      text-align: left
+    }
+
+    .share-channel-title {
+      font-weight: 700;
+      font-size: 13.5px;
+      color: var(--ink)
+    }
+
+    .share-channel-desc {
+      font-size: 11px;
+      color: var(--ink-faint);
+      font-weight: 500;
+      margin-top: 1px
+    }
+
+    .share-url-box {
+      display: flex;
+      gap: 8px;
+      background: var(--paper-2);
+      border: 1px solid var(--rule);
+      border-radius: 10px;
+      padding: 4px 4px 4px 10px;
+      align-items: center;
+    }
+
+    .share-url-text {
+      flex: 1;
+      border: none;
+      background: none;
+      color: var(--ink);
+      font-family: var(--f-mono);
+      font-size: 11.5px;
+      outline: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .share-copy-btn {
+      padding: 6px 12px;
+      border-radius: 7px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      font-size: 11.5px;
+      cursor: pointer;
+      transition: filter .18s;
+      flex: none;
+    }
+
+    .share-copy-btn:hover {
+      filter: brightness(1.1)
+    }
+
+    /* ---------- mobile menu btn ---------- */
+    .menu-btn {
+      display: none
+    }
+
+    /* ---------- responsive ---------- */
+    @media(max-width:1080px) {
+
+      .grid-top,
+      .grid-bottom {
+        grid-template-columns: minmax(0, 1fr)
+      }
+
+      .page-head {
+        flex-direction: column;
+        align-items: flex-start
+      }
+
+      .page-head-hero {
+        display: none
+      }
+    }
+
+    @media(max-width:820px) {
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 280px;
+        flex-basis: 280px;
+        z-index: 50;
+        transform: translateX(-100%);
+        transition: transform .3s ease;
+        height: 100vh
+      }
+
+      .sidebar.open {
+        transform: none
+      }
+
+      .main {
+        padding: 0 20px 24px;
+        max-width: 100%
+      }
+
+      .menu-btn {
+        display: grid
+      }
+
+      .scrim {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, .5);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .3s;
+        z-index: 40
+      }
+
+      .scrim.show {
+        opacity: 1;
+        pointer-events: auto
+      }
+
+      .steps-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px
+      }
+    }
+
+    @media(max-width:560px) {
+      .fgrid {
+        grid-template-columns: 1fr
+      }
+
+      .steps-row {
+        grid-template-columns: 1fr;
+        gap: 6px
+      }
+
+      .q {
+        grid-template-columns: 40px 1fr auto
+      }
+
+      .sheet {
+        margin: 12px
+      }
+
+      .sheet-stamp {
+        display: none
+      }
+
+      .sheet-head {
+        padding: 22px 20px 18px
+      }
+
+      .q {
+        padding-right: 16px
+      }
+
+      .share-channels-grid {
+        grid-template-columns: 1fr
+      }
+
+      .pkg-preview-header {
+        flex-direction: column;
+        align-items: flex-start
+      }
+    }
+
+    @media(prefers-reduced-motion:reduce) {
+      * {
+        animation-duration: .001ms !important;
+        transition-duration: .001ms !important
+      }
+    }
+
+    /* ---------- print ---------- */
+    @media print {
+
+      .sidebar,
+      .topbar,
+      .grid-top,
+      .grid-bottom>.card:last-child,
+      .paper-toolbar,
+      .foot,
+      .menu-btn {
+        display: none !important
+      }
+
+      body,
+      .main {
+        background: #fff
+      }
+
+      .app {
+        display: block
+      }
+
+      .main {
+        padding: 0;
+        max-width: 100%
+      }
+
+      .grid-bottom {
+        display: block;
+        margin: 0
+      }
+
+      .paper-card {
+        border: none;
+        box-shadow: none
+      }
+
+      .sheet {
+        margin: 0;
+        border: none
+      }
+
+      .qcopy {
+        display: none
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+
+    <!-- ============ SIDEBAR ============ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <img class="brand-logo" src="logo.png" alt="Ravi GenAI Studio Logo">
+        <div>
+          <div class="word"><span class="brand-grad">RaviGenAI</span></div>
+          <div class="sub">STUDIO</div>
+        </div>
+      </div>
+
+      <div class="side-label">WORKSPACE</div>
+      <nav class="nav">
+        <a class="nav-link" href="/candidate/dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <rect x="3" y="3" width="7" height="9" rx="1.5" />
+            <rect x="14" y="3" width="7" height="5" rx="1.5" />
+            <rect x="14" y="12" width="7" height="9" rx="1.5" />
+            <rect x="3" y="16" width="7" height="5" rx="1.5" />
+          </svg>
+          <span>Dashboard</span>
+        </a>
+        <a class="nav-link active" href="/candidate/interview-studio">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="16" y1="17" x2="8" y2="17" />
+          </svg>
+          <span>Generate Questions</span>
+        </a>
+        <a class="nav-link" href="/candidate/mock-interview">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" />
+            <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8" />
+          </svg>
+          <span>AI Mock Interview</span>
+          <span class="nav-badge new">VOICE</span>
+        </a>
+        <a class="nav-link" href="/candidate/interview-studio">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M9 11l3 3L22 4" />
+            <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+          </svg>
+          <span>Answer Evaluator</span>
+        </a>
+        <a class="nav-link" href="/candidate/resume-match">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="16" y1="17" x2="8" y2="17" />
+            <polyline points="10 9 9 9 8 9" />
+          </svg>
+          <span>Resume &amp; JD Match</span>
+          <span class="nav-badge pro">PRO</span>
+        </a>
+      </nav>
+
+      <div class="side-label" style="margin-top:14px">LIBRARY</div>
+      <nav class="nav">
+        <a class="nav-link" href="/candidate/history">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="12" cy="12" r="9" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+          <span>Interview History</span>
+        </a>
+        <a class="nav-link" href="/scorecard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
+            <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
+          </svg>
+          <span>Public Scorecards</span>
+        </a>
+        <a class="nav-link" href="/candidate/company-playbooks">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+            <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16" />
+          </svg>
+          <span>Company Playbooks</span>
+        </a>
+      </nav>
+
+      <div class="side-label" style="margin-top:14px">PREFERENCES</div>
+      <nav class="nav">
+        <a class="nav-link" href="/analytics">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M18 20V10M12 20V4M6 20v-6" />
+          </svg>
+          <span>Live Analytics</span>
+          <span class="nav-badge new" style="background:rgba(16,185,129,0.15);color:#10B981">LIVE</span>
+        </a>
+        <a class="nav-link" href="javascript:void(0)"
+          onclick="alert('Model: Gemini 2.5 Flash\nStatus: Operational\nAPI Base: Ready')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
+          </svg>
+          <span>Model &amp; Settings</span>
+        </a>
+      </nav>
+
+      <div class="side-foot">
+        <div class="upgrade" onclick="location.href='/upgrade-pro'">
+          <div class="u-top"><span class="star">✦</span> Go Pro <span class="u-chev"><svg width="14" height="14"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M9 6l6 6-6 6" />
+              </svg></span></div>
+          <p>Unlock advanced AI features</p>
+        </div>
+        <div class="user">
+          <img class="av" alt="Ravi Chandran"
+            src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><rect width='80' height='80' fill='%231E1B4B'/><circle cx='40' cy='31' r='15' fill='%23818CF8'/><path d='M12 78c0-18 14-28 28-28s28 10 28 28z' fill='%23818CF8'/></svg>">
+          <div>
+            <div class="nm">Ravi Chandran</div>
+            <div class="pl">Free plan</div>
+          </div>
+          <button class="logout-btn" title="Sign Out / Logout" onclick="handleLogout(event)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+    <div class="scrim" id="scrim"></div>
+
+    <!-- ============ MAIN ============ -->
+    <main class="main">
+      <div class="topbar">
+        <button class="icon-btn menu-btn" id="menuBtn" aria-label="Open menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M4 7h16M4 12h16M4 17h16" />
+          </svg>
+        </button>
+        <span class="crumb"><a href="Dashboard.html" style="color:inherit;text-decoration:none">WORKSPACE</a> / GENERATE QUESTIONS</span>
+        <div class="top-actions">
+          <button class="icon-btn" id="themeBtn" aria-label="Toggle theme">
+            <svg id="sunMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M21 12.8A8 8 0 1111.2 3 6.2 6.2 0 0021 12.8z" />
+            </svg>
+          </button>
+          <button class="icon-btn" title="Sign Out / Logout" onclick="handleLogout(event)" aria-label="Logout">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+          </button>
+        </div>
+      </div>
+
+      <header class="page-head">
+        <div class="page-head-left">
+          <h1>Set the brief.<br>We'll <em>compose the exam.</em></h1>
+          <p class="lede">Describe the role, the stack, or provide a specific focus question — we'll dynamically
+            synthesize tightly related questions you can rehearse or hand to a candidate.</p>
+        </div>
+        <div class="page-head-hero">
+          <div class="hero-bot-wrap">
+            <svg class="hero-svg" viewBox="0 0 340 190" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="cloudGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#C084FC" />
+                  <stop offset="100%" stop-color="#60A5FA" />
+                </linearGradient>
+                <linearGradient id="botGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#FFFFFF" />
+                  <stop offset="100%" stop-color="#E2E8F0" />
+                </linearGradient>
+                <linearGradient id="blueGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#38BDF8" />
+                  <stop offset="100%" stop-color="#3B82F6" />
+                </linearGradient>
+                <linearGradient id="screenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#0F172A" />
+                  <stop offset="100%" stop-color="#1E1B4B" />
+                </linearGradient>
+              </defs>
+              <path
+                d="M60 40 C60 25, 80 15, 95 25 C105 10, 130 10, 140 25 C155 25, 165 35, 160 50 C165 65, 150 75, 135 75 L65 75 C50 75, 45 60, 55 50 C50 40, 55 40, 60 40 Z"
+                fill="url(#cloudGrad)" opacity="0.85" />
+              <g stroke="#93C5FD" stroke-width="1.5" stroke-dasharray="3 3">
+                <line x1="80" y1="75" x2="80" y2="110" />
+                <line x1="110" y1="75" x2="110" y2="115" />
+                <line x1="140" y1="75" x2="140" y2="105" />
+              </g>
+              <rect x="180" y="20" width="140" height="95" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5"
+                filter="drop-shadow(0 8px 16px rgba(0,0,0,0.06))" />
+              <circle cx="198" cy="35" r="3" fill="#EF4444" />
+              <circle cx="208" cy="35" r="3" fill="#F59E0B" />
+              <circle cx="218" cy="35" r="3" fill="#10B981" />
+              <line x1="198" y1="50" x2="250" y2="50" stroke="#818CF8" stroke-width="2.5" stroke-linecap="round" />
+              <line x1="198" y1="60" x2="280" y2="60" stroke="#38BDF8" stroke-width="2" stroke-linecap="round" />
+              <line x1="198" y1="70" x2="240" y2="70" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round" />
+              <rect x="255" y="85" width="7" height="15" rx="2" fill="#93C5FD" />
+              <rect x="266" y="78" width="7" height="22" rx="2" fill="#60A5FA" />
+              <rect x="277" y="68" width="7" height="32" rx="2" fill="#3B82F6" />
+              <rect x="288" y="58" width="7" height="42" rx="2" fill="#4F46E5" />
+              <g transform="translate(0, 10)">
+                <rect x="75" y="95" width="65" height="60" rx="22" fill="url(#botGrad)" stroke="#CBD5E1"
+                  stroke-width="1.5" />
+                <rect x="88" y="110" width="38" height="26" rx="7" fill="#F1F5F9" />
+                <text x="107" y="128" fill="#2563EB" font-family="'Roboto', sans-serif" font-weight="900" font-size="14"
+                  text-anchor="middle">AI</text>
+                <rect x="65" y="40" width="85" height="60" rx="28" fill="url(#botGrad)" stroke="#CBD5E1"
+                  stroke-width="1.5" />
+                <rect x="75" y="50" width="65" height="40" rx="16" fill="#0F172A" />
+                <ellipse cx="93" cy="70" rx="8" ry="10" fill="url(#blueGlow)" />
+                <ellipse cx="121" cy="70" rx="8" ry="10" fill="url(#blueGlow)" />
+                <rect x="60" y="58" width="5" height="20" rx="2.5" fill="#94A3B8" />
+                <rect x="150" y="58" width="5" height="20" rx="2.5" fill="#94A3B8" />
+                <circle cx="107" cy="33" r="4" fill="#38BDF8" />
+                <line x1="107" y1="37" x2="107" y2="40" stroke="#94A3B8" stroke-width="2" />
+                <path d="M125 130 L165 130 L175 155 L115 155 Z" fill="#334155" />
+                <rect x="128" y="105" width="38" height="28" rx="4" fill="url(#screenGrad)" stroke="#475569"
+                  stroke-width="1" />
+                <text x="147" y="123" fill="#38BDF8" font-family="'Roboto', sans-serif" font-weight="700" font-size="10"
+                  text-anchor="middle">AI</text>
+<ellipse cx="120" cy="145" rx="8" ry="6" fill="#E2E8F0" />
+              </g>
+            </svg>
+          </div>
+        </div>
+      </header>
+
+      <!-- 2-COLUMN STUDIO LAYOUT -->
+      <div class="studio-layout">
+        <!-- MAIN WORKSPACE: THE BRIEF + QUESTION PAPER -->
+        <div class="studio-main-col">
+          <div class="card">
+            <div class="card-head">
+              <span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M4 5h16M4 12h16M4 19h10" />
+                </svg></span>
+              <span class="ct">The brief</span>
+            </div>
+            <div class="form">
+              <!-- QUICK PRESETS -->
+              <div class="preset-section">
+                <div class="preset-label">Role Presets:</div>
+                <div class="preset-chips">
+                  <button type="button" class="chip" onclick="applyPreset('ux')">🎨 UX Designer</button>
+                  <button type="button" class="chip" onclick="applyPreset('product')">💡 Product Designer</button>
+                  <button type="button" class="chip" onclick="applyPreset('uiux')">🎨 UI/UX Designer</button>
+                  <button type="button" class="chip" onclick="applyPreset('frontend')">⚛️ Frontend Developer</button>
+                  <button type="button" class="chip" onclick="applyPreset('backend')">⚙️ Backend Developer</button>
+                  <button type="button" class="chip" onclick="applyPreset('genai')">🤖 GenAI Engineer</button>
+                </div>
+              </div>
+
+              <div class="fgrid">
+                <div class="field">
+                  <label class="label" for="role">Role / position</label>
+                  <div class="control">
+                    <span class="lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <rect x="3" y="7" width="18" height="13" rx="2" />
+                        <path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" />
+                      </svg></span>
+                    <input class="input" id="role" value="UX Designer" placeholder="e.g. Senior UX Designer">
+                  </div>
+                </div>
+                <div class="field">
+                  <label class="label" for="exp">Experience</label>
+                  <div class="control custom-select-wrap" id="expSelectWrap">
+                    <span class="lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M4 20V10M10 20V4M16 20v-8M22 20H2" />
+                      </svg></span>
+                    <select class="select" id="exp" style="display:none">
+                      <option value="Intern / Fresher">Intern / Fresher</option>
+                      <option value="1 Year">1 Year</option>
+                      <option value="2 Years">2 Years</option>
+                      <option value="3 Years">3 Years</option>
+                      <option value="5 Years" selected>5 Years</option>
+                      <option value="8+ Years">8+ Years</option>
+                    </select>
+                    <button type="button" class="custom-select-trigger" id="expTrigger" aria-haspopup="listbox"
+                      aria-expanded="false">
+                      <span class="c-val" id="expDisplayVal">5 Years</span>
+                      <span class="c-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                          <path d="M6 9l6 6 6-6" />
+                        </svg></span>
+                    </button>
+                    <div class="custom-select-menu" id="expMenu" role="listbox">
+                      <div class="c-opt" role="option" data-val="Intern / Fresher">
+                        <div class="c-opt-info">
+                          <span class="c-opt-title">Intern / Fresher</span>
+                          <span class="c-opt-sub">Foundational concepts &amp; core principles</span>
+                        </div>
+                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg></span>
+                      </div>
+                      <div class="c-opt" role="option" data-val="1 Year">
+                        <div class="c-opt-info">
+                          <span class="c-opt-title">1 Year</span>
+                          <span class="c-opt-sub">Junior level practical problem solving</span>
+                        </div>
+                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg></span>
+                      </div>
+                      <div class="c-opt" role="option" data-val="2 Years">
+                        <div class="c-opt-info">
+                          <span class="c-opt-title">2 Years</span>
+                          <span class="c-opt-sub">Mid-level feature execution &amp; tooling</span>
+                        </div>
+                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg></span>
+                      </div>
+                      <div class="c-opt" role="option" data-val="3 Years">
+                        <div class="c-opt-info">
+                          <span class="c-opt-title">3 Years</span>
+                          <span class="c-opt-sub">Solid autonomous engineering &amp; design</span>
+                        </div>
+                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg></span>
+                      </div>
+                      <div class="c-opt selected" role="option" data-val="5 Years" aria-selected="true">
+                        <div class="c-opt-info">
+                          <span class="c-opt-title">5 Years</span>
+                          <span class="c-opt-sub">Senior architecture &amp; trade-off evaluation</span>
+                        </div>
+                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg></span>
+                      </div>
+                      <div class="c-opt" role="option" data-val="8+ Years">
+                        <div class="c-opt-info">
+                          <span class="c-opt-title">8+ Years</span>
+                          <span class="c-opt-sub">Staff / Principal leadership &amp; systems scale</span>
+                        </div>
+                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- TARGET COMPANY BAR -->
+                <div class="field">
+                  <label class="label" for="company">Target Company Bar</label>
+                  <div class="control custom-select-wrap" id="companySelectWrap">
+                    <span class="lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                        <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
+                      </svg></span>
+                    <select class="select" id="company" style="display:none">
+                      <option value="General Tech" selected>General Tech Unicorn</option>
+                      <option value="Google">Google (GCA &amp; RRK Rubric)</option>
+                      <option value="Amazon">Amazon (16 Leadership Principles)</option>
+                      <option value="Meta">Meta (Execution &amp; Scale Bar)</option>
+                      <option value="Microsoft">Microsoft (Systems &amp; Growth Mindset)</option>
+                      <option value="Apple">Apple (Hardware &amp; Precision)</option>
+                      <option value="Netflix">Netflix (Freedom &amp; Chaos)</option>
+                      <option value="OpenAI">OpenAI / Anthropic (AI Architecture)</option>
+                      <option value="Stripe">Stripe (API &amp; Rigorous Code)</option>
+                    </select>
+                    <button type="button" class="custom-select-trigger" id="companyTrigger" aria-haspopup="listbox" aria-expanded="false">
+                      <span class="c-val" id="companyDisplayVal">General Tech Unicorn</span>
+                      <span class="c-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></span>
+                    </button>
+                    <div class="custom-select-menu" id="companyMenu" role="listbox">
+                      <div class="c-opt selected" role="option" data-val="General Tech" aria-selected="true">
+                        <div class="c-opt-info"><span class="c-opt-title">General Tech Unicorn</span><span class="c-opt-sub">Standard modern industry assessment</span></div>
+                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+                      </div>
+                      <div class="c-opt" role="option" data-val="Google">
+                        <div class="c-opt-info"><span class="c-opt-title">Google (GCA &amp; RRK)</span><span class="c-opt-sub">General Cognitive Ability &amp; Googleyness</span></div>
+                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+                      </div>
+                      <div class="c-opt" role="option" data-val="Amazon">
+                        <div class="c-opt-info"><span class="c-opt-title">Amazon (16 LPs)</span><span class="c-opt-sub">Deep behavioral STAR &amp; Customer Obsession</span></div>
+                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+                      </div>
+                      <div class="c-opt" role="option" data-val="Meta">
+                        <div class="c-opt-info"><span class="c-opt-title">Meta (Execution &amp; Scale)</span><span class="c-opt-sub">Fast problem solving &amp; architecture</span></div>
+                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+                      </div>
+                      <div class="c-opt" role="option" data-val="Microsoft">
+                        <div class="c-opt-info"><span class="c-opt-title">Microsoft (Systems)</span><span class="c-opt-sub">Growth mindset &amp; enterprise scale</span></div>
+                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+                      </div>
+                      <div class="c-opt" role="option" data-val="Netflix">
+                        <div class="c-opt-info"><span class="c-opt-title">Netflix (Freedom &amp; Chaos)</span><span class="c-opt-sub">Extreme ownership &amp; chaos engineering</span></div>
+                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+                      </div>
+                      <div class="c-opt" role="option" data-val="OpenAI">
+                        <div class="c-opt-info"><span class="c-opt-title">OpenAI / Anthropic</span><span class="c-opt-sub">RAG, LLM inference &amp; model alignment</span></div>
+                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+                      </div>
+                      <div class="c-opt" role="option" data-val="Stripe">
+                        <div class="c-opt-info"><span class="c-opt-title">Stripe (API &amp; Rigor)</span><span class="c-opt-sub">Idempotency &amp; distributed transactions</span></div>
+                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- INTERVIEW ROUND / FORMAT -->
+                <div class="field">
+                  <label class="label" for="interviewType">Interview Round / Format</label>
+                  <div class="control custom-select-wrap" id="typeSelectWrap">
+                    <span class="lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                        <polyline points="2 17 12 22 22 17"/>
+                        <polyline points="2 12 12 17 22 12"/>
+                      </svg></span>
+                    <select class="select" id="interviewType" style="display:none">
+                      <option value="Technical &amp; Architecture" selected>Technical &amp; Architecture</option>
+                      <option value="System Design &amp; Scale">System Design &amp; Scale</option>
+                      <option value="STAR Behavioral &amp; Leadership">STAR Behavioral &amp; Leadership</option>
+                      <option value="Coding &amp; Algorithms">Coding &amp; Algorithms</option>
+                      <option value="Full Mixed Round">Full Mixed Round (Comprehensive)</option>
+                    </select>
+                    <button type="button" class="custom-select-trigger" id="typeTrigger" aria-haspopup="listbox" aria-expanded="false">
+                      <span class="c-val" id="typeDisplayVal">Technical &amp; Architecture</span>
+                      <span class="c-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></span>
+                    </button>
+                    <div class="custom-select-menu" id="typeMenu" role="listbox">
+                      <div class="c-opt selected" role="option" data-val="Technical &amp; Architecture" aria-selected="true">
+                        <div class="c-opt-info"><span class="c-opt-title">Technical &amp; Architecture</span><span class="c-opt-sub">Deep domain, concurrency &amp; trade-offs</span></div>
+                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+                      </div>
+                      <div class="c-opt" role="option" data-val="System Design &amp; Scale">
+                        <div class="c-opt-info"><span class="c-opt-title">System Design &amp; Scale</span><span class="c-opt-sub">High throughput, partitioning &amp; latency</span></div>
+                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+                      </div>
+                      <div class="c-opt" role="option" data-val="STAR Behavioral &amp; Leadership">
+                        <div class="c-opt-info"><span class="c-opt-title">STAR Behavioral &amp; Leadership</span><span class="c-opt-sub">Situation, Task, Action, Metric Result</span></div>
+                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+                      </div>
+                      <div class="c-opt" role="option" data-val="Coding &amp; Algorithms">
+                        <div class="c-opt-info"><span class="c-opt-title">Coding &amp; Algorithms</span><span class="c-opt-sub">Data structures &amp; time complexity</span></div>
+                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+                      </div>
+                      <div class="c-opt" role="option" data-val="Full Mixed Round">
+                        <div class="c-opt-info"><span class="c-opt-title">Full Mixed Round</span><span class="c-opt-sub">Comprehensive multi-stage assessment</span></div>
+                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="field full">
+                  <label class="label">Skills &amp; stack <span
+                      style="color:var(--ink-faint);text-transform:none;letter-spacing:0;font-family:var(--f-ui)">— type
+                      and press enter</span></label>
+                  <div class="control">
+                    <span class="lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M8 9l-4 3 4 3M16 9l4 3-4 3M13 6l-2 12" />
+                      </svg></span>
+                    <div class="tagbox" id="tagbox">
+                      <input id="tagInput" placeholder="Add a skill…">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- SPECIFIC FOCUS QUESTION / SEED TOPIC FIELD -->
+                <div class="field full" style="margin-top:4px">
+                  <div style="display:flex;justify-content:space-between;align-items:center">
+                    <label class="label" for="customQuestion">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"
+                        stroke-width="2.2">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 16v-4M12 8h.01" />
+                      </svg>
+                      Specific Focus Question / Seed Topic (Optional)
+                    </label>
+                    <span style="font-size:11px;font-family:var(--f-mono);color:var(--pen);font-weight:600">Generates
+                      related deep-dive questions</span>
+                  </div>
+                  <div class="control">
+                    <span class="lead" style="top:18px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                      </svg></span>
+                    <textarea class="input" id="customQuestion" rows="2"
+                      style="padding:10px 14px 10px 40px;height:auto;resize:vertical;min-height:48px;font-family:var(--f-ui);font-size:13.5px;line-height:1.45"
+                      placeholder="e.g. How do you design, prototype, and usability-test a multi-step checkout experience in Figma?"></textarea>
+                  </div>
+                  <!-- INSPIRATION PILLS -->
+                  <div class="seed-section">
+                    <div class="seed-label">Quick Seed:</div>
+                    <div class="seed-pills">
+                      <button type="button" class="seed-pill"
+                        onclick="setSeedTopic('How do you structure design tokens and variable modes in Figma for multi-brand design systems?')">Figma
+                        Design Tokens</button>
+                      <button type="button" class="seed-pill"
+                        onclick="setSeedTopic('How do you conduct unmoderated usability testing on an interactive Figma prototype to reduce cart abandonment?')">Usability
+                        Testing Case</button>
+                      <button type="button" class="seed-pill"
+                        onclick="setSeedTopic('How do you balance WCAG 2.2 AAA accessibility contrast with modern dark mode aesthetic guidelines?')">Accessibility
+                        &amp; WCAG</button>
+                      <button type="button" class="seed-pill"
+                        onclick="setSeedTopic('How do you facilitate a design critique when engineering and PM have conflicting performance vs UX trade-offs?')">Stakeholder
+                        Trade-offs</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label class="label" for="diff">Difficulty</label>
+                  <div class="control custom-select-wrap" id="diffSelectWrap">
+                    <span class="lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M12 3l3 6 6 .5-4.5 4L18 20l-6-3.3L6 20l1.5-6.5L3 9.5 9 9z" />
+                      </svg></span>
+                    <select class="select" id="diff" style="display:none">
+                      <option value="Warm-up">Warm-up</option>
+                      <option value="Medium">Medium</option>
+                      <option value="Hard" selected>Hard</option>
+                      <option value="Brutal">Brutal</option>
+                    </select>
+                    <button type="button" class="custom-select-trigger" id="diffTrigger" aria-haspopup="listbox"
+                      aria-expanded="false">
+                      <span class="c-val" id="diffDisplayVal">Hard</span>
+                      <span class="c-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                          <path d="M6 9l6 6 6-6" />
+                        </svg></span>
+                    </button>
+                    <div class="custom-select-menu" id="diffMenu" role="listbox">
+                      <div class="c-opt" role="option" data-val="Warm-up">
+                        <div class="c-opt-info">
+                          <span class="c-opt-title">Warm-up</span>
+                          <span class="c-opt-sub">Fundamentals &amp; conceptual refresher</span>
+                        </div>
+                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg></span>
+                      </div>
+                      <div class="c-opt" role="option" data-val="Medium">
+                        <div class="c-opt-info">
+                          <span class="c-opt-title">Medium</span>
+                          <span class="c-opt-sub">Standard production scenarios &amp; edge cases</span>
+                        </div>
+                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg></span>
+                      </div>
+                      <div class="c-opt selected" role="option" data-val="Hard" aria-selected="true">
+                        <div class="c-opt-info">
+                          <span class="c-opt-title">Hard</span>
+                          <span class="c-opt-sub">Surgical trade-offs, architecture &amp; failure modes</span>
+                        </div>
+                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg></span>
+                      </div>
+                      <div class="c-opt" role="option" data-val="Brutal">
+                        <div class="c-opt-info">
+                          <span class="c-opt-title">Brutal</span>
+                          <span class="c-opt-sub">FAANG Staff-level high pressure grill questions</span>
+                        </div>
+                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label class="label">Questions</label>
+                  <div class="count-row">
+                    <span class="num" id="countNum">10</span>
+                    <div class="stepper">
+                      <button id="minus" aria-label="Fewer">−</button>
+                      <button id="plus" aria-label="More">+</button>
+                    </div>
+                    <input class="range" id="range" type="range" min="3" max="20" value="10">
+                  </div>
+                </div>
+              </div>
+
+              <button class="generate" id="genBtn">
+                <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                </svg>
+                Compose question paper
+              </button>
+            </div>
+          </div>
+
+          <!-- QUESTION PAPER CARD -->
+          <div class="paper-card">
+            <div class="paper-toolbar">
+              <span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M6 3h9l3 3v15H6z" />
+                  <path d="M15 3v3h3M9 12h6M9 16h4" />
+                </svg></span>
+              <span class="ct">Question paper</span>
+              <div class="ha">
+                <button class="ghost-btn" id="shareBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <circle cx="18" cy="5" r="3" />
+                    <circle cx="6" cy="12" r="3" />
+                    <circle cx="18" cy="19" r="3" />
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                  </svg> Share</button>
+                <button class="ghost-btn" id="exportBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M12 3v11M8 11l4 3 4-3M5 21h14" />
+                  </svg> Export PDF</button>
+                <button class="ghost-btn" id="copyAllBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <rect x="9" y="9" width="11" height="11" rx="2" />
+                    <path d="M5 15V5a2 2 0 012-2h8" />
+                  </svg> Copy all</button>
+              </div>
+            </div>
+
+            <!-- AI PROGRESS STEPPER -->
+            <div class="ai-stepper" id="aiStepper" style="display:none">
+              <div class="stepper-header">
+                <div class="stepper-spinner"></div>
+                <div>
+                  <div class="stepper-title" id="stepperTitle">Synthesizing Surgical Question Paper with Gemini 2.5
+                    Flash...</div>
+                  <div class="stepper-sub" id="stepperSub">Live AI Reasoning &amp; Context-Branching Pipeline</div>
+                </div>
+              </div>
+              <div class="steps-row">
+                <div class="s-step active" id="st1"><span class="s-num">1</span> Context Extraction</div>
+                <div class="s-step" id="st2"><span class="s-num">2</span> Domain Calibration</div>
+                <div class="s-step" id="st3"><span class="s-num">3</span> Related Question Branching</div>
+                <div class="s-step" id="st4"><span class="s-num">4</span> Evaluation Rubrics</div>
+              </div>
+            </div>
+
+            <div class="sheet" id="sheet">
+              <div class="sheet-head">
+                <div class="sheet-stamp">For practice</div>
+                <div class="sheet-title" id="sheetTitle">UX Designer</div>
+                <div class="sheet-meta" id="sheetMeta">
+                  <span>Level <b>Hard</b></span>
+                  <span>Experience <b>5 Years</b></span>
+                  <span>Stack <b>Figma · Design Systems · User Research</b></span>
+                  <span id="metaCount">10 questions</span>
+                </div>
+                <div id="sheetFocusBadge"
+                  style="display:none;margin-top:10px;padding:6px 12px;border-radius:8px;background:var(--pen-wash);border:1px solid rgba(99,102,241,0.25);font-size:12px;color:var(--pen);font-weight:600">
+                  🎯 <b>Specific Focus Seed:</b> <span id="sheetFocusText"></span>
+                </div>
+              </div>
+              <ol class="qlist" id="qlist"></ol>
+            </div>
+          </div>
+        </div>
+
+        <!-- SIDEBAR TOOLS: TIPS / NOTES + RECENT PAPERS -->
+        <div class="studio-side-col">
+          <!-- TIPS -->
+          <aside class="card tips">
+            <div class="th"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M9 18h6M10 21h4M12 3a6 6 0 013.5 10.9c-.6.5-1 1.2-1 2H9.5c0-.8-.4-1.5-1-2A6 6 0 0112 3z" />
+              </svg> Sharper briefs, sharper questions</div>
+            <div class="thh">Marker's notes</div>
+            <div class="tip"><span class="tn">01</span>
+              <p>Provide a <b>specific seed question</b> above to generate deep-dive related questions.</p>
+            </div>
+            <div class="tip"><span class="tn">02</span>
+              <p>For UX/UI Design, include specific tools (e.g. <b>Figma, Design Tokens, Usability Testing</b>).</p>
+            </div>
+            <div class="tip"><span class="tn">03</span>
+              <p>Match difficulty to seniority — <b>Hard/Brutal</b> challenges design trade-offs &amp; systems.</p>
+            </div>
+            <div class="tip"><span class="tn">04</span>
+              <p>Questions stream <b>in real time</b> with Gemini 2.5 evaluation rubrics attached.</p>
+            </div>
+          </aside>
+
+          <!-- HISTORY -->
+          <aside class="card">
+            <div class="card-head">
+              <span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 7v5l3 2" />
+                </svg></span>
+              <span class="ct">Recent papers</span>
+            <div class="hist" id="hist">
+              <!-- Dynamically populated from backend /history -->
+            </div>
+          </aside>
+
+      <div class="foot">© 2026 Ravi GenAI Studio — built for the hot seat.</div>
+    </main>
+  </div>
+
+  <!-- QUESTION PACKAGE SHARE MODAL -->
+  <div class="share-modal-backdrop" id="shareModalBackdrop">
+    <div class="share-modal">
+      <div class="share-head">
+        <h3>
+          <span style="font-size:22px">📦</span>
+          <span>Share Question Package</span>
+        </h3>
+        <button class="close-modal-btn" id="closeShareModal" aria-label="Close modal">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="pkg-hero-banner">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 16v-4M12 8h.01" />
+        </svg>
+        <span>Shares the complete formatted question set directly into Email, LinkedIn, or chat — no URL
+          required!</span>
+      </div>
+
+      <!-- QUESTION PACKAGE PREVIEW CARD -->
+      <div class="pkg-preview-card">
+        <div class="pkg-preview-header">
+          <span class="pkg-title" id="pkgPreviewTitle">Interview Question Paper</span>
+          <div class="pkg-badge-group">
+            <span class="pkg-badge primary" id="pkgPreviewCount">10 Qs</span>
+            <span class="pkg-badge" id="pkgPreviewDiff">Hard</span>
+            <span class="pkg-badge" id="pkgPreviewExp">5 Years</span>
+          </div>
+        </div>
+        <div class="pkg-preview-content" id="pkgPreviewContent"></div>
+        <div class="pkg-preview-actions">
+          <button class="pkg-btn-sm" id="shareCopyPackageBtn">
+            📋 Copy Question Package
+          </button>
+          <button class="pkg-btn-sm" id="copyMarkdownBtn">
+            📑 Copy Markdown
+          </button>
+        </div>
+      </div>
+
+      <div
+        style="font-family:var(--f-mono);font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;margin-bottom:8px">
+        Instant Share Channels (Full Package Embedded):
+      </div>
+      <div class="share-channels-grid">
+        <button class="share-channel-btn" id="shareEmailBtn" type="button">
+          <span class="share-channel-icon">✉️</span>
+          <div class="share-channel-info">
+            <span class="share-channel-title">Email Package</span>
+            <span class="share-channel-desc">Prefills email with full questions</span>
+          </div>
+        </button>
+
+        <button class="share-channel-btn" id="shareLinkedInBtn" type="button">
+          <span class="share-channel-icon">💼</span>
+          <div class="share-channel-info">
+            <span class="share-channel-title">LinkedIn Post</span>
+            <span class="share-channel-desc">Copies package &amp; opens LinkedIn</span>
+          </div>
+        </button>
+
+        <button class="share-channel-btn" id="shareWhatsAppBtn" type="button">
+          <span class="share-channel-icon">💬</span>
+          <div class="share-channel-info">
+            <span class="share-channel-title">WhatsApp</span>
+            <span class="share-channel-desc">Sends package directly in chat</span>
+          </div>
+        </button>
+
+        <button class="share-channel-btn" id="shareTwitterBtn" type="button">
+          <span class="share-channel-icon">🐦</span>
+          <div class="share-channel-info">
+            <span class="share-channel-title">X / Twitter</span>
+            <span class="share-channel-desc">Post questions package</span>
+          </div>
+        </button>
+      </div>
+
+      <!-- Optional Real-time Live Link & QR Accordion -->
+      <details
+        style="margin-top:4px;border:1px solid var(--rule);border-radius:12px;background:var(--paper);padding:8px 12px">
+        <summary
+          style="font-size:11.5px;font-weight:600;color:var(--ink-soft);cursor:pointer;display:flex;align-items:center;gap:6px">
+          <span>🔗 Need a live interactive link or QR code instead?</span>
+        </summary>
+        <div style="margin-top:10px;display:flex;flex-direction:column;gap:10px">
+          <div class="share-url-box">
+            <input class="share-url-text" id="shareUrlInput" readonly value="">
+            <button class="share-copy-btn" id="shareUrlCopyBtn">Copy Link</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <img id="shareQrImg" alt="QR Code"
+              style="width:58px;height:58px;border-radius:6px;border:1px solid var(--rule);background:#fff;padding:2px">
+            <span style="font-size:11.5px;color:var(--ink-faint)">Scan to load real-time questions directly in mobile
+              browser.</span>
+          </div>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- DEDICATED EMAIL PACKAGE MODAL -->
+  <div class="share-modal-backdrop" id="emailModalBackdrop">
+    <div class="share-modal" style="max-width:560px">
+      <div class="share-head">
+        <h3>
+          <span style="font-size:22px">✉️</span>
+          <span>Email Question Package</span>
+        </h3>
+        <button class="close-modal-btn" id="closeEmailModal" aria-label="Close email modal">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="pkg-hero-banner">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 16v-4M12 8h.01" />
+        </svg>
+        <span>Pre-fills your chosen email app with the complete question set, rubric &amp; role details — no link
+          needed!</span>
+      </div>
+
+      <!-- RECIPIENT INPUT (OPTIONAL) -->
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;font-weight:700;color:var(--ink);margin-bottom:4px;display:block">Recipient Email
+          (Optional):</label>
+        <input type="email" id="emailRecipientInput" placeholder="e.g. candidate@example.com or interviewer@team.com"
+          style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--rule);background:var(--paper);color:var(--ink);font-size:13px;outline:none">
+      </div>
+
+      <!-- EMAIL SUBJECT PREVIEW -->
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;font-weight:700;color:var(--ink);margin-bottom:4px;display:block">Subject
+          Line:</label>
+        <input type="text" id="emailSubjectInput" readonly
+          style="width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--rule);background:var(--paper-2);color:var(--ink-soft);font-size:12px;font-family:var(--f-mono);outline:none">
+      </div>
+
+      <!-- PREVIEW OF EMAIL BODY PACKAGE -->
+      <div style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <label style="font-size:12px;font-weight:700;color:var(--ink)">Email Package Body Preview:</label>
+          <span style="font-size:11px;font-family:var(--f-mono);color:var(--pen);font-weight:600"
+            id="emailQCountBadge">10 Questions</span>
+        </div>
+        <div class="pkg-preview-content" id="emailBodyPreview" style="max-height:130px"></div>
+      </div>
+
+      <!-- EMAIL LAUNCH CHANNELS -->
+      <div
+        style="font-family:var(--f-mono);font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;margin-bottom:8px">
+        Choose How to Send:
+      </div>
+      <div class="share-channels-grid">
+        <button class="share-channel-btn" id="sendViaGmailBtn" type="button">
+          <span class="share-channel-icon">🔴</span>
+          <div class="share-channel-info">
+            <span class="share-channel-title">Gmail Web</span>
+            <span class="share-channel-desc">Opens in browser Gmail</span>
+          </div>
+        </button>
+
+        <button class="share-channel-btn" id="sendViaOutlookBtn" type="button">
+          <span class="share-channel-icon">🔵</span>
+          <div class="share-channel-info">
+            <span class="share-channel-title">Outlook Web</span>
+            <span class="share-channel-desc">Opens in Outlook.com</span>
+          </div>
+        </button>
+
+        <button class="share-channel-btn" id="sendViaDefaultMailBtn" type="button">
+          <span class="share-channel-icon">✉️</span>
+          <div class="share-channel-info">
+            <span class="share-channel-title">Default Mail App</span>
+            <span class="share-channel-desc">Windows / Mac / Desktop app</span>
+          </div>
+        </button>
+
+        <button class="share-channel-btn" id="copyEmailDraftBtn" type="button">
+          <span class="share-channel-icon">📋</span>
+          <div class="share-channel-info">
+            <span class="share-channel-title">Copy Email Text</span>
+            <span class="share-channel-desc">Copy full email draft</span>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path d="M5 12l4 4 10-10" />
+    </svg>
+    <span id="toastMsg">Copied</span>
+  </div>
+
+  <script>
+    /* ---------- tiny helpers ---------- */
+    const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+    let toastT;
+    function toast(msg) {
+      const t = $('#toast'); $('#toastMsg').textContent = msg;
+      t.classList.add('show'); clearTimeout(toastT);
+      toastT = setTimeout(() => t.classList.remove('show'), 2400);
+    }
+
+    /* ---------- Professional Custom Select Dropdowns Controller ---------- */
+    function initCustomDropdowns() {
+      document.querySelectorAll('.custom-select-wrap').forEach(wrap => {
+        const trigger = wrap.querySelector('.custom-select-trigger');
+        const menu = wrap.querySelector('.custom-select-menu');
+        const hiddenSelect = wrap.querySelector('select');
+        const displayVal = wrap.querySelector('.c-val');
+        const options = wrap.querySelectorAll('.c-opt');
+
+        if (!trigger || !menu || !hiddenSelect) return;
+
+        // Toggle dropdown
+        trigger.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isOpen = wrap.classList.contains('open');
+          document.querySelectorAll('.custom-select-wrap.open').forEach(w => {
+            if (w !== wrap) {
+              w.classList.remove('open');
+              w.querySelector('.custom-select-trigger')?.setAttribute('aria-expanded', 'false');
+            }
+          });
+          wrap.classList.toggle('open', !isOpen);
+          trigger.setAttribute('aria-expanded', !isOpen ? 'true' : 'false');
+        });
+
+        // Option click
+        options.forEach(opt => {
+          opt.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const val = opt.getAttribute('data-val');
+            hiddenSelect.value = val;
+
+            options.forEach(o => {
+              o.classList.remove('selected');
+              o.removeAttribute('aria-selected');
+            });
+            opt.classList.add('selected');
+            opt.setAttribute('aria-selected', 'true');
+
+            if (displayVal) {
+              displayVal.textContent = val;
+            }
+
+            wrap.classList.remove('open');
+            trigger.setAttribute('aria-expanded', 'false');
+
+            hiddenSelect.dispatchEvent(new Event('change', { bubbles: true }));
+          });
+        });
+      });
+
+      // Close on outside click
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.custom-select-wrap')) {
+          document.querySelectorAll('.custom-select-wrap.open').forEach(w => {
+            w.classList.remove('open');
+            w.querySelector('.custom-select-trigger')?.setAttribute('aria-expanded', 'false');
+          });
+        }
+      });
+
+      // Close on Escape key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          document.querySelectorAll('.custom-select-wrap.open').forEach(w => {
+            w.classList.remove('open');
+            w.querySelector('.custom-select-trigger')?.setAttribute('aria-expanded', 'false');
+          });
+        }
+      });
+    }
+
+    function syncCustomSelect(selectId) {
+      const sel = document.getElementById(selectId);
+      if (!sel) return;
+      const wrap = sel.closest('.custom-select-wrap');
+      if (!wrap) return;
+      const val = sel.value;
+      const displayVal = wrap.querySelector('.c-val');
+      if (displayVal) displayVal.textContent = val;
+
+      const options = wrap.querySelectorAll('.c-opt');
+      options.forEach(opt => {
+        if (opt.getAttribute('data-val') === val) {
+          opt.classList.add('selected');
+          opt.setAttribute('aria-selected', 'true');
+        } else {
+          opt.classList.remove('selected');
+          opt.removeAttribute('aria-selected');
+        }
+      });
+    }
+
+    // Initialize custom dropdowns
+    initCustomDropdowns();
+
+    /* ---------- theme ---------- */
+    $('#themeBtn')?.addEventListener('click', () => {
+      const r = document.documentElement;
+      const dark = r.getAttribute('data-theme') === 'dark';
+      r.setAttribute('data-theme', dark ? 'light' : 'dark');
+      $('#sunMoon').innerHTML = dark
+        ? '<path d="M21 12.8A8 8 0 1111.2 3 6.2 6.2 0 0021 12.8z"/>'
+        : '<circle cx="12" cy="12" r="4.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.5 4.5l2 2M17.5 17.5l2 2M19.5 4.5l-2 2M6.5 17.5l-2 2"/>';
+    });
+
+    function handleLogout(e) {
+      if (e) e.stopPropagation();
+      if (confirm("Are you sure you want to log out from Ravi GenAI Studio?")) {
+        window.location.href = "Login.html";
+      }
+    }
+
+    function setSeedTopic(topicText) {
+      const el = $('#customQuestion');
+      if (el) {
+        el.value = topicText;
+        el.focus();
+        toast("Seed topic applied!");
+      }
+    }
+
+    /* ---------- mobile menu ---------- */
+    $('#menuBtn')?.addEventListener('click', () => { $('#sidebar').classList.add('open'); $('#scrim').classList.add('show') });
+    $('#scrim')?.addEventListener('click', () => { $('#sidebar').classList.remove('open'); $('#scrim').classList.remove('show') });
+
+    /* ---------- skills tags ---------- */
+    let skills = ['Figma', 'Design Systems', 'User Research'];
+    const tagbox = $('#tagbox'), tagInput = $('#tagInput');
+    function renderTags() {
+      $$('.tag').forEach(t => t.remove());
+      skills.forEach((s, i) => {
+        const el = document.createElement('span'); el.className = 'tag';
+        el.innerHTML = `${s}<button aria-label="Remove ${s}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 6l12 12M18 6L6 18"/></svg></button>`;
+        el.querySelector('button').onclick = () => { skills.splice(i, 1); renderTags() };
+        tagbox.insertBefore(el, tagInput);
+      });
+    }
+    function addTag(v) { v = v.trim().replace(/,$/, ''); if (v && !skills.some(s => s.toLowerCase() === v.toLowerCase())) { skills.push(v); renderTags() } }
+    tagInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTag(tagInput.value); tagInput.value = '' }
+      else if (e.key === 'Backspace' && !tagInput.value && skills.length) { skills.pop(); renderTags() }
+    });
+    tagInput.addEventListener('blur', () => { if (tagInput.value) addTag(tagInput.value); tagInput.value = '' });
+    tagbox.addEventListener('click', () => tagInput.focus());
+    tagInput.addEventListener('focus', () => tagbox.classList.add('focus'));
+    tagInput.addEventListener('blur', () => tagbox.classList.remove('focus'));
+    renderTags();
+
+    /* ---------- count stepper + range ---------- */
+    let count = 10;
+    const countNum = $('#countNum'), range = $('#range');
+    function setCount(n) { count = Math.max(3, Math.min(20, n)); countNum.textContent = count; range.value = count }
+    $('#minus').onclick = () => setCount(count - 1);
+    $('#plus').onclick = () => setCount(count + 1);
+    range.oninput = () => setCount(+range.value);
+
+    /* ---------- comprehensive question bank (offline & fallback, 25+ items per role) ---------- */
+    const BANK = {
+      ux: [
+        "How do you design and execute a mixed-methods user research plan for an ambiguous feature definition?",
+        "Walk through how you construct a task-based usability testing protocol and analyze the System Usability Scale (SUS) results.",
+        "How do you organize information architecture and mental models for an enterprise application with dense navigation hierarchy?",
+        "Describe your approach to wireframing and low-fidelity prototyping to align cross-functional teams early.",
+        "How do you ensure interaction design patterns meet WCAG 2.2 AA accessibility standards for keyboard and screen-reader navigation?",
+        "Scenario: User drop-off spikes at step 2 of a multi-step onboarding wizard. How do you diagnose whether the issue is cognitive load, usability friction, or value communication?",
+        "How do you handle a situation where a Product Manager pushes for a dark pattern to temporarily boost conversion numbers?",
+        "Explain how you synthesize generative research findings into actionable personas and journey maps without introducing confirmation bias.",
+        "What quantitative metrics (SEQ, time-on-task, error rate) do you pair with qualitative observations during unmoderated user tests?",
+        "How do you design an intuitive search and filter experience for a dataset with over 50 multi-faceted dimensions?",
+        "Describe how you conduct tree testing and closed card sorting to validate a restructured taxonomy.",
+        "How do you balance aesthetic delight and micro-interactions with cognitive accessibility and task velocity?",
+        "Walk through your strategy for conducting accessibility audits across legacy web interfaces.",
+        "How do you facilitate co-design design thinking workshops with non-designer engineering and business stakeholders?",
+        "Scenario: Usability testing reveals users misunderstand a critical action button label. How do you rapidly test copy and icon variations?",
+        "How do you define UX guardrail metrics when product teams run high-velocity multivariate experiments?",
+        "Describe how you structure user interview discussion guides to avoid leading questions and uncover latent user needs.",
+        "How do you manage design handoff and annotate Figma files with edge cases, error states, and responsive breakpoints?",
+        "What is your approach to designing error recovery and empty states that guide users toward constructive resolution?",
+        "How do you evaluate user feedback from in-app CSAT/NPS micro-surveys alongside session replay analytics?",
+        "Scenario: A critical client requires an immediate custom workflow that compromises the core navigation UX. How do you navigate this trade-off?",
+        "How do you prototype high-fidelity motion and micro-interactions in Figma or ProtoPie to validate user feedback loops?",
+        "Explain how you create design tokens in Figma Variables to support dynamic theming and WCAG contrast compliance.",
+        "How do you measure the long-term ROI and business impact of UX research on product adoption and churn reduction?",
+        "What strategies do you use to continuously test and iterate on design system components based on real user behavior?"
+      ],
+      product: [
+        "How do you frame a product problem statement to balance business viability (e.g. ARR, retention) with core user needs?",
+        "Walk through a product feature you designed: what North Star metric and secondary guardrail metrics did you track?",
+        "How do you navigate discovery vs delivery when working in fast two-week agile sprint cycles with engineering?",
+        "Describe a scenario where A/B test data showed positive revenue metrics but qualitative customer feedback was negative. What did you do?",
+        "How do you determine when a design system component should be added to the core library vs remaining feature-specific?",
+        "Scenario: You are designing a zero-to-one product in a competitive space. How do you identify the minimum lovable product (MLP) scope?",
+        "How do you prioritize competing feature requests from high-value enterprise sales leads against core consumer user experience?",
+        "Explain how you design monetization and paywall trigger moments without degrading user engagement and product trust.",
+        "What frameworks (e.g., RICE, Kano Model, ICE) do you apply to evaluate product design trade-offs and roadmap initiatives?",
+        "How do you partner with Product Managers and Data Scientists to define funnel conversion milestones and event instrumentation?",
+        "Walk through your approach to sunsetting a legacy product feature that has passionate but low-volume user adoption.",
+        "How do you align multi-disciplinary squads across mobile, desktop web, and email notification touchpoints?",
+        "Describe a time you used cohort retention curves to identify where new users experience their initial 'aha!' value moment.",
+        "How do you design self-service onboarding flows that maximize Day-1 product activation and minimize time-to-value (TTV)?",
+        "Scenario: Product leadership wants to launch an AI feature quickly. How do you ensure it solves real customer pain rather than being a gimmick?",
+        "How do you evaluate whether to build custom bespoke components or adopt standard off-the-shelf design patterns for speed to market?",
+        "Walk through how you defend controversial design decisions using qualitative insights and quantitative benchmark metrics.",
+        "How do you run rapid customer advisory board (CAB) sessions to de-risk high-stakes strategic roadmap bets?",
+        "Describe how you architect omni-channel user experiences connecting web apps, mobile apps, and physical operational workflows.",
+        "How do you build business cases for investing engineering sprint capacity into foundational design debt refactoring?",
+        "Scenario: Key user engagement drops 15% after a major redesign rollout. Walk through your step-by-step diagnostic and remediation plan.",
+        "How do you ensure enterprise administrative permission models and role-based access control (RBAC) remain easy to configure?",
+        "What methods do you use to map out end-to-end customer service blueprints across support, sales, and automated product systems?",
+        "How do you balance immediate conversion rate optimization (CRO) quick-wins with long-term brand equity and UX integrity?",
+        "Describe your methodology for conducting post-launch product retrospectives and feeding user telemetry back into the roadmap."
+      ],
+      uiux: [
+        "How do you establish typographic scale, 8pt/4pt spatial rhythm, and contrast ratios across multi-density screens?",
+        "Explain how you architect multi-brand design tokens (Global -> Semantic -> Component) in Figma Variables.",
+        "How do you design state machines for complex interactive UI components (hover, focus-visible, active, error, loading, skeleton)?",
+        "Walk through your approach to micro-interactions and motion design to provide clear user feedback without causing distraction.",
+        "Scenario: An existing design system has 40+ inconsistent button variants. How do you audit, consolidate, and roll out a refactored component set?",
+        "How do you ensure visual accessibility for color-blind users across complex statistical charts and status badges?",
+        "Describe how you build responsive auto-layout components in Figma that fluidly resize across 320px mobile to 2560px ultra-wide screens.",
+        "What is your strategy for implementing dark mode theming with semantic color tokens while preserving hierarchy and depth?",
+        "How do you prototype realistic user input validation states and multi-field inline error messages in Figma?",
+        "Walk through how you organize component libraries in Figma using variants, nested instances, and boolean property toggles.",
+        "How do you collaborate with frontend engineers to ensure CSS custom properties match Figma token definitions precisely?",
+        "Describe how you design accessible keyboard navigation focus indicators that blend with brand aesthetics.",
+        "How do you maintain visual harmony when incorporating dense data tables, graphs, and action toolbars on a single dashboard viewport?",
+        "Scenario: Marketing requires large hero imagery, but engineering reports severe performance impacts on mobile. How do you solve this visually?",
+        "How do you create unified iconography guidelines (stroke weight, corner radius, optical volume) for a product suite?",
+        "Explain your approach to designing toast notifications, banners, and modal dialogs with strict visual z-index hierarchies.",
+        "How do you test UI components across high-contrast mode, browser font-size zoom (up to 200%), and RTL language scripts?",
+        "Describe how you design skeletal loading states that match actual layout geometries to reduce perceived latency.",
+        "What methods do you use to audit UI components for WCAG 2.2 target size requirements (minimum 24x24px / 44x44px)?",
+        "How do you design fluid bottom sheets, drawer navigation, and gesture-driven interactions for modern mobile apps?",
+        "Scenario: A critical user workflow requires dense multi-step configuration. How do you design progressive disclosure without visual clutter?",
+        "How do you document component usage guidelines and 'Do / Don't' visual specifications in Storybook or Zeroheight?",
+        "Describe your approach to designing micro-copy and typographic emphasis within tight interface constraints.",
+        "How do you handle visual degradation and responsive fallbacks for users on low-resolution or legacy display hardware?",
+        "What is your process for creating interactive prototypes to pitch high-concept visual UI innovations to executive leadership?"
+      ],
+      frontend: [
+        "Explain how the React 19 concurrent renderer and Server Components (RSC) change data fetching and hydration performance.",
+        "How do you profile, identify, and eliminate memory leaks and unnecessary re-renders in a complex component tree?",
+        "Compare client-side state architectures (Zustand/Redux) vs server cache state (TanStack Query/SWR) in high-frequency apps.",
+        "Describe how you build a custom accessible dropdown component compliant with WAI-ARIA authoring practices from scratch.",
+        "Scenario: A live trading dashboard receives 100 WebSocket price updates per second. How do you prevent UI freezing and DOM thrashing?",
+        "How do you optimize Core Web Vitals (LCP, INP, CLS) in Next.js applications using script prioritization and image optimization?",
+        "Explain how the JavaScript Event Loop coordinates the microtask queue (Promises), macrotask queue (setTimeout), and animation frames (rAF).",
+        "How do you implement code splitting, dynamic imports, and route-level bundle chunking to keep initial JS bundles under 100KB?",
+        "Describe your strategy for optimistic UI mutations, rollback on error, and background cache synchronization in TanStack Query.",
+        "How do you architect end-to-end type safety between backend OpenAPI/tRPC schemas and frontend TypeScript models?",
+        "Walk through how you create virtualized lists (e.g. react-virtual/tanstack-virtual) to render 50,000+ items smoothly at 60 FPS.",
+        "How do you handle offline sync, service worker caching, and IndexedDB persistence in Progressive Web Apps (PWAs)?",
+        "Scenario: A third-party analytics script is causing severe Interaction to Next Paint (INP) degradation. How do you isolate and fix it?",
+        "Compare CSS Modules, Tailwind CSS, and CSS-in-JS (e.g. styled-components) regarding runtime overhead and build-time zero-runtime extraction.",
+        "How do you design robust frontend error boundaries with fallback UI, telemetry logging (Sentry), and retry mechanisms?",
+        "Explain how you use Web Workers to offload heavy computational algorithms (e.g. large JSON parsing or image filtering) from the main thread.",
+        "How do you build responsive, high-performance canvas/SVG data visualizer components using D3 or PixiJS in React?",
+        "Describe how you implement secure JWT token storage (httpOnly cookies vs memory) and handle silent token refresh cycles.",
+        "What is your approach to testing frontend applications across Unit (Vitest/Jest), Integration (React Testing Library), and E2E (Playwright)?",
+        "Scenario: Layout shifts occur when custom web fonts and hero banners load asynchronously. How do you eliminate CLS completely?",
+        "How do you implement internationalization (i18n), right-to-left (RTL) layout switching, and localized number/date formatting cleanly?",
+        "Explain how modern browser rendering engines handle reflow, repaint, and GPU compositing layers.",
+        "How do you structure shared Monorepo architectures (Turborepo/Nx) with reusable UI component packages across multiple web apps?",
+        "Describe how you enforce strict accessibility linting (eslint-plugin-jsx-a11y) and automated axe-core audits in CI/CD pipelines.",
+        "How do you architect real-time collaborative document editing using CRDTs (Yjs/Automerge) and WebSockets?"
+      ],
+      backend: [
+        "How do you structure database indexes (B-Tree, GIN, composite) in PostgreSQL and interpret EXPLAIN ANALYZE output?",
+        "Explain concurrency control mechanisms: compare optimistic locking vs pessimistic locking with concrete SQL examples.",
+        "How do you design distributed caching with Redis (Cache-Aside, Write-Through) and prevent cache stampedes (dogpiling)?",
+        "Describe how you implement token bucket or leaky bucket rate limiting across distributed API gateway instances.",
+        "Scenario: A distributed payment endpoint experiences intermittent database timeouts under heavy load. How do you implement circuit breakers and dead-letter queue retry mechanisms?",
+        "Compare RESTful APIs, GraphQL, and gRPC with Protobuf regarding schema evolution, latency overhead, and client flexibility.",
+        "How do you design idempotent API endpoints using unique idempotency keys, Redis locks, and atomic database commits?",
+        "Explain database transaction isolation levels (Read Committed, Repeatable Read, Serializable) and the anomalies they prevent.",
+        "How do you architect event-driven microservices using Apache Kafka or RabbitMQ, ensuring at-least-once or exactly-once message delivery?",
+        "Describe how you implement secure OAuth2 + OpenID Connect authentication with JWT signing (RS256) and token revocation lists.",
+        "How do you manage database connection pooling (HikariCP, PgBouncer) and prevent pool starvation during traffic spikes?",
+        "Scenario: A monolithic PostgreSQL database table has reached 500 million rows. How do you plan and execute zero-downtime partitioning/sharding?",
+        "How do you structure asynchronous background task workers using Celery/BullMQ with exponential backoff and dead-letter queues?",
+        "Explain how you design structured logging, distributed tracing (OpenTelemetry/Jaeger), and metrics (Prometheus) across microservices.",
+        "How do you guard backend APIs against SQL injection, SSRF, broken object-level authorization (BOLA), and ReDoS attacks?",
+        "Walk through your strategy for zero-downtime database schema migrations with zero locks on live production tables.",
+        "How do you implement database read-replicas with replication lag monitoring and read-after-write consistency guarantees?",
+        "Scenario: Microservices communication experiences cascading network failures during an AWS AZ outage. How do you build resilience?",
+        "How do you architect secure multi-tenant data isolation (Row-Level Security vs schema-per-tenant vs database-per-tenant)?",
+        "Explain how modern asynchronous runtimes (Python asyncio, Node.js libuv, Go goroutines) handle 50,000+ concurrent network sockets.",
+        "How do you design distributed locks in Redis using Redlock and ensure safety during unexpected process pauses or clock drift?",
+        "Describe how you implement webhook delivery systems with HMAC-SHA256 signature verification and retry backoff policies.",
+        "How do you optimize slow SQL queries with heavy JOINs and aggregations using materialized views and covering indexes?",
+        "Scenario: A memory leak in a backend microservice causes OOM crashes every 6 hours. Walk through how you profile heap dumps and resolve it.",
+        "How do you architect high-volume data ingestion pipelines using CDC (Change Data Capture) with Debezium and Kafka Connect?"
+      ],
+      genai: [
+        "Compare chunking strategies (semantic chunking, parent-document retrieval, sentence windowing) for dense domain-specific documents.",
+        "How do you implement hybrid search combining dense vector embeddings with sparse BM25 keyword search using reciprocal rank fusion (RRF)?",
+        "Describe how you build a multi-step agentic workflow with LangGraph/AutoGen that executes deterministic tool calls safely.",
+        "How do you quantitatively benchmark and monitor hallucination rates in production using Ragas or LLM-as-a-judge frameworks?",
+        "Scenario: Your production LLM service suffers high TTFT (Time to First Token) and token cost. How do you optimize latency and throughput using semantic caching and model quantization?",
+        "Explain how Multi-Head Attention, RoPE (Rotary Position Embedding), and KV-caching operate inside transformer decoder architectures.",
+        "How do you design vector database index configurations (HNSW parameters M and efConstruction vs IVFFlat) for sub-20ms search latency?",
+        "Describe your methodology for fine-tuning open-weights models (e.g. LLaMA-3) using QLoRA, LoRA ranks, and target modules.",
+        "How do you implement multi-tenant RAG security to guarantee strict document-level Access Control Lists (ACLs) during vector retrieval?",
+        "Compare ReAct (Reason + Act), Plan-and-Solve, and Reflexion agentic frameworks regarding reliability and token consumption.",
+        "How do you design guardrails (NeMo Guardrails, Llama-Guard) to prevent prompt injections, jailbreaks, and sensitive PII exfiltration?",
+        "Scenario: Retrieval returns 20 relevant chunks but LLM context degradation causes 'lost in the middle' syndrome. How do you solve this with rerankers (Cohere/BGE)?",
+        "How do you implement streaming token output via Server-Sent Events (SSE) while preserving structured JSON schema validation?",
+        "Explain how speculative decoding and vLLM PagedAttention optimize GPU throughput and vRAM memory bandwidth.",
+        "How do you architect synthetic data generation pipelines with strict diversity filtering to train specialized domain models?",
+        "Describe how you benchmark embeddings models (MTEB leaderboard) for specialized legal, medical, or multilingual enterprise corpora.",
+        "How do you build self-correcting agent loops that validate SQL/code output against schemas and retry with error feedback?",
+        "Scenario: An agent gets caught in an infinite tool-calling loop or exhibits oscillatory tool behavior. How do you detect and safely terminate it?",
+        "How do you implement dynamic few-shot prompt exemplar selection using semantic similarity vector search?",
+        "Explain how Direct Preference Optimization (DPO) and RLHF align model responses with human feedback and domain safety guidelines.",
+        "How do you design observability tracing (Langfuse, Arize Phoenix, OpenInference) across multi-step LLM chains and tool calls?",
+        "What strategies do you use for cost-performance routing between frontier models (GPT-4o, Claude 3.5 Sonnet) and fast SLMs (Llama-3-8B)?",
+        "How do you handle contextual document updates, deletions, and real-time vector re-indexing in production RAG systems?",
+        "Describe your approach to evaluating agentic reasoning trajectories when there is no single deterministic ground truth answer.",
+        "Scenario: Multi-modal LLM applications process complex scanned PDFs with mixed tables and charts. How do you structure the OCR and vision ingestion pipeline?"
+      ],
+      figma: [
+        "How do you structure component variants, boolean properties, and nested instances in Figma to maximize reuse across product teams?",
+        "Explain how you leverage Figma Variables and Modes for dynamic light/dark theming and responsive layout spacing.",
+        "How do you utilize Auto Layout v5 to accurately mirror production flexbox behavior for developers?",
+        "Describe your methodology for organizing token hierarchies (Global, Semantic, Component) in Figma Variables.",
+        "How do you conduct design system versioning, deprecation notices, and breaking component migrations in Figma?"
+      ],
+      generic: [
+        "Describe a challenging project where you resolved a core conflict between cross-functional team members.",
+        "How do you decide when a deliverable is 'good enough' to ship vs requiring further design or engineering iteration?",
+        "Walk through how you approach prioritizing technical or design debt alongside high-visibility roadmap feature work.",
+        "How do you mentor junior team members and cultivate technical rigor and design excellence across a growing squad?",
+        "Describe a situation where project requirements changed drastically mid-sprint. How did you adapt your execution?"
+      ]
+    };
+
+    /* ---------- dynamic seed question relation synthesis ---------- */
+    function generateRelatedQuestionsFromSeed(seedQ, role, skillList, diff, n) {
+      const cleanSeed = seedQ.replace(/[?.\s]+$/, '').trim();
+      const r = (role || '').toLowerCase();
+      let pool = [];
+
+      if (r.includes('product designer')) {
+        pool = [
+          `Regarding "${cleanSeed}" — How do you define the product hypothesis and balance business metrics (conversion/retention) with user friction?`,
+          `How do you conduct rapid user discovery for "${cleanSeed}" while keeping engineering delivery on track during sprint cycles?`,
+          `What North Star metric and secondary guardrails would you monitor post-launch for: "${cleanSeed}"?`,
+          `Describe how you would facilitate a cross-functional workshop with PM and Engineering leads to align on the MVP scope for: "${cleanSeed}".`,
+          `Scenario: 30 days after launching "${cleanSeed}", adoption is high but customer support tickets increased by 25%. How do you diagnose and iterate?`,
+          `How do you prioritize trade-offs between speed-to-market and long-term UX architecture when designing: "${cleanSeed}"?`,
+          `What qualitative customer signals vs quantitative product telemetry would you evaluate when iterating on: "${cleanSeed}"?`,
+          `Describe how you design monetization or conversion upgrade touchpoints within: "${cleanSeed}".`,
+          `How do you map out user onboarding flows and activation milestones specifically for: "${cleanSeed}"?`,
+          `Scenario: A competitor launches an alternative to "${cleanSeed}". How do you evaluate customer feedback and differentiate your experience?`,
+          `Walk through how you defend design scope for "${cleanSeed}" against aggressive engineering timeline cuts.`,
+          `How do you test value proposition clarity and user comprehension during prototype testing of: "${cleanSeed}"?`,
+          `Describe how you structure post-launch retrospectives and feedback loops with executive leadership for: "${cleanSeed}".`,
+          `How do you balance power-user feature density with beginner accessibility when scoping: "${cleanSeed}"?`,
+          `Scenario: Funnel analytics reveal a 50% drop-off during the setup stage of "${cleanSeed}". Walk through your step-by-step remediation.`
+        ];
+      } else if (r.includes('ui/ux') || r.includes('ui designer') || r.includes('visual')) {
+        pool = [
+          `Regarding "${cleanSeed}" — How do you establish typographic hierarchy, 8pt/4pt spatial grid, and color contrast tokens in Figma?`,
+          `Explain how you architect component variants, boolean properties, and variable modes to build: "${cleanSeed}".`,
+          `How do you design realistic micro-interactions and motion feedback loops for: "${cleanSeed}"?`,
+          `How do you ensure responsive layout adaptability across mobile, tablet, and ultra-wide viewports for: "${cleanSeed}"?`,
+          `Describe how you prepare design specs and token handoff in Figma to guarantee pixel-perfect developer implementation of: "${cleanSeed}".`,
+          `How do you design high-contrast dark mode palettes and semantic tokens for: "${cleanSeed}"?`,
+          `Scenario: Component states in "${cleanSeed}" lack visual consistency. Walk through your audit and refactoring plan.`,
+          `How do you design skeletal loading animations and inline validation cues for: "${cleanSeed}"?`,
+          `What methods do you use to ensure WCAG 2.2 touch target compliance and focus ring visibility in: "${cleanSeed}"?`,
+          `Describe how you prototype realistic multi-breakpoint interactions in Figma or ProtoPie for: "${cleanSeed}".`,
+          `How do you handle tabular data visualization and micro-copy hierarchy within: "${cleanSeed}"?`,
+          `Scenario: Marketing demands visual embellishments in "${cleanSeed}" that impair readability. How do you resolve this?`,
+          `How do you design cohesive custom iconography and vector iconography systems for: "${cleanSeed}"?`,
+          `Explain your cross-browser visual QA and rendering validation process for: "${cleanSeed}".`,
+          `How do you document component usage constraints and design principles for: "${cleanSeed}"?`
+        ];
+      } else if (r.includes('ux designer') || r.includes('user experience') || r.includes('research')) {
+        pool = [
+          `Regarding "${cleanSeed}" — What user research methodology (generative interviews vs unmoderated testing) would you use to define requirements?`,
+          `In Figma, how would you architect the wireframes, Auto Layout constraints, and interactive states to prototype: "${cleanSeed}"?`,
+          `What usability friction points, accessibility (WCAG 2.2 AA) edge cases, and error states must be solved in: "${cleanSeed}"?`,
+          `How would you design a usability testing protocol (tasks, metrics like SUS/time-on-task) to validate your prototype for: "${cleanSeed}"?`,
+          `How do you defend your UX decisions for "${cleanSeed}" when engineering raises technical constraints or timeline trade-offs?`,
+          `Scenario: User testing on "${cleanSeed}" shows a 40% task abandonment rate at step 2. How do you diagnose whether it is cognitive load or friction?`,
+          `How do you establish design system tokens, component variants, and interactive states in Figma for: "${cleanSeed}"?`,
+          `Describe how you map the end-to-end customer journey and uncover latent user needs for: "${cleanSeed}".`,
+          `How do you ensure "${cleanSeed}" is 100% accessible for screen-reader users and keyboard navigators?`,
+          `What quantitative benchmark metrics and qualitative proof-points would you present to stakeholders before launching: "${cleanSeed}"?`,
+          `How do you conduct card sorting and tree testing to structure information architecture for: "${cleanSeed}"?`,
+          `Describe your developer handoff documentation process for edge cases and error states in: "${cleanSeed}".`,
+          `How do you incorporate post-launch user sentiment micro-surveys and session replays for: "${cleanSeed}"?`,
+          `Scenario: Stakeholders request adding promotional banners into "${cleanSeed}". How do you protect core task clarity?`,
+          `How do you test and iterate on the micro-copy, button labels, and empty states of: "${cleanSeed}"?`
+        ];
+      } else if (r.includes('front') || r.includes('react')) {
+        pool = [
+          `Regarding "${cleanSeed}" — Explain how you architect the component hierarchy, client/server state, and DOM rendering in React 19/Next.js.`,
+          `How do you optimize Core Web Vitals (LCP, INP, CLS) and prevent unnecessary re-renders when implementing: "${cleanSeed}"?`,
+          `How do you implement keyboard navigation, focus trap, and ARIA attributes to make "${cleanSeed}" 100% WCAG accessible?`,
+          `Describe your error boundary, optimistic UI update, and offline cache invalidation strategy for: "${cleanSeed}".`,
+          `Scenario: Performance profiling reveals high JS main-thread blocking time in "${cleanSeed}". Walk through your step-by-step optimization.`,
+          `How do you architect client state (Zustand/Redux) vs server cache state (TanStack Query) for: "${cleanSeed}"?`,
+          `Explain how you implement route-level code splitting, dynamic imports, and bundle optimization for: "${cleanSeed}"?`,
+          `How do you handle real-time WebSocket event streams and avoid UI thrashing in: "${cleanSeed}"?`,
+          `Describe your automated testing strategy (Unit, Component Integration, Playwright E2E) for: "${cleanSeed}".`,
+          `How do you enforce type safety across backend API responses and frontend models for: "${cleanSeed}"?`,
+          `Scenario: Memory profiling reveals leaks when users repeatedly mount "${cleanSeed}". How do you isolate and resolve it?`,
+          `How do you architect reusable UI components using Tailwind CSS or CSS Modules for: "${cleanSeed}"?`,
+          `Explain how you handle internationalization (i18n) and RTL layout direction in: "${cleanSeed}".`,
+          `How do you implement progressive enhancement and network offline fallbacks for: "${cleanSeed}"?`,
+          `Describe your CI/CD performance budgets and automated accessibility checks for: "${cleanSeed}".`
+        ];
+      } else if (r.includes('back') || r.includes('python') || r.includes('fastapi')) {
+        pool = [
+          `Regarding "${cleanSeed}" — Explain the API schema design, idempotency safeguards, and database transaction boundaries (ACID).`,
+          `How would you architect the database indexes, query plan, and Redis caching layer to handle high throughput in: "${cleanSeed}"?`,
+          `What concurrency race conditions, deadlocks, and partial failure modes must be guarded against in: "${cleanSeed}"?`,
+          `Describe how you implement distributed rate limiting, authentication (JWT/OAuth2), and background worker task queues for: "${cleanSeed}".`,
+          `Scenario: Under 5x peak traffic, the database connection pool saturates for "${cleanSeed}". How do you diagnose and resolve the bottleneck?`,
+          `How do you structure database schema migrations with zero downtime while serving live traffic for: "${cleanSeed}"?`,
+          `Explain how you design event-driven messaging with Kafka/RabbitMQ for decoupled services interacting with: "${cleanSeed}".`,
+          `How do you implement distributed tracing (OpenTelemetry) and structured JSON logging to monitor: "${cleanSeed}"?`,
+          `Describe your strategy for securing "${cleanSeed}" against SQL injection, broken object authorization (BOLA), and SSRF.`,
+          `How do you handle data partitioning, sharding, and read-replica replication lag for: "${cleanSeed}"?`,
+          `Scenario: A downstream third-party service fails intermittently in "${cleanSeed}". How do you build circuit breaker resiliency?`,
+          `How do you design idempotent webhook ingestion with HMAC signature verification for: "${cleanSeed}"?`,
+          `Explain how you manage database connection lifecycle and async I/O loops in FastAPI/Node for: "${cleanSeed}"?`,
+          `What automated load testing (k6/Locust) and chaos engineering tests would you run against: "${cleanSeed}"?`,
+          `How do you structure multi-tenant data isolation (RLS vs separate databases) for: "${cleanSeed}"?`
+        ];
+      } else {
+        pool = [
+          `Regarding "${cleanSeed}" — Explain the chunking strategy, embedding model selection, and hybrid vector search pipeline.`,
+          `How do you implement semantic caching, prompt templating, and guardrails to minimize latency and token cost for: "${cleanSeed}"?`,
+          `How do you architect a multi-step agentic workflow (LangGraph/ReAct) with deterministic tool validation for: "${cleanSeed}"?`,
+          `Describe how you benchmark and prevent hallucination rates in production using quantitative evaluation frameworks for: "${cleanSeed}".`,
+          `Scenario: Streaming tokens degrade and experience high TTFT under multi-tenant load for "${cleanSeed}". How do you optimize inference?`,
+          `How do you enforce document-level Access Control Lists (ACLs) and metadata filtering in vector retrieval for: "${cleanSeed}"?`,
+          `Explain how you evaluate retrieval precision and context recall (e.g. Ragas) for: "${cleanSeed}".`,
+          `How do you handle prompt injection attacks and malicious jailbreaks in: "${cleanSeed}"?`,
+          `Describe your strategy for fine-tuning or domain adaptation vs Retrieval-Augmented Generation for: "${cleanSeed}".`,
+          `How do you implement rerankers (e.g. Cohere/BGE) to optimize relevance without exceeding latency budgets in: "${cleanSeed}"?`,
+          `Scenario: An LLM agent in "${cleanSeed}" enters an unproductive tool-calling loop. How do you detect and recover safely?`,
+          `How do you design structured JSON schema validation and deterministic output parsing for: "${cleanSeed}"?`,
+          `Explain how you monitor cost, token drift, and latency anomalies across LLM endpoints serving: "${cleanSeed}".`,
+          `How do you implement synthetic evaluation datasets to continuously test edge cases in: "${cleanSeed}"?`,
+          `What is your approach to handling multi-modal inputs (PDFs, images, tables) within: "${cleanSeed}"?`
+        ];
+      }
+
+      const result = pool.slice(0, n);
+      while (result.length < n) {
+        const idx = result.length + 1;
+        result.push(`Deep-Dive Scenario #${idx}: In the context of "${cleanSeed}", describe how you measure operational trade-offs, edge-case failure modes, and stakeholder alignment.`);
+      }
+      return result.slice(0, n);
+    }
+
+    function pickQuestions(skillList, n, role = '', customQ = '') {
+      const targetCount = Number(n) || 10;
+      if (customQ && customQ.trim().length > 5) {
+        return generateRelatedQuestionsFromSeed(customQ.trim(), role, skillList, 'Hard', targetCount);
+      }
+
+      const roleLower = (role || '').toLowerCase();
+      let pool = [];
+
+      if (roleLower.includes('product designer')) {
+        pool = BANK.product;
+      } else if (roleLower.includes('ui/ux') || roleLower.includes('ui designer') || roleLower.includes('visual')) {
+        pool = BANK.uiux;
+      } else if (roleLower.includes('ux designer') || roleLower.includes('user experience') || roleLower.includes('research')) {
+        pool = BANK.ux;
+      } else if (roleLower.includes('front') || roleLower.includes('react')) {
+        pool = BANK.frontend;
+      } else if (roleLower.includes('back') || roleLower.includes('python') || roleLower.includes('fastapi')) {
+        pool = BANK.backend;
+      } else if (roleLower.includes('ai') || roleLower.includes('genai') || roleLower.includes('llm') || roleLower.includes('rag')) {
+        pool = BANK.genai;
+      } else {
+        pool = BANK.ux;
+      }
+
+      const result = pool.slice(0, targetCount);
+      while (result.length < targetCount) {
+        const idx = result.length + 1;
+        const skill = (skillList && skillList.length) ? skillList[(idx - 1) % skillList.length] : (role || 'Core Methodologies');
+        result.push(`Practical Execution Scenario #${idx}: How do you design, validate, and optimize ${skill} under strict production constraints?`);
+      }
+
+      return result.slice(0, targetCount);
+    }
+
+    const EVAL_LENSES_ROLE = {
+      ux: [
+        "Validates user research methodology, mental model alignment, information architecture, and WCAG accessibility.",
+        "Evaluates usability testing protocols, task completion metrics, and quantitative validation rigor.",
+        "Probes cognitive load reduction, edge-case recovery, and defending UX decisions to stakeholders."
+      ],
+      product: [
+        "Validates product thinking, user needs vs business viability, and prioritization frameworks.",
+        "Evaluates metric-driven decision making (retention, conversion funnels, churn, North Star).",
+        "Probes cross-functional collaboration, PM/Engineering trade-offs, and discovery vs delivery execution."
+      ],
+      uiux: [
+        "Validates visual craft, typographic hierarchy, 8pt/4pt spatial rhythm, and contrast ratios.",
+        "Evaluates Figma component architecture, design tokens, and variable mode scalability.",
+        "Probes micro-interaction design, component state machines, and pixel-perfect developer handoff."
+      ],
+      frontend: [
+        "Validates React 19/Next.js architecture, component lifecycle, and state synchronization.",
+        "Evaluates Core Web Vitals (LCP, INP, CLS) optimization, bundle splitting, and memory profiling.",
+        "Probes WAI-ARIA accessibility compliance, optimistic updates, and async DOM handling."
+      ],
+      backend: [
+        "Validates REST/FastAPI architecture, idempotent endpoints, and ACID transaction boundaries.",
+        "Evaluates PostgreSQL indexing, Redis caching strategies, and distributed locking mechanisms.",
+        "Probes circuit breakers, rate limiting, connection pooling, and high-concurrency resilience."
+      ],
+      genai: [
+        "Validates hybrid vector search (BM25 + dense embeddings) and document chunking strategies.",
+        "Evaluates multi-step agentic workflows (LangGraph), deterministic tool calling, and guardrails.",
+        "Probes quantitative hallucination benchmarking, TTFT optimization, and semantic caching."
+      ]
+    };
+
+    function getEvalLensText(index, role) {
+      const r = (role || $("#role").value || '').toLowerCase();
+      let key = 'ux';
+      if (r.includes('product designer')) key = 'product';
+      else if (r.includes('ui/ux') || r.includes('ui designer') || r.includes('visual')) key = 'uiux';
+      else if (r.includes('ux designer') || r.includes('user experience')) key = 'ux';
+      else if (r.includes('front') || r.includes('react')) key = 'frontend';
+      else if (r.includes('back') || r.includes('python')) key = 'backend';
+      else if (r.includes('ai') || r.includes('genai') || r.includes('llm')) key = 'genai';
+
+      const lenses = EVAL_LENSES_ROLE[key] || EVAL_LENSES_ROLE.ux;
+      return lenses[index % lenses.length];
+    }
+
+    function cleanQuestionText(q) {
+      if (!q) return "";
+      const str = typeof q === 'object' ? (q.question || '') : String(q);
+      return str.replace(/^(q\d+[\.\:\)]|\d+[\.\:\)]|\-|\*)\s*/i, '').trim();
+    }
+
+    function renderEmpty() {
+      qlist.innerHTML = `<div class="q-empty"><div class="qe-mark">?</div><p>Fill in the brief above and compose a paper — your questions appear here, ready to rehearse.</p></div>`;
+    }
+
+    const API_BASE = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') || window.location.protocol === 'file:' ? 'http://127.0.0.1:8000' : '';
+
+    function applyPreset(type) {
+      if (type === 'ux') {
+        $('#role').value = 'UX Designer';
+        $('#exp').value = '5 Years';
+        $('#diff').value = 'Hard';
+        if ($('#company')) $('#company').value = 'Google';
+        if ($('#interviewType')) $('#interviewType').value = 'Technical & Architecture';
+        skills = ['User Research', 'Usability Testing', 'Information Architecture', 'Wireframes', 'Figma', 'Design Systems', 'WCAG 2.2'];
+        $('#customQuestion').value = 'How do you conduct usability testing on a Figma prototype for an e-commerce checkout flow?';
+      } else if (type === 'product') {
+        $('#role').value = 'Product Designer';
+        $('#exp').value = '5 Years';
+        $('#diff').value = 'Hard';
+        if ($('#company')) $('#company').value = 'Amazon';
+        if ($('#interviewType')) $('#interviewType').value = 'STAR Behavioral & Leadership';
+        skills = ['Product Thinking', 'UX Strategy', 'Product Metrics', 'User Research', 'Design Systems', 'PM Collaboration'];
+        $('#customQuestion').value = 'How do you balance business conversion goals with user friction in a subscription upgrade flow?';
+      } else if (type === 'uiux') {
+        $('#role').value = 'UI/UX Designer';
+        $('#exp').value = '5 Years';
+        $('#diff').value = 'Hard';
+        if ($('#company')) $('#company').value = 'Meta';
+        if ($('#interviewType')) $('#interviewType').value = 'Technical & Architecture';
+        skills = ['Visual Hierarchy', 'Micro-interactions', 'Design Tokens', 'Figma Auto Layout', 'Responsive Grids', 'Component States'];
+        $('#customQuestion').value = 'How do you build a responsive design system in Figma using tokens and variable modes?';
+      } else if (type === 'frontend') {
+        $('#role').value = 'Frontend Developer';
+        $('#exp').value = '5 Years';
+        $('#diff').value = 'Hard';
+        if ($('#company')) $('#company').value = 'Meta';
+        if ($('#interviewType')) $('#interviewType').value = 'Technical & Architecture';
+        skills = ['HTML5', 'CSS3', 'JavaScript ESNext', 'React 19', 'Next.js', 'Performance', 'a11y', 'State Management'];
+        $('#customQuestion').value = 'How do you optimize Core Web Vitals (LCP, INP, CLS) in a large-scale React/Next.js application?';
+      } else if (type === 'backend') {
+        $('#role').value = 'Backend Developer';
+        $('#exp').value = '5 Years';
+        $('#diff').value = 'Hard';
+        if ($('#company')) $('#company').value = 'Google';
+        if ($('#interviewType')) $('#interviewType').value = 'System Design & Scale';
+        skills = ['Python', 'FastAPI', 'PostgreSQL', 'Redis', 'System Design', 'Distributed Systems', 'JWT Auth', 'Microservices'];
+        $('#customQuestion').value = 'How do you design a high-throughput, idempotent payment webhook processing service in FastAPI and PostgreSQL?';
+      } else if (type === 'genai') {
+        $('#role').value = 'GenAI Engineer';
+        $('#exp').value = '5 Years';
+        $('#diff').value = 'Hard';
+        if ($('#company')) $('#company').value = 'OpenAI';
+        if ($('#interviewType')) $('#interviewType').value = 'Technical & Architecture';
+        skills = ['LLMs', 'RAG Architecture', 'Vector Databases', 'Embeddings', 'LangGraph Agents', 'Hallucination Evaluation', 'Prompt Engineering'];
+        $('#customQuestion').value = 'How do you architect a multi-tenant enterprise RAG pipeline with hybrid search and strict document access control?';
+      }
+      syncCustomSelect('exp');
+      syncCustomSelect('diff');
+      syncCustomSelect('company');
+      syncCustomSelect('interviewType');
+      renderTags();
+      toast(`Applied ${$('#role').value} preset`);
+    }
+
+    function renderSkeletonLoading(n = 5) {
+      let html = '<div class="skeleton-box">';
+      for (let i = 0; i < n; i++) {
+        html += `
+      <div class="sk-item">
+        <div class="sk-num"></div>
+        <div class="sk-content">
+          <div class="sk-line"></div>
+          <div class="sk-line short"></div>
+        </div>
+      </div>
+    `;
+      }
+      html += '</div>';
+      qlist.innerHTML = html;
+    }
+
+    function buildItemHTML(rawQ, i) {
+      const qText = cleanQuestionText(rawQ);
+      const isObj = typeof rawQ === 'object' && rawQ !== null;
+      const isVerified = isObj && rawQ.source_type === 'verified';
+      const category = isObj ? (rawQ.category || '') : '';
+      const sourceTitle = isObj ? (rawQ.source_title || '') : '';
+      const sourceUrl = isObj && rawQ.source_url ? rawQ.source_url : null;
+      const sourceDate = isObj && rawQ.source_date ? rawQ.source_date : null;
+      const confidence = isObj && rawQ.confidence ? `${Math.round(rawQ.confidence * 100)}% Fit` : '92% Fit';
+      const modelAnswer = isObj && rawQ.model_answer ? rawQ.model_answer : '';
+
+      const badgeHtml = isVerified
+        ? `<span class="q-provenance-badge verified">✓ Verified Real Question</span>`
+        : `<span class="q-provenance-badge ai-gen">⚡ AI-Generated Practice</span>`;
+
+      const catHtml = category ? `<span class="q-cat-chip">${category}</span>` : '';
+      const confHtml = `<span class="q-confidence-tag">★ ${confidence}</span>`;
+      const srcHtml = sourceUrl
+        ? `<a href="${sourceUrl}" target="_blank" rel="noopener noreferrer" class="q-source-link">🔗 ${sourceTitle || 'Verified Source'} (${sourceDate || 'Verified'})</a>`
+        : (sourceTitle ? `<span style="font-size:11px;color:var(--ink-soft);font-family:var(--f-mono)">📌 ${sourceTitle}</span>` : '');
+
+      return {
+        qText,
+        badgeHtml,
+        catHtml,
+        confHtml,
+        srcHtml,
+        modelAnswer
+      };
+    }
+
+    function renderQuestions(qs, isStreaming = false) {
+      if (!qs || !qs.length) {
+        renderEmpty();
+        return;
+      }
+      qlist.innerHTML = '';
+      const role = $("#role").value;
+
+      if (!isStreaming) {
+        qs.forEach((rawQ, i) => {
+          const { qText, badgeHtml, catHtml, confHtml, srcHtml, modelAnswer } = buildItemHTML(rawQ, i);
+          if (!qText) return;
+
+          const li = document.createElement('li');
+          li.className = 'q reveal';
+          li.style.animationDelay = (i * 35) + 'ms';
+          const plain = qText.replace(/<[^>]+>/g, '');
+
+          li.innerHTML = `
+        <span class="qnum">Q${String(i + 1).padStart(2, '0')}</span>
+        <div class="qtext">
+          <div style="font-size:15px;line-height:1.55;font-weight:500;color:var(--ink)">${qText}</div>
+          <div class="q-meta-row">
+            ${badgeHtml}
+            ${catHtml}
+            ${confHtml}
+            ${srcHtml}
+          </div>
+          ${modelAnswer ? `<div class="q-model-answer-box"><b>Evaluation Focus:</b> ${modelAnswer}</div>` : ''}
+        </div>
+        <button class="qcopy" title="Copy question" aria-label="Copy question ${i + 1}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg>
+        </button>`;
+          li.querySelector('.qcopy').onclick = (e) => {
+            navigator.clipboard?.writeText(plain);
+            const b = e.currentTarget; b.classList.add('done');
+            b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12l4 4 10-10"/></svg>';
+            toast('Question copied');
+            setTimeout(() => {
+              b.classList.remove('done');
+              b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg>';
+            }, 1400);
+          };
+          qlist.appendChild(li);
+        });
+        return;
+      }
+
+      // Live Real-Time Progressive Streaming Mode
+      const metaCount = $('#metaCount');
+      (async () => {
+        for (let i = 0; i < qs.length; i++) {
+          const rawQ = qs[i];
+          const { qText, badgeHtml, catHtml, confHtml, srcHtml, modelAnswer } = buildItemHTML(rawQ, i);
+          if (!qText) continue;
+
+          const li = document.createElement('li');
+          li.className = 'q reveal';
+          const plain = qText.replace(/<[^>]+>/g, '');
+
+          li.innerHTML = `
+        <span class="qnum">Q${String(i + 1).padStart(2, '0')}</span>
+        <div class="qtext">
+          <div class="q-live-text" style="font-size:15px;line-height:1.55;font-weight:500;color:var(--ink)"><span class="typewriter-txt"></span><span class="type-cursor">|</span></div>
+          <div class="q-meta-row" style="opacity:0;transition:opacity .3s">
+            ${badgeHtml}
+            ${catHtml}
+            ${confHtml}
+            ${srcHtml}
+          </div>
+          ${modelAnswer ? `<div class="q-model-answer-box" style="opacity:0;transition:opacity .3s"><b>Evaluation Focus:</b> ${modelAnswer}</div>` : ''}
+        </div>
+        <button class="qcopy" title="Copy question" aria-label="Copy question ${i + 1}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg>
+        </button>`;
+
+          li.querySelector('.qcopy').onclick = (e) => {
+            navigator.clipboard?.writeText(plain);
+            const b = e.currentTarget; b.classList.add('done');
+            b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12l4 4 10-10"/></svg>';
+            toast('Question copied');
+            setTimeout(() => {
+              b.classList.remove('done');
+              b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg>';
+            }, 1400);
+          };
+
+          qlist.appendChild(li);
+          if (metaCount) {
+            metaCount.innerHTML = `<span style="color:var(--primary);font-weight:700">⚡ Verified Stream: Q${i + 1} of ${qs.length}...</span>`;
+          }
+
+          const typeBox = li.querySelector('.typewriter-txt');
+          const cursor = li.querySelector('.type-cursor');
+
+          const words = qText.split(' ');
+          for (let w = 0; w < words.length; w++) {
+            typeBox.textContent += (w === 0 ? '' : ' ') + words[w];
+            await new Promise(r => setTimeout(r, 12));
+          }
+          cursor?.remove();
+          li.querySelectorAll('.q-meta-row, .q-model-answer-box').forEach(el => el.style.opacity = '1');
+          await new Promise(r => setTimeout(r, 15));
+        }
+
+        if (metaCount) {
+          const verifiedTotal = qs.filter(q => typeof q === 'object' && q.source_type === 'verified').length;
+          metaCount.innerHTML = `<b>${qs.length} questions</b> ${verifiedTotal > 0 ? `· <span style="color:#059669;font-weight:700">✓ ${verifiedTotal} Verified Real</span>` : ''}`;
+        }
+      })();
+    }
+
+    let currentQs = [];
+    let recentHistory = [];
+
+    function getSampleRecentPapers() {
+      return [
+        {
+          id: 101,
+          role: "Senior UX Designer",
+          company: "Google",
+          interview_type: "Technical & Architecture",
+          difficulty: "Hard",
+          experience: "5 Years",
+          skills: ["Figma", "Design Systems", "User Research", "WCAG 2.2", "Usability Testing"],
+          count: 10,
+          created_at: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
+          questions: [
+            {
+              id: 1,
+              question: "Walk through how you design an accessible keyboard navigation protocol and mental model for a multi-faceted enterprise cloud console with 50+ nested configuration drawers.",
+              category: "Information Architecture & WCAG",
+              difficulty: "Hard",
+              source_type: "verified",
+              source_title: "Google Design Rubrics & WCAG Accessibility Standards",
+              source_url: "https://design.google/library",
+              source_date: "2024-Q2",
+              confidence: 0.94,
+              model_answer: "Focuses on WCAG 2.2 AA compliant focus traps, skip links, aria-expanded states, and tree navigation mental models."
+            },
+            {
+              id: 2,
+              question: "How do you establish typographic scale, 8pt spatial grid, and color contrast tokens in Figma Variables for a multi-brand design system?",
+              category: "Design System Architecture",
+              difficulty: "Hard",
+              source_type: "AI_generated",
+              source_title: "AI Synthesis (Senior UX Designer · Figma)",
+              source_url: null,
+              source_date: "2024-Q3",
+              confidence: 0.92,
+              model_answer: "Evaluates token hierarchies (global vs alias vs component tokens) and theme switching modes."
+            }
+          ]
+        }
+      ];
+    }
+
+    /* ---------- load recent papers from API ---------- */
+    async function fetchRecentPapers() {
+      const histEl = $('#hist');
+      try {
+        const res = await fetch(`${API_BASE}/history`);
+        if (!res.ok) throw new Error("Status " + res.status);
+        const data = await res.json();
+        if (data && data.length > 0) {
+          recentHistory = data;
+          renderRecentWidget(data.slice(0, 4));
+          return;
+        }
+        throw new Error("Empty backend data");
+      } catch (err) {
+        console.warn("Using sample recent history papers:", err.message);
+        recentHistory = getSampleRecentPapers();
+        renderRecentWidget(recentHistory.slice(0, 4));
+      }
+    }
+
+    function formatDateDisplay(isoStr) {
+      if (!isoStr) return "Recent paper";
+      try {
+        const d = new Date(isoStr);
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const day = d.getDate();
+        const mon = months[d.getMonth()];
+        const yr = d.getFullYear();
+        let hours = d.getHours();
+        const mins = String(d.getMinutes()).padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12 || 12;
+        return `${day} ${mon} ${yr} · ${String(hours).padStart(2, '0')}:${mins} ${ampm}`;
+      } catch (e) {
+        return "Recent paper";
+      }
+    }
+
+    function renderRecentWidget(items) {
+      const histEl = $('#hist');
+      if (!items || items.length === 0) {
+        histEl.innerHTML = `<div style="padding:16px;font-size:13px;color:var(--ink-faint);text-align:center">No papers saved yet.</div>`;
+        return;
+      }
+      let html = "";
+      items.forEach((item, idx) => {
+        const diffClass = item.difficulty === 'Hard' ? 'hard' : item.difficulty === 'Brutal' ? 'brutal' : '';
+        const dateStr = formatDateDisplay(item.created_at);
+        html += `
+      <button class="hist-item" data-id="${item.id}">
+        <div class="hi-top">
+          <span class="hi-role">${item.role || 'Question Paper'}</span>
+          <span class="hi-chev"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span>
+        </div>
+        <div class="hi-meta">
+          <span class="hi-badge ${diffClass}">${item.difficulty}</span>
+          ${item.count || (item.questions ? item.questions.length : 5)} questions
+        </div>
+        <div class="hi-date">${dateStr}</div>
+      </button>
+      ${idx < items.length - 1 ? '<div class="hist-sep"></div>' : ''}
+    `;
+      });
+      histEl.innerHTML = html;
+
+      $$('.hist-item').forEach(btn => {
+        btn.onclick = () => {
+          const id = +btn.dataset.id;
+          const found = recentHistory.find(r => r.id === id);
+          if (found) {
+            loadPaperIntoSheet(found);
+          }
+        };
+      });
+    }
+
+    function loadPaperIntoSheet(paper) {
+      currentQs = paper.questions || [];
+      $("#sheetTitle").textContent = paper.role;
+      $("#sheetMeta").innerHTML = `
+    <span>Level <b>${paper.difficulty}</b></span>
+    <span>Experience <b>${paper.experience}</b></span>
+    <span>Stack <b>${(paper.skills || []).join(" · ")}</b></span>
+    <span>${currentQs.length} Questions</span>
+  `;
+      renderQuestions(currentQs);
+
+      if (paper.role) $("#role").value = paper.role;
+      if (paper.experience) $("#exp").value = paper.experience;
+      if (paper.difficulty) $("#diff").value = paper.difficulty;
+      syncCustomSelect('exp');
+      syncCustomSelect('diff');
+      if (paper.skills && paper.skills.length) {
+        skills = [...paper.skills];
+        renderTags();
+      }
+      setCount(currentQs.length || 10);
+      toast(`Loaded paper: ${paper.role}`);
+    }
+
+    /* ---------- generation logic with AI Stepper ---------- */
+    async function generate() {
+      const role = $("#role").value.trim();
+      const exp = $("#exp").value;
+      const diff = $("#diff").value;
+      const company = ($("#company")?.value || "General Tech").trim();
+      const interviewType = ($("#interviewType")?.value || "Technical & Architecture").trim();
+      const countVal = Number($("#countNum").textContent);
+      const customQ = ($("#customQuestion")?.value || "").trim();
+
+      if (!role) {
+        toast("Please enter a role or position");
+        $("#role").focus();
+        return;
+      }
+
+      if (skills.length === 0) {
+        toast("Add at least one skill");
+        tagInput.focus();
+        return;
+      }
+
+      const btn = $("#genBtn");
+      const stepper = $("#aiStepper");
+      btn.classList.add("busy");
+      btn.innerHTML = '<span class="spin"></span> Synthesizing with Gemini 2.5...';
+
+      stepper.style.display = "block";
+      renderSkeletonLoading(countVal);
+
+      const focusBadge = $("#sheetFocusBadge");
+      const focusText = $("#sheetFocusText");
+      if (customQ) {
+        focusBadge.style.display = "block";
+        focusText.textContent = customQ;
+      } else {
+        focusBadge.style.display = "none";
+      }
+
+      const setStep = (num) => {
+        for (let i = 1; i <= 4; i++) {
+          const el = $(`#st${i}`);
+          if (i < num) { el.className = "s-step done"; }
+          else if (i === num) { el.className = "s-step active"; }
+          else { el.className = "s-step"; }
+        }
+      };
+
+      setStep(1);
+      setTimeout(() => setStep(2), 350);
+      setTimeout(() => setStep(3), 700);
+
+      try {
+        const generateEndpoint = API_BASE ? `${API_BASE}/generate` : '/api/generate';
+        const response = await fetch(generateEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            role: role,
+            company: company,
+            interview_type: interviewType,
+            experience: exp,
+            skills: skills,
+            difficulty: diff,
+            questionCount: countVal,
+            number_of_questions: countVal,
+            custom_question: customQ || undefined
+          })
+        });
+
+        setStep(4);
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          const errMsg = errData.message || errData.detail || `Server returned ${response.status}: ${response.statusText}`;
+          console.error("AI Generation Error:", errMsg);
+          toast(`⚠️ Notice: ${errMsg}. Using verified fallback engine.`);
+          throw new Error(errMsg);
+        }
+
+        const data = await response.json();
+        currentQs = (data.questions_details && data.questions_details.length) ? data.questions_details : data.questions;
+
+        const verifiedN = Array.isArray(currentQs) ? currentQs.filter(q => typeof q === 'object' && q.source_type === 'verified').length : 0;
+        $("#sheetTitle").textContent = `${role} · ${company !== 'General Tech' ? company : 'Tech Unicorn'}`;
+        $("#sheetMeta").innerHTML = `
+          <span>Company <b>${company}</b></span>
+          <span>Round <b>${interviewType}</b></span>
+          <span>Level <b>${diff}</b></span>
+          <span>Experience <b>${exp}</b></span>
+          <span>Stack <b>${skills.join(" · ")}</b></span>
+          <span>${currentQs.length} Questions ${verifiedN > 0 ? `(${verifiedN} Verified)` : ''}</span>
+        `;
+
+        renderQuestions(currentQs, true);
+        toast(`⚡ ${currentQs.length} questions synthesized in real-time (${verifiedN} verified)`);
+        pushPaperToSupabase({ role, company, interview_type: interviewType, experience: exp, difficulty: diff, skills, questions: currentQs, custom_question: customQ });
+        fetchRecentPapers();
+
+      } catch (error) {
+        console.warn("Backend API call fallback:", error.message);
+        currentQs = pickQuestions(skills, countVal, role, customQ);
+        $("#sheetTitle").textContent = role;
+        $("#sheetMeta").innerHTML = `
+          <span>Level <b>${diff}</b></span>
+          <span>Experience <b>${exp}</b></span>
+          <span>Stack <b>${skills.join(" · ")}</b></span>
+          <span>${currentQs.length} Questions (Contextual Bank)</span>
+        `;
+        renderQuestions(currentQs, true);
+        toast("⚡ Related questions synthesized in real-time");
+        pushPaperToSupabase({ role, experience: exp, difficulty: diff, skills, questions: currentQs, custom_question: customQ });
+      } finally {
+        btn.classList.remove("busy");
+        btn.innerHTML = '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Compose question paper';
+        setTimeout(() => { stepper.style.display = "none"; }, 800);
+      }
+    }
+
+    const SUPABASE_CONFIG = {
+      url: window.ENV_SUPABASE_URL || localStorage.getItem('SUPABASE_URL') || 'https://xyzcompany.supabase.co',
+      anonKey: window.ENV_SUPABASE_ANON_KEY || localStorage.getItem('SUPABASE_ANON_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummyKey'
+    };
+
+    async function pushPaperToSupabase(paperData) {
+      if (typeof supabase !== 'undefined' && SUPABASE_CONFIG.url && !SUPABASE_CONFIG.url.includes('xyzcompany')) {
+        try {
+          const sb = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+          await sb.from('interview_papers').insert([{
+            role: paperData.role,
+            experience: paperData.experience,
+            difficulty: paperData.difficulty,
+            skills: paperData.skills,
+            questions: paperData.questions,
+            count: paperData.questions ? paperData.questions.length : 5,
+            custom_question: paperData.custom_question || null
+          }]);
+          console.log('⚡ [Supabase Realtime] Synced paper to database');
+        } catch (e) {
+          console.warn('Supabase sync notice:', e.message);
+        }
+      }
+    }
+
+    document.getElementById("genBtn").addEventListener("click", generate);
+
+    /* ---------- copy all + export ---------- */
+    $('#copyAllBtn').onclick = () => {
+      if (!currentQs.length) { toast('Compose a paper first'); return }
+      const text = currentQs.map((q, i) => `${i + 1}. ${cleanQuestionText(q).replace(/<[^>]+>/g, '')}`).join('\n');
+      navigator.clipboard?.writeText(text);
+      toast('All questions copied to clipboard');
+    };
+
+    $('#exportBtn').onclick = () => {
+      if (!currentQs.length) { toast('Compose a paper first'); return }
+      toast('Opening print dialog…');
+      setTimeout(() => window.print(), 400);
+    };
+
+    /* ---------- question package builders & sharing ---------- */
+    function getCleanQuestionsArray() {
+      return currentQs.map((q) => cleanQuestionText(q).replace(/<[^>]+>/g, '').trim()).filter(Boolean);
+    }
+
+    function getQuestionPackagePlainText() {
+      const role = $("#role").value.trim() || $("#sheetTitle").textContent || "Interview Candidate";
+      const exp = $("#exp").value || "5 Years";
+      const diff = $("#diff").value || "Hard";
+      const stack = skills.length ? skills.join(", ") : "General";
+      const customQ = ($("#customQuestion")?.value || "").trim();
+      const qs = getCleanQuestionsArray();
+
+      let text = `AI INTERVIEW QUESTION PACKAGE\n`;
+      text += `==================================================\n`;
+      text += `Target Role : ${role}\n`;
+      text += `Experience  : ${exp}\n`;
+      text += `Difficulty  : ${diff}\n`;
+      text += `Tech Stack  : ${stack}\n`;
+      if (customQ) {
+        text += `Focus Topic : ${customQ}\n`;
+      }
+      text += `Total Qs    : ${qs.length}\n`;
+      text += `==================================================\n\n`;
+      text += `QUESTIONS:\n\n`;
+
+      qs.forEach((q, i) => {
+        text += `${i + 1}. ${q}\n\n`;
+      });
+
+      text += `--------------------------------------------------\n`;
+      text += `Evaluation Guidelines:\n`;
+      text += `• Depth & clarity on fundamental principles & mental models\n`;
+      text += `• Real-world architecture, design systems, trade-offs & edge cases\n`;
+      text += `• Structure problem-solving & stakeholder defense with clarity\n\n`;
+      text += `Generated with Ravi GenAI Studio`;
+      return text;
+    }
+
+    function getEmailPackageText() {
+      return getQuestionPackagePlainText();
+    }
+
+    function getLinkedInPackageText() {
+      const role = $("#role").value.trim() || $("#sheetTitle").textContent || "UX Designer";
+      const exp = $("#exp").value || "5 Years";
+      const diff = $("#diff").value || "Hard";
+      const stack = skills.length ? skills.join(" · ") : "Design & Tech";
+      const customQ = ($("#customQuestion")?.value || "").trim();
+      const qs = getCleanQuestionsArray();
+
+      let text = `🎯 Interview Question Package: ${role}\n\n`;
+      text += `💼 Experience Level: ${exp}\n`;
+      text += `⚡ Difficulty: ${diff}\n`;
+      text += `🛠️ Tech & Tools: ${stack}\n`;
+      if (customQ) {
+        text += `💡 Specific Topic: "${customQ}"\n`;
+      }
+      text += `📊 Questions: ${qs.length}\n\n`;
+      text += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+      text += `📝 INTERVIEW QUESTIONS:\n`;
+      text += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+      qs.forEach((q, i) => {
+        text += `${i + 1}️⃣ ${q}\n\n`;
+      });
+
+      text += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+      text += `💡 How would you answer these questions? Share your approach or favorite question below!\n\n`;
+
+      const skillTags = skills.map(s => '#' + s.replace(/[^a-zA-Z0-9]/g, '')).filter(Boolean).join(' ');
+      const roleTag = '#' + role.replace(/[^a-zA-Z0-9]/g, '');
+      text += `#InterviewQuestions #DesignHiring #UXDesign #Figma ${roleTag} ${skillTags} #CareerGrowth #InterviewPrep #RaviGenAI`;
+      return text;
+    }
+
+    function getWhatsAppPackageText() {
+      const role = $("#role").value.trim() || $("#sheetTitle").textContent || "UX Designer";
+      const exp = $("#exp").value || "5 Years";
+      const diff = $("#diff").value || "Hard";
+      const stack = skills.length ? skills.join(", ") : "Design";
+      const customQ = ($("#customQuestion")?.value || "").trim();
+      const qs = getCleanQuestionsArray();
+
+      let text = `*🎯 Interview Question Package: ${role}*\n`;
+      text += `*Level:* ${diff} | *Exp:* ${exp} | *Stack:* ${stack}\n`;
+      if (customQ) text += `*Focus Topic:* _${customQ}_\n`;
+      text += `\n*Questions (${qs.length}):*\n\n`;
+      qs.forEach((q, i) => {
+        text += `${i + 1}. ${q}\n\n`;
+      });
+      text += `_Generated with Ravi GenAI Studio_`;
+      return text;
+    }
+
+    function getMarkdownPackageText() {
+      const title = $("#sheetTitle").textContent || "Question Paper";
+      const role = $("#role").value.trim() || title;
+      const exp = $("#exp").value || "5 Years";
+      const diff = $("#diff").value || "Hard";
+      const customQ = ($("#customQuestion")?.value || "").trim();
+      const qs = getCleanQuestionsArray();
+
+      let md = `# Interview Question Paper: ${title}\n\n`;
+      md += `**Target Role:** ${role} | **Experience:** ${exp} | **Difficulty:** ${diff}\n`;
+      md += `**Skills Stack:** ${skills.join(', ')}\n`;
+      if (customQ) md += `**Focus Topic:** *${customQ}*\n`;
+      md += `\n---\n\n## Questions (${qs.length})\n\n`;
+      qs.forEach((q, i) => {
+        md += `### Q${i + 1}. ${q}\n\n`;
+      });
+      md += `\n*Generated with Ravi GenAI Studio*\n`;
+      return md;
+    }
+
+    /* ---------- real-time share question paper URL helper ---------- */
+    function getShareableUrl() {
+      const role = $("#role").value.trim() || 'UX Designer';
+      const exp = $("#exp").value;
+      const diff = $("#diff").value;
+      const customQ = ($("#customQuestion")?.value || "").trim();
+      const countVal = currentQs.length || Number(count);
+
+      const payloadObj = {
+        role: role,
+        exp: exp,
+        diff: diff,
+        skills: skills,
+        customQ: customQ,
+        count: countVal,
+        questions: currentQs
+      };
+
+      try {
+        const jsonStr = JSON.stringify(payloadObj);
+        const encoded = encodeURIComponent(btoa(unescape(encodeURIComponent(jsonStr))));
+        const baseUrl = window.location.origin + window.location.pathname;
+        return `${baseUrl}?paper=${encoded}`;
+      } catch (e) {
+        const baseUrl = window.location.origin + window.location.pathname;
+        return `${baseUrl}?role=${encodeURIComponent(role)}&exp=${encodeURIComponent(exp)}&diff=${encodeURIComponent(diff)}&skills=${encodeURIComponent(skills.join(','))}&customQ=${encodeURIComponent(customQ)}&count=${countVal}`;
+      }
+    }
+
+    function openShareModal() {
+      if (!currentQs.length) {
+        toast('Compose a question paper first');
+        return;
+      }
+
+      const role = $("#role").value.trim() || $("#sheetTitle").textContent || "Interview Paper";
+      const exp = $("#exp").value || "5 Years";
+      const diff = $("#diff").value || "Hard";
+      const qs = getCleanQuestionsArray();
+
+      $('#pkgPreviewTitle').textContent = role;
+      $('#pkgPreviewCount').textContent = `${qs.length} Questions`;
+      $('#pkgPreviewDiff').textContent = diff;
+      $('#pkgPreviewExp').textContent = exp;
+
+      const previewLines = qs.slice(0, 4).map((q, i) => `${i + 1}. ${q}`).join('\n\n');
+      const remaining = qs.length > 4 ? `\n\n... and ${qs.length - 4} more questions in package.` : '';
+      $('#pkgPreviewContent').textContent = previewLines + remaining;
+
+      const shareUrl = getShareableUrl();
+      $('#shareUrlInput').value = shareUrl;
+      $('#shareQrImg').src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(shareUrl)}`;
+
+      $('#shareModalBackdrop').classList.add('open');
+    }
+
+    function closeShareModal() {
+      $('#shareModalBackdrop').classList.remove('open');
+    }
+
+    $('#shareBtn').onclick = openShareModal;
+    $('#closeShareModal').onclick = closeShareModal;
+    $('#shareModalBackdrop').onclick = (e) => {
+      if (e.target === $('#shareModalBackdrop')) closeShareModal();
+    };
+
+    /* ---------- Email Package Modal Handlers ---------- */
+    function openEmailModal() {
+      if (!currentQs.length) {
+        toast('Compose a question paper first');
+        return;
+      }
+      const role = $("#role").value.trim() || $("#sheetTitle").textContent || "Interview Candidate";
+      const exp = $("#exp").value || "5 Years";
+      const diff = $("#diff").value || "Hard";
+      const qs = getCleanQuestionsArray();
+      const subject = `Interview Question Package: ${role} (${exp} · ${diff})`;
+      const body = getEmailPackageText();
+
+      $('#emailSubjectInput').value = subject;
+      $('#emailQCountBadge').textContent = `${qs.length} Questions`;
+      $('#emailBodyPreview').textContent = body;
+
+      closeShareModal();
+      $('#emailModalBackdrop').classList.add('open');
+    }
+
+    function closeEmailModal() {
+      $('#emailModalBackdrop').classList.remove('open');
+    }
+
+    $('#emailPackageBtn').onclick = openEmailModal;
+    $('#shareEmailBtn').onclick = openEmailModal;
+    $('#closeEmailModal').onclick = closeEmailModal;
+    $('#emailModalBackdrop').onclick = (e) => {
+      if (e.target === $('#emailModalBackdrop')) closeEmailModal();
+    };
+
+    // 1. Send via Gmail Web
+    $('#sendViaGmailBtn').onclick = () => {
+      if (!currentQs.length) return;
+      const to = ($('#emailRecipientInput').value || '').trim();
+      const subject = $('#emailSubjectInput').value;
+      const body = getEmailPackageText();
+      navigator.clipboard?.writeText(body);
+
+      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      window.open(gmailUrl, '_blank', 'noopener,noreferrer');
+      toast('Opening Gmail with full question package! 🔴 (Copied to clipboard as backup)');
+    };
+
+    // 2. Send via Outlook Web
+    $('#sendViaOutlookBtn').onclick = () => {
+      if (!currentQs.length) return;
+      const to = ($('#emailRecipientInput').value || '').trim();
+      const subject = $('#emailSubjectInput').value;
+      const body = getEmailPackageText();
+      navigator.clipboard?.writeText(body);
+
+      const outlookUrl = `https://outlook.live.com/mail/0/deeplink/compose?to=${encodeURIComponent(to)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      window.open(outlookUrl, '_blank', 'noopener,noreferrer');
+      toast('Opening Outlook with full question package! 🔵 (Copied to clipboard as backup)');
+    };
+
+    // 3. Send via Default Mail App (mailto:)
+    $('#sendViaDefaultMailBtn').onclick = () => {
+      if (!currentQs.length) return;
+      const to = ($('#emailRecipientInput').value || '').trim();
+      const subject = $('#emailSubjectInput').value;
+      const body = getEmailPackageText();
+      navigator.clipboard?.writeText(body);
+
+      const mailtoUrl = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      const link = document.createElement('a');
+      link.href = mailtoUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast('Opening Default Mail Client with full question package! ✉️');
+    };
+
+    // 4. Copy Email Draft
+    $('#copyEmailDraftBtn').onclick = () => {
+      if (!currentQs.length) return;
+      const subject = $('#emailSubjectInput').value;
+      const body = getEmailPackageText();
+      const fullDraft = `Subject: ${subject}\n\n${body}`;
+      navigator.clipboard?.writeText(fullDraft);
+      $('#copyEmailDraftBtn').querySelector('.share-channel-title').textContent = 'Draft Copied! ✓';
+      toast('Complete Email Draft copied to clipboard! 📋');
+      setTimeout(() => {
+        $('#copyEmailDraftBtn').querySelector('.share-channel-title').textContent = 'Copy Email Text';
+      }, 1600);
+    };
+
+    // 2. LinkedIn Post Package (No URL needed)
+    $('#shareLinkedInBtn').onclick = () => {
+      if (!currentQs.length) return;
+      const postText = getLinkedInPackageText();
+
+      navigator.clipboard?.writeText(postText).then(() => {
+        toast('Question package copied for LinkedIn! 💼 Paste (Ctrl+V) directly into your post.');
+      }).catch(() => {
+        toast('Opening LinkedIn... 💼');
+      });
+
+      window.open('https://www.linkedin.com/feed/?shareActive=true', '_blank', 'noopener,noreferrer');
+    };
+
+    // 3. WhatsApp Package (No URL needed)
+    $('#shareWhatsAppBtn').onclick = () => {
+      if (!currentQs.length) return;
+      const waText = getWhatsAppPackageText();
+      navigator.clipboard?.writeText(waText);
+      const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(waText)}`;
+      window.open(waUrl, '_blank', 'noopener,noreferrer');
+      toast('Opening WhatsApp with question package! 💬');
+    };
+
+    // 4. X / Twitter Package
+    $('#shareTwitterBtn').onclick = () => {
+      if (!currentQs.length) return;
+      const role = $("#role").value.trim() || $("#sheetTitle").textContent || "UX Designer";
+      const qs = getCleanQuestionsArray();
+      const topQ = qs[0] ? `\n\nSample Q: "${qs[0].slice(0, 90)}..."` : '';
+      const tweetText = `🎯 Interview Question Package for ${role} (${currentQs.length} questions)${topQ}\n\n#InterviewQuestions #UXDesign #CareerGrowth`;
+
+      navigator.clipboard?.writeText(getQuestionPackagePlainText());
+      const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+      window.open(tweetUrl, '_blank', 'noopener,noreferrer');
+      toast('Opening X/Twitter! (Full package also copied to clipboard 📋)');
+    };
+
+    // 5. Copy Full Package (Plain text)
+    $('#shareCopyPackageBtn').onclick = () => {
+      if (!currentQs.length) return;
+      const pkg = getQuestionPackagePlainText();
+      navigator.clipboard?.writeText(pkg);
+      $('#shareCopyPackageBtn').textContent = 'Copied! ✓';
+      toast('Complete Question Package copied to clipboard! 📋');
+      setTimeout(() => {
+        $('#shareCopyPackageBtn').textContent = '📋 Copy Question Package';
+      }, 1600);
+    };
+
+    // 6. Copy Markdown
+    $('#copyMarkdownBtn').onclick = () => {
+      if (!currentQs.length) return;
+      const md = getMarkdownPackageText();
+      navigator.clipboard?.writeText(md);
+      $('#copyMarkdownBtn').textContent = 'Copied! ✓';
+      toast('Full Markdown Question Paper copied! 📑');
+      setTimeout(() => {
+        $('#copyMarkdownBtn').textContent = '📑 Copy Markdown';
+      }, 1600);
+    };
+
+    // 7. Copy URL
+    $('#shareUrlCopyBtn').onclick = () => {
+      const input = $('#shareUrlInput');
+      navigator.clipboard?.writeText(input.value);
+      $('#shareUrlCopyBtn').textContent = 'Copied! ✓';
+      toast('Real-time paper link copied to clipboard 🔗');
+      setTimeout(() => {
+        $('#shareUrlCopyBtn').textContent = 'Copy Link';
+      }, 1600);
+    };
+
+    /* ---------- parse URL query params & real-time rehydration ---------- */
+    function initFromUrlParams() {
+      const params = new URLSearchParams(window.location.search);
+      const paperPayload = params.get('paper');
+
+      if (paperPayload) {
+        try {
+          const decodedJson = decodeURIComponent(escape(atob(decodeURIComponent(paperPayload))));
+          const data = JSON.parse(decodedJson);
+          if (data && data.questions && data.questions.length) {
+            currentQs = data.questions;
+            if (data.role) $("#role").value = data.role;
+            if (data.exp) $("#exp").value = data.exp;
+            if (data.diff) $("#diff").value = data.diff;
+            syncCustomSelect('exp');
+            syncCustomSelect('diff');
+            if (data.customQ && $("#customQuestion")) $("#customQuestion").value = data.customQ;
+            if (data.skills && data.skills.length) {
+              skills = [...data.skills];
+              renderTags();
+            }
+            setCount(data.count || currentQs.length);
+
+            $("#sheetTitle").textContent = data.role || "Shared Question Paper";
+            $("#sheetMeta").innerHTML = `
+          <span>Level <b>${data.diff || 'Hard'}</b></span>
+          <span>Experience <b>${data.exp || '5 Years'}</b></span>
+          <span>Stack <b>${(data.skills || []).join(" · ")}</b></span>
+          <span>${currentQs.length} Questions (Shared Live)</span>
+        `;
+            if (data.customQ) {
+              $("#sheetFocusBadge").style.display = "block";
+              $("#sheetFocusText").textContent = data.customQ;
+            }
+            renderQuestions(currentQs);
+            toast(`Loaded shared paper: ${data.role || 'Interview Paper'}`);
+            return true;
+          }
+        } catch (err) {
+          console.warn("Could not unpack real-time shared payload:", err);
+        }
+      }
+
+      const pRole = params.get('role');
+      const pExp = params.get('exp');
+      const pDiff = params.get('diff');
+      const pSkills = params.get('skills');
+      const pCustomQ = params.get('customQ');
+      const pCount = params.get('count');
+
+      if (pRole || pSkills || pDiff || pCustomQ) {
+        if (pRole) $("#role").value = pRole;
+        if (pExp) $("#exp").value = pExp;
+        if (pDiff) $("#diff").value = pDiff;
+        syncCustomSelect('exp');
+        syncCustomSelect('diff');
+        if (pCustomQ && $("#customQuestion")) $("#customQuestion").value = pCustomQ;
+        if (pSkills) {
+          skills = pSkills.split(',').map(s => s.trim()).filter(Boolean);
+          renderTags();
+        }
+        if (pCount) setCount(Number(pCount));
+        generate();
+        return true;
+      }
+      return false;
+    }
+
+    // Initialize on page load
+    const loadedFromUrl = initFromUrlParams();
+    if (!loadedFromUrl) {
+      currentQs = pickQuestions(skills, 10, 'Senior UX Designer');
+      renderQuestions(currentQs);
+    }
+    fetchRecentPapers();
+  </script>
+  <script src="analytics-tracker.js"></script>
+</body>
+
+</html>

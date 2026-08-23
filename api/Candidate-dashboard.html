@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Candidate Dashboard — Ravi GenAI Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600&family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#070A12;      --paper-2:#0E1424;    --sheet:#131D33;
+  --ink:#F8FAFC;        --ink-soft:#94A3B8;   --ink-faint:#64748B;
+  --board:#04070D;      --board-2:#111827;    --board-ink:#F8FAFC;
+  --primary:#6366F1;    --primary-grad:linear-gradient(135deg, #3B82F6 0%, #6366F1 50%, #8B5CF6 100%);
+  --pen:#818CF8;        --pen-soft:#A5B4FC;   --pen-wash:rgba(99, 102, 241, 0.15);
+  --label-color:#60A5FA;
+  --rule:#1E293B;       --rule-soft:#151F32;
+  --gold:#FBBF24;       --pass:#34D399;       --pass-wash:rgba(16, 185, 129, 0.15);
+  --shadow:0 14px 40px -10px rgba(0, 0, 0, 0.6);
+  --radius:16px;
+  --f-ui:"Roboto",system-ui,-apple-system,sans-serif;
+  --f-mono:"Roboto Mono",ui-monospace,monospace;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100vh;background:var(--paper-2);color:var(--ink);font-family:var(--f-ui);font-size:15px;}
+a{color:inherit;text-decoration:none}
+
+.nav-header {
+  height: 64px;
+  background: var(--sheet);
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+}
+
+.brand-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 800;
+  font-size: 18px;
+  color: #FFF;
+}
+
+.brand-title span {
+  background: var(--primary-grad);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.nav-link {
+  font-size: 14px;
+  color: var(--ink-soft);
+  font-weight: 500;
+  transition: color 0.2s;
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+
+.nav-link:hover, .nav-link.active {
+  color: var(--ink);
+  background: var(--pen-wash);
+}
+
+.user-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-pill {
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: var(--rule);
+  color: var(--ink-soft);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-signout {
+  font-size: 13px;
+  color: var(--ink-soft);
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-signout:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #F87171;
+}
+
+.dashboard-container {
+  max-width: 1200px;
+  margin: 36px auto;
+  padding: 0 24px;
+}
+
+.welcome-hero {
+  background: linear-gradient(135deg, rgba(30, 27, 75, 0.6) 0%, rgba(19, 29, 51, 0.9) 100%);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin-bottom: 32px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.welcome-hero h1 {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.welcome-hero p {
+  margin: 0;
+  color: var(--ink-soft);
+  max-width: 600px;
+}
+
+.tier-badge {
+  position: absolute;
+  top: 32px; right: 32px;
+  background: var(--primary-grad);
+  color: #FFF;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 6px 14px;
+  border-radius: 20px;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 24px;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #FFF;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-desc {
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.card-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  background: var(--primary-grad);
+  color: #FFF;
+  font-weight: 600;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.section-header {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.history-table th, .history-table td {
+  padding: 14px 20px;
+  text-align: left;
+  border-bottom: 1px solid var(--rule);
+  font-size: 14px;
+}
+
+.history-table th {
+  background: var(--paper);
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+.history-table tr:last-child td {
+  border-bottom: none;
+}
+
+.badge {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.badge-hard { background: rgba(239, 68, 68, 0.2); color: #F87171; }
+.badge-mid { background: rgba(245, 158, 11, 0.2); color: #FBBF24; }
+.badge-easy { background: rgba(16, 185, 129, 0.2); color: #34D399; }
+</style>
+</head>
+<body>
+
+<header class="nav-header">
+  <div class="brand-title">
+    <span>Ravi GenAI Studio</span>
+  </div>
+  <nav class="nav-links">
+    <a href="/candidate/dashboard" class="nav-link active">Dashboard</a>
+    <a href="/candidate/interview-studio" class="nav-link">Interview Studio</a>
+    <a href="/candidate/mock-interview" class="nav-link">Mock Interview</a>
+    <a href="/candidate/history" class="nav-link">History</a>
+  </nav>
+  <div class="user-badge">
+    <div class="user-pill" id="userDisplayPill">Candidate Account</div>
+    <button class="btn-signout" onclick="handleCandidateLogout()">Sign Out</button>
+  </div>
+</header>
+
+<main class="dashboard-container">
+  <section class="welcome-hero">
+    <div class="tier-badge" id="planTierBadge">FREE PLAN</div>
+    <h1 id="welcomeGreeting">Welcome back!</h1>
+    <p>Prepare for high-bar technical interviews using AI-driven question generation, real-time mock simulations, and skill analysis.</p>
+  </section>
+
+  <section class="grid-3">
+    <div class="card">
+      <div>
+        <div class="card-title">🎯 Interview Studio</div>
+        <div class="card-desc">Generate tailored technical and architectural questions specific to your target company, role, and experience level.</div>
+      </div>
+      <a href="/candidate/interview-studio" class="card-btn">Launch Studio →</a>
+    </div>
+
+    <div class="card">
+      <div>
+        <div class="card-title">🎙️ Practice & Mock Interview</div>
+        <div class="card-desc">Simulate realistic voice-based mock interviews with instant evaluation and detailed feedback scorecards.</div>
+      </div>
+      <a href="/candidate/mock-interview" class="card-btn">Start Mock Interview →</a>
+    </div>
+
+    <div class="card">
+      <div>
+        <div class="card-title">📊 Question History</div>
+        <div class="card-desc">Review your past generated question sets, model answers, and study notes.</div>
+      </div>
+      <a href="/candidate/history" class="card-btn">View History →</a>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-header">Recent Question Sets</div>
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th>Role / Domain</th>
+          <th>Difficulty</th>
+          <th>Key Skills</th>
+          <th>Date</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="recentHistoryBody">
+        <tr>
+          <td colspan="5" style="text-align: center; color: var(--ink-soft); padding: 24px;">
+            Loading practice history...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+
+<script src="/analytics-tracker.js"></script>
+<script>
+async function loadCandidateDashboard() {
+  try {
+    const res = await fetch('/api/candidate/me', {
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    });
+
+    if (!res.ok) {
+      window.location.href = '/candidate/login';
+      return;
+    }
+
+    const data = await res.json();
+    const user = data.user || {};
+
+    const greetingName = user.full_name || user.email || 'Candidate';
+    document.getElementById('welcomeGreeting').textContent = `Welcome back, ${greetingName}!`;
+    document.getElementById('userDisplayPill').textContent = user.email || 'Candidate';
+    document.getElementById('planTierBadge').textContent = (user.plan_tier || 'FREE').toUpperCase() + ' PLAN';
+
+    loadRecentHistory();
+  } catch (err) {
+    console.error('Candidate Auth verification error:', err);
+    window.location.href = '/candidate/login';
+  }
+}
+
+async function loadRecentHistory() {
+  const tbody = document.getElementById('recentHistoryBody');
+  try {
+    const res = await fetch('/history');
+    if (!res.ok) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--ink-soft);">No recent sessions found.</td></tr>`;
+      return;
+    }
+
+    const history = await res.json();
+    if (!history || history.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--ink-soft); padding: 24px;">No past sessions found. <a href="/candidate/interview-studio" style="color: var(--pen); text-decoration: underline;">Generate your first session!</a></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = history.slice(0, 5).map(item => {
+      const diffClass = item.difficulty === 'Hard' ? 'badge-hard' : item.difficulty === 'Medium' ? 'badge-mid' : 'badge-easy';
+      const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString() : 'Recent';
+      return `
+        <tr>
+          <td><strong>${item.role}</strong></td>
+          <td><span class="badge ${diffClass}">${item.difficulty}</span></td>
+          <td style="color: var(--ink-soft);">${(item.skills || []).join(', ')}</td>
+          <td style="color: var(--ink-soft);">${dateStr}</td>
+          <td><a href="/candidate/history" style="color: var(--pen); font-weight: 500;">View →</a></td>
+        </tr>
+      `;
+    }).join('');
+
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--ink-soft);">Failed to load history.</td></tr>`;
+  }
+}
+
+async function handleCandidateLogout() {
+  try {
+    await fetch('/api/admin/logout', { method: 'POST' });
+  } catch (e) {}
+  localStorage.removeItem('candidate_token');
+  localStorage.removeItem('candidate_user');
+  window.location.href = '/candidate/login';
+}
+
+document.addEventListener('DOMContentLoaded', loadCandidateDashboard);
+</script>
+</body>
+</html>

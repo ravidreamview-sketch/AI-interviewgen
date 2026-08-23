@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ravi — Company Interview Playbooks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400;1,700&display=swap');
+
+:root{
+  --paper:#F8FAFC;      --paper-2:#FFFFFF;    --sheet:#FFFFFF;
+  --ink:#0F172A;        --ink-soft:#475569;   --ink-faint:#94A3B8;
+  --board:#0B0F19;      --board-2:#1E1B4B;    --board-ink:#F8FAFC;
+  --primary:#4F46E5;    --primary-grad:linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);
+  --pen:#4F46E5;        --pen-soft:#6366F1;   --pen-wash:#EEF2FF;
+  --label-color:#2563EB;
+  --rule:#E2E8F0;       --rule-soft:#F1F5F9;
+  --gold:#F59E0B;       --pass:#10B981;       --pass-wash:#ECFDF5;
+  --shadow:0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0,0,0,0.03);
+  --radius:16px;
+  --f-disp:"Roboto",system-ui,-apple-system,sans-serif;
+  --f-ui:"Roboto",system-ui,-apple-system,sans-serif;
+  --f-mono:"Roboto Mono",ui-monospace,monospace;
+}
+[data-theme="dark"]{
+  --paper:#0B0F19;      --paper-2:#111827;    --sheet:#131D33;
+  --ink:#F8FAFC;        --ink-soft:#94A3B8;   --ink-faint:#64748B;
+  --board:#070A10;      --board-2:#1E1B4B;    --board-ink:#F8FAFC;
+  --primary:#6366F1;    --primary-grad:linear-gradient(135deg, #3B82F6 0%, #6366F1 50%, #8B5CF6 100%);
+  --pen:#818CF8;        --pen-soft:#A5B4FC;   --pen-wash:rgba(99, 102, 241, 0.15);
+  --label-color:#60A5FA;
+  --rule:#1E293B;       --rule-soft:#182234;
+  --gold:#FBBF24;       --pass:#34D399;       --pass-wash:rgba(16, 185, 129, 0.15);
+  --shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);color:var(--ink);
+  font-family:var(--f-ui);font-size:15px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  transition:background .3s ease,color .3s ease;
+}
+::selection{background:var(--primary);color:#fff}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:none}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px;border-radius:6px}
+
+/* shell */
+.app{display:flex;min-height:100vh;align-items:flex-start}
+
+/* sidebar */
+.sidebar{
+  flex:0 0 270px;width:270px;
+  background:var(--board);color:var(--board-ink);
+  display:flex;flex-direction:column;
+  padding:22px 16px;gap:14px;position:sticky;top:0;height:100vh;
+  align-self:flex-start;overflow-y:auto;
+  border-right:1px solid rgba(255,255,255,.07);
+  transition:background .3s ease, transform .3s ease;
+  z-index:40;
+}
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:4px}
+.brand{display:flex;align-items:center;gap:12px;padding:4px 8px 8px}
+.brand .brand-logo{
+  width:44px;height:44px;border-radius:50%;flex:none;
+  object-fit:cover;box-shadow:0 0 18px rgba(59, 130, 246, 0.45);
+  border:1.5px solid rgba(99, 102, 241, 0.6);
+  background:#0B0F19;
+}
+.brand .word{font-weight:700;font-size:20px;letter-spacing:-.02em;line-height:1.1;color:#FFFFFF}
+.brand .brand-grad{
+  background:linear-gradient(135deg, #38BDF8 0%, #818CF8 50%, #C084FC 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.brand .sub{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#94A3B8;margin-top:2px;font-weight:600}
+
+.side-label{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#64748B;padding:4px 10px 0;margin-bottom:-6px;font-weight:600}
+.nav{display:flex;flex-direction:column;gap:3px}
+.nav-link{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 14px;border-radius:12px;
+  color:#94A3B8;font-weight:500;font-size:14px;
+  position:relative;transition:all .2s ease;
+}
+.nav-link svg{width:18px;height:18px;flex:none;stroke-width:1.8}
+.nav-link:hover{background:rgba(255,255,255,.06);color:#F8FAFC}
+.nav-link.active{
+  background:linear-gradient(135deg, #1E40AF 0%, #4F46E5 50%, #7C3AED 100%);
+  color:#FFFFFF;box-shadow:0 4px 16px rgba(79, 70, 229, 0.4);font-weight:600;
+}
+.nav-badge{margin-left:auto;font-family:var(--f-mono);font-size:9.5px;font-weight:700;letter-spacing:.04em;padding:2.5px 7px;border-radius:6px;background:rgba(255,255,255,.12);color:#FFFFFF}
+.nav-badge.new{background:#7C3AED;color:#FFFFFF}
+.nav-badge.pro{background:#6366F1;color:#FFFFFF;border:none}
+
+.side-foot{margin-top:auto;display:flex;flex-direction:column;gap:12px}
+.user{display:flex;align-items:center;gap:11px;padding:6px 4px}
+.user .av{width:38px;height:38px;border-radius:10px;flex:none;object-fit:cover;box-shadow:0 0 0 1px rgba(255,255,255,.14)}
+.user .nm{font-weight:600;font-size:13.5px;line-height:1.2;color:#FFFFFF}
+.user .pl{font-family:var(--f-mono);font-size:10px;letter-spacing:.06em;color:#64748B;text-transform:uppercase;margin-top:2px}
+.logout-btn{
+  margin-left:auto;width:32px;height:32px;border-radius:8px;
+  display:grid;place-items:center;color:#94A3B8;background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.1);cursor:pointer;transition:all .18s;flex:none;
+}
+.logout-btn:hover{color:#EF4444;background:rgba(239,68,68,0.18);border-color:rgba(239,68,68,0.4);transform:scale(1.05)}
+.logout-btn svg{width:16px;height:16px;stroke-width:2}
+
+/* main canvas */
+.main{flex:1 1 0;min-width:0;padding:0 42px 36px;max-width:1320px}
+.topbar{display:flex;align-items:center;gap:16px;padding:22px 0 8px;position:sticky;top:0;z-index:20;background:linear-gradient(var(--paper) 72%,transparent)}
+.crumb{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);font-weight:600}
+.top-actions{margin-left:auto;display:flex;align-items:center;gap:10px}
+.icon-btn{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;border:1px solid var(--rule);background:var(--paper-2);color:var(--ink-soft);transition:all .18s}
+.icon-btn:hover{color:var(--ink);border-color:var(--pen)}
+.icon-btn svg{width:19px;height:19px;stroke-width:1.7}
+.pro-btn{display:flex;align-items:center;gap:8px;padding:0 18px;height:40px;border-radius:10px;background:linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);color:#FFFFFF;font-weight:600;font-size:13.5px;border:none;box-shadow:0 4px 14px rgba(79, 70, 229, 0.35)}
+
+/* mobile toggle */
+.mob-btn{display:none;width:40px;height:40px;border-radius:10px;place-items:center;border:1px solid var(--rule);background:var(--paper-2);color:var(--ink-soft)}
+.scrim{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:35;backdrop-filter:blur(3px)}
+
+/* header & filter chips */
+.head-box{margin:20px 0 24px}
+.head-box h1{font-size:32px;font-weight:800;margin:0 0 6px}
+.head-box p{color:var(--ink-soft);margin:0;font-size:15.5px}
+
+.filter-bar{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.filter-chip{
+  padding:6px 14px;border-radius:20px;border:1px solid var(--rule);background:var(--paper-2);
+  color:var(--ink-soft);font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;
+}
+.filter-chip:hover{border-color:var(--primary);color:var(--primary)}
+.filter-chip.active{background:var(--primary);color:#FFFFFF;border-color:var(--primary);box-shadow:0 4px 12px rgba(79,70,229,0.3)}
+
+/* playbooks grid */
+.playbooks-grid{display:grid;grid-template-columns:repeat(2, 1fr);gap:20px}
+.p-card{
+  background:var(--paper-2);border:1px solid var(--rule);border-radius:var(--radius);
+  padding:24px;box-shadow:var(--shadow);transition:all .2s ease;display:flex;flex-direction:column;gap:14px;
+}
+.p-card:hover{transform:translateY(-3px);border-color:#818CF8;box-shadow:0 12px 28px -6px rgba(79,70,229,0.12)}
+.p-top{display:flex;justify-content:space-between;align-items:flex-start}
+.p-icon{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;font-size:24px;background:var(--paper);border:1px solid var(--rule-soft)}
+.p-badge{font-family:var(--f-mono);font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px}
+
+.p-title{font-size:19px;font-weight:700;margin:0;color:var(--ink)}
+.p-desc{font-size:13.5px;color:var(--ink-soft);margin:0;line-height:1.55}
+
+.p-rubrics{display:flex;flex-wrap:wrap;gap:6px}
+.r-chip{font-family:var(--f-mono);font-size:11px;padding:4px 9px;border-radius:6px;background:var(--paper);border:1px solid var(--rule);color:var(--ink-soft)}
+
+.p-foot{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:14px;border-top:1px solid var(--rule-soft)}
+.start-p-btn{
+  padding:9px 18px;border-radius:10px;background:linear-gradient(135deg, #2563EB, #4F46E5);
+  color:#FFFFFF;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:6px;
+  box-shadow:0 4px 12px rgba(79,70,229,0.3);transition:all .18s;
+}
+.start-p-btn:hover{filter:brightness(1.1);transform:scale(1.02)}
+
+@media(max-width:820px){
+  .mob-btn{display:grid}
+  .sidebar{position:fixed;left:0;top:0;bottom:0;width:280px;z-index:50;transform:translateX(-100%)}
+  .sidebar.open{transform:none}
+  .scrim.show{display:block}
+  .main{padding:0 20px 24px}
+  .playbooks-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="scrim" id="scrim"></div>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <img class="brand-logo" src="logo.png" alt="Ravi GenAI Studio Logo">
+      <div>
+        <div class="word"><span class="brand-grad">RaviGenAI</span></div>
+        <div class="sub">STUDIO</div>
+      </div>
+    </div>
+    <div class="side-label">WORKSPACE</div>
+    <nav class="nav">
+      <a class="nav-link" href="Dashboard.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        <span>Dashboard</span>
+      </a>
+      <a class="nav-link" href="Interview-studio.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2.5l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg>
+        <span>Generate Questions</span>
+      </a>
+      <a class="nav-link" href="Mock-interview.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
+        <span>AI Mock Interview</span>
+        <span class="nav-badge new">VOICE</span>
+      </a>
+      <a class="nav-link" href="Interview-studio.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        <span>Answer Evaluator</span>
+      </a>
+      <a class="nav-link" href="Resume-match.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span>Resume &amp; JD Match</span>
+        <span class="nav-badge pro">PRO</span>
+      </a>
+    </nav>
+
+    <div class="side-label" style="margin-top:14px">LIBRARY</div>
+    <nav class="nav">
+      <a class="nav-link" href="Interview history.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>Interview History</span>
+      </a>
+      <a class="nav-link" href="Interview history.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        <span>Question Bank</span>
+      </a>
+      <a class="nav-link active" href="Company-playbooks.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+        <span>Company Playbooks</span>
+      </a>
+    </nav>
+
+    <div class="side-label" style="margin-top:14px">PREFERENCES</div>
+    <nav class="nav">
+      <a class="nav-link" href="Dashboard.html#analytics">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+        <span>Analytics</span>
+      </a>
+      <a class="nav-link" href="javascript:void(0)" onclick="alert('Model: Gemini 2.5 Flash\nStatus: Operational\nAPI Base: Ready')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        <span>Model &amp; Settings</span>
+      </a>
+    </nav>
+
+    <div class="side-foot">
+      <div class="user">
+        <img class="av" alt="Ravi Chandran" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><rect width='40' height='40' fill='%234F46E5'/><circle cx='20' cy='15' r='8' fill='%23FFFFFF'/><path d='M6 38c0-8 6-13 14-13s14 5 14 13z' fill='%23FFFFFF'/></svg>">
+        <div>
+          <div class="nm">Ravi Chandran</div>
+          <div class="pl">Staff GenAI Lead</div>
+        </div>
+        <button class="logout-btn" title="Sign Out / Logout" onclick="handleLogout(event)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CANVAS -->
+  <main class="main">
+    <div class="topbar">
+      <button class="mob-btn" id="menuBtn" aria-label="Open navigation menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <span class="crumb"><a href="Interview history.html" style="color:inherit;text-decoration:none">LIBRARY</a> / COMPANY PLAYBOOKS</span>
+      <div class="top-actions">
+        <button class="icon-btn" id="themeBtn" aria-label="Toggle theme">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 12.8A8 8 0 1111.2 3 6.2 6.2 0 0021 12.8z"/></svg>
+        </button>
+        <button class="icon-btn" title="Sign Out / Logout" onclick="handleLogout(event)" aria-label="Logout">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="head-box">
+      <h1>Company Interview Playbooks</h1>
+      <p>Targeted interview rubrics, evaluation criteria, and authentic question structures from top tech companies.</p>
+    </div>
+
+    <!-- CATEGORY FILTER CHIPS -->
+    <div class="filter-bar">
+      <button class="filter-chip active" onclick="filterCategory('all', this)">All Playbooks (6)</button>
+      <button class="filter-chip" onclick="filterCategory('faang', this)">FAANG Tier</button>
+      <button class="filter-chip" onclick="filterCategory('cloud', this)">Cloud &amp; DevOps</button>
+      <button class="filter-chip" onclick="filterCategory('ai', this)">AI / Unicorns</button>
+    </div>
+
+    <div class="playbooks-grid" id="playbooksGrid">
+      <!-- GOOGLE -->
+      <div class="p-card" data-cat="faang">
+        <div class="p-top">
+          <div class="p-icon">🔍</div>
+          <span class="p-badge" style="background:#EEF2FF;color:#4F46E5">GOOGLE L4-L6</span>
+        </div>
+        <h3 class="p-title">Google Software Engineering Rubric</h3>
+        <p class="p-desc">Covers General Cognitive Ability (GCA), Role-Related Knowledge (RRK), and Googleyness &amp; Leadership.</p>
+        <div class="p-rubrics">
+          <span class="r-chip">Algorithms &amp; Data Structures</span>
+          <span class="r-chip">Large Scale System Design</span>
+          <span class="r-chip">Clean Modular Code</span>
+        </div>
+        <div class="p-foot">
+          <span style="font-size:12.5px;color:var(--ink-soft);font-family:var(--f-mono)">18 Questions Preset</span>
+          <a class="start-p-btn" href="Mock-interview.html?company=Google&role=Software+Engineer&diff=Hard">Practice Playbook →</a>
+        </div>
+      </div>
+
+      <!-- AMAZON STAR -->
+      <div class="p-card" data-cat="faang">
+        <div class="p-top">
+          <div class="p-icon">📦</div>
+          <span class="p-badge" style="background:#FEF3C7;color:#D97706">AMAZON 16 LPs</span>
+        </div>
+        <h3 class="p-title">Amazon Leadership Principles (STAR)</h3>
+        <p class="p-desc">Deep behavioral probing evaluating Customer Obsession, Ownership, Bias for Action, and Deliver Results.</p>
+        <div class="p-rubrics">
+          <span class="r-chip">STAR Story Structure</span>
+          <span class="r-chip">Data-Driven Metrics</span>
+          <span class="r-chip">Disagree &amp; Commit</span>
+        </div>
+        <div class="p-foot">
+          <span style="font-size:12.5px;color:var(--ink-soft);font-family:var(--f-mono)">16 Questions Preset</span>
+          <a class="start-p-btn" href="Mock-interview.html?company=Amazon&role=Software+Development+Engineer&diff=Hard">Practice Playbook →</a>
+        </div>
+      </div>
+
+      <!-- META -->
+      <div class="p-card" data-cat="faang">
+        <div class="p-top">
+          <div class="p-icon">♾️</div>
+          <span class="p-badge" style="background:#EDE9FE;color:#6D28D9">META E4-E6</span>
+        </div>
+        <h3 class="p-title">Meta Architecture &amp; Coding Bar</h3>
+        <p class="p-desc">Fast-paced live problem-solving, high-scale caching, feed design, and distributed consensus rounds.</p>
+        <div class="p-rubrics">
+          <span class="r-chip">Speed &amp; Accuracy</span>
+          <span class="r-chip">Distributed Systems</span>
+          <span class="r-chip">Trade-off Defense</span>
+        </div>
+        <div class="p-foot">
+          <span style="font-size:12.5px;color:var(--ink-soft);font-family:var(--f-mono)">14 Questions Preset</span>
+          <a class="start-p-btn" href="Mock-interview.html?company=Meta&role=Fullstack+Engineer&diff=Hard">Practice Playbook →</a>
+        </div>
+      </div>
+
+      <!-- MICROSOFT -->
+      <div class="p-card" data-cat="cloud">
+        <div class="p-top">
+          <div class="p-icon">🪟</div>
+          <span class="p-badge" style="background:#ECFDF5;color:#059669">MICROSOFT SDE II</span>
+        </div>
+        <h3 class="p-title">Microsoft Growth Mindset &amp; Systems</h3>
+        <p class="p-desc">Evaluating architectural clarity, collaborative code review, cloud-native Azure/AWS patterns, and customer empathy.</p>
+        <div class="p-rubrics">
+          <span class="r-chip">System Extensibility</span>
+          <span class="r-chip">Cloud Scalability</span>
+          <span class="r-chip">Growth Mindset</span>
+        </div>
+        <div class="p-foot">
+          <span style="font-size:12.5px;color:var(--ink-soft);font-family:var(--f-mono)">12 Questions Preset</span>
+          <a class="start-p-btn" href="Mock-interview.html?company=Microsoft&role=Backend+Engineer&diff=Hard">Practice Playbook →</a>
+        </div>
+      </div>
+
+      <!-- OPENAI / ANTHROPIC -->
+      <div class="p-card" data-cat="ai">
+        <div class="p-top">
+          <div class="p-icon">🤖</div>
+          <span class="p-badge" style="background:#FDF2F8;color:#DB2777">AI UNICORN</span>
+        </div>
+        <h3 class="p-title">OpenAI &amp; GenAI Architecture Bar</h3>
+        <p class="p-desc">Deep evaluations in RAG vector indexing, context window optimization, fine-tuning latency, and LLM evaluation benchmarks.</p>
+        <div class="p-rubrics">
+          <span class="r-chip">RAG &amp; VectorDBs</span>
+          <span class="r-chip">Embedding Precision</span>
+          <span class="r-chip">Model Alignment</span>
+        </div>
+        <div class="p-foot">
+          <span style="font-size:12.5px;color:var(--ink-soft);font-family:var(--f-mono)">15 Questions Preset</span>
+          <a class="start-p-btn" href="Mock-interview.html?company=OpenAI&role=GenAI+Systems+Engineer&diff=Brutal">Practice Playbook →</a>
+        </div>
+      </div>
+
+      <!-- NETFLIX -->
+      <div class="p-card" data-cat="cloud">
+        <div class="p-top">
+          <div class="p-icon">🍿</div>
+          <span class="p-badge" style="background:#FEE2E2;color:#DC2626">NETFLIX SENIOR</span>
+        </div>
+        <h3 class="p-title">Netflix High Alignment &amp; Freedom</h3>
+        <p class="p-desc">Chaos engineering, resilient microservices, distributed rate-limiting, and deep high-ownership behavioral scenarios.</p>
+        <div class="p-rubrics">
+          <span class="r-chip">Chaos Resilience</span>
+          <span class="r-chip">Microservice Decoupling</span>
+          <span class="r-chip">Extreme Ownership</span>
+        </div>
+        <div class="p-foot">
+          <span style="font-size:12.5px;color:var(--ink-soft);font-family:var(--f-mono)">14 Questions Preset</span>
+          <a class="start-p-btn" href="Mock-interview.html?company=Netflix&role=Senior+Platform+Engineer&diff=Hard">Practice Playbook →</a>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// Mobile Drawer
+const menuBtn = document.getElementById('menuBtn');
+const sidebar = document.getElementById('sidebar');
+const scrim = document.getElementById('scrim');
+if (menuBtn && sidebar && scrim) {
+  menuBtn.onclick = () => { sidebar.classList.add('open'); scrim.classList.add('show'); };
+  scrim.onclick = () => { sidebar.classList.remove('open'); scrim.classList.remove('show'); };
+}
+
+// Category Filter
+function filterCategory(cat, btn) {
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  const cards = document.querySelectorAll('.p-card');
+  cards.forEach(card => {
+    if (cat === 'all' || card.dataset.cat === cat) {
+      card.style.display = 'flex';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+
+// Theme Switcher
+document.getElementById('themeBtn').addEventListener('click', () => {
+  const root = document.documentElement;
+  const currentTheme = root.getAttribute('data-theme');
+  root.setAttribute('data-theme', currentTheme === 'dark' ? 'light' : 'dark');
+});
+
+function handleLogout(e) {
+  if (e) e.stopPropagation();
+  if (confirm("Are you sure you want to log out from Ravi GenAI Studio?")) {
+    window.location.href = "Login.html";
+  }
+}
+</script>
+<script src="analytics-tracker.js"></script>
+</body>
+</html>
