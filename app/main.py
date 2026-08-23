@@ -61,6 +61,7 @@ def format_interview_response(interview: InterviewHistory) -> dict:
 
 
 @app.post("/generate")
+@app.post("/api/generate")
 def generate_questions(
     data: InterviewRequest,
     db: Session = Depends(get_db)

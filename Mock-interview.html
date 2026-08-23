@@ -268,6 +268,255 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
   box-shadow: 0 0 0 3px var(--pen-wash);
 }
 
+/* Role Presets & Skill Chips */
+.preset-chips-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.role-preset-chip {
+  font-family: var(--f-ui);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 9px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--ink-soft);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all .18s ease;
+  user-select: none;
+}
+.role-preset-chip:hover {
+  border-color: var(--pen);
+  color: var(--pen);
+  background: var(--pen-wash);
+  transform: translateY(-1px);
+}
+.role-preset-chip.active {
+  border-color: #4F46E5;
+  background: #EEF2FF;
+  color: #4F46E5;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.15);
+}
+[data-theme="dark"] .role-preset-chip.active {
+  background: rgba(99, 102, 241, 0.2);
+  color: #A5B4FC;
+  border-color: #818CF8;
+}
+
+.skills-tags-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+  margin-bottom: 14px;
+}
+.skill-tag-pill {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  color: var(--ink-soft);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all .15s ease;
+}
+.skill-tag-pill:hover {
+  border-color: var(--pen);
+  color: var(--pen);
+}
+
+/* Generated Questions Preview in Setup */
+.gen-q-cta-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule-soft);
+  flex-wrap: wrap;
+}
+.btn-generate-role-q {
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 1.5px solid #4F46E5;
+  background: #EEF2FF;
+  color: #4F46E5;
+  font-family: var(--f-ui);
+  font-weight: 700;
+  font-size: 13.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all .2s ease;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.12);
+}
+.btn-generate-role-q:hover {
+  background: #4F46E5;
+  color: #FFFFFF;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
+}
+.btn-generate-role-q:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+[data-theme="dark"] .btn-generate-role-q {
+  background: rgba(99, 102, 241, 0.15);
+  color: #A5B4FC;
+  border-color: #818CF8;
+}
+[data-theme="dark"] .btn-generate-role-q:hover {
+  background: #6366F1;
+  color: #FFFFFF;
+}
+
+.gen-preview-card {
+  margin-top: 20px;
+  background: var(--paper-2);
+  border: 1.5px solid rgba(79, 70, 229, 0.25);
+  border-radius: var(--radius);
+  padding: 22px;
+  box-shadow: var(--shadow);
+  display: none;
+}
+.gen-preview-card.show {
+  display: block;
+  animation: fadeIn .3s cubic-bezier(.16,1,.3,1);
+}
+.preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--rule-soft);
+}
+.preview-title {
+  font-size: 16.5px;
+  font-weight: 800;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.preview-count-badge {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10B981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.preview-q-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 440px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.preview-q-list::-webkit-scrollbar { width: 4px; }
+.preview-q-list::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 4px; }
+
+.preview-q-item {
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  transition: all .18s ease;
+}
+.preview-q-item:hover {
+  border-color: var(--pen);
+  background: var(--paper-2);
+}
+.preview-q-item.updated {
+  animation: highlightFlash 1s ease;
+}
+@keyframes highlightFlash {
+  0% { background: var(--pen-wash); border-color: var(--pen); }
+  100% { background: var(--sheet); border-color: var(--rule); }
+}
+
+.preview-q-num {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-weight: 800;
+  color: #4F46E5;
+  background: #EEF2FF;
+  padding: 4px 8px;
+  border-radius: 6px;
+  flex: none;
+}
+[data-theme="dark"] .preview-q-num {
+  background: rgba(99, 102, 241, 0.2);
+  color: #A5B4FC;
+}
+.preview-q-body {
+  flex: 1;
+  min-width: 0;
+}
+.preview-q-text {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.45;
+  margin-bottom: 6px;
+}
+.preview-q-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.preview-q-actions {
+  display: flex;
+  gap: 6px;
+  flex: none;
+}
+.preview-act-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid var(--rule);
+  background: var(--paper-2);
+  color: var(--ink-soft);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+.preview-act-btn:hover {
+  border-color: var(--pen);
+  color: var(--pen);
+  transform: translateY(-1px);
+}
+.preview-act-btn.delete:hover {
+  border-color: #EF4444;
+  color: #EF4444;
+}
+
 /* Section 3: Live Interview Intelligence */
 .live-intel-box {
   background: var(--sheet);
@@ -726,15 +975,34 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
               2. Interview Brief &amp; Focus Area
             </div>
+
+            <!-- ROLE QUICK PRESETS -->
+            <div style="margin-bottom:14px">
+              <div style="font-family:var(--f-mono);font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--label-color);margin-bottom:8px">
+                POPULAR ROLE PRESETS:
+              </div>
+              <div class="preset-chips-wrap" id="rolePresetsContainer">
+                <button type="button" class="role-preset-chip active" data-preset="backend" onclick="selectRolePreset('backend')">⚙️ Backend Developer</button>
+                <button type="button" class="role-preset-chip" data-preset="frontend" onclick="selectRolePreset('frontend')">⚛️ Frontend Developer</button>
+                <button type="button" class="role-preset-chip" data-preset="ux" onclick="selectRolePreset('ux')">🎨 UX Designer</button>
+                <button type="button" class="role-preset-chip" data-preset="product" onclick="selectRolePreset('product')">💡 Product Designer</button>
+                <button type="button" class="role-preset-chip" data-preset="uiux" onclick="selectRolePreset('uiux')">✨ UI/UX Designer</button>
+                <button type="button" class="role-preset-chip" data-preset="genai" onclick="selectRolePreset('genai')">🤖 GenAI / LLM Engineer</button>
+                <button type="button" class="role-preset-chip" data-preset="fullstack" onclick="selectRolePreset('fullstack')">🌐 Full Stack Developer</button>
+                <button type="button" class="role-preset-chip" data-preset="devops" onclick="selectRolePreset('devops')">☁️ DevOps &amp; Cloud</button>
+                <button type="button" class="role-preset-chip" data-preset="data" onclick="selectRolePreset('data')">📊 Data Engineer</button>
+              </div>
+            </div>
+
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
               <div class="f-field">
                 <label class="f-label" for="mockRole">TARGET ROLE</label>
-                <input class="f-input" id="mockRole" value="Python Backend Engineer">
+                <input class="f-input" id="mockRole" value="Python Backend Engineer" placeholder="e.g. Python Backend Engineer, Senior UX Designer..." oninput="handleRoleInputChange()">
               </div>
               <div class="f-field">
                 <label class="f-label" for="mockExp">EXPERIENCE LEVEL</label>
                 <select class="f-select" id="mockExp">
-                  <option value="Fresher">Fresher</option>
+                  <option value="Fresher">Fresher (0 Years)</option>
                   <option value="Junior (0-2 Years)">Junior (0–2 Years)</option>
                   <option value="Mid Level (3-5 Years)" selected>Mid Level (3–5 Years)</option>
                   <option value="Senior (6-10 Years)">Senior (6–10 Years)</option>
@@ -742,17 +1010,18 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
                 </select>
               </div>
             </div>
+
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
               <div class="f-field">
                 <label class="f-label" for="mockType">QUESTION FORMAT</label>
                 <select class="f-select" id="mockType">
                   <option value="Technical &amp; System Architecture" selected>Technical &amp; System Architecture</option>
-                  <option value="Behavioral &amp; Leadership">Behavioral &amp; Leadership</option>
+                  <option value="Behavioral &amp; Leadership">Behavioral &amp; Leadership (STAR)</option>
                   <option value="Product / UX Design">Product / UX Design</option>
                   <option value="Coding &amp; Problem Solving">Coding &amp; Problem Solving</option>
-                  <option value="Case Study">Case Study</option>
-                  <option value="System Design">System Design</option>
-                  <option value="Mixed Interview">Mixed Interview</option>
+                  <option value="Case Study">Case Study &amp; Scenarios</option>
+                  <option value="System Design">System Design &amp; Scalability</option>
+                  <option value="Mixed Interview">Mixed Comprehensive Loop</option>
                 </select>
               </div>
               <div class="f-field">
@@ -767,18 +1036,78 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
                   <option value="Stripe">Stripe (API &amp; Rigor)</option>
                   <option value="Adobe">Adobe (Creative Cloud &amp; Design Systems)</option>
                   <option value="Atlassian">Atlassian (Collaboration &amp; Scale)</option>
-                  <option value="Generic">Generic / No Company</option>
+                  <option value="Generic">Generic / Standard Industry Bar</option>
                 </select>
               </div>
             </div>
-            <div class="f-field" style="margin-bottom:0">
-              <label class="f-label" for="mockCount">QUESTION COUNT (EXACT)</label>
-              <select class="f-select" id="mockCount">
-                <option value="5">5 Questions (Sprint Practice)</option>
-                <option value="10" selected>10 Questions (Standard Interview Simulation)</option>
-                <option value="15">15 Questions (Deep-Dive Grill)</option>
-                <option value="20">20 Questions (Full Assessment Loop)</option>
-              </select>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+              <div class="f-field" style="margin-bottom:0">
+                <label class="f-label" for="mockCount">QUESTION COUNT (EXACT)</label>
+                <select class="f-select" id="mockCount">
+                  <option value="5">5 Questions (Sprint Practice)</option>
+                  <option value="10" selected>10 Questions (Standard Interview Simulation)</option>
+                  <option value="15">15 Questions (Deep-Dive Grill)</option>
+                  <option value="20">20 Questions (Full Assessment Loop)</option>
+                </select>
+              </div>
+              <div class="f-field" style="margin-bottom:0">
+                <label class="f-label" for="mockCustomTopic">CUSTOM FOCUS TOPIC / SEED QUESTION (OPTIONAL)</label>
+                <input class="f-input" id="mockCustomTopic" placeholder="e.g. Asynchronous I/O, WCAG accessibility, RAG ACLs...">
+              </div>
+            </div>
+
+            <!-- DYNAMIC ROLE SKILLS BAR -->
+            <div style="margin-top:14px">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-family:var(--f-mono);font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--label-color)">
+                  ROLE CORE FOCUS SKILLS:
+                </span>
+                <span style="font-size:11px;color:var(--ink-soft);font-family:var(--f-mono)" id="skillsCountText">Auto-calibrated</span>
+              </div>
+              <div class="skills-tags-wrap" id="mockSkillsWrap">
+                <!-- Dynamically filled by JS -->
+              </div>
+            </div>
+
+            <!-- GENERATE QUESTIONS FOR ROLE CTA -->
+            <div class="gen-q-cta-bar">
+              <div style="font-size:12.5px;color:var(--ink-soft)">
+                <span>Ready to tailor questions?</span> <b>Generate role questions</b> to preview &amp; customize, or launch live directly.
+              </div>
+              <button type="button" class="btn-generate-role-q" id="btnGenRoleQuestions" onclick="generateAndPreviewQuestions()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                <span id="genBtnText">⚡ Generate Questions for Selected Role</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- GENERATED QUESTIONS PREVIEW CARD -->
+          <div class="gen-preview-card" id="genPreviewCard">
+            <div class="preview-head">
+              <div>
+                <div class="preview-title">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                  <span id="previewHeadingRole">Role Interview Questions Staged</span>
+                </div>
+                <div style="font-size:12px;color:var(--ink-soft);margin-top:2px" id="previewSubtext">
+                  Questions tailored to your role are ready for the live voice room. You can edit, re-roll, or add questions.
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <span class="preview-count-badge" id="previewCountBadge">0 Questions Ready</span>
+                <button type="button" class="calib-btn-sm" onclick="addCustomQuestionPrompt()" title="Add Custom Question">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  + Add Question
+                </button>
+                <button type="button" class="calib-btn-sm" onclick="regenerateAllQuestions()" title="Regenerate All Questions">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
+                  Regenerate All
+                </button>
+              </div>
+            </div>
+            <div class="preview-q-list" id="previewQList">
+              <!-- Dynamically populated question items -->
             </div>
           </div>
 
@@ -906,8 +1235,8 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
         </div>
 
         <div class="live-q-card">
-          <div class="live-q-badge" id="liveBadge">Question #1 · Technical Architecture</div>
-          <div class="live-q-text" id="liveQuestion">"Can you explain how FastAPI handles asynchronous requests under the hood compared to Django or Flask?"</div>
+          <div class="live-q-badge" id="liveBadge">Question #1 · Initializing...</div>
+          <div class="live-q-text" id="liveQuestion">"Connecting to live voice room..."</div>
 
           <!-- REAL-TIME TRANSCRIPT STRIP WITH INSTANT CLARIFY -->
           <div class="transcript-box">
@@ -1096,12 +1425,213 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
   let currentQIndex = 0;
   let interviewQuestions = [];
   let userAnswers = [];
+  let roleInputDebounce = null;
 
-  // Initialize Intel date
+  // Role Preset Definitions
+  const ROLE_PRESET_CONFIG = {
+    backend: {
+      name: "Python Backend Engineer",
+      type: "Technical & System Architecture",
+      persona: "Alex",
+      skills: ['FastAPI / Distributed Systems', 'PostgreSQL (Indexing & ACID)', 'Redis Cluster Caching', 'Async I/O Concurrency', 'Docker / K8s', 'Kafka / Event-Driven']
+    },
+    frontend: {
+      name: "Frontend Developer (React/TypeScript)",
+      type: "Technical & System Architecture",
+      persona: "Elena",
+      skills: ['React 19 / Next.js', 'TypeScript', 'State Management (TanStack/Zustand)', 'Core Web Vitals (INP/LCP)', 'WAI-ARIA Accessibility', 'WebSockets']
+    },
+    ux: {
+      name: "UX Designer & Researcher",
+      type: "Product / UX Design",
+      persona: "Marcus",
+      skills: ['User Research', 'Figma', 'Wireframing', 'Usability Testing (SUS/SEQ)', 'Design Systems', 'WCAG 2.2 AA', 'Information Architecture']
+    },
+    product: {
+      name: "Product Designer",
+      type: "Product / UX Design",
+      persona: "Marcus",
+      skills: ['Product Strategy', 'Figma', 'User Journeys', 'Design Systems', 'A/B Testing', 'Product Metrics (ARR/Retention)', 'Discovery vs Delivery']
+    },
+    uiux: {
+      name: "UI/UX Designer",
+      type: "Product / UX Design",
+      persona: "Elena",
+      skills: ['Visual Hierarchy', 'Figma Variables & Modes', 'Design Tokens', 'Micro-interactions', 'Responsive Breakpoints', 'Spatial Grid 8pt']
+    },
+    genai: {
+      name: "GenAI & LLM Systems Engineer",
+      type: "Technical & System Architecture",
+      persona: "Elena",
+      skills: ['RAG Architecture', 'Vector Databases (Pinecone/Milvus)', 'LangGraph / AutoGen', 'Embeddings (Sparse/Dense)', 'Evaluation Guardrails (Ragas)', 'Token Latency']
+    },
+    fullstack: {
+      name: "Full Stack Developer",
+      type: "Mixed Interview",
+      persona: "Alex",
+      skills: ['React 19 / TypeScript', 'Node.js / Python FastAPI', 'PostgreSQL & Redis', 'REST / GraphQL / gRPC', 'Docker / CI/CD', 'End-to-End Type Safety']
+    },
+    devops: {
+      name: "DevOps & Cloud Infrastructure Architect",
+      type: "System Design",
+      persona: "Alex",
+      skills: ['Kubernetes & Docker', 'Terraform (IaC)', 'CI/CD (GitHub Actions)', 'Observability (Prometheus/Grafana)', 'AWS / GCP Multi-Region', 'Zero-Downtime Deployments']
+    },
+    data: {
+      name: "Data & Distributed Systems Engineer",
+      type: "Technical & System Architecture",
+      persona: "Elena",
+      skills: ['Apache Spark / PySpark', 'Apache Kafka (Streaming)', 'dbt & Snowflake / BigQuery', 'PostgreSQL / Data Lakehouse', 'Data Quality (Great Expectations)', 'Airflow Orchestration']
+    }
+  };
+
+  // Comprehensive Dynamic Role Question Banks (Offline Fallback & AI Synthesis)
+  const DYNAMIC_ROLE_BANKS = {
+    ux: [
+      "Walk through how you design and execute a mixed-methods user research study to define information architecture for a complex enterprise workflow at {company}.",
+      "How do you build, scale, and govern a component design system in Figma while ensuring strict WCAG 2.2 AA accessibility and seamless developer handoff?",
+      "Describe a scenario where usability testing revealed critical drop-off in user onboarding. How did you diagnose the root friction and defend UX trade-offs to PMs and engineering?",
+      "How do you evaluate user feedback from qualitative moderated testing against quantitative funnel telemetry (e.g. SUS, SEQ, task completion time)?",
+      "Walk through your end-to-end design process from discovery research and low-fidelity wireframing to high-fidelity interactive prototyping.",
+      "How do you design intuitive multi-faceted search, filter, and drawer navigation for enterprise users managing complex data?",
+      "Explain your strategy for conducting accessibility audits across legacy interfaces and prioritizing remediation backlog with engineers.",
+      "Tell me about a situation at {company} where you resolved conflicting feedback between executive stakeholders and end-user testing insights.",
+      "How do you use card sorting, tree testing, and cognitive walkthroughs to validate taxonomy changes before UI production?",
+      "Describe how you structure user interview discussion guides to eliminate confirmation bias and uncover latent user needs.",
+      "Scenario: User drop-off spikes at step 2 of a multi-step checkout wizard. How do you diagnose whether the issue is cognitive load, usability friction, or value communication?",
+      "How do you prototype high-fidelity motion and micro-interactions in Figma or ProtoPie to validate user feedback loops before engineering handoff?"
+    ],
+    product: [
+      "How do you frame a product design problem statement to balance business viability (e.g. retention, conversion) with core user delight at {company}?",
+      "Walk through a 0-to-1 feature you designed: what North Star metric and secondary guardrail metrics did you establish?",
+      "Describe a scenario where A/B experiment metrics showed positive revenue impact but qualitative user feedback indicated brand trust erosion. How did you navigate this?",
+      "How do you determine when a design system component should be incorporated into the shared core library versus remaining domain-specific?",
+      "Tell me about a time you partnered with Product Management and Data Science to redefine the user activation funnel.",
+      "How do you run rapid customer discovery sessions to de-risk high-stakes strategic roadmap initiatives under tight sprint deadlines?",
+      "Walk through your approach to sunsetting a legacy product feature with low active volume but vocal power users.",
+      "How do you defend design decisions using both qualitative research and quantitative experimentation data to cross-functional leaders?",
+      "Describe how you design monetization and paywall trigger moments without degrading the core user experience.",
+      "How do you prioritize competing customer feature requests against foundational design debt remediation?",
+      "Scenario: You are designing a zero-to-one product in a competitive space. How do you identify the minimum lovable product (MLP) scope?",
+      "How do you navigate discovery vs delivery when working in fast two-week agile sprint cycles with engineering?"
+    ],
+    uiux: [
+      "How do you establish typographic scale, 8pt/4pt spatial rhythm, and contrast ratios across multi-density screens?",
+      "Explain how you architect multi-brand design tokens (Global -> Semantic -> Component) in Figma Variables.",
+      "How do you design state machines for complex interactive UI components (hover, focus-visible, active, error, loading, skeleton)?",
+      "Walk through your approach to micro-interactions and motion design to provide clear user feedback without causing cognitive distraction.",
+      "Scenario: An existing design system has 40+ inconsistent button variants. How do you audit, consolidate, and roll out a refactored component set?",
+      "How do you ensure visual accessibility for color-blind users across complex statistical charts, graphs, and status badges?",
+      "Describe how you build responsive auto-layout components in Figma that fluidly resize across 320px mobile to 2560px ultra-wide screens.",
+      "What is your strategy for implementing dark mode theming with semantic color tokens while preserving depth and visual hierarchy?",
+      "How do you prototype realistic user input validation states and multi-field inline error messages in Figma?",
+      "Walk through how you collaborate with frontend engineers to ensure CSS custom properties match Figma token definitions precisely.",
+      "Describe how you design accessible keyboard navigation focus indicators that blend harmoniously with brand aesthetics.",
+      "How do you maintain visual harmony when incorporating dense data tables, graphs, and action toolbars on a single dashboard viewport?"
+    ],
+    frontend: [
+      "How do you eliminate Interaction to Next Paint (INP) and Long Animation Frames (LoAF) bottlenecks in complex client-side applications rendering dense data visualizers at {company}?",
+      "Explain your architectural strategy for state management, optimistic updates, and server cache synchronization in React 19 / Next.js.",
+      "How do you design and enforce automated component testing, visual regression testing, and WCAG 2.2 accessibility in CI/CD pipelines?",
+      "Describe how you architect a real-time WebSocket dashboard handling 100+ streaming updates/sec without triggering unnecessary DOM re-renders.",
+      "Walk through how you isolate, debug, and resolve memory leaks caused by lingering event listeners or detached DOM nodes in single-page apps.",
+      "Compare client-side state architectures (Zustand/Redux) vs server cache state (TanStack Query/SWR) in high-frequency applications.",
+      "How do you implement code splitting, dynamic imports, and route-level bundle chunking to keep initial JS payloads under 100KB?",
+      "Explain how the JavaScript Event Loop coordinates the microtask queue (Promises), macrotask queue (setTimeout), and animation frames (rAF).",
+      "How do you build custom accessible dropdown components strictly compliant with WAI-ARIA authoring practices from scratch?",
+      "Describe how you implement secure JWT token storage (httpOnly cookies vs in-memory) and handle silent background token refresh cycles.",
+      "How do you create virtualized lists (e.g. TanStack Virtual) to render 50,000+ items smoothly at a locked 60 FPS?",
+      "Explain how modern browser rendering engines handle layout reflow, repaint, and GPU compositing layers during heavy CSS animations."
+    ],
+    backend: [
+      "How would you architect a high-throughput, low-latency {role} service at {company} handling 50,000 asynchronous requests/sec while guaranteeing idempotency?",
+      "Describe how you diagnose, isolate, and resolve database connection pool exhaustion and query plan degradation under sudden 5x traffic surges.",
+      "How do you implement distributed tracing (OpenTelemetry), circuit breakers, and exponential backoff with jitter across microservices?",
+      "Explain how you design zero-downtime database schema migrations for PostgreSQL tables with tens of millions of active records.",
+      "Walk through your strategy for multi-level caching (L1 in-memory + L2 Redis Cluster) and handling cache stampede/thundering herd problems.",
+      "How do you structure database indexes (B-Tree, GIN, composite) in PostgreSQL and interpret EXPLAIN ANALYZE output for slow queries?",
+      "Explain database transaction isolation levels (Read Committed, Repeatable Read, Serializable) and the concurrency anomalies each prevents.",
+      "How do you architect event-driven microservices using Apache Kafka or RabbitMQ, ensuring at-least-once or exactly-once message delivery?",
+      "Describe how you implement token bucket or leaky bucket rate limiting across distributed API gateway instances.",
+      "How do you architect secure multi-tenant data isolation (Row-Level Security vs schema-per-tenant vs database-per-tenant)?",
+      "Scenario: A payment endpoint experiences intermittent database timeouts under heavy load. How do you implement dead-letter queue retry mechanisms?",
+      "How do you manage database read-replicas with replication lag monitoring and read-after-write consistency guarantees?"
+    ],
+    genai: [
+      "How do you architect an enterprise RAG pipeline at {company} that enforces granular document-level Access Control Lists (ACLs) during hybrid vector-lexical search?",
+      "Explain your methodology for evaluating LLM hallucination rates and output reliability using automated benchmark frameworks (e.g. Ragas / TruLens).",
+      "How do you optimize time-to-first-token (TTFT) and throughput latency for multi-step agentic workflows with dynamic tool-calling?",
+      "Describe how you design prompt injection guardrails, input sanitization, and output filtering for user-facing generative AI applications.",
+      "How do you approach fine-tuning (QLoRA) vs retrieval-augmented generation (RAG) when enterprise domain data evolves continuously?",
+      "Compare chunking strategies (semantic chunking, parent-document retrieval, sentence windowing) for dense domain-specific technical documentation.",
+      "How do you implement hybrid search combining dense vector embeddings with sparse BM25 keyword search using Reciprocal Rank Fusion (RRF)?",
+      "Describe how you build a multi-step agentic workflow with LangGraph/AutoGen that executes deterministic tool calls safely.",
+      "How do you design vector database index configurations (HNSW parameters M and efConstruction vs IVFFlat) for sub-20ms search latency?",
+      "Scenario: Retrieval returns 20 relevant chunks but LLM context degradation causes 'lost in the middle' syndrome. How do you solve this with rerankers (Cohere/BGE)?",
+      "How do you implement streaming token output via Server-Sent Events (SSE) while preserving structured JSON schema validation?",
+      "Explain how Direct Preference Optimization (DPO) and RLHF align model responses with human feedback and domain safety guidelines."
+    ],
+    fullstack: [
+      "How do you architect an end-to-end type-safe pipeline spanning React 19 frontend, TypeScript models, and FastAPI backend services at {company}?",
+      "Describe your strategy for optimistic UI mutations, automatic rollback on network failure, and background server cache invalidation.",
+      "How do you design authentication and role-based access control (RBAC) across client sessions, API gateways, and microservices?",
+      "Walk through how you profile performance bottlenecks that span client-side hydration, API network latency, and database query execution.",
+      "Scenario: A critical production feature requires a breaking database schema migration and UI update. How do you orchestrate zero-downtime deployment?",
+      "How do you implement real-time collaborative editing features using WebSockets and conflict-free replicated data types (CRDTs)?",
+      "Compare server-side rendering (SSR), static generation (SSG), and client-side rendering (CSR) regarding SEO, TTFB, and server compute load.",
+      "How do you design RESTful, GraphQL, and gRPC endpoints to serve diverse clients with minimal over-fetching and strict contracts?",
+      "Explain how you handle offline data persistence and background sync using IndexedDB and Service Workers in web applications.",
+      "How do you structure shared Monorepo architectures (Turborepo/Nx) with reusable UI component packages across multiple web apps?",
+      "Describe your approach to end-to-end testing (Playwright) and API contract testing in automated continuous deployment pipelines.",
+      "How do you guard full-stack applications against XSS, CSRF, SQL injection, and Broken Object Level Authorization (BOLA) vulnerabilities?"
+    ],
+    devops: [
+      "How do you design and manage multi-region Kubernetes clusters on AWS/GCP with automated pod horizontal autoscaling (HPA) and cluster autoscaling at {company}?",
+      "Walk through how you architect immutable infrastructure using Terraform, state locking, and automated drift detection.",
+      "Describe how you implement blue-green and canary deployments with automated rollback triggered by Prometheus error rate metrics.",
+      "How do you design centralized observability pipelines combining Prometheus metrics, Grafana dashboards, Loki logs, and Tempo traces?",
+      "Scenario: A sudden DDoS attack or regional cloud outage hits your primary availability zone. Walk through your automated failover and traffic shedding strategy.",
+      "How do you enforce DevSecOps principles, container vulnerability scanning (Trivy), and secret rotation (HashiCorp Vault) in CI/CD pipelines?",
+      "Explain how you optimize cloud infrastructure costs (FinOps), right-sizing compute instances and utilizing spot/preemptible instances safely.",
+      "How do you configure Kubernetes Ingress controllers (NGINX/Traefik) with TLS termination, rate limiting, and mTLS between internal pods?",
+      "Describe your strategy for backup, disaster recovery (RPO/RTO targets), and automated chaos engineering tests (Chaos Mesh).",
+      "How do you manage database connection pooling at scale and prevent connection exhaustion across ephemeral serverless containers?",
+      "Walk through how you secure CI/CD pipelines against supply chain attacks, enforce signed commits, and verify artifact signatures (Cosign).",
+      "How do you structure Service Level Objectives (SLOs), Service Level Indicators (SLIs), and error budget alerting for 99.99% availability services?"
+    ],
+    data: [
+      "How do you architect scalable real-time streaming data ingestion pipelines using Apache Kafka and Apache Spark Streaming at {company}?",
+      "Explain how you design medallion lakehouse architectures (Bronze -> Silver -> Gold) using Delta Lake or Apache Iceberg on cloud object storage.",
+      "How do you implement automated data quality validation, anomaly detection, and schema drift monitoring using Great Expectations or Soda?",
+      "Describe how you structure idempotent batch transformation pipelines with dbt and orchestrate DAG dependencies using Apache Airflow.",
+      "Scenario: A critical downstream reporting table produces duplicate or late-arriving records. Walk through your triage, reconciliation, and backfill process.",
+      "How do you optimize slow distributed queries in Snowflake or BigQuery using clustering keys, partitioning, and materialized views?",
+      "Compare row-oriented storage (PostgreSQL) vs columnar storage (Parquet/ClickHouse) regarding analytical scan speeds and compression efficiency.",
+      "How do you implement Change Data Capture (CDC) using Debezium and Kafka Connect to synchronize transactional databases with data warehouses in real-time?",
+      "Describe your approach to managing data governance, role-based access control (RBAC), and column-level masking for sensitive PII data.",
+      "How do you handle schema evolution (backward/forward compatibility) using Avro and Confluent Schema Registry in distributed message streams?",
+      "Explain how you tune Spark jobs to resolve data skew, memory spill to disk, and optimize shuffle partition sizes.",
+      "How do you design data contracts between engineering service owners and downstream analytical data consumers to prevent breaking pipeline failures?"
+    ],
+    general: [
+      "In a {role} position at {company}: What is your framework for diagnosing ambiguous problems and aligning stakeholders on execution milestones?",
+      "Describe a high-stakes technical or architectural decision you made with incomplete telemetry. How did you balance risk with bias for action?",
+      "Walk through your approach to maintaining code quality, automated testing, and documentation while delivering under aggressive sprint deadlines.",
+      "Tell me about a time you received critical feedback on your technical or design proposal. How did you iterate and resolve the trade-offs?",
+      "Scenario: A critical production issue arises that affects top-tier enterprise customers. Walk through your step-by-step triage, resolution, and retrospective process.",
+      "How do you prioritize addressing technical debt and architectural refactoring against feature delivery on product roadmaps?",
+      "Describe a situation where you had to mentor a junior team member or resolve technical disagreements within your engineering team.",
+      "How do you ensure solutions you build are scalable, maintainable, and aligned with industry best practices?",
+      "Tell me about a project where you had to quickly ramp up on an unfamiliar framework or technology stack to deliver a critical milestone.",
+      "What is your approach to conducting constructive code reviews and fostering a culture of technical excellence in your team?"
+    ]
+  };
+
+  // Initialize Intel date stamp
   const now = new Date();
   $('#intelDateStamp').textContent = `Last Updated: ${now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
 
-  // Persona Selection
+  // Persona Selection Handlers
   $$('.persona-card').forEach(card => {
     card.addEventListener('click', () => {
       $$('.persona-card').forEach(c => c.classList.remove('selected'));
@@ -1214,80 +1744,380 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
     }
   }
 
-  // API Fallback / Verified Questions Generator
-  async function fetchInterviewQuestions(role, exp, type, company, count) {
+  // Extract role-calibrated skills for any role
+  function getSkillsForRole(role) {
+    const r = (role || '').toLowerCase();
+    if (r.includes('ux') && !r.includes('product') && !r.includes('ui/ux')) {
+      return ROLE_PRESET_CONFIG.ux.skills;
+    } else if (r.includes('product designer') || r.includes('product design')) {
+      return ROLE_PRESET_CONFIG.product.skills;
+    } else if (r.includes('ui/ux') || r.includes('visual') || r.includes('ui designer')) {
+      return ROLE_PRESET_CONFIG.uiux.skills;
+    } else if (r.includes('frontend') || r.includes('react') || r.includes('web') || r.includes('next.js')) {
+      return ROLE_PRESET_CONFIG.frontend.skills;
+    } else if (r.includes('genai') || r.includes('llm') || r.includes('ai') || r.includes('machine learning')) {
+      return ROLE_PRESET_CONFIG.genai.skills;
+    } else if (r.includes('fullstack') || r.includes('full stack')) {
+      return ROLE_PRESET_CONFIG.fullstack.skills;
+    } else if (r.includes('devops') || r.includes('cloud') || r.includes('sre') || r.includes('infrastructure')) {
+      return ROLE_PRESET_CONFIG.devops.skills;
+    } else if (r.includes('data engineer') || r.includes('data') || r.includes('analytics engineer')) {
+      return ROLE_PRESET_CONFIG.data.skills;
+    } else if (r.includes('backend') || r.includes('python') || r.includes('api') || r.includes('java') || r.includes('golang') || r.includes('systems')) {
+      return ROLE_PRESET_CONFIG.backend.skills;
+    }
+    return ['System Architecture', 'Scalability & Trade-offs', 'Problem Solving', 'Data Structures & Algorithms', 'Production Resilience'];
+  }
+
+  // Render Role Skills Tags
+  function renderRoleSkills(role) {
+    const wrap = $('#mockSkillsWrap');
+    if (!wrap) return;
+    const skills = getSkillsForRole(role);
+    wrap.innerHTML = skills.map(s => `
+      <span class="skill-tag-pill">
+        <span style="color:#4F46E5">●</span> ${s}
+      </span>
+    `).join('');
+    const countText = $('#skillsCountText');
+    if (countText) countText.textContent = `${skills.length} Target Competencies`;
+  }
+
+  // Role Preset Selection Handler
+  function selectRolePreset(presetKey) {
+    const cfg = ROLE_PRESET_CONFIG[presetKey];
+    if (!cfg) return;
+
+    // Update active preset button style
+    $$('.role-preset-chip').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.preset === presetKey);
+    });
+
+    // Update input values
+    const roleInput = $('#mockRole');
+    if (roleInput) roleInput.value = cfg.name;
+
+    const typeSelect = $('#mockType');
+    if (typeSelect && cfg.type) {
+      for (let opt of typeSelect.options) {
+        if (opt.value.includes(cfg.type) || cfg.type.includes(opt.value)) {
+          typeSelect.value = opt.value;
+          break;
+        }
+      }
+    }
+
+    // Auto-select recommended persona
+    if (cfg.persona) {
+      $$('.persona-card').forEach(c => {
+        const match = c.dataset.persona === cfg.persona;
+        c.classList.toggle('selected', match);
+        if (match) {
+          currentPersona = {
+            name: c.dataset.persona,
+            role: c.dataset.personaRole,
+            avatar: c.dataset.avatar
+          };
+        }
+      });
+    }
+
+    // Refresh dynamic skills
+    renderRoleSkills(cfg.name);
+
+    // Update staged preview heading if open
+    const previewHeading = $('#previewHeadingRole');
+    if (previewHeading) previewHeading.textContent = `${cfg.name} — Role Questions Staged`;
+  }
+
+  // Role input typing handler with debounced skill sync
+  function handleRoleInputChange() {
+    clearTimeout(roleInputDebounce);
+    roleInputDebounce = setTimeout(() => {
+      const roleVal = $('#mockRole').value.trim();
+      renderRoleSkills(roleVal);
+
+      // Match preset chip if typed role matches
+      let matchedKey = null;
+      for (const [key, cfg] of Object.entries(ROLE_PRESET_CONFIG)) {
+        if (roleVal.toLowerCase().includes(key) || cfg.name.toLowerCase().includes(roleVal.toLowerCase())) {
+          matchedKey = key;
+          break;
+        }
+      }
+      $$('.role-preset-chip').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.preset === matchedKey);
+      });
+
+      const previewHeading = $('#previewHeadingRole');
+      if (previewHeading) previewHeading.textContent = `${roleVal || 'Custom Role'} — Role Questions Staged`;
+    }, 250);
+  }
+
+  // API or Fallback Questions Fetcher
+  async function fetchInterviewQuestions(role, exp, type, company, count, customQuestion = '') {
     const targetCount = Number(count) || 10;
-    try {
-      const res = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          role: role,
-          company: company,
-          interview_type: type,
-          experience: exp,
-          questionCount: targetCount,
-          number_of_questions: targetCount
-        })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.questions_details && data.questions_details.length >= targetCount) {
-          return data.questions_details.slice(0, targetCount);
+    const skills = getSkillsForRole(role);
+    const endpoints = ['/generate', '/api/generate'];
+
+    for (const ep of endpoints) {
+      try {
+        const res = await fetch(ep, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            role: role,
+            company: company,
+            interview_type: type,
+            experience: exp,
+            skills: skills,
+            difficulty: "Hard",
+            number_of_questions: targetCount,
+            questionCount: targetCount,
+            custom_question: customQuestion || undefined
+          })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.questions_details && data.questions_details.length >= targetCount) {
+            return data.questions_details.slice(0, targetCount);
+          }
+          if (data.questions && data.questions.length >= targetCount) {
+            return data.questions.slice(0, targetCount).map((q, i) => ({
+              id: i + 1,
+              question: typeof q === 'string' ? q.replace(/^\d+[\.\)]\s*/, '') : (q.question || String(q)),
+              category: type,
+              difficulty: "Hard",
+              source_type: i < 2 ? "verified" : "AI_generated",
+              source_title: i < 2 ? `${company} Bar` : `AI Synthesis (${role})`
+            }));
+          }
         }
-        if (data.questions && data.questions.length >= targetCount) {
-          return data.questions.slice(0, targetCount).map((q, i) => ({
-            id: i + 1,
-            question: q,
-            category: type,
-            source_type: i < 2 ? "verified" : "AI_generated"
-          }));
-        }
+      } catch (err) {
+        console.warn(`Endpoint ${ep} connection notice:`, err.message);
       }
-    } catch (e) {
-      console.warn("Backend synthesis fallback, generating structured questions:", e.message);
     }
 
-    // High quality verified fallbacks
-    const pool = [
-      {
-        question: `How would you architect a high-throughput, low-latency ${role} system to process 50,000 asynchronous events per second while guaranteeing idempotency?`,
-        category: "System Architecture",
-        source_type: "verified"
-      },
-      {
-        question: `In an enterprise ${company} infrastructure: Describe how you diagnose and eliminate database connection pool saturation under 5x traffic spikes.`,
-        category: "Concurrency & Resilience",
-        source_type: "verified"
-      },
-      {
-        question: `Walk through a situation where an executive stakeholder required a feature that compromised system reliability or accessibility. How did you navigate the trade-off?`,
-        category: "STAR Leadership",
-        source_type: "AI_generated"
-      },
-      {
-        question: `Explain how you implement distributed tracing (OpenTelemetry) and structured JSON logging across decoupled microservices.`,
-        category: "Observability",
-        source_type: "AI_generated"
-      },
-      {
-        question: `How do you structure database schema migrations with zero downtime while serving continuous live customer traffic?`,
-        category: "Data Engineering",
-        source_type: "AI_generated"
-      }
-    ];
+    // Dynamic Role-Calibrated Synthesis from Offline Bank
+    const rLower = (role || '').toLowerCase();
+    let bankKey = 'general';
+    if (rLower.includes('ux') && !rLower.includes('product') && !rLower.includes('ui/ux')) bankKey = 'ux';
+    else if (rLower.includes('product designer') || rLower.includes('product design')) bankKey = 'product';
+    else if (rLower.includes('ui/ux') || rLower.includes('visual') || rLower.includes('ui designer')) bankKey = 'uiux';
+    else if (rLower.includes('frontend') || rLower.includes('react') || rLower.includes('web') || rLower.includes('next.js')) bankKey = 'frontend';
+    else if (rLower.includes('genai') || rLower.includes('llm') || rLower.includes('ai') || rLower.includes('machine learning')) bankKey = 'genai';
+    else if (rLower.includes('fullstack') || rLower.includes('full stack')) bankKey = 'fullstack';
+    else if (rLower.includes('devops') || rLower.includes('cloud') || rLower.includes('sre') || rLower.includes('infrastructure')) bankKey = 'devops';
+    else if (rLower.includes('data engineer') || rLower.includes('data') || rLower.includes('analytics engineer')) bankKey = 'data';
+    else if (rLower.includes('backend') || rLower.includes('python') || rLower.includes('api') || rLower.includes('software')) bankKey = 'backend';
 
-    const result = [];
-    for (let i = 0; i < targetCount; i++) {
-      const item = pool[i % pool.length];
-      result.push({
+    const sourceBank = DYNAMIC_ROLE_BANKS[bankKey] || DYNAMIC_ROLE_BANKS.general;
+    const companyClean = company.includes('Generic') ? 'our engineering team' : company.split('(')[0].trim();
+    const generated = [];
+
+    // If custom seed provided, craft the first question branching directly from it
+    if (customQuestion && customQuestion.trim()) {
+      generated.push({
+        id: 1,
+        question: `Focus Assessment: In your experience as a ${role}, walk through how you approach: "${customQuestion.trim()}" at ${companyClean}.`,
+        category: type,
+        difficulty: "Hard",
+        source_type: "derived",
+        source_title: `Seed Topic (${customQuestion.slice(0, 20)}...)`,
+        confidence: 0.96
+      });
+    }
+
+    const startIndex = generated.length;
+    for (let i = startIndex; i < targetCount; i++) {
+      const template = sourceBank[(i - startIndex) % sourceBank.length];
+      const qText = template
+        .replace(/\{role\}/g, role)
+        .replace(/\{company\}/g, companyClean);
+
+      generated.push({
         id: i + 1,
-        question: i < pool.length ? item.question : `Scenario #${i + 1}: In a production ${role} system at ${company}, how do you evaluate latency, cost, and reliability trade-offs?`,
-        category: item.category,
-        source_type: i < 2 ? "verified" : "AI_generated"
+        question: qText,
+        category: type,
+        difficulty: "Hard",
+        source_type: i < 2 ? "verified" : "AI_generated",
+        source_title: i < 2 ? `${companyClean} Assessment Bar` : `AI Synthesis (${role})`,
+        source_url: null,
+        source_date: new Date().toISOString().slice(0, 10),
+        confidence: 0.94
       });
     }
-    return result;
+
+    return generated;
+  }
+
+  // Generate and Preview Questions in Stage 1
+  async function generateAndPreviewQuestions() {
+    const role = $('#mockRole').value.trim() || 'Python Backend Engineer';
+    const exp = $('#mockExp').value;
+    const type = $('#mockType').value;
+    const company = $('#mockCompany').value;
+    const count = Number($('#mockCount').value) || 10;
+    const customTopic = $('#mockCustomTopic')?.value.trim() || '';
+
+    const btn = $('#btnGenRoleQuestions');
+    const btnText = $('#genBtnText');
+    btn.disabled = true;
+    btnText.innerHTML = '<span>⚡ Generating Role Questions...</span>';
+
+    try {
+      interviewQuestions = await fetchInterviewQuestions(role, exp, type, company, count, customTopic);
+      renderPreviewQuestionsList();
+
+      const previewCard = $('#genPreviewCard');
+      if (previewCard) {
+        previewCard.classList.add('show');
+        previewCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      const previewHeading = $('#previewHeadingRole');
+      if (previewHeading) previewHeading.textContent = `${role} — Questions Staged (${interviewQuestions.length})`;
+
+      const countBadge = $('#previewCountBadge');
+      if (countBadge) countBadge.textContent = `${interviewQuestions.length} Questions Ready`;
+
+    } catch (err) {
+      console.error("Question generation error:", err);
+      alert("Notice: Could not load questions from server. Using role offline synthesis.");
+    } finally {
+      btn.disabled = false;
+      btnText.innerHTML = '<span>⚡ Regenerate Role Questions</span>';
+    }
+  }
+
+  // Render the Staged Questions in Stage 1 Preview List
+  function renderPreviewQuestionsList() {
+    const list = $('#previewQList');
+    if (!list) return;
+
+    if (!interviewQuestions.length) {
+      list.innerHTML = `<div style="padding:20px;text-align:center;color:var(--ink-soft);font-size:13.5px">No questions generated yet. Click "Generate Questions for Selected Role" above.</div>`;
+      return;
+    }
+
+    list.innerHTML = interviewQuestions.map((qObj, i) => `
+      <div class="preview-q-item" id="prevQItem_${i}">
+        <div class="preview-q-num">Q${String(i + 1).padStart(2, '0')}</div>
+        <div class="preview-q-body">
+          <div class="preview-q-text" id="prevQText_${i}">${qObj.question}</div>
+          <div class="preview-q-meta">
+            <span class="prov-tag ${qObj.source_type === 'verified' ? 'verified' : (qObj.source_type === 'derived' ? 'derived' : 'aigen')}">
+              ${qObj.source_type === 'verified' ? '🟢 Verified' : (qObj.source_type === 'derived' ? '🔵 Derived' : '🟣 AI Synthesized')}
+            </span>
+            <span style="font-size:11px;color:var(--ink-soft);font-family:var(--f-mono)">${qObj.category || 'Technical'}</span>
+            ${qObj.source_title ? `<span style="font-size:11px;color:var(--ink-faint);font-family:var(--f-mono)">· ${qObj.source_title}</span>` : ''}
+          </div>
+        </div>
+        <div class="preview-q-actions">
+          <button type="button" class="preview-act-btn" title="Re-roll this question" onclick="rerollSingleQuestion(${i})">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
+          </button>
+          <button type="button" class="preview-act-btn" title="Edit question text" onclick="editSingleQuestion(${i})">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          </button>
+          <button type="button" class="preview-act-btn delete" title="Delete question" onclick="deleteSingleQuestion(${i})">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+    const countBadge = $('#previewCountBadge');
+    if (countBadge) countBadge.textContent = `${interviewQuestions.length} Questions Ready`;
+  }
+
+  // Re-roll a single question at index
+  function rerollSingleQuestion(idx) {
+    const role = $('#mockRole').value.trim() || 'Python Backend Engineer';
+    const company = $('#mockCompany').value;
+    const companyClean = company.includes('Generic') ? 'our team' : company.split('(')[0].trim();
+    const rLower = role.toLowerCase();
+
+    let bankKey = 'general';
+    if (rLower.includes('ux') && !rLower.includes('product') && !rLower.includes('ui/ux')) bankKey = 'ux';
+    else if (rLower.includes('product designer') || rLower.includes('product design')) bankKey = 'product';
+    else if (rLower.includes('ui/ux') || rLower.includes('visual') || rLower.includes('ui designer')) bankKey = 'uiux';
+    else if (rLower.includes('frontend') || rLower.includes('react') || rLower.includes('web')) bankKey = 'frontend';
+    else if (rLower.includes('genai') || rLower.includes('llm') || rLower.includes('ai') || rLower.includes('machine learning')) bankKey = 'genai';
+    else if (rLower.includes('fullstack') || rLower.includes('full stack')) bankKey = 'fullstack';
+    else if (rLower.includes('devops') || rLower.includes('cloud') || rLower.includes('sre')) bankKey = 'devops';
+    else if (rLower.includes('data engineer') || rLower.includes('data')) bankKey = 'data';
+    else if (rLower.includes('backend') || rLower.includes('python') || rLower.includes('api')) bankKey = 'backend';
+
+    const sourceBank = DYNAMIC_ROLE_BANKS[bankKey] || DYNAMIC_ROLE_BANKS.general;
+    // Pick a question from the bank not already used
+    const existingTexts = new Set(interviewQuestions.map(q => q.question));
+    let candidates = sourceBank.filter(t => !existingTexts.has(t.replace(/\{role\}/g, role).replace(/\{company\}/g, companyClean)));
+    if (!candidates.length) candidates = sourceBank;
+
+    const randomTemplate = candidates[Math.floor(Math.random() * candidates.length)];
+    const newText = randomTemplate.replace(/\{role\}/g, role).replace(/\{company\}/g, companyClean);
+
+    interviewQuestions[idx] = {
+      id: idx + 1,
+      question: newText,
+      category: $('#mockType').value,
+      difficulty: "Hard",
+      source_type: "AI_generated",
+      source_title: `AI Synthesis (${role})`,
+      confidence: 0.95
+    };
+
+    renderPreviewQuestionsList();
+
+    const item = $(`#prevQItem_${idx}`);
+    if (item) item.classList.add('updated');
+  }
+
+  // Edit single question text
+  function editSingleQuestion(idx) {
+    const currentQ = interviewQuestions[idx]?.question || '';
+    const newText = prompt(`Edit Question #${idx + 1}:`, currentQ);
+    if (newText && newText.trim() && newText.trim() !== currentQ) {
+      interviewQuestions[idx].question = newText.trim();
+      renderPreviewQuestionsList();
+      const item = $(`#prevQItem_${idx}`);
+      if (item) item.classList.add('updated');
+    }
+  }
+
+  // Delete single question
+  function deleteSingleQuestion(idx) {
+    if (interviewQuestions.length <= 1) {
+      alert("You need at least 1 question for the interview.");
+      return;
+    }
+    interviewQuestions.splice(idx, 1);
+    interviewQuestions.forEach((q, i) => q.id = i + 1);
+    renderPreviewQuestionsList();
+  }
+
+  // Add custom question prompt
+  function addCustomQuestionPrompt() {
+    const text = prompt("Enter custom question to add to this mock session:");
+    if (text && text.trim()) {
+      interviewQuestions.push({
+        id: interviewQuestions.length + 1,
+        question: text.trim(),
+        category: $('#mockType').value,
+        difficulty: "Hard",
+        source_type: "derived",
+        source_title: "Candidate Custom",
+        confidence: 1.0
+      });
+      renderPreviewQuestionsList();
+    }
+  }
+
+  // Regenerate all questions
+  function regenerateAllQuestions() {
+    generateAndPreviewQuestions();
   }
 
   // Start Live Session
@@ -1297,12 +2127,17 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
     const type = $('#mockType').value;
     const company = $('#mockCompany').value;
     const count = Number($('#mockCount').value) || 10;
+    const customTopic = $('#mockCustomTopic')?.value.trim() || '';
 
     const startBtn = $('#startInterviewBtn');
     startBtn.disabled = true;
     startBtn.innerHTML = '<span>⚡ Initializing Voice Room...</span>';
 
-    interviewQuestions = await fetchInterviewQuestions(role, exp, type, company, count);
+    // If questions were not staged or user changed settings, fetch fresh
+    if (!interviewQuestions.length) {
+      interviewQuestions = await fetchInterviewQuestions(role, exp, type, company, count, customTopic);
+    }
+
     currentQIndex = 0;
     userAnswers = [];
 
@@ -1341,6 +2176,8 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
     const provBadge = $('#liveProvBadge');
     if (qObj.source_type === 'verified') {
       provBadge.innerHTML = '<span class="prov-tag verified">🟢 Verified Question</span>';
+    } else if (qObj.source_type === 'derived') {
+      provBadge.innerHTML = '<span class="prov-tag derived">🔵 Derived from Focus Topic</span>';
     } else {
       provBadge.innerHTML = '<span class="prov-tag aigen">🟣 AI Generated Practice Question</span>';
     }
@@ -1565,6 +2402,76 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
       window.location.href = "Login.html";
     }
   }
+
+  // Initialization & URL Parameters Rehydration
+  window.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paramRole = urlParams.get('role') || urlParams.get('target_role');
+    const paramExp = urlParams.get('exp') || urlParams.get('experience');
+    const paramCompany = urlParams.get('company');
+    const paramType = urlParams.get('type') || urlParams.get('format');
+    const paramCount = urlParams.get('count') || urlParams.get('num');
+    const paramSeed = urlParams.get('seed') || urlParams.get('topic');
+    const autoGen = urlParams.get('autogen') === 'true' || urlParams.get('generate') === 'true';
+
+    if (paramRole) {
+      $('#mockRole').value = paramRole;
+      let matchedKey = null;
+      for (const [key, cfg] of Object.entries(ROLE_PRESET_CONFIG)) {
+        if (paramRole.toLowerCase().includes(key) || cfg.name.toLowerCase().includes(paramRole.toLowerCase())) {
+          matchedKey = key;
+          break;
+        }
+      }
+      if (matchedKey) {
+        selectRolePreset(matchedKey);
+        $('#mockRole').value = paramRole;
+      }
+    }
+
+    if (paramExp && $('#mockExp')) {
+      for (let opt of $('#mockExp').options) {
+        if (opt.value.toLowerCase().includes(paramExp.toLowerCase())) {
+          $('#mockExp').value = opt.value;
+          break;
+        }
+      }
+    }
+
+    if (paramCompany && $('#mockCompany')) {
+      for (let opt of $('#mockCompany').options) {
+        if (opt.value.toLowerCase().includes(paramCompany.toLowerCase())) {
+          $('#mockCompany').value = opt.value;
+          break;
+        }
+      }
+    }
+
+    if (paramType && $('#mockType')) {
+      for (let opt of $('#mockType').options) {
+        if (opt.value.toLowerCase().includes(paramType.toLowerCase())) {
+          $('#mockType').value = opt.value;
+          break;
+        }
+      }
+    }
+
+    if (paramCount && $('#mockCount')) {
+      $('#mockCount').value = paramCount;
+    }
+
+    if (paramSeed && $('#mockCustomTopic')) {
+      $('#mockCustomTopic').value = paramSeed;
+    }
+
+    // Initialize skills tags
+    renderRoleSkills($('#mockRole').value);
+
+    // Auto-generate preview if requested or role passed
+    if (autoGen) {
+      generateAndPreviewQuestions();
+    }
+  });
 </script>
 <script src="analytics-tracker.js"></script>
 </body>
