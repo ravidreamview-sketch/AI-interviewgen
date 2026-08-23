@@ -64,8 +64,9 @@
       screen_resolution: meta.screen_resolution
     };
 
-    // Send to backend
-    fetch(`${API_BASE}/api/analytics/track`, {
+    // Send to backend / Vercel Serverless Function
+    const trackEndpoint = API_BASE ? `${API_BASE}/api/analytics/track` : '/api/track';
+    fetch(trackEndpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -144,12 +145,14 @@
       device_type: meta.device_type
     };
 
+    const clickEndpoint = API_BASE ? `${API_BASE}/api/analytics/click` : '/api/track';
+
     // Use sendBeacon if available, otherwise fetch
     const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
     if (navigator.sendBeacon) {
-      navigator.sendBeacon(`${API_BASE}/api/analytics/click`, blob);
+      navigator.sendBeacon(clickEndpoint, blob);
     } else {
-      fetch(`${API_BASE}/api/analytics/click`, {
+      fetch(clickEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

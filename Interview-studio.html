@@ -4174,7 +4174,8 @@
       setTimeout(() => setStep(3), 700);
 
       try {
-        const response = await fetch(`${API_BASE}/generate`, {
+        const generateEndpoint = API_BASE ? `${API_BASE}/generate` : '/api/generate';
+        const response = await fetch(generateEndpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -4182,6 +4183,7 @@
             experience: exp,
             skills: skills,
             difficulty: diff,
+            questionCount: countVal,
             number_of_questions: countVal,
             custom_question: customQ || undefined
           })
@@ -4191,7 +4193,10 @@
 
         if (!response.ok) {
           const errData = await response.json().catch(() => ({}));
-          throw new Error(errData.detail || ("HTTP Error " + response.status));
+          const errMsg = errData.message || errData.detail || `Server returned ${response.status}: ${response.statusText}`;
+          console.error("AI Generation Error:", errMsg);
+          toast(`⚠️ Notice: ${errMsg}. Using local fallback engine.`);
+          throw new Error(errMsg);
         }
 
         const data = await response.json();

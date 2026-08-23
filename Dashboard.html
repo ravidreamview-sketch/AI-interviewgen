@@ -1474,7 +1474,8 @@ async function synthesizeDashboardQuestions() {
   let questions = [];
 
   try {
-    const res = await fetch(`${API_BASE}/generate`, {
+    const generateEndpoint = API_BASE ? `${API_BASE}/generate` : '/api/generate';
+    const res = await fetch(generateEndpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -1482,6 +1483,7 @@ async function synthesizeDashboardQuestions() {
         experience: "5 Years",
         skills: skillsArr,
         difficulty: diff,
+        questionCount: countVal,
         number_of_questions: countVal,
         custom_question: customQ || undefined
       })
