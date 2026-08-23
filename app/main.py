@@ -60,23 +60,12 @@ app.add_middleware(
 @app.middleware("http")
 async def fix_vercel_path_middleware(request: Request, call_next):
     path = request.scope.get("path", "")
-    
     if path.startswith("/api/index.py"):
         clean = path[len("/api/index.py"):]
-        if clean:
-            request.scope["path"] = clean
-        else:
-            x_matched = request.headers.get("x-matched-path")
-            if x_matched and x_matched != "/api/index.py":
-                request.scope["path"] = x_matched
+        request.scope["path"] = clean if clean else "/"
     elif path.startswith("/index.py"):
         clean = path[len("/index.py"):]
-        if clean:
-            request.scope["path"] = clean
-        else:
-            x_matched = request.headers.get("x-matched-path")
-            if x_matched and x_matched != "/index.py":
-                request.scope["path"] = x_matched
+        request.scope["path"] = clean if clean else "/"
 
     return await call_next(request)
 
