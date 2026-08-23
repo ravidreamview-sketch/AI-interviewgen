@@ -459,6 +459,7 @@ def serve_tracker_script():
     return FileResponse(f, media_type="application/javascript") if f.exists() else HTTPException(404, "analytics-tracker.js not found")
 
 @app.get("/", include_in_schema=False)
+@app.get("/Candidate-login.html", include_in_schema=False)
 @app.get("/candidate/login", include_in_schema=False)
 @app.get("/login", include_in_schema=False)
 @app.get("/Login", include_in_schema=False)
@@ -476,6 +477,7 @@ def serve_login():
 @app.get("/candidate/dashboard", include_in_schema=False)
 @app.get("/candidate/Dashboard.html", include_in_schema=False)
 @app.get("/candidate/Candidate-dashboard.html", include_in_schema=False)
+@app.get("/Candidate-dashboard.html", include_in_schema=False)
 @app.get("/dashboard", include_in_schema=False)
 @app.get("/Dashboard", include_in_schema=False)
 @app.get("/Dashboard.html", include_in_schema=False)
