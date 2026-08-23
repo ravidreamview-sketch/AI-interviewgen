@@ -531,7 +531,11 @@ def get_html_response(filename: str, db: Session = None):
         if p.exists() and p.is_file():
             try:
                 with open(p, "r", encoding="utf-8") as file_obj:
-                    return HTMLResponse(content=file_obj.read(), media_type="text/html", status_code=200)
+                    res = HTMLResponse(content=file_obj.read(), media_type="text/html", status_code=200)
+                    res.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+                    res.headers["Pragma"] = "no-cache"
+                    res.headers["Expires"] = "0"
+                    return res
             except Exception as read_err:
                 print(f"[HTML Load Warning] {p}: {read_err}")
                 

@@ -302,6 +302,13 @@
     });
   }
 
+  // Prevent BFcache back navigation from serving stale authenticated content
+  window.addEventListener('pageshow', function (e) {
+    if (e.persisted) {
+      window.location.reload();
+    }
+  });
+
   // Initialize listeners
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function () {
