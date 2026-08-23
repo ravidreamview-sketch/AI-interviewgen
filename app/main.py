@@ -57,6 +57,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.middleware("http")
+async def fix_vercel_path_middleware(request: Request, call_next):
+    path = request.scope.get("path", "")
+    if path.startswith("/api/index.py"):
+        request.scope["path"] = path.replace("/api/index.py", "/api", 1)
+    elif path.startswith("/index.py"):
+        request.scope["path"] = path.replace("/index.py", "", 1)
+    return await call_next(request)
+
 # Mount Super Admin & Candidate API routers with dual prefix support for Vercel serverless compatibility
 app.include_router(admin_router, prefix="/api/admin")
 app.include_router(admin_router, prefix="/admin/api")
@@ -72,6 +81,8 @@ from app.models import CandidateLoginRequest, AdminLoginRequest
 @app.post("/candidate/login", include_in_schema=False)
 @app.post("/api/login", include_in_schema=False)
 @app.post("/login", include_in_schema=False)
+@app.post("/api/index.py/candidate/login", include_in_schema=False)
+@app.post("/api/index.py/login", include_in_schema=False)
 def direct_candidate_login(
     payload: CandidateLoginRequest,
     request: Request,

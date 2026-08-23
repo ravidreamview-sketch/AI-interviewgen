@@ -1,5 +1,8 @@
 {
   "rewrites": [
+    { "source": "/api/candidate/login", "destination": "/api/index.py" },
+    { "source": "/api/admin/login", "destination": "/api/index.py" },
+    { "source": "/api/public/menus", "destination": "/api/index.py" },
     { "source": "/api/(.*)", "destination": "/api/index.py" },
     { "source": "/candidate", "destination": "/Candidate-dashboard.html" },
     { "source": "/candidate/dashboard", "destination": "/Candidate-dashboard.html" },
