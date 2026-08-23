@@ -79,6 +79,7 @@ from fastapi import Response
 from app.admin_routes import candidate_login, admin_login
 from app.models import CandidateLoginRequest, AdminLoginRequest
 
+@app.post("/", include_in_schema=False)
 @app.post("/api/candidate/login", include_in_schema=False)
 @app.post("/candidate/login", include_in_schema=False)
 @app.post("/api/login", include_in_schema=False)
