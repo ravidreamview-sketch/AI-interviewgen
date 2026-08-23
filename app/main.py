@@ -61,9 +61,11 @@ app.add_middleware(
 async def fix_vercel_path_middleware(request: Request, call_next):
     path = request.scope.get("path", "")
     if path.startswith("/api/index.py"):
-        request.scope["path"] = path.replace("/api/index.py", "/api", 1)
+        clean_path = path.replace("/api/index.py", "", 1)
+        request.scope["path"] = clean_path if clean_path else "/"
     elif path.startswith("/index.py"):
-        request.scope["path"] = path.replace("/index.py", "", 1)
+        clean_path = path.replace("/index.py", "", 1)
+        request.scope["path"] = clean_path if clean_path else "/"
     return await call_next(request)
 
 # Mount Super Admin & Candidate API routers with dual prefix support for Vercel serverless compatibility
@@ -589,6 +591,7 @@ def serve_login():
 @app.get("/candidate", include_in_schema=False)
 @app.get("/candidate/", include_in_schema=False)
 @app.get("/candidate/dashboard", include_in_schema=False)
+@app.get("/api/candidate/dashboard", include_in_schema=False)
 @app.get("/candidate/Dashboard.html", include_in_schema=False)
 @app.get("/candidate/Candidate-dashboard.html", include_in_schema=False)
 @app.get("/Candidate-dashboard.html", include_in_schema=False)
@@ -601,6 +604,7 @@ def serve_candidate_dashboard(db: Session = Depends(get_db)):
     return get_html_response("Candidate-dashboard.html", db)
 
 @app.get("/candidate/evaluator", include_in_schema=False)
+@app.get("/api/candidate/evaluator", include_in_schema=False)
 @app.get("/evaluator", include_in_schema=False)
 def serve_evaluator(db: Session = Depends(get_db)):
     block_res = check_menu_access_or_block("Interview Studio", db)
@@ -618,6 +622,7 @@ def serve_admin_page():
     return get_html_response("Admin.html")
 
 @app.get("/candidate/interview-studio", include_in_schema=False)
+@app.get("/api/candidate/interview-studio", include_in_schema=False)
 @app.get("/candidate/Interview-studio.html", include_in_schema=False)
 @app.get("/studio", include_in_schema=False)
 @app.get("/Studio", include_in_schema=False)
@@ -630,6 +635,7 @@ def serve_studio(db: Session = Depends(get_db)):
     return get_html_response("Interview-studio.html", db)
 
 @app.get("/candidate/mock-interview", include_in_schema=False)
+@app.get("/api/candidate/mock-interview", include_in_schema=False)
 @app.get("/candidate/Mock-interview.html", include_in_schema=False)
 @app.get("/mock-interview", include_in_schema=False)
 @app.get("/Mock-interview", include_in_schema=False)
@@ -640,6 +646,7 @@ def serve_mock(db: Session = Depends(get_db)):
     return get_html_response("Mock-interview.html", db)
 
 @app.get("/candidate/resume-match", include_in_schema=False)
+@app.get("/api/candidate/resume-match", include_in_schema=False)
 @app.get("/candidate/Resume-match.html", include_in_schema=False)
 @app.get("/resume-match", include_in_schema=False)
 @app.get("/Resume-match", include_in_schema=False)
@@ -650,6 +657,7 @@ def serve_resume_match(db: Session = Depends(get_db)):
     return get_html_response("Resume-match.html", db)
 
 @app.get("/candidate/company-playbooks", include_in_schema=False)
+@app.get("/api/candidate/company-playbooks", include_in_schema=False)
 @app.get("/candidate/Company-playbooks.html", include_in_schema=False)
 @app.get("/company-playbooks", include_in_schema=False)
 @app.get("/Company-playbooks", include_in_schema=False)
@@ -660,6 +668,7 @@ def serve_company_playbooks(db: Session = Depends(get_db)):
     return get_html_response("Company-playbooks.html", db)
 
 @app.get("/candidate/history", include_in_schema=False)
+@app.get("/api/candidate/history", include_in_schema=False)
 @app.get("/candidate/Interview history.html", include_in_schema=False)
 @app.get("/candidate/Interview%20history.html", include_in_schema=False)
 @app.get("/history-page", include_in_schema=False)
@@ -673,6 +682,7 @@ def serve_history_page(db: Session = Depends(get_db)):
     return get_html_response("Interview history.html", db)
 
 @app.get("/candidate/upgrade-pro", include_in_schema=False)
+@app.get("/api/candidate/upgrade-pro", include_in_schema=False)
 @app.get("/candidate/Upgrade-pro.html", include_in_schema=False)
 @app.get("/upgrade-pro", include_in_schema=False)
 @app.get("/Upgrade-pro", include_in_schema=False)
