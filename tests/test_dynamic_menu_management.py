@@ -291,6 +291,25 @@ class TestDynamicMenuManagement(unittest.TestCase):
         patch_res = client.patch("/api/admin/menus/menu-1", headers=cand_headers, json={"status": "disabled"})
         self.assertEqual(patch_res.status_code, 403)
 
+    def test_16_direct_url_access_blocked_when_menu_disabled(self):
+        admin_token = self.get_admin_token()
+        admin_headers = {"Authorization": f"Bearer {admin_token}", "X-Requested-With": "XMLHttpRequest"}
+        
+        # Disable Interview Studio (menu-2)
+        client.patch("/api/admin/menus/menu-2", headers=admin_headers, json={"status": "disabled"})
+        
+        # Direct URL access to /candidate/interview-studio must return 403 Forbidden
+        direct_res = client.get("/candidate/interview-studio")
+        self.assertEqual(direct_res.status_code, 403)
+        self.assertIn("Feature Temporarily Disabled", direct_res.text)
+        
+        # Re-enable Interview Studio
+        client.patch("/api/admin/menus/menu-2", headers=admin_headers, json={"status": "active"})
+        
+        # Direct URL access restored
+        direct_res_re = client.get("/candidate/interview-studio")
+        self.assertEqual(direct_res_re.status_code, 200)
+
 
 if __name__ == "__main__":
     unittest.main()
