@@ -229,7 +229,7 @@ async function handleCandidateLogin(event) {
   submitBtn.textContent = 'Authenticating...';
 
   try {
-    const response = await fetch('/api/candidate/login', {
+    let response = await fetch('/candidate/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -237,6 +237,17 @@ async function handleCandidateLogin(event) {
       },
       body: JSON.stringify({ email, password })
     });
+
+    if (response.status === 404) {
+      response = await fetch('/api/candidate/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ email, password })
+      });
+    }
 
     const data = await response.json();
 
