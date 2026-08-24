@@ -85,27 +85,21 @@ def debug_status(request: Request, db: Session = Depends(get_db)):
 
 @app.middleware("http")
 async def fix_vercel_path_middleware(request: Request, call_next):
-    path = request.scope.get("path", "")
+    query_params = request.query_params
+    override_path = query_params.get("__path")
     
-    x_matched = request.headers.get("x-matched-path")
-    x_forwarded = request.headers.get("x-forwarded-path")
-    
-    if path.startswith("/api/index.py"):
-        clean = path[len("/api/index.py"):]
-        if clean:
-            request.scope["path"] = clean
-        elif x_forwarded and x_forwarded != "/api/index.py":
-            request.scope["path"] = x_forwarded
-        elif x_matched and x_matched != "/api/index.py":
-            request.scope["path"] = x_matched
-    elif path.startswith("/index.py"):
-        clean = path[len("/index.py"):]
-        if clean:
-            request.scope["path"] = clean
-        elif x_forwarded and x_forwarded != "/index.py":
-            request.scope["path"] = x_forwarded
-        elif x_matched and x_matched != "/index.py":
-            request.scope["path"] = x_matched
+    if override_path:
+        request.scope["path"] = override_path
+    else:
+        path = request.scope.get("path", "")
+        if path.startswith("/api/index.py"):
+            clean = path[len("/api/index.py"):]
+            if clean:
+                request.scope["path"] = clean
+        elif path.startswith("/index.py"):
+            clean = path[len("/index.py"):]
+            if clean:
+                request.scope["path"] = clean
 
     return await call_next(request)
 
