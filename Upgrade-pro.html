@@ -7,32 +7,36 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
 
 :root{
   --paper:#F8FAFC;      --paper-2:#FFFFFF;    --sheet:#FFFFFF;
   --ink:#0F172A;        --ink-soft:#475569;   --ink-faint:#94A3B8;
   --board:#0B0F19;      --board-2:#1E1B4B;    --board-ink:#F8FAFC;
-  --primary:#4F46E5;    --primary-grad:linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);
+  --primary:#4F46E5;    --primary-dark:#3730A3; --primary-blue:#2563EB;
+  --primary-grad:linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);
+  --emerald-grad:linear-gradient(135deg, #3B82F6 0%, #6366F1 50%, #8B5CF6 100%);
   --pen:#4F46E5;        --pen-soft:#6366F1;   --pen-wash:#EEF2FF;
   --label-color:#2563EB;
   --rule:#E2E8F0;       --rule-soft:#F1F5F9;
   --gold:#F59E0B;       --pass:#10B981;       --pass-wash:#ECFDF5;
-  --shadow:0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0,0,0,0.03);
+  --shadow:0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(0,0,0,0.02);
   --radius:16px;
-  --f-disp:"Roboto",system-ui,-apple-system,sans-serif;
-  --f-ui:"Roboto",system-ui,-apple-system,sans-serif;
-  --f-mono:"Roboto Mono",ui-monospace,monospace;
+  --f-disp:"Inter",system-ui,-apple-system,sans-serif;
+  --f-ui:"Inter",system-ui,-apple-system,sans-serif;
+  --f-mono:"JetBrains Mono","Inter",ui-monospace,monospace;
 }
 [data-theme="dark"]{
   --paper:#0B0F19;      --paper-2:#111827;    --sheet:#131D33;
   --ink:#F8FAFC;        --ink-soft:#94A3B8;   --ink-faint:#64748B;
   --board:#070A10;      --board-2:#1E1B4B;    --board-ink:#F8FAFC;
-  --primary:#6366F1;    --primary-grad:linear-gradient(135deg, #3B82F6 0%, #6366F1 50%, #8B5CF6 100%);
+  --primary:#6366F1;    --primary-dark:#4F46E5; --primary-blue:#60A5FA;
+  --primary-grad:linear-gradient(135deg, #3B82F6 0%, #6366F1 50%, #8B5CF6 100%);
+  --emerald-grad:linear-gradient(135deg, #38BDF8 0%, #818CF8 50%, #C084FC 100%);
   --pen:#818CF8;        --pen-soft:#A5B4FC;   --pen-wash:rgba(99, 102, 241, 0.15);
   --label-color:#60A5FA;
   --rule:#1E293B;       --rule-soft:#182234;
-  --gold:#FBBF24;       --pass:#34D399;       --pass-wash:rgba(16, 185, 129, 0.15);
+  --gold:#FBBF24;       --pass:#34D399;       --pass-wash:rgba(16, 185, 129, 0.18);
   --shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);
 }
 
@@ -54,10 +58,10 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 
 /* sidebar */
 .sidebar{
-  flex:0 0 270px;width:270px;
+  flex:0 0 285px;width:285px;
   background:var(--board);color:var(--board-ink);
   display:flex;flex-direction:column;
-  padding:22px 16px;gap:14px;position:sticky;top:0;height:100vh;
+  padding:22px 14px;gap:14px;position:sticky;top:0;height:100vh;
   align-self:flex-start;overflow-y:auto;
   border-right:1px solid rgba(255,255,255,.07);
   transition:background .3s ease;
@@ -67,34 +71,37 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 .brand{display:flex;align-items:center;gap:12px;padding:4px 8px 8px}
 .brand .brand-logo{
   width:44px;height:44px;border-radius:50%;flex:none;
-  object-fit:cover;box-shadow:0 0 18px rgba(59, 130, 246, 0.45);
+  object-fit:cover;box-shadow:0 0 18px rgba(79, 70, 229, 0.45);
   border:1.5px solid rgba(99, 102, 241, 0.6);
   background:#0B0F19;
 }
-.brand .word{font-weight:700;font-size:20px;letter-spacing:-.02em;line-height:1.1;color:#FFFFFF}
+.brand .word{font-weight:700;font-size:20px;letter-spacing:-.02em;line-height:1.1;color:#FFFFFF;white-space:nowrap}
 .brand .brand-grad{
   background:linear-gradient(135deg, #38BDF8 0%, #818CF8 50%, #C084FC 100%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
 }
-.brand .sub{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#94A3B8;margin-top:2px;font-weight:600}
+.brand .sub{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#94A3B8;margin-top:2px;font-weight:600;white-space:nowrap}
 
-.side-label{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#64748B;padding:4px 10px 0;margin-bottom:-6px;font-weight:600}
+.side-label{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#64748B;padding:4px 10px 0;margin-bottom:-6px;font-weight:600;white-space:nowrap}
 .nav{display:flex;flex-direction:column;gap:3px}
 .nav-link{
-  display:flex;align-items:center;gap:12px;
-  padding:10px 14px;border-radius:12px;
-  color:#94A3B8;font-weight:500;font-size:14px;
+  display:flex;align-items:center;gap:10px;
+  padding:9.5px 12px;border-radius:12px;
+  color:#94A3B8;font-weight:500;font-size:13.5px;
   position:relative;transition:all .2s ease;
+  white-space:nowrap;
 }
+.nav-link span{white-space:nowrap}
 .nav-link svg{width:18px;height:18px;flex:none;stroke-width:1.8}
 .nav-link:hover{background:rgba(255,255,255,.06);color:#F8FAFC}
 .nav-link.active{
   background:linear-gradient(135deg, #1E40AF 0%, #4F46E5 50%, #7C3AED 100%);
-  color:#FFFFFF;box-shadow:0 4px 16px rgba(79, 70, 229, 0.4);font-weight:600;
+  color:#FFFFFF;box-shadow:0 4px 18px rgba(79, 70, 229, 0.45);font-weight:600;
+  border:1px solid rgba(129, 140, 248, 0.3);
 }
-.nav-badge{margin-left:auto;font-family:var(--f-mono);font-size:9.5px;font-weight:700;letter-spacing:.04em;padding:2.5px 7px;border-radius:6px;background:rgba(255,255,255,.12);color:#FFFFFF}
+.nav-badge{margin-left:auto;font-family:var(--f-mono);font-size:9px;font-weight:700;letter-spacing:.04em;padding:2.5px 6.5px;border-radius:6px;background:rgba(255,255,255,.12);color:#FFFFFF;flex-shrink:0;white-space:nowrap}
 .nav-badge.new{background:#7C3AED;color:#FFFFFF}
-.nav-badge.pro{background:#6366F1;color:#FFFFFF;border:none}
+.nav-badge.pro{background:linear-gradient(135deg, #3B82F6, #6366F1);color:#FFFFFF}
 .nav-sep{height:1px;background:rgba(255,255,255,.08);margin:2px 8px}
 
 .side-foot{margin-top:auto;display:flex;flex-direction:column;gap:12px}
@@ -123,7 +130,7 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 
 /* main canvas */
 .main{flex:1 1 0;min-width:0;padding:0 42px 36px;max-width:1320px}
-.topbar{display:flex;align-items:center;gap:16px;padding:22px 0 8px;position:sticky;top:0;z-index:20;background:linear-gradient(var(--paper) 72%,transparent)}
+.topbar{display:flex;align-items:center;gap:16px;padding:18px 0 16px;margin-bottom:24px;position:sticky;top:0;z-index:20;background:var(--paper);border-bottom:1px solid var(--rule)}
 .crumb{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);font-weight:600}
 .top-actions{margin-left:auto;display:flex;align-items:center;gap:10px}
 .icon-btn{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;border:1px solid var(--rule);background:var(--paper-2);color:var(--ink-soft);transition:all .18s;box-shadow:0 1px 2px rgba(0,0,0,0.03)}
@@ -182,10 +189,12 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 .plan-btn.outline{border:1.5px solid var(--rule);background:var(--paper);color:var(--ink)}
 .plan-btn.outline:hover{border-color:#4F46E5;color:#4F46E5}
 .plan-btn.primary{
-  background:linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);
-  color:#FFFFFF;border:none;box-shadow:0 8px 20px rgba(79, 70, 229, 0.4);
+  background:linear-gradient(90deg, #2563EB 0%, #3B82F6 20%, #4F46E5 50%, #7C3AED 80%, #8B5CF6 100%);
+  color:#FFFFFF;border:1px solid rgba(255, 255, 255, 0.15);
+  box-shadow:0 8px 24px -4px rgba(37, 99, 235, 0.45), 0 4px 14px -2px rgba(124, 58, 237, 0.4);
+  border-radius:14px;
 }
-.plan-btn.primary:hover{filter:brightness(1.08);box-shadow:0 12px 26px rgba(79, 70, 229, 0.5)}
+.plan-btn.primary:hover{filter:brightness(1.08);transform:translateY(-2px);box-shadow:0 12px 30px -4px rgba(37, 99, 235, 0.55), 0 6px 18px -2px rgba(124, 58, 237, 0.5)}
 
 /* modal simulation */
 .modal-overlay{
@@ -216,8 +225,8 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
     <div class="brand">
       <img class="brand-logo" src="logo.png" alt="Ravi GenAI Studio Logo">
       <div>
-        <div class="word"><span class="brand-grad">RaviGenAI</span></div>
-        <div class="sub">Studio</div>
+        <div class="word"><span class="brand-grad">RaviGen AI</span></div>
+        <div class="sub">Interview Studio</div>
       </div>
     </div>
     <div class="side-label">Workspace</div>

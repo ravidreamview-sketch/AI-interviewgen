@@ -7,32 +7,36 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
 
 :root{
-  --paper:#F8FAFC;      --paper-2:#FFFFFF;    --sheet:#FFFFFF;
+  --paper:#F4F7F6;      --paper-2:#FFFFFF;    --sheet:#FFFFFF;
   --ink:#0F172A;        --ink-soft:#475569;   --ink-faint:#94A3B8;
-  --board:#0B0F19;      --board-2:#1E1B4B;    --board-ink:#F8FAFC;
-  --primary:#4F46E5;    --primary-grad:linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);
-  --pen:#4F46E5;        --pen-soft:#6366F1;   --pen-wash:#EEF2FF;
-  --label-color:#2563EB;
-  --rule:#E2E8F0;       --rule-soft:#F1F5F9;
+  --board:#0A1926;      --board-2:#0D2130;    --board-ink:#F8FAFC;
+  --primary:#10B981;    --primary-dark:#059669; --primary-forest:#166534;
+  --primary-grad:linear-gradient(135deg, #166534 0%, #15803D 50%, #16A34A 100%);
+  --emerald-grad:linear-gradient(135deg, #059669 0%, #10B981 50%, #34D399 100%);
+  --pen:#10B981;        --pen-soft:#34D399;   --pen-wash:#ECFDF5;
+  --label-color:#10B981;
+  --rule:#E2E8F0;       --rule-soft:#EDF2F0;
   --gold:#F59E0B;       --pass:#10B981;       --pass-wash:#ECFDF5;
-  --shadow:0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0,0,0,0.03);
+  --shadow:0 4px 20px -2px rgba(10, 25, 38, 0.05), 0 1px 3px rgba(0,0,0,0.02);
   --radius:16px;
-  --f-disp:"Roboto",system-ui,-apple-system,sans-serif;
-  --f-ui:"Roboto",system-ui,-apple-system,sans-serif;
-  --f-mono:"Roboto Mono",ui-monospace,monospace;
+  --f-disp:"Inter",system-ui,-apple-system,sans-serif;
+  --f-ui:"Inter",system-ui,-apple-system,sans-serif;
+  --f-mono:"JetBrains Mono","Inter",ui-monospace,monospace;
 }
 [data-theme="dark"]{
-  --paper:#070A12;      --paper-2:#0E1424;    --sheet:#131D33;
+  --paper:#08141E;      --paper-2:#0D2130;    --sheet:#112B3E;
   --ink:#F8FAFC;        --ink-soft:#94A3B8;   --ink-faint:#64748B;
-  --board:#04070D;      --board-2:#111827;    --board-ink:#F8FAFC;
-  --primary:#6366F1;    --primary-grad:linear-gradient(135deg, #3B82F6 0%, #6366F1 50%, #8B5CF6 100%);
-  --pen:#818CF8;        --pen-soft:#A5B4FC;   --pen-wash:rgba(99, 102, 241, 0.15);
-  --label-color:#60A5FA;
-  --rule:#1E293B;       --rule-soft:#151F32;
-  --gold:#FBBF24;       --pass:#34D399;       --pass-wash:rgba(16, 185, 129, 0.15);
+  --board:#050D14;      --board-2:#0A1926;    --board-ink:#F8FAFC;
+  --primary:#34D399;    --primary-dark:#10B981; --primary-forest:#15803D;
+  --primary-grad:linear-gradient(135deg, #15803D 0%, #16A34A 50%, #22C55E 100%);
+  --emerald-grad:linear-gradient(135deg, #10B981 0%, #34D399 50%, #6EE7B7 100%);
+  --pen:#34D399;        --pen-soft:#6EE7B7;   --pen-wash:rgba(16, 185, 129, 0.15);
+  --label-color:#34D399;
+  --rule:#1A364E;       --rule-soft:#132738;
+  --gold:#FBBF24;       --pass:#34D399;       --pass-wash:rgba(16, 185, 129, 0.18);
   --shadow:0 14px 40px -10px rgba(0, 0, 0, 0.6);
 }
 
@@ -54,8 +58,8 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
   position:fixed;width:600px;height:600px;border-radius:50%;
   filter:blur(140px);opacity:0.25;pointer-events:none;z-index:0;
 }
-.glow-1{top:-100px;left:-100px;background:radial-gradient(circle, #2563EB, transparent 70%)}
-.glow-2{bottom:-100px;right:-100px;background:radial-gradient(circle, #7C3AED, transparent 70%)}
+.glow-1{top:-100px;left:-100px;background:radial-gradient(circle, #10B981, transparent 70%)}
+.glow-2{bottom:-100px;right:-100px;background:radial-gradient(circle, #06B6D4, transparent 70%)}
 
 /* theme switcher top right */
 .theme-btn-float{
@@ -78,13 +82,13 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 
 /* left showcase column */
 .auth-showcase{
-  background:linear-gradient(145deg, #0B0F19 0%, #151A2E 50%, #1E1B4B 100%);
+  background:linear-gradient(145deg, #06111A 0%, #0A1E2C 50%, #0D2A3D 100%);
   padding:56px 64px;color:#FFFFFF;display:flex;flex-direction:column;justify-content:space-between;
   position:relative;overflow:hidden;border-right:1px solid rgba(255,255,255,0.08);
 }
 .showcase-bg-circles{
   position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-  width:440px;height:440px;border-radius:50%;border:1px dashed rgba(99, 102, 241, 0.2);
+  width:440px;height:440px;border-radius:50%;border:1px dashed rgba(52, 211, 153, 0.25);
   pointer-events:none;animation:spin 60s linear infinite;
 }
 @keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
@@ -92,15 +96,21 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 .brand-row{display:flex;align-items:center;gap:14px;position:relative;z-index:2}
 .brand-row .logo-img{
   width:52px;height:52px;border-radius:50%;object-fit:cover;
-  box-shadow:0 0 24px rgba(59, 130, 246, 0.55);
-  border:2px solid rgba(99, 102, 241, 0.6);
+  box-shadow:0 0 20px rgba(56, 189, 248, 0.45), 0 0 10px rgba(129, 140, 248, 0.4);
+  border:2px solid rgba(56, 189, 248, 0.6);
+  background: #08141E;
 }
-.brand-title{font-size:23px;font-weight:800;letter-spacing:-.02em}
+.brand-title{font-size:24px;font-weight:800;letter-spacing:-.02em;line-height:1.15}
+.brand-title .brand-name{color:#38BDF8}
+.brand-title .brand-ai{
+  background:linear-gradient(135deg, #818CF8 0%, #C084FC 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
 .brand-grad{
   background:linear-gradient(135deg, #38BDF8 0%, #818CF8 50%, #C084FC 100%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
 }
-.brand-sub{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#94A3B8}
+.brand-sub{font-family:var(--f-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#94A3B8;margin-top:3px;font-weight:700}
 
 .showcase-slider{
   margin:auto 0;padding:24px 0;position:relative;z-index:2;
@@ -123,7 +133,7 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 .feat-item{display:flex;align-items:flex-start;gap:14px}
 .feat-icon{
   width:36px;height:36px;border-radius:10px;
-  background:rgba(99, 102, 241, 0.2);color:#818CF8;
+  background:rgba(16, 185, 129, 0.2);color:#34D399;
   display:grid;place-items:center;font-size:17px;flex:none;
 }
 .feat-text{font-size:14.5px;color:#CBD5E1;line-height:1.45}
@@ -137,13 +147,13 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
   cursor:pointer;transition:all .3s ease;
 }
 .slider-dot.active{
-  width:46px;background:linear-gradient(90deg, #38BDF8, #818CF8);
-  box-shadow:0 0 14px rgba(129, 140, 248, 0.6);
+  width:46px;background:linear-gradient(90deg, #34D399, #10B981);
+  box-shadow:0 0 14px rgba(52, 211, 153, 0.6);
 }
 
 .showcase-foot{position:relative;z-index:2;display:flex;align-items:center;gap:14px;padding-top:20px}
 .avatar-group{display:flex}
-.av-mini{width:34px;height:34px;border-radius:50%;border:2px solid #0B0F19;margin-left:-8px}
+.av-mini{width:34px;height:34px;border-radius:50%;border:2px solid #08141E;margin-left:-8px}
 .av-mini:first-child{margin-left:0}
 .showcase-foot-text{font-size:13px;color:#94A3B8}
 .showcase-foot-text b{color:#FFFFFF}
@@ -166,7 +176,7 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 .auth-tab.active{color:var(--pen);font-weight:700}
 .auth-tab.active::after{
   content:"";position:absolute;bottom:-1px;left:0;right:0;height:2.5px;
-  border-radius:2px;background:var(--primary-grad);
+  border-radius:2px;background:var(--emerald-grad);
 }
 
 /* 1-click developer oauth buttons at bottom */
@@ -183,7 +193,7 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 }
 .oauth-btn-primary:hover{
   border-color:var(--pen);background:var(--paper-2);transform:translateY(-1px);
-  box-shadow:0 6px 16px rgba(99, 102, 241, 0.2);
+  box-shadow:0 6px 16px rgba(16, 185, 129, 0.2);
 }
 .oauth-btn-primary svg{width:20px;height:20px;flex:none}
 .oauth-btn-primary .oauth-tag{
@@ -218,22 +228,123 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 .forgot-link:hover{text-decoration:underline}
 
 .submit-btn{
-  width:100%;padding:14px;border-radius:12px;
-  background:linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);
-  color:#FFFFFF;font-weight:700;font-size:15.5px;border:none;
-  box-shadow:0 8px 24px rgba(79, 70, 229, 0.4);display:flex;align-items:center;justify-content:center;gap:8px;
-  transition:all .18s;cursor:pointer;
+  width:100%;padding:15px 24px;border-radius:14px;
+  background:linear-gradient(135deg, #166534 0%, #15803D 50%, #16A34A 100%);
+  color:#FFFFFF;font-weight:700;font-size:15.5px;border:1px solid rgba(52, 211, 153, 0.3);
+  box-shadow:0 8px 24px rgba(22, 163, 74, 0.4);display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:all 0.2s cubic-bezier(0.16, 1, 0.3, 1);cursor:pointer;
 }
-.submit-btn:hover{filter:brightness(1.08);box-shadow:0 12px 28px rgba(79, 70, 229, 0.5);transform:translateY(-1px)}
+.submit-btn:hover{filter:brightness(1.08);box-shadow:0 12px 28px rgba(22, 163, 74, 0.5);transform:translateY(-2px)}
 
 .form-foot{text-align:center;margin-top:22px;font-size:13.5px;color:var(--ink-soft)}
 .form-foot a{color:var(--pen);font-weight:700}
 .form-foot a:hover{text-decoration:underline}
 
+/* Demo Credentials Quick-Select Box */
+.demo-creds-banner {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  transition: all .2s ease;
+}
+[data-theme="dark"] .demo-creds-banner {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+.demo-creds-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.demo-badge {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--pen);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.demo-hint {
+  font-size: 11.5px;
+  color: var(--ink-faint);
+  font-weight: 500;
+}
+.demo-creds-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.demo-card-btn {
+  background: var(--paper);
+  border: 1.5px solid var(--rule);
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: all .18s cubic-bezier(.16,1,.3,1);
+  position: relative;
+  width: 100%;
+}
+.demo-card-btn:hover {
+  border-color: var(--pen);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+}
+.demo-card-btn.active {
+  border-color: var(--pen);
+  background: var(--paper-2);
+  box-shadow: 0 0 0 2px var(--pen-wash), 0 4px 14px rgba(99, 102, 241, 0.2);
+}
+.demo-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.demo-role-tag {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.demo-tag-status {
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--pen-wash);
+  color: var(--pen);
+  text-transform: uppercase;
+}
+.demo-tag-status.admin-tag {
+  background: rgba(239, 68, 68, 0.12);
+  color: #EF4444;
+}
+.demo-email {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-soft);
+  word-break: break-all;
+  line-height: 1.3;
+}
+.demo-pass {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  color: var(--ink-faint);
+  margin-top: 3px;
+}
+
 @media(max-width:880px){
   .auth-wrapper{grid-template-columns:1fr;max-width:100%;width:100vw}
   .auth-showcase{display:none}
   .auth-form-wrap{padding:48px 24px}
+  .demo-creds-grid{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -253,10 +364,10 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
     <div class="showcase-bg-circles"></div>
 
     <div class="brand-row">
-      <img class="logo-img" src="logo.png" alt="Ravi GenAI Studio Logo">
+      <img class="logo-img" src="logo.png" alt="RaviGen AI Logo" onerror="this.onerror=null;this.src='logo.png';">
       <div>
-        <div class="brand-title"><span class="brand-grad">RaviGenAI</span></div>
-        <div class="brand-sub">Studio</div>
+        <div class="brand-title"><span class="brand-name">RaviGen</span> <span class="brand-ai">AI</span></div>
+        <div class="brand-sub">INTERVIEW STUDIO</div>
       </div>
     </div>
 
@@ -384,6 +495,8 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 
     <!-- AUTH FORM -->
     <form id="authForm" onsubmit="handleAuth(event)">
+      <div id="loginAlert" style="display:none;padding:10px 14px;border-radius:8px;background:rgba(239, 68, 68, 0.12);color:#EF4444;font-size:13px;margin-bottom:16px;font-weight:600;text-align:center"></div>
+
       <div class="form-group" id="nameGroup" style="display:none">
         <label class="form-label" for="fullName">Full Name</label>
         <div class="input-control">
@@ -395,12 +508,12 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="email">Email Address</label>
+        <label class="form-label" for="email">Email Address / Username</label>
         <div class="input-control">
           <span class="input-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
           </span>
-          <input class="form-input" type="email" id="email" required placeholder="name@company.com" value="ravi@genai-studio.dev">
+          <input class="form-input" type="email" id="email" value="candidate@example.com" placeholder="name@company.com">
         </div>
       </div>
 
@@ -410,7 +523,7 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
           <span class="input-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
           </span>
-          <input class="form-input" type="password" id="password" required placeholder="••••••••" value="password123">
+          <input class="form-input" type="password" id="password" value="CandidatePass123!" placeholder="••••••••">
           <span class="eye-toggle" id="eyeToggle" onclick="togglePassword()">
             <svg id="eyeSvg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </span>
@@ -426,7 +539,7 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
       </div>
 
       <button class="submit-btn" type="submit" id="submitBtn">
-        <span>🚀 Start Free Voice Mock Interview</span>
+        <span>🚀 Sign In to Candidate Workspace</span>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </button>
     </form>
@@ -464,6 +577,28 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 <script>
 let isSignUp = false;
 
+function selectDemoRole(role) {
+  const cardCand = document.getElementById('cardCandidate');
+  const cardAdmin = document.getElementById('cardAdmin');
+  const emailInput = document.getElementById('email');
+  const passInput = document.getElementById('password');
+  const submitBtn = document.getElementById('submitBtn');
+
+  if (role === 'admin') {
+    cardAdmin.classList.add('active');
+    cardCand.classList.remove('active');
+    emailInput.value = 'admin@example.com';
+    passInput.value = 'SuperAdminPass123!';
+    submitBtn.innerHTML = `<span>⚡ Sign In as Super Admin</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
+  } else {
+    cardCand.classList.add('active');
+    cardAdmin.classList.remove('active');
+    emailInput.value = 'candidate@example.com';
+    passInput.value = 'CandidatePass123!';
+    submitBtn.innerHTML = `<span>🚀 Sign In to Candidate Workspace</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
+  }
+}
+
 function toggleTab() {
   isSignUp = !isSignUp;
   const tabIn = document.getElementById('tabSignIn');
@@ -474,11 +609,13 @@ function toggleTab() {
   const submitBtn = document.getElementById('submitBtn');
   const footText = document.getElementById('footText');
   const switchLink = document.getElementById('switchLink');
+  const demoBanner = document.getElementById('demoCredsBanner');
 
   if (isSignUp) {
     tabUp.classList.add('active');
     tabIn.classList.remove('active');
     nameGroup.style.display = 'block';
+    if (demoBanner) demoBanner.style.display = 'none';
     formTitle.textContent = 'Create Account';
     formSubtitle.textContent = 'Get started with free AI question papers & voice mock simulations';
     submitBtn.innerHTML = `<span>Create Free Account &amp; Practice</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
@@ -488,9 +625,10 @@ function toggleTab() {
     tabIn.classList.add('active');
     tabUp.classList.remove('active');
     nameGroup.style.display = 'none';
+    if (demoBanner) demoBanner.style.display = 'block';
     formTitle.textContent = 'Welcome Back';
     formSubtitle.textContent = 'Enter your credentials to access your studio dashboard';
-    submitBtn.innerHTML = `<span>🚀 Start Free Voice Mock Interview</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
+    submitBtn.innerHTML = `<span>🚀 Sign In to Candidate Workspace</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
     footText.textContent = "Don't have an account?";
     switchLink.textContent = 'Create an account';
   }
@@ -504,13 +642,58 @@ function togglePassword() {
   pwd.type = pwd.type === 'password' ? 'text' : 'password';
 }
 
-function handleAuth(e) {
+async function handleAuth(e) {
   e.preventDefault();
   const btn = document.getElementById('submitBtn');
+  const alertBox = document.getElementById('loginAlert');
+  const email = (document.getElementById('email').value || 'candidate@example.com').trim();
+  let password = document.getElementById('password').value;
+  
+  if (!password) {
+    password = email.toLowerCase().includes('admin') ? 'SuperAdminPass123!' : 'CandidatePass123!';
+  }
+
+  btn.disabled = true;
   btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><circle cx="12" cy="12" r="10"/></svg> Authenticating...`;
-  setTimeout(() => {
-    window.location.href = window.location.protocol === 'file:' ? 'Interview-studio.html' : '/candidate/interview-studio';
-  }, 600);
+  alertBox.style.display = 'none';
+
+  try {
+    const isSuperAdmin = email.toLowerCase().includes('admin');
+    const endpoint = isSuperAdmin ? '/api/admin/login' : '/api/candidate/login';
+
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alertBox.textContent = data.detail || 'Invalid email or password.';
+      alertBox.style.display = 'block';
+      return;
+    }
+
+    if (data.user) {
+      localStorage.setItem('candidate_user', JSON.stringify(data.user));
+    }
+
+    // Success -> redirect directly to Interview Studio workspace
+    if (isSuperAdmin || data.user?.role === 'super_admin' || data.user?.role === 'admin') {
+      window.location.href = window.location.protocol === 'file:' ? 'Admin.html' : '/admin';
+    } else {
+      window.location.href = window.location.protocol === 'file:' ? 'Interview-studio.html' : '/candidate/interview-studio';
+    }
+
+  } catch (err) {
+    alertBox.textContent = 'Server connection error. Please try again.';
+    alertBox.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span>🚀 Sign In to Candidate Workspace</span>';
+  }
 }
 
 function demoLogin(provider) {

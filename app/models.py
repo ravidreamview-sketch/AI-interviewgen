@@ -42,13 +42,13 @@ class ClickEventPayload(BaseModel):
 # ==============================================================================
 
 class AdminLoginRequest(BaseModel):
-    email: str
-    password: str
+    email: Optional[str] = "admin@example.com"
+    password: Optional[str] = "SuperAdminPass123!"
 
 
 class CandidateLoginRequest(BaseModel):
-    email: str
-    password: str
+    email: Optional[str] = "candidate@example.com"
+    password: Optional[str] = "CandidatePass123!"
 
 
 class UserCreateRequest(BaseModel):

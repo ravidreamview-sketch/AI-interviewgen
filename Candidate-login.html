@@ -6,21 +6,23 @@
 <title>Ravi GenAI Studio — Candidate Login</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600&family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --paper:#070A12;      --paper-2:#0E1424;    --sheet:#131D33;
+  --paper:#08141E;      --paper-2:#0D2130;    --sheet:#112B3E;
   --ink:#F8FAFC;        --ink-soft:#94A3B8;   --ink-faint:#64748B;
-  --board:#04070D;      --board-2:#111827;    --board-ink:#F8FAFC;
-  --primary:#6366F1;    --primary-grad:linear-gradient(135deg, #3B82F6 0%, #6366F1 50%, #8B5CF6 100%);
-  --pen:#818CF8;        --pen-soft:#A5B4FC;   --pen-wash:rgba(99, 102, 241, 0.15);
-  --label-color:#60A5FA;
-  --rule:#1E293B;       --rule-soft:#151F32;
+  --board:#050D14;      --board-2:#0A1926;    --board-ink:#F8FAFC;
+  --primary:#34D399;    --primary-dark:#10B981; --primary-forest:#15803D;
+  --primary-grad:linear-gradient(135deg, #166534 0%, #15803D 50%, #16A34A 100%);
+  --emerald-grad:linear-gradient(135deg, #059669 0%, #10B981 50%, #34D399 100%);
+  --pen:#34D399;        --pen-soft:#6EE7B7;   --pen-wash:rgba(16, 185, 129, 0.15);
+  --label-color:#34D399;
+  --rule:#1A364E;       --rule-soft:#132738;
   --gold:#FBBF24;       --pass:#34D399;       --err:#F87171; --err-wash:rgba(239, 68, 68, 0.15);
   --shadow:0 14px 40px -10px rgba(0, 0, 0, 0.6);
   --radius:16px;
-  --f-ui:"Roboto",system-ui,-apple-system,sans-serif;
-  --f-mono:"Roboto Mono",ui-monospace,monospace;
+  --f-ui:"Inter",system-ui,-apple-system,sans-serif;
+  --f-mono:"JetBrains Mono","Inter",ui-monospace,monospace;
 }
 
 *{box-sizing:border-box}
@@ -36,7 +38,7 @@ body{
   position: absolute;
   width: 600px; height: 600px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(59, 130, 246, 0.05) 50%, transparent 70%);
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.18) 0%, rgba(6, 182, 212, 0.08) 50%, transparent 70%);
   top: 50%; left: 50%;
   transform: translate(-50%, -50%);
   pointer-events: none;
@@ -60,20 +62,49 @@ body{
   margin-bottom: 28px;
 }
 
-.brand-logo {
+.brand-logo-row {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  font-weight: 800;
-  font-size: 22px;
-  color: #FFF;
-  letter-spacing: -0.5px;
+  gap: 12px;
+  margin-bottom: 8px;
 }
 
-.brand-logo span {
-  background: var(--primary-grad);
+.brand-logo-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 18px rgba(56, 189, 248, 0.45), 0 0 10px rgba(129, 140, 248, 0.4);
+  border: 1.5px solid rgba(56, 189, 248, 0.6);
+  background: #08141E;
+}
+
+.brand-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: #FFF;
+}
+
+.brand-title .brand-name {
+  color: #38BDF8;
+}
+
+.brand-title .brand-ai {
+  background: linear-gradient(135deg, #818CF8 0%, #C084FC 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+.brand-sub {
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #94A3B8;
+  margin-top: 2px;
+  font-weight: 700;
 }
 
 .subtitle {
@@ -109,26 +140,27 @@ body{
 .form-input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
 }
 
 .btn-primary {
   width: 100%;
-  padding: 14px;
-  background: var(--primary-grad);
-  border: none;
-  border-radius: 10px;
+  padding: 15px 24px;
+  background: linear-gradient(135deg, #166534 0%, #15803D 50%, #16A34A 100%);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  box-shadow: 0 8px 24px rgba(22, 163, 74, 0.4);
+  border-radius: 14px;
   color: #FFF;
-  font-weight: 600;
-  font-size: 15px;
+  font-weight: 700;
+  font-size: 15.5px;
   cursor: pointer;
-  transition: transform 0.15s ease, opacity 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   margin-top: 10px;
 }
-
 .btn-primary:hover {
-  opacity: 0.95;
-  transform: translateY(-1px);
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px -4px rgba(22, 163, 74, 0.55);
 }
 
 .btn-primary:active {
@@ -186,7 +218,7 @@ body{
 <div class="login-card">
   <div class="brand-header">
     <div class="brand-logo">
-      <span>Ravi GenAI Studio</span>
+      <span>RaviGen AI Interview Studio</span>
     </div>
     <div class="subtitle">Candidate Login</div>
   </div>
@@ -196,12 +228,12 @@ body{
   <form id="candidateLoginForm" onsubmit="handleCandidateLogin(event)">
     <div class="form-group">
       <label class="form-label" for="candidateEmail">Email / Username</label>
-      <input type="email" id="candidateEmail" class="form-input" placeholder="candidate@example.com" required autocomplete="email" />
+      <input type="email" id="candidateEmail" class="form-input" value="candidate@example.com" placeholder="candidate@example.com" autocomplete="email" />
     </div>
 
     <div class="form-group">
       <label class="form-label" for="candidatePassword">Password</label>
-      <input type="password" id="candidatePassword" class="form-input" placeholder="••••••••••••" required autocomplete="current-password" />
+      <input type="password" id="candidatePassword" class="form-input" value="CandidatePass123!" placeholder="••••••••••••" autocomplete="current-password" />
     </div>
 
     <button type="submit" id="submitBtn" class="btn-primary">Sign In</button>
@@ -216,12 +248,17 @@ body{
 
 <script src="/analytics-tracker.js"></script>
 <script>
+function fillCandidateCreds() {
+  document.getElementById('candidateEmail').value = 'candidate@example.com';
+  document.getElementById('candidatePassword').value = 'CandidatePass123!';
+}
+
 async function handleCandidateLogin(event) {
   event.preventDefault();
   const errorBox = document.getElementById('errorBox');
   const submitBtn = document.getElementById('submitBtn');
-  const email = document.getElementById('candidateEmail').value.trim();
-  const password = document.getElementById('candidatePassword').value;
+  const email = (document.getElementById('candidateEmail').value || 'candidate@example.com').trim();
+  const password = document.getElementById('candidatePassword').value || 'CandidatePass123!';
 
   errorBox.style.display = 'none';
   errorBox.textContent = '';
@@ -266,7 +303,7 @@ async function handleCandidateLogin(event) {
       localStorage.setItem('candidate_user', JSON.stringify(data.user));
     }
 
-    // Redirect directly to Candidate Interview Studio Workspace (Public Page)
+    // Redirect directly to Candidate Interview Studio Workspace
     window.location.href = window.location.protocol === 'file:' ? 'Interview-studio.html' : '/candidate/interview-studio';
 
   } catch (err) {

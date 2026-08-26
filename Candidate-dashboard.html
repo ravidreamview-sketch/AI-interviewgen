@@ -1,415 +1,2379 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Candidate Dashboard — Ravi GenAI Studio</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600&family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-<style>
-:root{
-  --paper:#070A12;      --paper-2:#0E1424;    --sheet:#131D33;
-  --ink:#F8FAFC;        --ink-soft:#94A3B8;   --ink-faint:#64748B;
-  --board:#04070D;      --board-2:#111827;    --board-ink:#F8FAFC;
-  --primary:#6366F1;    --primary-grad:linear-gradient(135deg, #3B82F6 0%, #6366F1 50%, #8B5CF6 100%);
-  --pen:#818CF8;        --pen-soft:#A5B4FC;   --pen-wash:rgba(99, 102, 241, 0.15);
-  --label-color:#60A5FA;
-  --rule:#1E293B;       --rule-soft:#151F32;
-  --gold:#FBBF24;       --pass:#34D399;       --pass-wash:rgba(16, 185, 129, 0.15);
-  --shadow:0 14px 40px -10px rgba(0, 0, 0, 0.6);
-  --radius:16px;
-  --f-ui:"Roboto",system-ui,-apple-system,sans-serif;
-  --f-mono:"Roboto Mono",ui-monospace,monospace;
-}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RaviGen AI — Candidate Preparation Dashboard</title>
+  <meta name="description" content="AI-Powered Technical Assessment, Question Paper Generation & Voice Mock Simulations Dashboard." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Supabase Realtime Client CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
 
-*{box-sizing:border-box}
-html,body{margin:0;padding:0;min-height:100vh;background:var(--paper-2);color:var(--ink);font-family:var(--f-ui);font-size:15px;}
-a{color:inherit;text-decoration:none}
+    :root {
+      --paper: #F4F7F6;
+      --paper-2: #FFFFFF;
+      --sheet: #FFFFFF;
+      --ink: #0F172A;
+      --ink-soft: #475569;
+      --ink-faint: #94A3B8;
+      --board: #0A1926;
+      --board-2: #0D2130;
+      --board-ink: #F8FAFC;
+      --primary: #10B981;
+      --primary-dark: #059669;
+      --primary-forest: #166534;
+      --primary-blue: #3B82F6;
+      --primary-grad: linear-gradient(135deg, #166534 0%, #15803D 50%, #16A34A 100%);
+      --emerald-grad: linear-gradient(135deg, #059669 0%, #10B981 50%, #34D399 100%);
+      --accent-glow: rgba(16, 185, 129, 0.2);
+      --pen: #10B981;
+      --pen-soft: #34D399;
+      --pen-wash: #ECFDF5;
+      --label-color: #10B981;
+      --rule: #E2E8F0;
+      --rule-soft: #EDF2F0;
+      --gold: #F59E0B;
+      --pass: #10B981;
+      --pass-wash: #ECFDF5;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+      --shadow: 0 4px 20px -2px rgba(10, 25, 38, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
+      --shadow-lg: 0 12px 28px -6px rgba(16, 185, 129, 0.18), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+      --radius-sm: 8px;
+      --radius: 16px;
+      --radius-lg: 20px;
+      --f-ui: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --f-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
 
-.nav-header {
-  height: 64px;
-  background: var(--sheet);
-  border-bottom: 1px solid var(--rule);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 28px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  backdrop-filter: blur(12px);
-}
+    [data-theme="dark"] {
+      --paper: #08141E;
+      --paper-2: #0D2130;
+      --sheet: #112B3E;
+      --ink: #F8FAFC;
+      --ink-soft: #94A3B8;
+      --ink-faint: #64748B;
+      --board: #050D14;
+      --board-2: #0A1926;
+      --board-ink: #F8FAFC;
+      --primary: #34D399;
+      --primary-dark: #10B981;
+      --primary-forest: #15803D;
+      --primary-blue: #60A5FA;
+      --primary-grad: linear-gradient(135deg, #15803D 0%, #16A34A 50%, #22C55E 100%);
+      --emerald-grad: linear-gradient(135deg, #10B981 0%, #34D399 50%, #6EE7B7 100%);
+      --accent-glow: rgba(52, 211, 153, 0.25);
+      --pen: #34D399;
+      --pen-soft: #6EE7B7;
+      --pen-wash: rgba(16, 185, 129, 0.15);
+      --label-color: #34D399;
+      --rule: #1A364E;
+      --rule-soft: #132738;
+      --gold: #FBBF24;
+      --pass: #34D399;
+      --pass-wash: rgba(16, 185, 129, 0.18);
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+      --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+      --shadow-lg: 0 20px 35px -10px rgba(0, 0, 0, 0.7);
+    }
 
-.brand-title {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-weight: 800;
-  font-size: 18px;
-  color: #FFF;
-}
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-.brand-title span {
-  background: var(--primary-grad);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
+    html, body {
+      min-height: 100vh;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--f-ui);
+      font-size: 15px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      transition: background .25s ease, color .25s ease;
+    }
 
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
+    ::selection {
+      background: var(--primary);
+      color: #FFFFFF;
+    }
 
-.nav-link {
-  font-size: 14px;
-  color: var(--ink-soft);
-  font-weight: 500;
-  transition: color 0.2s;
-  padding: 6px 12px;
-  border-radius: 8px;
-}
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
 
-.nav-link:hover, .nav-link.active {
-  color: var(--ink);
-  background: var(--pen-wash);
-}
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      color: inherit;
+      background: none;
+      border: none;
+    }
 
-.user-badge {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+    :focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+      border-radius: 6px;
+    }
 
-.user-pill {
-  font-size: 13px;
-  padding: 6px 12px;
-  border-radius: 20px;
-  background: var(--rule);
-  color: var(--ink-soft);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
+    /* -------------------------------------------------------------
+       GLOBAL APP SHELL
+    ------------------------------------------------------------- */
+    .app {
+      display: flex;
+      min-height: 100vh;
+      align-items: stretch;
+    }
 
-.btn-signout {
-  font-size: 13px;
-  color: var(--ink-soft);
-  background: transparent;
-  border: 1px solid var(--rule);
-  border-radius: 8px;
-  padding: 6px 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
+    /* -------------------------------------------------------------
+       SIDEBAR
+    ------------------------------------------------------------- */
+    .sidebar {
+      flex: 0 0 280px;
+      width: 280px;
+      background: var(--board);
+      color: var(--board-ink);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 16px;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      transition: transform .3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 50;
+    }
 
-.btn-signout:hover {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.4);
-  color: #F87171;
-}
+    .sidebar::-webkit-scrollbar {
+      width: 4px;
+    }
+    .sidebar::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+    }
 
-.dashboard-container {
-  max-width: 1200px;
-  margin: 36px auto;
-  padding: 0 24px;
-}
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 4px 8px 12px;
+    }
 
-.welcome-hero {
-  background: linear-gradient(135deg, rgba(30, 27, 75, 0.6) 0%, rgba(19, 29, 51, 0.9) 100%);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  padding: 32px;
-  margin-bottom: 32px;
-  position: relative;
-  overflow: hidden;
-  box-shadow: var(--shadow);
-}
+    .brand-logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      flex: none;
+      object-fit: cover;
+      box-shadow: 0 0 18px rgba(56, 189, 248, 0.45), 0 0 10px rgba(129, 140, 248, 0.4);
+      border: 1.5px solid rgba(56, 189, 248, 0.6);
+      background: #0B0F19;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
 
-.welcome-hero h1 {
-  margin: 0 0 8px 0;
-  font-size: 28px;
-  font-weight: 800;
-}
+    .brand-logo:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 24px rgba(56, 189, 248, 0.7);
+    }
 
-.welcome-hero p {
-  margin: 0;
-  color: var(--ink-soft);
-  max-width: 600px;
-}
+    .brand-title {
+      font-weight: 800;
+      font-size: 20px;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      color: #FFFFFF;
+      white-space: nowrap;
+    }
 
-.tier-badge {
-  position: absolute;
-  top: 32px; right: 32px;
-  background: var(--primary-grad);
-  color: #FFF;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 6px 14px;
-  border-radius: 20px;
-}
+    .brand-title .brand-name {
+      color: #38BDF8;
+    }
 
-.grid-3 {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 24px;
-  margin-bottom: 32px;
-}
+    .brand-title .brand-ai {
+      background: linear-gradient(135deg, #818CF8 0%, #C084FC 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
 
-.card {
-  background: var(--sheet);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  padding: 24px;
-  transition: transform 0.2s ease, border-color 0.2s ease;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
+    .brand-grad {
+      background: linear-gradient(135deg, #38BDF8 0%, #818CF8 50%, #C084FC 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
 
-.card:hover {
-  transform: translateY(-2px);
-  border-color: var(--primary);
-}
+    .brand-sub {
+      font-family: var(--f-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #94A3B8;
+      margin-top: 3px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
 
-.card-title {
-  font-size: 18px;
-  font-weight: 700;
-  margin-bottom: 8px;
-  color: #FFF;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+    .side-label {
+      font-family: var(--f-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #64748B;
+      padding: 8px 10px 2px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
 
-.card-desc {
-  color: var(--ink-soft);
-  font-size: 14px;
-  line-height: 1.5;
-  margin-bottom: 20px;
-}
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
 
-.card-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 18px;
-  background: var(--primary-grad);
-  color: #FFF;
-  font-weight: 600;
-  border-radius: 8px;
-  font-size: 14px;
-}
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      color: #94A3B8;
+      font-weight: 500;
+      font-size: 14px;
+      position: relative;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      user-select: none;
+    }
 
-.section-header {
-  font-size: 20px;
-  font-weight: 700;
-  margin-bottom: 16px;
-}
+    .nav-link svg {
+      width: 18px;
+      height: 18px;
+      flex: none;
+      stroke-width: 2;
+    }
 
-.history-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: var(--sheet);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  overflow: hidden;
-}
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.07);
+      color: #F8FAFC;
+      transform: translateX(2px);
+    }
 
-.history-table th, .history-table td {
-  padding: 14px 20px;
-  text-align: left;
-  border-bottom: 1px solid var(--rule);
-  font-size: 14px;
-}
+    .nav-link.active {
+      background: linear-gradient(135deg, #059669 0%, #10B981 60%, #34D399 100%);
+      color: #FFFFFF;
+      box-shadow: 0 4px 18px rgba(16, 185, 129, 0.45);
+      font-weight: 700;
+      border: 1px solid rgba(52, 211, 153, 0.4);
+    }
+    .nav-link.active svg {
+      color: #FFFFFF;
+    }
 
-.history-table th {
-  background: var(--paper);
-  color: var(--ink-soft);
-  font-weight: 600;
-}
+    .nav-badge {
+      margin-left: auto;
+      font-family: var(--f-mono);
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      padding: 2.5px 6.5px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.15);
+      color: #FFFFFF;
+      flex-shrink: 0;
+    }
 
-.history-table tr:last-child td {
-  border-bottom: none;
-}
+    .nav-badge.new {
+      background: var(--primary-dark);
+    }
 
-.badge {
-  font-size: 12px;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-weight: 600;
-}
+    .nav-badge.pro {
+      background: var(--emerald-grad);
+    }
 
-.badge-hard { background: rgba(239, 68, 68, 0.2); color: #F87171; }
-.badge-mid { background: rgba(245, 158, 11, 0.2); color: #FBBF24; }
-.badge-easy { background: rgba(16, 185, 129, 0.2); color: #34D399; }
-</style>
+    .side-foot {
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-top: 12px;
+    }
+
+    .upgrade-card {
+      background: linear-gradient(145deg, rgba(16, 185, 129, 0.12) 0%, #0A1926 60%, #0D2A3D 100%);
+      border: 1px solid rgba(52, 211, 153, 0.35);
+      border-radius: 14px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .upgrade-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, #10B981, #34D399, #6EE7B7);
+    }
+
+    .upgrade-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(52, 211, 153, 0.8);
+      box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+    }
+
+    .upgrade-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      color: #FFFFFF;
+    }
+
+    .upgrade-top .crown-icon {
+      color: #FBBF24;
+      font-size: 15px;
+      filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.5));
+    }
+
+    .upgrade-top .chevron {
+      margin-left: auto;
+      color: #34D399;
+      display: flex;
+      align-items: center;
+      transition: transform 0.2s;
+    }
+
+    .upgrade-card:hover .chevron {
+      transform: translateX(3px);
+    }
+
+    .upgrade-desc {
+      margin-top: 6px;
+      font-size: 12px;
+      line-height: 1.45;
+      color: #94A3B8;
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .user-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      flex: none;
+      object-fit: cover;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
+    }
+
+    .user-info {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .user-name {
+      font-weight: 700;
+      font-size: 13.5px;
+      color: #FFFFFF;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-role {
+      font-family: var(--f-mono);
+      font-size: 10px;
+      letter-spacing: 0.05em;
+      color: #64748B;
+      text-transform: uppercase;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .logout-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: #94A3B8;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      cursor: pointer;
+      transition: all 0.18s;
+      flex: none;
+    }
+
+    .logout-btn:hover {
+      color: #EF4444;
+      background: rgba(239, 68, 68, 0.18);
+      border-color: rgba(239, 68, 68, 0.4);
+      transform: scale(1.05);
+    }
+
+    .logout-btn svg {
+      width: 16px;
+      height: 16px;
+      stroke-width: 2;
+    }
+
+    /* -------------------------------------------------------------
+       MAIN CONTENT CANVAS
+    ------------------------------------------------------------- */
+    .main-canvas {
+      flex: 1 1 0;
+      min-width: 0;
+      padding: 0 40px 48px;
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    /* Top Navigation Bar */
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 20px 0 16px;
+      margin-bottom: 24px;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: var(--paper);
+      border-bottom: 1px solid var(--rule);
+      transition: background .25s ease, border-color .25s ease;
+    }
+
+    .breadcrumb {
+      font-family: var(--f-mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .breadcrumb-active {
+      color: var(--label-color);
+      font-weight: 800;
+    }
+
+    .topbar-actions {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--rule);
+      background: var(--paper-2);
+      color: var(--ink-soft);
+      transition: all 0.18s ease;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .icon-btn:hover {
+      color: var(--ink);
+      border-color: var(--pen);
+      box-shadow: 0 2px 10px rgba(16, 185, 129, 0.18);
+      transform: translateY(-1px);
+    }
+
+    .icon-btn svg {
+      width: 18px;
+      height: 18px;
+      stroke-width: 2;
+    }
+
+    .mob-menu-btn {
+      display: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      place-items: center;
+      border: 1px solid var(--rule);
+      background: var(--paper-2);
+      color: var(--ink-soft);
+    }
+
+    .scrim {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 45;
+      backdrop-filter: blur(4px);
+    }
+
+    /* -------------------------------------------------------------
+       MAIN HEADER (HERO)
+    ------------------------------------------------------------- */
+    .dashboard-header {
+      margin-bottom: 32px;
+    }
+
+    .dashboard-title {
+      font-size: clamp(32px, 4vw, 48px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+
+    .dashboard-subtitle {
+      font-size: 16px;
+      color: var(--ink-soft);
+      line-height: 1.5;
+      max-width: 700px;
+    }
+
+    /* -------------------------------------------------------------
+       SECTION HEADERS (MONOSPACE LABELS)
+    ------------------------------------------------------------- */
+    .section-label {
+      font-family: var(--f-mono);
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--label-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .section-heading-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -0.01em;
+    }
+
+    /* -------------------------------------------------------------
+       HERO / NEXT BEST ACTION CARD
+    ------------------------------------------------------------- */
+    .next-action-card {
+      background: var(--paper-2);
+      border: 1px solid var(--rule);
+      border-top: 3.5px solid var(--primary);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .next-action-card:hover {
+      box-shadow: var(--shadow-lg);
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+
+    .na-header-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .na-content-main {
+      flex: 1 1 400px;
+    }
+
+    .na-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+
+    .na-desc {
+      font-size: 14.5px;
+      color: var(--ink-soft);
+      line-height: 1.5;
+    }
+
+    .na-cta-box {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .primary-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 13px 26px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #166534 0%, #15803D 50%, #16A34A 100%);
+      color: #FFFFFF;
+      font-weight: 700;
+      font-size: 14.5px;
+      border: 1px solid rgba(52, 211, 153, 0.3);
+      box-shadow: 0 4px 16px rgba(22, 163, 74, 0.35);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .primary-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(22, 163, 74, 0.45);
+      filter: brightness(1.08);
+    }
+
+    .primary-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Progress Indicator inside Next Action Card */
+    .na-progress-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .na-progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .na-progress-val {
+      font-family: var(--f-mono);
+      font-weight: 800;
+      font-size: 16px;
+      color: var(--pen);
+    }
+
+    .na-progress-bar-bg {
+      height: 10px;
+      border-radius: 99px;
+      background: var(--rule-soft);
+      border: 1px solid var(--rule);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .na-progress-bar-fill {
+      height: 100%;
+      width: 68%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, #10B981 0%, #22C55E 100%);
+      position: relative;
+      transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .na-progress-bar-fill::after {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+      animation: barShine 2.5s infinite;
+    }
+
+    @keyframes barShine {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    /* Meta Badges */
+    .na-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding-top: 6px;
+      border-top: 1px solid var(--rule-soft);
+    }
+
+    .meta-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--ink-soft);
+    }
+
+    .meta-badge svg {
+      width: 14px;
+      height: 14px;
+      color: #10B981;
+    }
+
+    /* -------------------------------------------------------------
+       QUICK STATS SECTION WITH SPARKLINE CHARTS
+    ------------------------------------------------------------- */
+    .stats-section {
+      margin-bottom: 36px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+    }
+
+    .stat-card {
+      background: var(--paper-2);
+      border: 1px solid var(--rule);
+      border-radius: var(--radius);
+      padding: 22px 24px 14px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+      border-color: rgba(16, 185, 129, 0.35);
+    }
+
+    .stat-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .stat-title {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--ink-soft);
+    }
+
+    .stat-icon-wrap {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: #ECFDF5;
+      color: #10B981;
+      font-size: 16px;
+    }
+
+    .stat-icon-wrap.cyan {
+      background: rgba(6, 182, 212, 0.12);
+      color: #06B6D4;
+    }
+
+    .stat-icon-wrap.purple {
+      background: rgba(139, 92, 246, 0.12);
+      color: #8B5CF6;
+    }
+
+    .stat-icon-wrap.flame {
+      background: rgba(245, 158, 11, 0.15);
+      color: #F59E0B;
+    }
+
+    .stat-val-num {
+      font-size: 34px;
+      font-weight: 800;
+      color: var(--ink);
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+
+    .stat-subtext {
+      font-size: 12.5px;
+      color: var(--ink-soft);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .stat-subtext.positive {
+      color: #10B981;
+      font-weight: 600;
+    }
+
+    /* Sparkline SVGs */
+    .stat-sparkline {
+      width: 100%;
+      height: 32px;
+      margin-top: auto;
+      overflow: visible;
+    }
+
+    /* -------------------------------------------------------------
+       MAIN 2-COLUMN DASHBOARD GRID
+    ------------------------------------------------------------- */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+
+    .grid-col {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    /* Standard Card Box */
+    .dash-card {
+      background: var(--paper-2);
+      border: 1px solid var(--rule);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      box-shadow: var(--shadow);
+      transition: all 0.2s ease;
+    }
+
+    .dash-card:hover {
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    /* -------------------------------------------------------------
+       PREPARATION PROGRESS
+    ------------------------------------------------------------- */
+    .progress-list {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      margin-top: 8px;
+    }
+
+    .progress-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .progress-item-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .progress-item-pct {
+      font-family: var(--f-mono);
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #10B981;
+    }
+
+    .progress-item-bar-bg {
+      height: 8px;
+      border-radius: 99px;
+      background: var(--rule-soft);
+      border: 1px solid var(--rule);
+      overflow: hidden;
+    }
+
+    .progress-item-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, #10B981 0%, #22C55E 100%);
+      transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* -------------------------------------------------------------
+       RECENT ACTIVITY LIST
+    ------------------------------------------------------------- */
+    .activity-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .activity-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--rule-soft);
+      background: var(--paper);
+      transition: all 0.2s ease;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .activity-row:hover {
+      border-color: var(--pen);
+      background: var(--paper-2);
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.08);
+      transform: translateX(3px);
+    }
+
+    .activity-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .activity-icon-wrap {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      flex: none;
+      font-size: 18px;
+      background: #ECFDF5;
+      color: #10B981;
+    }
+
+    .activity-info {
+      min-width: 0;
+    }
+
+    .activity-title {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .activity-meta {
+      font-size: 12.5px;
+      color: var(--ink-soft);
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .activity-score-badge {
+      font-family: var(--f-mono);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: var(--pass-wash);
+      color: var(--pass);
+    }
+
+    .activity-chev {
+      color: var(--ink-faint);
+      transition: transform 0.2s ease, color 0.2s ease;
+      display: grid;
+      place-items: center;
+      flex: none;
+      margin-left: 12px;
+    }
+
+    .activity-row:hover .activity-chev {
+      color: var(--pen);
+      transform: translateX(2px);
+    }
+
+    /* -------------------------------------------------------------
+       UPCOMING INTERVIEW CARD
+    ------------------------------------------------------------- */
+    .upcoming-card {
+      background: var(--paper-2);
+      border: 1px solid var(--rule);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+
+    .upcoming-card:hover {
+      box-shadow: var(--shadow-lg);
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+
+    .upcoming-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .upcoming-badge {
+      font-family: var(--f-mono);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(16, 185, 129, 0.12);
+      color: #059669;
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+
+    [data-theme="dark"] .upcoming-badge {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34D399;
+    }
+
+    .upcoming-role {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+
+    .upcoming-topic {
+      font-size: 13.5px;
+      color: var(--ink-soft);
+      margin-bottom: 14px;
+    }
+
+    .upcoming-time-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 18px;
+    }
+
+    .upcoming-time-box svg {
+      width: 16px;
+      height: 16px;
+      color: var(--pen);
+      flex: none;
+    }
+
+    .secondary-cta-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      padding: 11px 18px;
+      border-radius: 10px;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      color: var(--primary-dark);
+      font-size: 13.5px;
+      font-weight: 700;
+      transition: all 0.18s ease;
+      cursor: pointer;
+    }
+
+    .secondary-cta-btn:hover {
+      background: var(--primary-grad);
+      color: #FFFFFF;
+      border-color: transparent;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+    }
+
+    /* -------------------------------------------------------------
+       AI INSIGHT CARD
+    ------------------------------------------------------------- */
+    .ai-insight-card {
+      background: linear-gradient(145deg, var(--paper-2) 0%, #ECFDF5 100%);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+
+    [data-theme="dark"] .ai-insight-card {
+      background: linear-gradient(145deg, var(--paper-2) 0%, rgba(16, 185, 129, 0.12) 100%);
+    }
+
+    .ai-insight-card:hover {
+      border-color: var(--pen);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .ai-insight-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .ai-sparkle-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: var(--emerald-grad);
+      color: #FFFFFF;
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+    }
+
+    .ai-insight-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 1.35;
+      margin-bottom: 8px;
+    }
+
+    .ai-insight-text {
+      font-size: 13.5px;
+      color: var(--ink-soft);
+      line-height: 1.55;
+      margin-bottom: 16px;
+    }
+
+    .ai-insight-link {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary-dark);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: gap 0.2s ease;
+    }
+
+    .ai-insight-link:hover {
+      gap: 8px;
+      color: var(--primary);
+    }
+
+    /* -------------------------------------------------------------
+       RECOMMENDED PRACTICE CARDS
+    ------------------------------------------------------------- */
+    .recommendations-box {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .rec-card {
+      background: var(--paper-2);
+      border: 1px solid var(--rule);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      box-shadow: var(--shadow);
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .rec-card:hover {
+      border-color: var(--pen);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .rec-card-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .rec-card-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-size: 16px;
+      background: #ECFDF5;
+      color: #10B981;
+      flex: none;
+    }
+
+    .rec-card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 2px;
+    }
+
+    .rec-card-desc {
+      font-size: 12.5px;
+      color: var(--ink-soft);
+      line-height: 1.4;
+    }
+
+    .rec-card-btn {
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+      border: 1px solid var(--rule);
+      background: var(--paper);
+      color: var(--primary-dark);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.18s ease;
+      cursor: pointer;
+      width: fit-content;
+    }
+
+    .rec-card-btn:hover {
+      background: #ECFDF5;
+      border-color: var(--pen);
+      transform: translateX(2px);
+    }
+
+    /* -------------------------------------------------------------
+       REAL-TIME SYNTHESIZER DRAWER / MODAL COLLAPSIBLE TOOL
+    ------------------------------------------------------------- */
+    .synth-bar-trigger {
+      background: var(--paper-2);
+      border: 1px dashed var(--pen-soft);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-top: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .synth-bar-trigger:hover {
+      background: #ECFDF5;
+      border-style: solid;
+      border-color: var(--pen);
+    }
+
+    .synth-trigger-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .synth-trigger-icon {
+      font-size: 20px;
+    }
+
+    .synth-trigger-title {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--ink);
+    }
+
+    .synth-trigger-desc {
+      font-size: 12.5px;
+      color: var(--ink-soft);
+    }
+
+    /* Real-Time Synthesizer Card */
+    .synth-card-hidden {
+      display: none;
+      margin-top: 16px;
+      background: var(--paper-2);
+      border: 1px solid var(--rule);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      animation: fadeIn 0.3s ease;
+    }
+
+    .dash-synth-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1.5fr 1fr auto;
+      gap: 12px;
+      align-items: end;
+      margin-top: 14px;
+      background: var(--paper);
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid var(--rule);
+    }
+
+    .synth-input-group label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .synth-select, .synth-input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--rule);
+      background: var(--paper-2);
+      color: var(--ink);
+      font-size: 13px;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .synth-select:focus, .synth-input:focus {
+      border-color: var(--pen);
+    }
+
+    .dash-q-card {
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 10px;
+      padding: 12px 16px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      margin-top: 10px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .dash-q-num {
+      font-family: var(--f-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--pen);
+      background: var(--pen-wash);
+      padding: 3px 6px;
+      border-radius: 6px;
+      flex: none;
+    }
+
+    .dash-q-content {
+      flex: 1;
+      font-size: 13.5px;
+      color: var(--ink);
+      line-height: 1.45;
+    }
+
+    .type-cursor {
+      display: inline-block;
+      color: var(--pen);
+      font-weight: 700;
+      animation: blink 0.6s infinite;
+      margin-left: 2px;
+    }
+
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* -------------------------------------------------------------
+       RESPONSIVE BREAKPOINTS
+    ------------------------------------------------------------- */
+    @media (max-width: 1200px) {
+      .dashboard-grid {
+        grid-template-columns: 1.2fr 1fr;
+        gap: 20px;
+      }
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+      }
+      .main-canvas {
+        padding: 0 28px 36px;
+      }
+    }
+
+    @media (max-width: 992px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+      .dash-synth-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 820px) {
+      .mob-menu-btn {
+        display: grid;
+      }
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 280px;
+        z-index: 60;
+        transform: translateX(-100%);
+      }
+      .sidebar.open {
+        transform: translateX(0);
+      }
+      .scrim.show {
+        display: block;
+      }
+      .main-canvas {
+        padding: 0 20px 32px;
+      }
+      .dashboard-title {
+        font-size: 32px;
+      }
+      .next-action-card {
+        padding: 20px 22px;
+      }
+      .na-header-row {
+        flex-direction: column;
+      }
+      .na-cta-box {
+        width: 100%;
+      }
+      .primary-btn {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 580px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      .dash-synth-grid {
+        grid-template-columns: 1fr;
+      }
+      .na-meta-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .activity-row {
+        padding: 12px 14px;
+      }
+    }
+  </style>
 </head>
 <body>
 
-<header class="nav-header">
-  <div class="brand-title">
-    <span>Ravi GenAI Studio</span>
+  <!-- MOBILE SCRIM OVERLAY -->
+  <div class="scrim" id="scrim"></div>
+
+  <div class="app">
+
+    <!-- =============================================================
+         LEFT SIDEBAR NAVIGATION
+    ============================================================= -->
+    <aside class="sidebar" id="sidebar">
+      
+      <!-- Brand Header -->
+      <div class="brand">
+        <img class="brand-logo" src="logo.png" alt="RaviGen AI Logo" onerror="this.onerror=null;this.src='logo.png';">
+        <div>
+          <div class="brand-title"><span class="brand-name">RaviGen</span> <span class="brand-ai">AI</span></div>
+          <div class="brand-sub">INTERVIEW STUDIO</div>
+        </div>
+      </div>
+
+      <!-- Section: WORKSPACE -->
+      <div class="side-label">WORKSPACE</div>
+      <nav class="nav" aria-label="Workspace Navigation">
+        <a class="nav-link active" href="Dashboard.html" aria-current="page">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+          <span>Dashboard</span>
+        </a>
+        <a class="nav-link" href="Interview-studio.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2.5l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg>
+          <span>Generate Questions</span>
+        </a>
+        <a class="nav-link" href="Mock-interview.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
+          <span>AI Mock Interview</span>
+          <span class="nav-badge new">VOICE</span>
+        </a>
+        <a class="nav-link" href="Interview-studio.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+          <span>Answer Evaluator</span>
+        </a>
+        <a class="nav-link" href="Resume-match.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          <span>Resume &amp; JD Match</span>
+          <span class="nav-badge pro">PRO</span>
+        </a>
+      </nav>
+
+      <!-- Section: LIBRARY -->
+      <div class="side-label" style="margin-top: 10px;">LIBRARY</div>
+      <nav class="nav" aria-label="Library Navigation">
+        <a class="nav-link" href="Interview history.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>Interview History</span>
+        </a>
+        <a class="nav-link" href="scorecard.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+          <span>Public Scorecards</span>
+        </a>
+        <a class="nav-link" href="Company-playbooks.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+          <span>Company Playbooks</span>
+        </a>
+      </nav>
+
+      <!-- Sidebar Bottom: Go Pro & Profile -->
+      <div class="side-foot">
+        <div class="upgrade-card" onclick="location.href='Upgrade-pro.html'" role="button" tabindex="0" aria-label="Go Pro Upgrade">
+          <div class="upgrade-top">
+            <span class="crown-icon">👑</span>
+            <span>Go Pro Plan</span>
+            <span class="chevron">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+            </span>
+          </div>
+          <p class="upgrade-desc">Unlock unlimited Gemini 2.5 Flash generations &amp; live voice mock tests.</p>
+        </div>
+
+        <div class="user-profile">
+          <img class="user-avatar" alt="Ravi Avatar" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><rect width='40' height='40' fill='%2310B981'/><circle cx='20' cy='15' r='8' fill='%23FFFFFF'/><path d='M6 38c0-8 6-13 14-13s14 5 14 13z' fill='%23FFFFFF'/></svg>">
+          <div class="user-info">
+            <div class="user-name candidate-user-email">Ravi Chandran</div>
+            <div class="user-role candidate-plan-tier">Staff GenAI Lead</div>
+          </div>
+          <button class="logout-btn" title="Sign Out / Logout" onclick="handleLogout(event)" aria-label="Sign Out">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </button>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- =============================================================
+         MAIN DASHBOARD CANVAS
+    ============================================================= -->
+    <main class="main-canvas">
+
+      <!-- Topbar Header -->
+      <header class="topbar">
+        <button class="mob-menu-btn" id="menuBtn" aria-label="Open navigation menu">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div class="breadcrumb">
+          <span>WORKSPACE</span>
+          <span>/</span>
+          <span class="breadcrumb-active">DASHBOARD</span>
+        </div>
+        <div class="topbar-actions">
+          <button class="icon-btn" id="themeBtn" aria-label="Toggle light/dark theme" title="Toggle Theme">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          </button>
+          <button class="icon-btn" onclick="handleLogout(event)" aria-label="Sign Out" title="Sign Out">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Welcome Hero Heading -->
+      <section class="dashboard-header">
+        <h1 class="dashboard-title">Welcome back, Ravi.</h1>
+        <p class="dashboard-subtitle">Your interview preparation is on track. Here's what you should focus on next.</p>
+      </section>
+
+      <!-- =============================================================
+           5. HERO / NEXT BEST ACTION CARD
+      ============================================================= -->
+      <section class="next-action-card" aria-label="Next Best Action">
+        <div class="section-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <span>NEXT BEST ACTION</span>
+        </div>
+
+        <div class="na-header-row">
+          <div class="na-content-main">
+            <h2 class="na-title">Continue your interview preparation</h2>
+            <p class="na-desc">You have completed 68% of your current preparation plan.</p>
+          </div>
+          <div class="na-cta-box">
+            <a href="Mock-interview.html" class="primary-btn">
+              <span>Continue Preparation</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Horizontal Progress Bar -->
+        <div class="na-progress-container">
+          <div class="na-progress-header">
+            <span>Overall Plan Readiness</span>
+            <span class="na-progress-val">68%</span>
+          </div>
+          <div class="na-progress-bar-bg">
+            <div class="na-progress-bar-fill" style="width: 68%;"></div>
+          </div>
+        </div>
+
+        <!-- Secondary Information Badges -->
+        <div class="na-meta-row">
+          <div class="meta-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+            <span>Lead Product Designer</span>
+          </div>
+          <div class="meta-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            <span>Technical &amp; Architecture</span>
+          </div>
+          <div class="meta-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>5 Years Experience</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- =============================================================
+           6. QUICK STATS (4-COLUMN GRID WITH SPARKLINE GRAPHS)
+      ============================================================= -->
+      <section class="stats-section" aria-label="Quick Performance Stats">
+        <div class="stats-grid">
+
+          <!-- Stat 1: Questions Practiced -->
+          <div class="stat-card" id="kpiCardQuestions">
+            <div class="stat-top-row">
+              <span class="stat-title">Questions Practiced</span>
+              <div class="stat-icon-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              </div>
+            </div>
+            <div class="stat-val-num" id="statQuestions">595</div>
+            <div class="stat-subtext positive">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+              <span>+18 this week</span>
+            </div>
+            <!-- Sparkline Chart (Green) -->
+            <svg class="stat-sparkline" viewBox="0 0 100 24" fill="none" preserveAspectRatio="none">
+              <path d="M0 16 Q 15 18, 25 14 T 50 12 T 75 16 T 100 8" stroke="#10B981" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+              <circle cx="100" cy="8" r="2.5" fill="#10B981"/>
+            </svg>
+          </div>
+
+          <!-- Stat 2: Mock Interviews -->
+          <div class="stat-card" id="kpiCardMocks">
+            <div class="stat-top-row">
+              <span class="stat-title">Mock Interviews</span>
+              <div class="stat-icon-wrap cyan">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
+              </div>
+            </div>
+            <div class="stat-val-num" id="statMocks">12</div>
+            <div class="stat-subtext">3 completed this week</div>
+            <!-- Sparkline Chart (Cyan) -->
+            <svg class="stat-sparkline" viewBox="0 0 100 24" fill="none" preserveAspectRatio="none">
+              <path d="M0 18 Q 20 16, 35 12 T 65 14 T 85 8 T 100 10" stroke="#06B6D4" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+              <circle cx="100" cy="10" r="2.5" fill="#06B6D4"/>
+            </svg>
+          </div>
+
+          <!-- Stat 3: Average Score -->
+          <div class="stat-card" id="kpiCardReadiness">
+            <div class="stat-top-row">
+              <span class="stat-title">Average Score</span>
+              <div class="stat-icon-wrap purple">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              </div>
+            </div>
+            <div class="stat-val-num" id="statReadiness">84%</div>
+            <div class="stat-subtext positive">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+              <span>+6% improvement</span>
+            </div>
+            <!-- Sparkline Chart (Purple) -->
+            <svg class="stat-sparkline" viewBox="0 0 100 24" fill="none" preserveAspectRatio="none">
+              <path d="M0 16 Q 25 18, 45 12 T 75 14 T 100 12" stroke="#8B5CF6" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+              <circle cx="100" cy="12" r="2.5" fill="#8B5CF6"/>
+            </svg>
+          </div>
+
+          <!-- Stat 4: Preparation Streak -->
+          <div class="stat-card" id="kpiCardStreak">
+            <div class="stat-top-row">
+              <span class="stat-title">Preparation Streak</span>
+              <div class="stat-icon-wrap flame">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 3.5z"/></svg>
+              </div>
+            </div>
+            <div class="stat-val-num" id="statStreak">7 days</div>
+            <div class="stat-subtext">Personal best</div>
+            <!-- Sparkline Chart (Amber) -->
+            <svg class="stat-sparkline" viewBox="0 0 100 24" fill="none" preserveAspectRatio="none">
+              <path d="M0 18 Q 20 14, 40 18 T 70 10 T 100 6" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+              <circle cx="100" cy="6" r="2.5" fill="#F59E0B"/>
+            </svg>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- =============================================================
+           MAIN 2-COLUMN WORKSPACE GRID
+      ============================================================= -->
+      <div class="dashboard-grid">
+
+        <!-- -----------------------------------------------------------
+             LEFT COLUMN (PROGRESS & RECENT ACTIVITY)
+        ------------------------------------------------------------ -->
+        <div class="grid-col">
+
+          <!-- 7. PREPARATION PROGRESS CARD -->
+          <section class="dash-card" aria-label="Preparation Progress">
+            <div class="section-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+              <span>PREPARATION PROGRESS</span>
+            </div>
+            <div class="section-heading-row">
+              <h2 class="section-title">Core Competency Breakdown</h2>
+            </div>
+
+            <div class="progress-list">
+              <!-- Technical Skills -->
+              <div class="progress-item">
+                <div class="progress-item-head">
+                  <span>Technical Skills</span>
+                  <span class="progress-item-pct">82%</span>
+                </div>
+                <div class="progress-item-bar-bg">
+                  <div class="progress-item-bar-fill" style="width: 82%;"></div>
+                </div>
+              </div>
+
+              <!-- System / Architecture -->
+              <div class="progress-item">
+                <div class="progress-item-head">
+                  <span>System / Architecture</span>
+                  <span class="progress-item-pct">64%</span>
+                </div>
+                <div class="progress-item-bar-bg">
+                  <div class="progress-item-bar-fill" style="width: 64%;"></div>
+                </div>
+              </div>
+
+              <!-- Product Thinking -->
+              <div class="progress-item">
+                <div class="progress-item-head">
+                  <span>Product Thinking</span>
+                  <span class="progress-item-pct">76%</span>
+                </div>
+                <div class="progress-item-bar-bg">
+                  <div class="progress-item-bar-fill" style="width: 76%;"></div>
+                </div>
+              </div>
+
+              <!-- Behavioral -->
+              <div class="progress-item">
+                <div class="progress-item-head">
+                  <span>Behavioral</span>
+                  <span class="progress-item-pct">58%</span>
+                </div>
+                <div class="progress-item-bar-bg">
+                  <div class="progress-item-bar-fill" style="width: 58%;"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 8. RECENT ACTIVITY LIST -->
+          <section class="dash-card" aria-label="Recent Activity">
+            <div class="section-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              <span>RECENT ACTIVITY</span>
+            </div>
+            <div class="section-heading-row">
+              <h2 class="section-title">Timeline &amp; Assessment History</h2>
+              <a href="Interview history.html" style="font-size: 13px; font-weight: 700; color: #10B981;">View All →</a>
+            </div>
+
+            <div class="activity-list" id="activityListContainer">
+
+              <!-- Item 1: AI Mock Interview -->
+              <a href="Mock-interview.html" class="activity-row">
+                <div class="activity-left">
+                  <div class="activity-icon-wrap">
+                    🎙️
+                  </div>
+                  <div class="activity-info">
+                    <div class="activity-title">AI Mock Interview</div>
+                    <div class="activity-meta">
+                      <span>Lead Product Designer — Technical Round</span>
+                      <span>·</span>
+                      <span>Today</span>
+                      <span class="activity-score-badge">Score 86%</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="activity-chev">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                </div>
+              </a>
+
+              <!-- Item 2: Question Practice -->
+              <a href="Interview-studio.html?role=Product+Designer&skills=Design+Systems,Figma" class="activity-row">
+                <div class="activity-left">
+                  <div class="activity-icon-wrap" style="background: rgba(6, 182, 212, 0.12); color: #06B6D4;">
+                    ⚡
+                  </div>
+                  <div class="activity-info">
+                    <div class="activity-title">Question Practice</div>
+                    <div class="activity-meta">
+                      <span>Design Systems &amp; Figma</span>
+                      <span>·</span>
+                      <span>Yesterday · 18 questions</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="activity-chev">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                </div>
+              </a>
+
+              <!-- Item 3: Answer Evaluation -->
+              <a href="Interview-studio.html" class="activity-row">
+                <div class="activity-left">
+                  <div class="activity-icon-wrap" style="background: #ECFDF5; color: #10B981;">
+                    📝
+                  </div>
+                  <div class="activity-info">
+                    <div class="activity-title">Answer Evaluation</div>
+                    <div class="activity-meta">
+                      <span>Product Strategy</span>
+                      <span>·</span>
+                      <span>Yesterday</span>
+                      <span class="activity-score-badge">Score 81%</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="activity-chev">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                </div>
+              </a>
+
+              <!-- Item 4: Resume Match -->
+              <a href="Resume-match.html" class="activity-row">
+                <div class="activity-left">
+                  <div class="activity-icon-wrap" style="background: rgba(16, 185, 129, 0.12); color: #10B981;">
+                    📄
+                  </div>
+                  <div class="activity-info">
+                    <div class="activity-title">Resume Match</div>
+                    <div class="activity-meta">
+                      <span>Senior Product Designer — FinTech</span>
+                      <span>·</span>
+                      <span>2 days ago</span>
+                      <span class="activity-score-badge">92% match</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="activity-chev">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                </div>
+              </a>
+
+            </div>
+          </section>
+
+        </div>
+
+        <!-- -----------------------------------------------------------
+             RIGHT COLUMN (UPCOMING, AI INSIGHT & RECOMMENDATIONS)
+        ------------------------------------------------------------ -->
+        <div class="grid-col">
+
+          <!-- 10. UPCOMING INTERVIEW CARD -->
+          <section class="upcoming-card" aria-label="Upcoming Scheduled Interview">
+            <div class="upcoming-top">
+              <div class="section-label" style="margin-bottom: 0;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span>UPCOMING INTERVIEW</span>
+              </div>
+              <span class="upcoming-badge">In 2 Days</span>
+            </div>
+
+            <div class="upcoming-role">Lead Product Designer</div>
+            <div class="upcoming-topic">Technical &amp; Architecture Round</div>
+
+            <div class="upcoming-time-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span>Friday · 10:30 AM EST</span>
+            </div>
+
+            <a href="Mock-interview.html" class="secondary-cta-btn">
+              <span>Prepare Now</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+            </a>
+          </section>
+
+          <!-- 11. AI INSIGHT CARD -->
+          <section class="ai-insight-card" aria-label="AI Performance Insight">
+            <div class="ai-insight-head">
+              <div class="ai-sparkle-icon">✦</div>
+              <div class="section-label" style="margin-bottom: 0;">AI INSIGHT</div>
+            </div>
+
+            <h3 class="ai-insight-title">Your strongest area is Design Systems.</h3>
+            <p class="ai-insight-text">Your recent answers show strong knowledge of component architecture and Figma workflows. Focus next on system-level trade-offs and scalability.</p>
+
+            <a href="Interview history.html" class="ai-insight-link">
+              <span>View Full Analysis</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+            </a>
+          </section>
+
+          <!-- 9. RECOMMENDED PRACTICE SECTION -->
+          <section aria-label="Recommended Practice">
+            <div class="section-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <span>RECOMMENDED PRACTICE</span>
+            </div>
+            <div style="font-size: 13px; color: var(--ink-soft); margin-top: -6px; margin-bottom: 14px;">
+              Based on your recent performance
+            </div>
+
+            <div class="recommendations-box">
+
+              <!-- Recommendation 1: Design Systems -->
+              <div class="rec-card">
+                <div class="rec-card-top">
+                  <div class="rec-card-icon">📐</div>
+                  <div>
+                    <h4 class="rec-card-title">Design Systems</h4>
+                    <p class="rec-card-desc">Strengthen your system-design interview answers</p>
+                  </div>
+                </div>
+                <a href="Interview-studio.html?role=Product+Designer&skills=Design+Systems,Figma,Variables" class="rec-card-btn">
+                  <span>Practice 12 Questions →</span>
+                </a>
+              </div>
+
+              <!-- Recommendation 2: System Architecture -->
+              <div class="rec-card">
+                <div class="rec-card-top">
+                  <div class="rec-card-icon" style="background: rgba(6, 182, 212, 0.12); color: #06B6D4;">⚙️</div>
+                  <div>
+                    <h4 class="rec-card-title">System Architecture</h4>
+                    <p class="rec-card-desc">Improve architecture trade-off reasoning</p>
+                  </div>
+                </div>
+                <a href="Interview-studio.html?role=Technical+Architect&skills=Architecture,Distributed+Systems,Scalability" class="rec-card-btn">
+                  <span>Start Practice →</span>
+                </a>
+              </div>
+
+              <!-- Recommendation 3: Behavioral Interview -->
+              <div class="rec-card">
+                <div class="rec-card-top">
+                  <div class="rec-card-icon" style="background: #ECFDF5; color: #10B981;">💬</div>
+                  <div>
+                    <h4 class="rec-card-title">Behavioral Interview</h4>
+                    <p class="rec-card-desc">Build stronger STAR responses</p>
+                  </div>
+                </div>
+                <a href="Mock-interview.html?mode=behavioral" class="rec-card-btn">
+                  <span>Practice Behavioral →</span>
+                </a>
+              </div>
+
+            </div>
+          </section>
+
+        </div>
+
+      </div>
+
+      <!-- =============================================================
+           QUICK REAL-TIME AI QUESTION SYNTHESIZER (EXPANDABLE)
+      ============================================================= -->
+      <div class="synth-bar-trigger" id="synthToggleBtn" role="button" tabindex="0">
+        <div class="synth-trigger-left">
+          <span class="synth-trigger-icon">⚡</span>
+          <div>
+            <div class="synth-trigger-title">Real-Time AI Question Synthesizer (Instant Simulator)</div>
+            <div class="synth-trigger-desc">Click to generate role-specific questions directly on this dashboard.</div>
+          </div>
+        </div>
+        <span style="font-size: 13px; font-weight: 700; color: #10B981;" id="synthToggleText">Open Generator ↓</span>
+      </div>
+
+      <div class="synth-card-hidden" id="synthCard">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+          <div>
+            <h3 style="font-size: 17px; font-weight: 800; margin: 0; color: var(--ink);">Instant Question Generator</h3>
+            <p style="font-size: 12.5px; color: var(--ink-soft); margin: 2px 0 0;">Synthesize questions on the fly powered by Gemini 2.5 Flash.</p>
+          </div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button class="rec-card-btn" onclick="selectRolePreset('Product Designer')">💎 Product Designer</button>
+            <button class="rec-card-btn" onclick="selectRolePreset('UI/UX Designer')">🎨 UI/UX</button>
+            <button class="rec-card-btn" onclick="selectRolePreset('Frontend Developer')">💻 Frontend</button>
+            <button class="rec-card-btn" onclick="selectRolePreset('GenAI Engineer')">🤖 GenAI</button>
+          </div>
+        </div>
+
+        <div class="dash-synth-grid">
+          <div class="synth-input-group">
+            <label>Target Role:</label>
+            <select id="dashRoleSelect" class="synth-select" onchange="onRoleSelectChange(this.value)">
+              <option value="Product Designer" selected>💎 Product Designer</option>
+              <option value="UX Designer">📐 UX Designer</option>
+              <option value="UI/UX Designer">🎨 UI/UX Designer</option>
+              <option value="Frontend Developer">💻 Frontend Developer</option>
+              <option value="Backend Developer">⚙️ Backend Developer</option>
+              <option value="GenAI Engineer">🤖 GenAI Engineer</option>
+            </select>
+          </div>
+          <div class="synth-input-group">
+            <label>Skills &amp; Methodologies:</label>
+            <input type="text" id="dashSkillsInput" class="synth-input" value="Design Systems, Figma Variables, User Research, Product Strategy">
+          </div>
+          <div class="synth-input-group">
+            <label>Difficulty:</label>
+            <select id="dashDiffSelect" class="synth-select">
+              <option>Medium</option>
+              <option selected>Hard</option>
+              <option>Brutal</option>
+            </select>
+          </div>
+          <button id="dashSynthesizeBtn" class="primary-btn" style="padding: 10px 18px; height: 42px; font-size: 13px;">
+            <span>⚡ Generate</span>
+          </button>
+        </div>
+
+        <div id="dashLiveSheet" style="display: none; margin-top: 16px; border-top: 1px solid var(--rule); padding-top: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div id="dashSheetTitle" style="font-weight: 700; font-size: 14px; color: var(--ink);">Questions</div>
+            <div style="display: flex; gap: 8px;">
+              <button id="dashCopyAllBtn" class="rec-card-btn" style="font-size: 11.5px;">📋 Copy All</button>
+              <a id="dashOpenStudioBtn" class="rec-card-btn" href="Interview-studio.html" style="font-size: 11.5px; background: #ECFDF5;">Open in Studio →</a>
+            </div>
+          </div>
+          <div id="dashQuestionsList"></div>
+        </div>
+      </div>
+
+    </main>
+
   </div>
-  <nav class="nav-links">
-    <a href="/candidate/dashboard" class="nav-link active">Dashboard</a>
-    <a href="/candidate/interview-studio" class="nav-link">Interview Studio</a>
-    <a href="/candidate/mock-interview" class="nav-link">Mock Interview</a>
-    <a href="/candidate/history" class="nav-link">History</a>
-  </nav>
-  <div class="user-badge">
-    <div class="user-pill" id="userDisplayPill">Candidate Account</div>
-    <button class="btn-signout" onclick="handleCandidateLogout()">Sign Out</button>
-  </div>
-</header>
 
-<main class="dashboard-container">
-  <section class="welcome-hero">
-    <div class="tier-badge" id="planTierBadge">FREE PLAN</div>
-    <h1 id="welcomeGreeting">Welcome back!</h1>
-    <p>Prepare for high-bar technical interviews using AI-driven question generation, real-time mock simulations, and skill analysis.</p>
-  </section>
+  <!-- =============================================================
+       SCRIPTS & REAL-TIME DATA INTEGRATION
+  ============================================================= -->
+  <script>
+    const API_BASE = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') || window.location.protocol === 'file:' ? 'http://127.0.0.1:8000' : '';
 
-  <section class="grid-3">
-    <div class="card">
-      <div>
-        <div class="card-title">🎯 Interview Studio</div>
-        <div class="card-desc">Generate tailored technical and architectural questions specific to your target company, role, and experience level.</div>
-      </div>
-      <a href="/candidate/interview-studio" class="card-btn">Launch Studio →</a>
-    </div>
+    // Mobile Sidebar Drawer
+    const menuBtn = document.getElementById('menuBtn');
+    const sidebar = document.getElementById('sidebar');
+    const scrim = document.getElementById('scrim');
+    if (menuBtn && sidebar && scrim) {
+      menuBtn.onclick = () => { sidebar.classList.add('open'); scrim.classList.add('show'); };
+      scrim.onclick = () => { sidebar.classList.remove('open'); scrim.classList.remove('show'); };
+    }
 
-    <div class="card">
-      <div>
-        <div class="card-title">🎙️ Practice & Mock Interview</div>
-        <div class="card-desc">Simulate realistic voice-based mock interviews with instant evaluation and detailed feedback scorecards.</div>
-      </div>
-      <a href="/candidate/mock-interview" class="card-btn">Start Mock Interview →</a>
-    </div>
-
-    <div class="card">
-      <div>
-        <div class="card-title">📊 Question History</div>
-        <div class="card-desc">Review your past generated question sets, model answers, and study notes.</div>
-      </div>
-      <a href="/candidate/history" class="card-btn">View History →</a>
-    </div>
-  </section>
-
-  <section>
-    <div class="section-header">Recent Question Sets</div>
-    <table class="history-table">
-      <thead>
-        <tr>
-          <th>Role / Domain</th>
-          <th>Difficulty</th>
-          <th>Key Skills</th>
-          <th>Date</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody id="recentHistoryBody">
-        <tr>
-          <td colspan="5" style="text-align: center; color: var(--ink-soft); padding: 24px;">
-            Loading practice history...
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
-</main>
-
-<script src="/analytics-tracker.js"></script>
-<script>
-async function loadCandidateDashboard() {
-  try {
-    let res = await fetch('/candidate/me', {
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    });
-
-    if (res.status === 404) {
-      res = await fetch('/api/candidate/me', {
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest'
-        }
+    // Theme Switcher
+    const themeBtn = document.getElementById('themeBtn');
+    if (themeBtn) {
+      themeBtn.addEventListener('click', () => {
+        const root = document.documentElement;
+        const currentTheme = root.getAttribute('data-theme');
+        const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        root.setAttribute('data-theme', nextTheme);
+        localStorage.setItem('theme', nextTheme);
       });
-    }
-
-    if (!res.ok) {
-      window.location.replace('/');
-      return;
-    }
-
-    const data = await res.json();
-    const user = data.user || {};
-
-    const greetingName = user.full_name || user.email || 'Candidate';
-    document.getElementById('welcomeGreeting').textContent = `Welcome back, ${greetingName}!`;
-    document.getElementById('userDisplayPill').textContent = user.email || 'Candidate';
-    document.getElementById('planTierBadge').textContent = (user.plan_tier || 'FREE').toUpperCase() + ' PLAN';
-
-    loadRecentHistory();
-  } catch (err) {
-    console.error('Candidate Auth verification error:', err);
-    window.location.replace('/');
-  }
-}
-
-async function loadRecentHistory() {
-  const tbody = document.getElementById('recentHistoryBody');
-  try {
-    const res = await fetch('/history');
-    if (!res.ok) {
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--ink-soft);">No recent sessions found.</td></tr>`;
-      return;
-    }
-
-    const history = await res.json();
-    if (!history || history.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--ink-soft); padding: 24px;">No past sessions found. <a href="/candidate/interview-studio" style="color: var(--pen); text-decoration: underline;">Generate your first session!</a></td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = history.slice(0, 5).map(item => {
-      const diffClass = item.difficulty === 'Hard' ? 'badge-hard' : item.difficulty === 'Medium' ? 'badge-mid' : 'badge-easy';
-      const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString() : 'Recent';
-      return `
-        <tr>
-          <td><strong>${item.role}</strong></td>
-          <td><span class="badge ${diffClass}">${item.difficulty}</span></td>
-          <td style="color: var(--ink-soft);">${(item.skills || []).join(', ')}</td>
-          <td style="color: var(--ink-soft);">${dateStr}</td>
-          <td><a href="/candidate/history" style="color: var(--pen); font-weight: 500;">View →</a></td>
-        </tr>
-      `;
-    }).join('');
-
-  } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--ink-soft);">Failed to load history.</td></tr>`;
-  }
-}
-
-async function handleCandidateLogout() {
-  try {
-    await fetch('/candidate/logout', {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest'
+      // Restore saved theme
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme) {
+        document.documentElement.setAttribute('data-theme', savedTheme);
       }
-    });
-  } catch (err) {}
-  localStorage.removeItem('candidate_token');
-  localStorage.removeItem('candidate_user');
-  window.location.replace('/');
-}
+    }
 
-document.addEventListener('DOMContentLoaded', loadCandidateDashboard);
-</script>
+    // Candidate Auth Check
+    let CURRENT_CANDIDATE = null;
+    async function initCandidateAuth() {
+      try {
+        const res = await fetch('/api/candidate/me', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          CURRENT_CANDIDATE = data.user;
+          const userEmailEls = document.querySelectorAll('.candidate-user-email');
+          userEmailEls.forEach(el => el.textContent = CURRENT_CANDIDATE.name || CURRENT_CANDIDATE.email.split('@')[0]);
+
+          const planEls = document.querySelectorAll('.candidate-plan-tier');
+          planEls.forEach(el => el.textContent = (CURRENT_CANDIDATE.plan_tier || 'PRO').toUpperCase() + ' TIER');
+        }
+      } catch (err) {
+        console.warn("Candidate auth check:", err);
+      }
+    }
+
+    async function handleLogout(e) {
+      if (e) e.stopPropagation();
+      if (confirm("Are you sure you want to log out from RaviGen AI?")) {
+        try {
+          await fetch('/candidate/logout', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          });
+        } catch (err) {}
+        localStorage.removeItem('candidate_token');
+        localStorage.removeItem('candidate_user');
+        window.location.replace('/Login.html');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initCandidateAuth();
+      loadDashboardDynamicData();
+    });
+
+    // Toggle Realtime Synthesizer Box
+    const synthToggleBtn = document.getElementById('synthToggleBtn');
+    const synthCard = document.getElementById('synthCard');
+    const synthToggleText = document.getElementById('synthToggleText');
+    if (synthToggleBtn && synthCard) {
+      synthToggleBtn.onclick = () => {
+        const isHidden = synthCard.style.display === 'none' || synthCard.style.display === '';
+        synthCard.style.display = isHidden ? 'block' : 'none';
+        synthToggleText.textContent = isHidden ? 'Close Generator ↑' : 'Open Generator ↓';
+      };
+    }
+
+    // Supabase Real-time Sync
+    const SUPABASE_CONFIG = {
+      url: window.ENV_SUPABASE_URL || localStorage.getItem('SUPABASE_URL') || '',
+      anonKey: window.ENV_SUPABASE_ANON_KEY || localStorage.getItem('SUPABASE_ANON_KEY') || ''
+    };
+
+    let liveDashboardState = {
+      questionsCount: 595,
+      mocksCount: 12,
+      avgReadiness: 84,
+      streakDays: 7
+    };
+
+    async function loadDashboardDynamicData() {
+      try {
+        const res = await fetch(`${API_BASE}/history`);
+        if (res.ok) {
+          const papers = await res.json();
+          if (papers && papers.length > 0) {
+            const totalQs = papers.reduce((sum, p) => sum + (p.count || (p.questions ? p.questions.length : 5)), 0);
+            liveDashboardState.questionsCount = Math.max(595, totalQs);
+            document.getElementById('statQuestions').textContent = liveDashboardState.questionsCount;
+          }
+        }
+      } catch (e) {
+        console.log('Using baseline dashboard KPI values');
+      }
+    }
+
+    // Question Synthesizer Quick Presets
+    const ROLE_PRESETS = {
+      'Product Designer': {
+        skills: 'Design Systems, Figma Variables, User Research, Product Strategy',
+        diff: 'Hard'
+      },
+      'UX Designer': {
+        skills: 'User Research, Usability Testing, Information Architecture, Wireframes',
+        diff: 'Hard'
+      },
+      'UI/UX Designer': {
+        skills: 'Visual Hierarchy, Micro-interactions, Design Tokens, Responsive Grids',
+        diff: 'Hard'
+      },
+      'Frontend Developer': {
+        skills: 'React 19, Next.js, TypeScript, Performance, CSS Architecture',
+        diff: 'Hard'
+      },
+      'GenAI Engineer': {
+        skills: 'LLMs, RAG Architecture, Vector DBs, LangGraph, Hallucination Benchmarks',
+        diff: 'Hard'
+      }
+    };
+
+    function selectRolePreset(roleKey) {
+      const select = document.getElementById('dashRoleSelect');
+      const cfg = ROLE_PRESETS[roleKey];
+      if (!cfg) return;
+      if (select) select.value = roleKey;
+      document.getElementById('dashSkillsInput').value = cfg.skills;
+      document.getElementById('dashDiffSelect').value = cfg.diff;
+      if (synthCard.style.display === 'none' || synthCard.style.display === '') {
+        synthCard.style.display = 'block';
+        synthToggleText.textContent = 'Close Generator ↑';
+      }
+      synthesizeDashboardQuestions();
+    }
+
+    function onRoleSelectChange(val) {
+      if (ROLE_PRESETS[val]) {
+        selectRolePreset(val);
+      }
+    }
+
+    let dashCurrentQs = [];
+    async function synthesizeDashboardQuestions() {
+      const select = document.getElementById('dashRoleSelect');
+      const role = select.value || 'Product Designer';
+      const skillsStr = document.getElementById('dashSkillsInput').value || 'Design Systems';
+      const diff = document.getElementById('dashDiffSelect').value || 'Hard';
+
+      const btn = document.getElementById('dashSynthesizeBtn');
+      const sheet = document.getElementById('dashLiveSheet');
+      const listEl = document.getElementById('dashQuestionsList');
+      const titleEl = document.getElementById('dashSheetTitle');
+
+      btn.innerHTML = '<span>⚡ Synthesizing...</span>';
+      btn.style.opacity = '0.7';
+      btn.style.pointerEvents = 'none';
+
+      sheet.style.display = 'block';
+      listEl.innerHTML = `<div style="padding:16px;text-align:center;color:var(--ink-soft);font-size:13px">⚡ Synthesizing tailored questions for <b>${role}</b>...</div>`;
+      titleEl.textContent = `${role} (${diff})`;
+
+      document.getElementById('dashOpenStudioBtn').href = `Interview-studio.html?role=${encodeURIComponent(role)}&diff=${encodeURIComponent(diff)}&skills=${encodeURIComponent(skillsStr)}`;
+
+      const skillsArr = skillsStr.split(',').map(s => s.trim()).filter(Boolean);
+      let questions = [];
+
+      try {
+        const generateEndpoint = API_BASE ? `${API_BASE}/generate` : '/api/generate';
+        const res = await fetch(generateEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            role: role,
+            experience: "5 Years",
+            skills: skillsArr,
+            difficulty: diff,
+            questionCount: 3,
+            number_of_questions: 3
+          })
+        });
+
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        questions = data.questions || [];
+      } catch (err) {
+        if (role.includes('Product')) {
+          questions = [
+            "How do you balance business conversion goals with user cognitive friction in a multi-step checkout redesign?",
+            "Describe your strategy for auditing and establishing multi-brand design tokens in Figma Variables.",
+            "Walk through a time an A/B test delivered positive revenue metrics but negative qualitative user sentiment. How did you diagnose the trade-off?"
+          ];
+        } else if (role.includes('Frontend')) {
+          questions = [
+            "Explain how React 19 Concurrent rendering and Server Actions change data fetching and hydration patterns.",
+            "How do you profile, identify, and eliminate memory leaks and layout shifts (CLS) in a high-throughput dashboard?",
+            "Compare optimistic UI mutation rollback strategies in TanStack Query vs local Zustand state."
+          ];
+        } else {
+          questions = [
+            "How do you design a mixed-methods user research protocol to validate ambiguous feature requirements?",
+            "Explain how you ensure design system components meet WCAG 2.2 AA accessibility standards across dark mode.",
+            "How do you structure design handoff in Figma to guarantee edge cases and error states are implemented precisely?"
+          ];
+        }
+      }
+
+      dashCurrentQs = questions;
+      listEl.innerHTML = '';
+
+      for (let i = 0; i < questions.length; i++) {
+        const cleanQ = questions[i].replace(/^(q\d+[\.\:\)]|\d+[\.\:\)]|\-|\*)\s*/i, '').trim();
+        const card = document.createElement('div');
+        card.className = 'dash-q-card';
+        card.innerHTML = `
+          <div class="dash-q-num">Q0${i + 1}</div>
+          <div class="dash-q-content">
+            <div><span class="type-text"></span><span class="type-cursor">|</span></div>
+          </div>
+          <button class="rec-card-btn" style="padding:4px 8px;font-size:11px;" title="Copy">📋 Copy</button>
+        `;
+
+        card.querySelector('button').onclick = (e) => {
+          navigator.clipboard?.writeText(cleanQ);
+          e.target.textContent = 'Copied! ✓';
+          setTimeout(() => { e.target.textContent = '📋 Copy'; }, 1200);
+        };
+
+        listEl.appendChild(card);
+        const textEl = card.querySelector('.type-text');
+        const cursor = card.querySelector('.type-cursor');
+
+        const words = cleanQ.split(' ');
+        for (let w = 0; w < words.length; w++) {
+          textEl.textContent += (w === 0 ? '' : ' ') + words[w];
+          await new Promise(r => setTimeout(r, 12));
+        }
+        cursor.remove();
+      }
+
+      btn.innerHTML = '<span>⚡ Generate</span>';
+      btn.style.opacity = '1';
+      btn.style.pointerEvents = 'auto';
+    }
+
+    document.getElementById('dashSynthesizeBtn')?.addEventListener('click', synthesizeDashboardQuestions);
+
+    document.getElementById('dashCopyAllBtn')?.addEventListener('click', () => {
+      if (!dashCurrentQs.length) return;
+      const text = dashCurrentQs.map((q, i) => `${i + 1}. ${q}`).join('\n\n');
+      navigator.clipboard?.writeText(text);
+      const btn = document.getElementById('dashCopyAllBtn');
+      btn.textContent = 'Copied! ✓';
+      setTimeout(() => { btn.textContent = '📋 Copy All'; }, 1400);
+    });
+  </script>
 </body>
 </html>

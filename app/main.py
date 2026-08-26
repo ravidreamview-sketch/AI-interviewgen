@@ -6,7 +6,7 @@ from typing import Dict, Any, List
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
-from sqlalchemy import func, desc
+from sqlalchemy import func, desc, text
 from sqlalchemy.orm import Session
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -756,6 +756,15 @@ def serve_upgrade(db: Session = Depends(get_db)):
     block_res = check_menu_access_or_block("Upgrade Pro", db)
     if block_res: return block_res
     return get_html_response("Upgrade-pro.html", db)
+
+@app.get("/candidate/user-guide", include_in_schema=False)
+@app.get("/api/candidate/user-guide", include_in_schema=False)
+@app.get("/candidate/User-guide.html", include_in_schema=False)
+@app.get("/user-guide", include_in_schema=False)
+@app.get("/User-guide", include_in_schema=False)
+@app.get("/User-guide.html", include_in_schema=False)
+def serve_user_guide(db: Session = Depends(get_db)):
+    return get_html_response("User-guide.html", db)
 
 @app.get("/candidate/scorecard", include_in_schema=False)
 @app.get("/candidate/scorecard.html", include_in_schema=False)

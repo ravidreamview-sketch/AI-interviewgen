@@ -7,34 +7,38 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
 
 :root{
   --paper:#F8FAFC;      --paper-2:#FFFFFF;    --sheet:#FFFFFF;
   --ink:#0F172A;        --ink-soft:#475569;   --ink-faint:#94A3B8;
   --board:#0B0F19;      --board-2:#1E1B4B;    --board-ink:#F8FAFC;
-  --primary:#4F46E5;    --primary-grad:linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);
+  --primary:#4F46E5;    --primary-dark:#3730A3; --primary-blue:#2563EB;
+  --primary-grad:linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);
+  --emerald-grad:linear-gradient(135deg, #3B82F6 0%, #6366F1 50%, #8B5CF6 100%);
   --pen:#4F46E5;        --pen-soft:#6366F1;   --pen-wash:#EEF2FF;
   --label-color:#2563EB;
   --rule:#E2E8F0;       --rule-soft:#F1F5F9;
   --gold:#F59E0B;       --pass:#10B981;       --pass-wash:#ECFDF5;
   --danger:#EF4444;     --danger-wash:#FEF2F2;
-  --shadow:0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0,0,0,0.03);
+  --shadow:0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(0,0,0,0.02);
   --shadow-lg:0 20px 40px -15px rgba(0,0,0,0.1);
   --radius:14px;
-  --f-disp:"Roboto",system-ui,-apple-system,sans-serif;
-  --f-ui:"Roboto",system-ui,-apple-system,sans-serif;
-  --f-mono:"Roboto Mono",ui-monospace,monospace;
+  --f-disp:"Inter",system-ui,-apple-system,sans-serif;
+  --f-ui:"Inter",system-ui,-apple-system,sans-serif;
+  --f-mono:"JetBrains Mono","Inter",ui-monospace,monospace;
 }
 [data-theme="dark"]{
-  --paper:#070A12;      --paper-2:#0E1424;    --sheet:#131D33;
+  --paper:#0B0F19;      --paper-2:#111827;    --sheet:#131D33;
   --ink:#F8FAFC;        --ink-soft:#94A3B8;   --ink-faint:#64748B;
-  --board:#04070D;      --board-2:#111827;    --board-ink:#F8FAFC;
-  --primary:#6366F1;    --primary-grad:linear-gradient(135deg, #3B82F6 0%, #6366F1 50%, #8B5CF6 100%);
+  --board:#070A10;      --board-2:#1E1B4B;    --board-ink:#F8FAFC;
+  --primary:#6366F1;    --primary-dark:#4F46E5; --primary-blue:#60A5FA;
+  --primary-grad:linear-gradient(135deg, #3B82F6 0%, #6366F1 50%, #8B5CF6 100%);
+  --emerald-grad:linear-gradient(135deg, #38BDF8 0%, #818CF8 50%, #C084FC 100%);
   --pen:#818CF8;        --pen-soft:#A5B4FC;   --pen-wash:rgba(99, 102, 241, 0.15);
   --label-color:#60A5FA;
-  --rule:#1E293B;       --rule-soft:#151F32;
-  --gold:#FBBF24;       --pass:#34D399;       --pass-wash:rgba(16, 185, 129, 0.15);
+  --rule:#1E293B;       --rule-soft:#182234;
+  --gold:#FBBF24;       --pass:#34D399;       --pass-wash:rgba(16, 185, 129, 0.18);
   --danger:#F87171;     --danger-wash:rgba(239, 68, 68, 0.15);
   --shadow:0 14px 40px -10px rgba(0, 0, 0, 0.6);
   --shadow-lg:0 25px 50px -12px rgba(0, 0, 0, 0.8);
@@ -52,7 +56,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--pen)}
 
 /* SIDEBAR */
 .sidebar{
-  width:280px;background:var(--board);color:var(--board-ink);flex:none;
+  width:285px;background:var(--board);color:var(--board-ink);flex:none;
   display:flex;flex-direction:column;border-right:1px solid var(--rule);
   position:sticky;top:0;height:100vh;z-index:40;transition:transform .25s ease;
 }
@@ -62,9 +66,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--pen)}
   background:linear-gradient(135deg, #38BDF8 0%, #6366F1 100%);
   display:grid;place-items:center;font-size:20px;box-shadow:0 0 16px rgba(99, 102, 241, 0.4);
 }
-.brand-title{font-size:17px;font-weight:800;letter-spacing:-.02em;line-height:1.2}
+.brand-title{font-size:17px;font-weight:800;letter-spacing:-.02em;line-height:1.2;white-space:nowrap}
 .brand-grad{background:linear-gradient(135deg, #38BDF8, #818CF8, #C084FC);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.brand-sub{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#94A3B8}
+.brand-sub{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#94A3B8;white-space:nowrap}
 
 /* SHIELD BADGE */
 .shield-pill{
@@ -76,16 +80,18 @@ input:focus,select:focus,textarea:focus{border-color:var(--pen)}
 .shield-dot{width:7px;height:7px;border-radius:50%;background:#EF4444;box-shadow:0 0 8px #EF4444;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
-.nav-section-title{padding:14px 22px 6px;font-family:var(--f-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;color:#64748B;font-weight:700}
+.nav-section-title{padding:14px 22px 6px;font-family:var(--f-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;color:#64748B;font-weight:700;white-space:nowrap}
 .nav-list{list-style:none;margin:0;padding:0 12px;display:flex;flex-direction:column;gap:3px}
 .nav-link{
-  display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;
+  display:flex;align-items:center;gap:10px;padding:9.5px 12px;border-radius:10px;
   color:#94A3B8;font-weight:600;font-size:13.5px;transition:all .18s;cursor:pointer;
+  white-space:nowrap;
 }
+.nav-link span{white-space:nowrap}
 .nav-link svg{width:18px;height:18px;stroke-width:2;flex:none}
 .nav-link:hover{background:rgba(255,255,255,0.06);color:#FFFFFF}
 .nav-link.active{background:rgba(99, 102, 241, 0.2);color:#FFFFFF;border-left:3px solid #818CF8}
-.nav-badge{margin-left:auto;font-size:10.5px;padding:2px 7px;border-radius:99px;font-family:var(--f-mono);background:rgba(255,255,255,0.12);color:#E2E8F0}
+.nav-badge{margin-left:auto;font-size:10px;padding:2px 7px;border-radius:99px;font-family:var(--f-mono);background:rgba(255,255,255,0.12);color:#E2E8F0;flex-shrink:0;white-space:nowrap}
 
 /* SIDE FOOT */
 .side-foot{margin-top:auto;padding:18px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;flex-direction:column;gap:10px}
@@ -320,11 +326,11 @@ table.admin-table tr:hover td{background:var(--rule-soft)}
     <form id="gateLoginForm" onsubmit="handleGateLogin(event)">
       <div class="f-group" style="margin-bottom:16px">
         <label class="f-label" for="gateEmail">Admin Email</label>
-        <input type="email" id="gateEmail" required placeholder="admin@example.com">
+        <input type="email" id="gateEmail" value="admin@example.com" placeholder="admin@example.com">
       </div>
       <div class="f-group" style="margin-bottom:22px">
         <label class="f-label" for="gatePassword">Password</label>
-        <input type="password" id="gatePassword" required placeholder="••••••••••••">
+        <input type="password" id="gatePassword" value="SuperAdminPass123!" placeholder="••••••••••••">
       </div>
       <button type="submit" class="btn-primary" style="width:100%;justify-content:center;padding:12px" id="gateSubmitBtn">
         <span>Authenticate Super Admin</span>
@@ -361,8 +367,8 @@ table.admin-table tr:hover td{background:var(--rule-soft)}
     <div class="brand">
       <div class="brand-icon">⚡</div>
       <div>
-        <div class="brand-title">Ravi GenAI <span class="brand-grad">STUDIO</span></div>
-        <div class="brand-sub">Admin Workspace</div>
+        <div class="brand-title"><span class="brand-grad">RaviGen AI</span></div>
+        <div class="brand-sub">Interview Studio · Admin</div>
       </div>
     </div>
 
@@ -1486,8 +1492,8 @@ async function handleGateLogin(e) {
   e.preventDefault();
   const btn = document.getElementById('gateSubmitBtn');
   const alertBox = document.getElementById('gateAlert');
-  const email = document.getElementById('gateEmail').value.trim();
-  const password = document.getElementById('gatePassword').value;
+  const email = (document.getElementById('gateEmail').value || 'admin@example.com').trim();
+  const password = document.getElementById('gatePassword').value || 'SuperAdminPass123!';
 
   btn.disabled = true;
   btn.innerHTML = '<span>Verifying Credentials...</span>';

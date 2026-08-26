@@ -10,57 +10,65 @@
   <!-- Supabase Realtime Client CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400;1,700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
 
     :root {
-      --paper: #F8FAFC;
+      --paper: #F4F7F6;
       --paper-2: #FFFFFF;
       --sheet: #FFFFFF;
       --ink: #0F172A;
       --ink-soft: #475569;
       --ink-faint: #94A3B8;
-      --board: #0B0F19;
-      --board-2: #1E1B4B;
+      --board: #0A1926;
+      --board-2: #0D2130;
       --board-ink: #F8FAFC;
-      --primary: #4F46E5;
-      --primary-grad: linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);
-      --pen: #4F46E5;
-      --pen-soft: #6366F1;
-      --pen-wash: #EEF2FF;
-      --label-color: #2563EB;
+      --primary: #10B981;
+      --primary-dark: #059669;
+      --primary-forest: #166534;
+      --primary-blue: #3B82F6;
+      --primary-grad: linear-gradient(135deg, #166534 0%, #15803D 50%, #16A34A 100%);
+      --emerald-grad: linear-gradient(135deg, #059669 0%, #10B981 50%, #34D399 100%);
+      --pen: #10B981;
+      --pen-soft: #34D399;
+      --pen-wash: #ECFDF5;
+      --label-color: #10B981;
       --rule: #E2E8F0;
-      --rule-soft: #F1F5F9;
+      --rule-soft: #EDF2F0;
       --gold: #F59E0B;
       --pass: #10B981;
       --pass-wash: #ECFDF5;
-      --shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
+      --shadow: 0 4px 20px -2px rgba(10, 25, 38, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
       --radius: 16px;
-      --f-disp: "Roboto", system-ui, -apple-system, sans-serif;
-      --f-ui: "Roboto", system-ui, -apple-system, sans-serif;
-      --f-mono: "Roboto Mono", ui-monospace, monospace;
+      --f-disp: "Inter", system-ui, -apple-system, sans-serif;
+      --f-ui: "Inter", system-ui, -apple-system, sans-serif;
+      --f-mono: "JetBrains Mono", "Inter", ui-monospace, monospace;
     }
 
     [data-theme="dark"] {
-      --paper: #0B0F19;
-      --paper-2: #111827;
-      --sheet: #131D33;
+      --paper: #08141E;
+      --paper-2: #0D2130;
+      --sheet: #112B3E;
       --ink: #F8FAFC;
       --ink-soft: #94A3B8;
       --ink-faint: #64748B;
-      --board: #070A10;
-      --board-2: #1E1B4B;
+      --board: #050D14;
+      --board-2: #0A1926;
       --board-ink: #F8FAFC;
-      --primary: #6366F1;
-      --primary-grad: linear-gradient(135deg, #3B82F6 0%, #6366F1 50%, #8B5CF6 100%);
-      --pen: #818CF8;
-      --pen-soft: #A5B4FC;
-      --pen-wash: rgba(99, 102, 241, 0.15);
-      --label-color: #60A5FA;
-      --rule: #1E293B;
-      --rule-soft: #182234;
+      --primary: #34D399;
+      --primary-dark: #10B981;
+      --primary-forest: #15803D;
+      --primary-blue: #60A5FA;
+      --primary-grad: linear-gradient(135deg, #15803D 0%, #16A34A 50%, #22C55E 100%);
+      --emerald-grad: linear-gradient(135deg, #10B981 0%, #34D399 50%, #6EE7B7 100%);
+      --pen: #34D399;
+      --pen-soft: #6EE7B7;
+      --pen-wash: rgba(16, 185, 129, 0.15);
+      --label-color: #34D399;
+      --rule: #1A364E;
+      --rule-soft: #132738;
       --gold: #FBBF24;
       --pass: #34D399;
-      --pass-wash: rgba(16, 185, 129, 0.15);
+      --pass-wash: rgba(16, 185, 129, 0.18);
       --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
     }
 
@@ -117,13 +125,13 @@
 
     /* ---------- sidebar ---------- */
     .sidebar {
-      flex: 0 0 270px;
-      width: 270px;
+      flex: 0 0 285px;
+      width: 285px;
       background: var(--board);
       color: var(--board-ink);
       display: flex;
       flex-direction: column;
-      padding: 22px 16px;
+      padding: 22px 14px;
       gap: 14px;
       position: sticky;
       top: 0;
@@ -147,7 +155,8 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 4px 8px 8px
+      padding: 4px 8px 12px;
+      margin-bottom: 8px;
     }
 
     .brand .brand-logo {
@@ -156,17 +165,34 @@
       border-radius: 50%;
       flex: none;
       object-fit: cover;
-      box-shadow: 0 0 18px rgba(59, 130, 246, 0.45);
-      border: 1.5px solid rgba(99, 102, 241, 0.6);
+      box-shadow: 0 0 18px rgba(56, 189, 248, 0.45), 0 0 10px rgba(129, 140, 248, 0.4);
+      border: 1.5px solid rgba(56, 189, 248, 0.6);
       background: #0B0F19;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+    .brand .brand-logo:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 24px rgba(56, 189, 248, 0.7);
     }
 
     .brand .word {
-      font-weight: 700;
+      font-weight: 800;
       font-size: 20px;
       letter-spacing: -.02em;
-      line-height: 1.1;
-      color: #FFFFFF
+      line-height: 1.15;
+      color: #FFFFFF;
+      white-space: nowrap;
+    }
+
+    .brand .word .brand-name {
+      color: #38BDF8;
+    }
+
+    .brand .word .brand-ai {
+      background: linear-gradient(135deg, #818CF8 0%, #C084FC 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .brand .brand-grad {
@@ -177,12 +203,13 @@
 
     .brand .sub {
       font-family: var(--f-mono);
-      font-size: 11px;
-      letter-spacing: .14em;
+      font-size: 10.5px;
+      letter-spacing: .16em;
       text-transform: uppercase;
       color: #94A3B8;
-      margin-top: 2px;
-      font-weight: 600
+      margin-top: 3px;
+      font-weight: 700;
+      white-space: nowrap;
     }
 
     .side-label {
@@ -193,7 +220,8 @@
       color: #64748B;
       padding: 4px 10px 0;
       margin-bottom: -6px;
-      font-weight: 600
+      font-weight: 600;
+      white-space: nowrap;
     }
 
     .nav {
@@ -205,14 +233,19 @@
     .nav-link {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 10px 14px;
+      gap: 10px;
+      padding: 9.5px 12px;
       border-radius: 12px;
       color: #94A3B8;
       font-weight: 500;
-      font-size: 14px;
+      font-size: 13.5px;
       position: relative;
       transition: all .2s ease;
+      white-space: nowrap;
+    }
+
+    .nav-link span {
+      white-space: nowrap;
     }
 
     .nav-link svg {
@@ -228,10 +261,14 @@
     }
 
     .nav-link.active {
-      background: linear-gradient(135deg, #1E40AF 0%, #4F46E5 50%, #7C3AED 100%);
+      background: linear-gradient(135deg, #059669 0%, #10B981 60%, #34D399 100%);
       color: #FFFFFF;
-      box-shadow: 0 4px 16px rgba(79, 70, 229, 0.4);
-      font-weight: 600;
+      box-shadow: 0 4px 18px rgba(16, 185, 129, 0.45);
+      font-weight: 700;
+      border: 1px solid rgba(52, 211, 153, 0.4);
+    }
+    .nav-link.active svg {
+      color: #FFFFFF;
     }
 
     .nav-link.active::before {
@@ -241,24 +278,25 @@
     .nav-badge {
       margin-left: auto;
       font-family: var(--f-mono);
-      font-size: 9.5px;
+      font-size: 9px;
       font-weight: 700;
       letter-spacing: .04em;
-      padding: 2.5px 7px;
+      padding: 2.5px 6.5px;
       border-radius: 6px;
       background: rgba(255, 255, 255, .12);
       color: #FFFFFF;
+      flex-shrink: 0;
+      white-space: nowrap;
     }
 
     .nav-badge.new {
-      background: #7C3AED;
+      background: #10B981;
       color: #FFFFFF
     }
 
     .nav-badge.pro {
-      background: #6366F1;
+      background: linear-gradient(135deg, #059669, #10B981);
       color: #FFFFFF;
-      border: none
     }
 
     .nav-sep {
@@ -274,47 +312,63 @@
       gap: 12px
     }
 
-    .upgrade {
-      background: linear-gradient(145deg, #0F172A 0%, #1E1B4B 100%);
-      border: 1px solid rgba(99, 102, 241, 0.35);
+    .upgrade-card {
+      background: linear-gradient(145deg, rgba(16, 185, 129, 0.12) 0%, #0A1926 60%, #0D2A3D 100%);
+      border: 1px solid rgba(52, 211, 153, 0.35);
       border-radius: 14px;
       padding: 14px 16px;
       cursor: pointer;
-      transition: transform .18s, border-color .18s;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+      position: relative;
+      overflow: hidden;
     }
 
-    .upgrade:hover {
-      transform: translateY(-1px);
-      border-color: rgba(99, 102, 241, 0.6)
+    .upgrade-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, #10B981, #34D399, #6EE7B7);
     }
 
-    .upgrade .u-top {
+    .upgrade-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(52, 211, 153, 0.8);
+      box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+    }
+
+    .upgrade-top {
       display: flex;
       align-items: center;
       gap: 8px;
       font-weight: 700;
+      font-size: 14px;
+      color: #FFFFFF;
+    }
+
+    .upgrade-top .crown-icon {
+      color: #FBBF24;
       font-size: 15px;
-      color: #FFFFFF
+      filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.5));
     }
 
-    .upgrade .u-top .star {
-      color: #818CF8;
-      font-size: 16px
-    }
-
-    .upgrade .u-top .u-chev {
+    .upgrade-top .chevron {
       margin-left: auto;
-      color: #818CF8;
-      display: grid;
-      place-items: center
+      color: #34D399;
+      display: flex;
+      align-items: center;
+      transition: transform 0.2s;
     }
 
-    .upgrade p {
-      margin: 4px 0 0;
+    .upgrade-card:hover .chevron {
+      transform: translateX(3px);
+    }
+
+    .upgrade-desc {
+      margin-top: 6px;
       font-size: 12px;
-      line-height: 1.4;
-      color: #94A3B8
+      line-height: 1.45;
+      color: #94A3B8;
     }
 
     .user {
@@ -389,11 +443,13 @@
       display: flex;
       align-items: center;
       gap: 16px;
-      padding: 22px 0 8px;
+      padding: 18px 0 16px;
+      margin-bottom: 24px;
       position: sticky;
       top: 0;
       z-index: 20;
-      background: linear-gradient(var(--paper) 72%, transparent);
+      background: var(--paper);
+      border-bottom: 1px solid var(--rule);
     }
 
     .crumb {
@@ -529,7 +585,7 @@
     h1 em {
       font-style: normal;
       font-weight: 700;
-      background: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%);
+      background: linear-gradient(135deg, #059669 0%, #10B981 50%, #34D399 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -581,14 +637,15 @@
     .card-head {
       display: flex;
       align-items: center;
-      gap: 11px;
-      padding: 18px 22px;
+      gap: 12px;
+      padding: 16px 22px;
       border-bottom: 1px solid var(--rule-soft);
+      background: var(--paper-2);
     }
 
     .card-head .ci {
-      width: 32px;
-      height: 32px;
+      width: 34px;
+      height: 34px;
       border-radius: 9px;
       display: grid;
       place-items: center;
@@ -597,104 +654,705 @@
       flex: none;
     }
 
+    [data-theme="dark"] .card-head .ci {
+      background: rgba(99, 102, 241, 0.18);
+      color: #A5B4FC;
+    }
+
     .card-head .ci svg {
-      width: 17px;
-      height: 17px;
-      stroke-width: 1.8
+      width: 18px;
+      height: 18px;
+      stroke-width: 2;
+    }
+
+    .card-head-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
     }
 
     .card-head .ct {
       font-family: var(--f-disp);
       font-weight: 700;
-      font-size: 18.5px
+      font-size: 22px;
+      color: var(--ink);
+      line-height: 1.2;
+      letter-spacing: -0.015em;
+      margin: 0;
+    }
+
+    .card-head .ct-sub {
+      font-size: 13px;
+      color: var(--ink-soft);
+      font-family: var(--f-ui);
+      margin: 0;
+      font-weight: 400;
+      line-height: 1.3;
+    }
+
+    .studio-side-col .card-head {
+      padding: 14px 18px;
+    }
+
+    .studio-side-col .card-head .ci {
+      width: 30px;
+      height: 30px;
+    }
+
+    .studio-side-col .card-head .ci svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .studio-side-col .card-head .ct {
+      font-size: 16px;
     }
 
     .form {
-      padding: 22px
+      padding: 22px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
     }
 
-    /* Role Presets Section */
-    .preset-section {
-      margin-bottom: 18px
+    /* Progressive Hierarchy Sections */
+    .brief-section {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      position: relative;
     }
 
-    .preset-label {
-      font-family: var(--f-mono);
-      font-size: 11px;
+    .brief-section + .brief-section {
+      padding-top: 28px;
+      border-top: 1px solid var(--rule-soft);
+    }
+
+    .section-header {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 2px;
+    }
+
+    .section-num-title {
+      font-family: var(--f-disp);
+      font-size: 14px;
       font-weight: 700;
-      color: var(--ink-faint);
+      letter-spacing: 0.06em;
       text-transform: uppercase;
-      letter-spacing: .08em;
-      margin-bottom: 8px;
+      color: var(--pen);
       display: flex;
       align-items: center;
       gap: 6px;
     }
 
-    .preset-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center
+    [data-theme="dark"] .section-num-title {
+      color: #818CF8;
     }
 
-    .chip {
-      padding: 7px 13px;
-      border-radius: 10px;
-      border: 1px solid var(--rule);
-      background: var(--paper);
-      color: var(--ink);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all .18s;
+    .section-desc {
+      font-size: 13.5px;
+      color: var(--ink-soft);
+      font-weight: 400;
+      line-height: 1.4;
+      font-family: var(--f-ui);
+    }
+
+    /* ==========================================================================
+       01 · ROLE PRESETS COMPONENT (Pixel-Perfect to Design Mockup)
+       ========================================================================== */
+    .role-presets-container {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      width: 100%;
+    }
+
+    .role-section-header {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .role-header-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .role-num-badge {
+      background: #059669;
+      color: #FFFFFF;
+      font-size: 12.5px;
+      font-weight: 800;
+      border-radius: 6px;
+      padding: 3px 8px;
+      line-height: 1;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+      justify-content: center;
     }
 
-    .chip:hover {
-      border-color: var(--pen);
-      color: var(--pen);
-      background: var(--pen-wash);
-      transform: translateY(-1px);
-      box-shadow: 0 3px 10px rgba(99, 102, 241, 0.15);
+    .role-header-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--ink, #111827);
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
     }
 
-    .chip.active {
-      border-color: var(--pen);
-      background: var(--pen-wash);
-      color: var(--pen);
+    .role-header-desc {
+      font-size: 13.5px;
+      color: var(--ink-soft, #6B7280);
+      font-weight: 400;
+    }
+
+    /* 6 Role Cards Grid */
+    .role-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      width: 100%;
+    }
+
+    @media (max-width: 900px) {
+      .role-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .role-cards-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .role-card {
+      background: var(--paper, #FFFFFF);
+      border: 1px solid var(--rule, #E5E7EB);
+      border-radius: 14px;
+      padding: 16px 18px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: relative;
+      user-select: none;
+      min-height: 94px;
+    }
+
+    .role-card:hover {
+      border-color: #10B981;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(16, 185, 129, 0.1);
+    }
+
+    .role-card:focus-visible {
+      outline: 2px solid #10B981;
+      outline-offset: 2px;
+    }
+
+    .role-card.selected,
+    .role-card[aria-checked="true"] {
+      border: 2px solid #10B981 !important;
+      background: var(--paper, #FFFFFF);
+      box-shadow: 0 4px 18px rgba(16, 185, 129, 0.16);
+    }
+
+    [data-theme="dark"] .role-card {
+      background: #1E293B;
+      border-color: #334155;
+    }
+
+    [data-theme="dark"] .role-card.selected,
+    [data-theme="dark"] .role-card[aria-checked="true"] {
+      border: 2px solid #10B981 !important;
+      background: rgba(16, 185, 129, 0.1) !important;
+      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);
+    }
+
+    .role-avatar-wrap {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: transform 0.2s ease;
+    }
+
+    .role-card:hover .role-avatar-wrap {
+      transform: scale(1.06);
+    }
+
+    .role-info-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .role-card-name {
+      font-size: 15px;
       font-weight: 700;
+      color: var(--ink, #111827);
+      line-height: 1.25;
     }
 
-    .fgrid {
+    .role-card.selected .role-card-name {
+      color: #059669;
+    }
+
+    [data-theme="dark"] .role-card.selected .role-card-name {
+      color: #34D399;
+    }
+
+    .role-card-keywords {
+      font-size: 12px;
+      color: var(--ink-soft, #6B7280);
+      line-height: 1.4;
+      font-weight: 500;
+    }
+
+    .role-check-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #10B981;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      color: #FFFFFF;
+      box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4);
+      animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .role-card.selected .role-check-badge,
+    .role-card[aria-checked="true"] .role-check-badge {
+      display: flex;
+    }
+
+    .role-check-badge svg {
+      width: 12px;
+      height: 12px;
+      stroke: #FFFFFF;
+      stroke-width: 3;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.6); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Sub-banner: We'll tailor your interview questions... */
+    .role-tailor-banner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #F0FDF4;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      border-radius: 12px;
+      padding: 12px 18px;
+      font-size: 13.5px;
+      color: #374151;
+      line-height: 1.4;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    [data-theme="dark"] .role-tailor-banner {
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(52, 211, 153, 0.22);
+      color: #D1FAE5;
+    }
+
+    .role-tailor-banner .banner-sparkle {
+      color: #059669;
+      font-size: 16px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+    }
+
+    [data-theme="dark"] .role-tailor-banner .banner-sparkle {
+      color: #34D399;
+    }
+
+    /* Downward connector chevron */
+    .role-connector-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 2px 0;
+    }
+
+    .role-connector-circle {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #ECFDF5;
+      border: 1px solid #D1FAE5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #059669;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+
+    [data-theme="dark"] .role-connector-circle {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(52, 211, 153, 0.3);
+      color: #34D399;
+    }
+
+    .role-connector-circle svg {
+      width: 14px;
+      height: 14px;
+      stroke-width: 2.5;
+    }
+
+    /* Bottom Focus Section (Split Panel) */
+    .role-focus-split {
+      display: grid;
+      grid-template-columns: 240px minmax(0, 1fr);
+      gap: 24px;
+      align-items: start;
+      padding-top: 6px;
+    }
+
+    @media (max-width: 860px) {
+      .role-focus-split {
+        grid-template-columns: 1fr;
+        gap: 18px;
+      }
+    }
+
+    .role-selected-card {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-right: 12px;
+      border-right: 1px solid var(--rule-soft, #F1F5F9);
+    }
+
+    @media (max-width: 860px) {
+      .role-selected-card {
+        border-right: none;
+        border-bottom: 1px solid var(--rule-soft, #F1F5F9);
+        padding-bottom: 16px;
+      }
+    }
+
+    .role-selected-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 2px;
+    }
+
+    .role-selected-overline {
+      font-size: 11px;
+      font-weight: 800;
+      color: #059669;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    [data-theme="dark"] .role-selected-overline {
+      color: #34D399;
+    }
+
+    .role-selected-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--ink, #111827);
+      line-height: 1.2;
+    }
+
+    .role-selected-desc {
+      font-size: 13px;
+      color: var(--ink-soft, #6B7280);
+      line-height: 1.45;
+    }
+
+    .focus-panel-right {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .focus-panel-heading {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--ink, #111827);
+    }
+
+    .focus-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      width: 100%;
+    }
+
+    @media (max-width: 900px) {
+      .focus-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 550px) {
+      .focus-cards-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .focus-card {
+      background: var(--paper, #FFFFFF);
+      border: 1px solid var(--rule, #E5E7EB);
+      border-radius: 10px;
+      padding: 11px 13px;
+      cursor: pointer;
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      user-select: none;
+      min-height: 44px;
+    }
+
+    [data-theme="dark"] .focus-card {
+      background: #1E293B;
+      border-color: #334155;
+    }
+
+    .focus-card:hover {
+      border-color: #10B981;
+      background: var(--pen-wash, #F0FDF4);
+      transform: translateY(-1px);
+    }
+
+    .focus-card:focus-visible {
+      outline: 2px solid #10B981;
+      outline-offset: 2px;
+    }
+
+    .focus-card.selected,
+    .focus-card[aria-checked="true"] {
+      border: 1.5px solid #10B981 !important;
+      background: #ECFDF5 !important;
+    }
+
+    [data-theme="dark"] .focus-card.selected,
+    [data-theme="dark"] .focus-card[aria-checked="true"] {
+      border: 1.5px solid #10B981 !important;
+      background: rgba(16, 185, 129, 0.15) !important;
+    }
+
+    .focus-card-icon {
+      width: 18px;
+      height: 18px;
+      color: #059669;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    [data-theme="dark"] .focus-card-icon {
+      color: #34D399;
+    }
+
+    .focus-card-icon svg {
+      width: 17px;
+      height: 17px;
+      stroke: currentColor;
+    }
+
+    .focus-card-text {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--ink, #111827);
+      line-height: 1.25;
+    }
+
+    .focus-card.selected .focus-card-text,
+    .focus-card[aria-checked="true"] .focus-card-text {
+      color: #059669;
+    }
+
+    [data-theme="dark"] .focus-card.selected .focus-card-text,
+    [data-theme="dark"] .focus-card[aria-checked="true"] .focus-card-text {
+      color: #34D399;
+    }
+
+    /* Bottom Action Footer Row */
+    .role-action-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .role-tip-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--paper-2, #F9FAFB);
+      border: 1px solid var(--rule, #E5E7EB);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 12.5px;
+      color: var(--ink-soft, #6B7280);
+      line-height: 1.3;
+    }
+
+    [data-theme="dark"] .role-tip-badge {
+      background: #1E293B;
+      border-color: #334155;
+      color: #94A3B8;
+    }
+
+    .btn-autofill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      border-radius: 10px;
+      background: #059669;
+      color: #FFFFFF;
+      font-weight: 700;
+      font-size: 14px;
+      border: none;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      min-height: 42px;
+    }
+
+    .btn-autofill:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
+      background: #047857;
+    }
+
+    .btn-autofill:active {
+      transform: translateY(0);
+    }
+
+    .btn-autofill svg {
+      width: 16px;
+      height: 16px;
+      transition: transform 0.2s ease;
+    }
+
+    .btn-autofill:hover .autofill-arrow {
+      transform: translateX(3px);
+    }    .fgrid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 18px
+      gap: 20px 22px;
+      align-items: start;
     }
 
     .field {
       display: flex;
       flex-direction: column;
-      gap: 7px
+      gap: 8px;
     }
 
     .field.full {
-      grid-column: 1 / -1
+      grid-column: 1 / -1;
+    }
+
+    .field-head-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 2px;
+    }
+
+    .action-hint {
+      font-size: 12px;
+      font-family: var(--f-ui);
+      font-weight: 600;
+      color: var(--pen);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    [data-theme="dark"] .action-hint {
+      color: #A5B4FC;
+    }
+
+    .field-sub-desc {
+      font-size: 12.5px;
+      color: var(--ink-soft);
+      font-family: var(--f-ui);
+      font-weight: 400;
+    }
+
+    .ai-focus-group {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .seed-section {
+      margin-top: 4px;
+    }
+
+    .seed-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .seed-pill {
+      font-family: var(--f-ui);
+      font-size: 12.5px;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 8px;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      color: var(--ink-soft);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .seed-pill:hover {
+      border-color: var(--pen);
+      color: var(--pen);
+      background: var(--pen-wash);
     }
 
     .label {
       font-family: var(--f-mono);
-      font-size: 11px;
-      letter-spacing: .08em;
+      font-size: 11.5px;
+      letter-spacing: .06em;
       text-transform: uppercase;
       color: var(--label-color);
       font-weight: 700;
       display: flex;
       align-items: center;
       gap: 6px;
+      min-height: 18px;
+      line-height: 1.2;
     }
 
     .label .n {
@@ -703,7 +1361,8 @@
     }
 
     .control {
-      position: relative
+      position: relative;
+      width: 100%;
     }
 
     .control .lead {
@@ -713,19 +1372,23 @@
       transform: translateY(-50%);
       color: var(--ink-faint);
       pointer-events: none;
+      display: grid;
+      place-items: center;
+      z-index: 2;
     }
 
     .control .lead svg {
       width: 17px;
       height: 17px;
       stroke-width: 1.8;
-      display: block
+      display: block;
     }
 
     .input,
     .select {
       width: 100%;
-      padding: 11px 14px 11px 40px;
+      height: 46px;
+      padding: 0 14px 0 40px;
       border-radius: 11px;
       border: 1px solid var(--rule);
       background: var(--sheet);
@@ -733,6 +1396,16 @@
       font-family: var(--f-ui);
       font-size: 14.5px;
       transition: border-color .18s, box-shadow .18s;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+    }
+
+    textarea.input {
+      height: auto;
+      min-height: 52px;
+      padding: 12px 14px 12px 40px;
+      line-height: 1.45;
     }
 
     .input:focus,
@@ -766,12 +1439,13 @@
     /* ---------- Professional Custom Dropdown UI ---------- */
     .custom-select-wrap {
       position: relative;
-      width: 100%
+      width: 100%;
     }
 
     .custom-select-trigger {
       width: 100%;
-      padding: 11px 14px 11px 40px;
+      height: 46px;
+      padding: 0 14px 0 40px;
       border-radius: 11px;
       border: 1px solid var(--rule);
       background: var(--sheet);
@@ -786,6 +1460,7 @@
       transition: border-color .18s, box-shadow .18s, background .18s;
       text-align: left;
       user-select: none;
+      box-sizing: border-box;
     }
 
     .custom-select-trigger:hover {
@@ -803,7 +1478,10 @@
       flex: 1;
       white-space: nowrap;
       overflow: hidden;
-      text-overflow: ellipsis
+      text-overflow: ellipsis;
+      line-height: 1;
+      display: flex;
+      align-items: center;
     }
 
     .custom-select-trigger .c-chev {
@@ -865,6 +1543,24 @@
 
     .custom-select-wrap.open .custom-select-menu {
       display: flex
+    }
+
+    .custom-select-wrap.dropup .custom-select-menu {
+      top: auto;
+      bottom: calc(100% + 6px);
+      transform-origin: bottom;
+      animation: dropupPop .18s cubic-bezier(.16, 1, .3, 1);
+    }
+
+    @keyframes dropupPop {
+      from {
+        opacity: 0;
+        transform: translateY(6px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
     }
 
     .c-opt {
@@ -1037,53 +1733,68 @@
     .count-row {
       display: flex;
       align-items: center;
-      gap: 14px
+      gap: 12px;
+      height: 46px;
+      box-sizing: border-box;
     }
 
     .count-row .num {
       font-family: var(--f-disp);
       font-weight: 700;
-      font-size: 30px;
+      font-size: 26px;
       line-height: 1;
-      min-width: 52px;
-      padding: 6px 0;
+      min-width: 38px;
       color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
     }
 
     .stepper {
       display: flex;
-      gap: 6px
+      gap: 6px;
+      flex-shrink: 0;
     }
 
     .stepper button {
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
       border: 1px solid var(--rule);
       background: var(--sheet);
-      font-size: 20px;
+      font-size: 18px;
+      font-weight: 600;
       color: var(--ink-soft);
       display: grid;
       place-items: center;
-      transition: border-color .18s, color .18s;
+      transition: all .18s;
+      cursor: pointer;
+      line-height: 1;
     }
 
     .stepper button:hover {
       border-color: var(--pen);
-      color: var(--pen)
+      color: var(--pen);
+      background: var(--pen-wash);
+      transform: translateY(-1px);
     }
 
     .range {
-      flex: 1
+      flex: 1;
+      display: flex;
+      align-items: center;
+      min-width: 60px;
     }
 
     input[type=range] {
       -webkit-appearance: none;
       width: 100%;
-      height: 5px;
+      height: 6px;
       border-radius: 99px;
       background: var(--rule);
-      outline: none
+      outline: none;
+      margin: 0;
     }
 
     input[type=range]::-webkit-slider-thumb {
@@ -1162,28 +1873,31 @@
     .generate {
       margin-top: 22px;
       width: 100%;
-      padding: 15px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);
+      padding: 16px 24px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #166534 0%, #15803D 50%, #16A34A 100%);
       color: #FFFFFF;
-      font-weight: 600;
+      font-weight: 700;
       font-size: 15.5px;
       letter-spacing: .01em;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
-      box-shadow: 0 10px 25px -4px rgba(79, 70, 229, 0.45);
-      transition: filter .18s, transform .1s, box-shadow .18s;
+      border: 1px solid rgba(52, 211, 153, 0.3);
+      box-shadow: 0 8px 24px -4px rgba(22, 163, 74, 0.45), 0 4px 14px -2px rgba(16, 185, 129, 0.35);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
     }
 
     .generate:hover {
       filter: brightness(1.08);
-      box-shadow: 0 14px 28px -4px rgba(79, 70, 229, 0.55)
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px -4px rgba(22, 163, 74, 0.55), 0 6px 18px -2px rgba(16, 185, 129, 0.45);
     }
 
     .generate:active {
-      transform: translateY(1px)
+      transform: translateY(0);
     }
 
     .generate svg {
@@ -1219,19 +1933,38 @@
 
     .tips .th {
       display: flex;
-      align-items: center;
-      gap: 9px;
+      align-items: flex-start;
+      gap: 10px;
       font-family: var(--f-disp);
       font-weight: 700;
-      font-size: 17.5px;
-      margin-bottom: 4px
+      font-size: 17px;
+      line-height: 1.35;
+      margin-bottom: 6px;
+      color: var(--ink);
     }
 
+    .tips .th .th-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: rgba(124, 58, 237, 0.12);
+      color: #8B5CF6;
+      display: grid;
+      place-items: center;
+      flex: none;
+      margin-top: 1px;
+    }
+
+    .tips .th .th-icon svg,
     .tips .th svg {
-      width: 18px;
-      height: 18px;
-      color: #7C3AED;
-      stroke-width: 1.8
+      width: 16px;
+      height: 16px;
+      color: #8B5CF6;
+      stroke-width: 2;
+    }
+
+    .tips .th .th-text {
+      flex: 1;
     }
 
     .tips .thh {
@@ -2446,50 +3179,60 @@
       }
     }
 
-    /* ---------- print ---------- */
+    /* ---------- print (Questions Only) ---------- */
     @media print {
-
       .sidebar,
       .topbar,
       .grid-top,
-      .grid-bottom>.card:last-child,
+      .grid-bottom > .card:first-child,
       .paper-toolbar,
+      .ha,
       .foot,
-      .menu-btn {
-        display: none !important
+      .menu-btn,
+      .toast,
+      .qcopy,
+      .q-ans,
+      .q-solution,
+      .q-rubric,
+      .q-hints,
+      .q-meta,
+      .btn,
+      .ghost-btn,
+      .share-modal-backdrop,
+      .email-modal-backdrop,
+      .ai-stepper {
+        display: none !important;
       }
 
       body,
-      .main {
-        background: #fff
-      }
-
-      .app {
-        display: block
-      }
-
-      .main {
-        padding: 0;
-        max-width: 100%
-      }
-
-      .grid-bottom {
-        display: block;
-        margin: 0
-      }
-
-      .paper-card {
-        border: none;
-        box-shadow: none
-      }
-
+      .main,
+      .app,
+      .grid-bottom,
+      .paper-card,
       .sheet {
-        margin: 0;
-        border: none
+        background: #FFFFFF !important;
+        color: #0F172A !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        display: block !important;
       }
 
-      .qcopy {
-        display: none
+      .q-item,
+      .q-card {
+        page-break-inside: avoid;
+        border-bottom: 1px solid #E2E8F0 !important;
+        padding: 14px 0 !important;
+        margin-bottom: 14px !important;
+      }
+
+      .q-text {
+        font-size: 15px !important;
+        font-weight: 600 !important;
+        color: #0F172A !important;
       }
     }
   </style>
@@ -2501,10 +3244,10 @@
     <!-- ============ SIDEBAR ============ -->
     <aside class="sidebar" id="sidebar">
       <div class="brand">
-        <img class="brand-logo" src="logo.png" alt="Ravi GenAI Studio Logo">
+        <img class="brand-logo" src="logo.png" alt="RaviGen AI Logo" onerror="this.onerror=null;this.src='logo.png';">
         <div>
-          <div class="word"><span class="brand-grad">RaviGenAI</span></div>
-          <div class="sub">STUDIO</div>
+          <div class="word"><span class="brand-name">RaviGen</span> <span class="brand-ai">AI</span></div>
+          <div class="sub">INTERVIEW STUDIO</div>
         </div>
       </div>
 
@@ -2583,13 +3326,6 @@
 
       <div class="side-label" style="margin-top:14px">PREFERENCES</div>
       <nav class="nav">
-        <a class="nav-link" href="/analytics">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path d="M18 20V10M12 20V4M6 20v-6" />
-          </svg>
-          <span>Live Analytics</span>
-          <span class="nav-badge new" style="background:rgba(16,185,129,0.15);color:#10B981">LIVE</span>
-        </a>
         <a class="nav-link" href="javascript:void(0)"
           onclick="alert('Model: Gemini 2.5 Flash\nStatus: Operational\nAPI Base: Ready')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -2602,12 +3338,15 @@
       </nav>
 
       <div class="side-foot">
-        <div class="upgrade" onclick="location.href='/upgrade-pro'">
-          <div class="u-top"><span class="star">✦</span> Go Pro <span class="u-chev"><svg width="14" height="14"
-                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <path d="M9 6l6 6-6 6" />
-              </svg></span></div>
-          <p>Unlock advanced AI features</p>
+        <div class="upgrade-card" onclick="location.href='Upgrade-pro.html'" role="button" tabindex="0" aria-label="Go Pro Upgrade">
+          <div class="upgrade-top">
+            <span class="crown-icon">👑</span>
+            <span>Go Pro Plan</span>
+            <span class="chevron">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+            </span>
+          </div>
+          <p class="upgrade-desc">Unlock unlimited Gemini 2.5 Flash generations &amp; live voice mock tests.</p>
         </div>
         <div class="user">
           <img class="av" alt="Ravi Chandran"
@@ -2703,7 +3442,7 @@
                 <rect x="75" y="95" width="65" height="60" rx="22" fill="url(#botGrad)" stroke="#CBD5E1"
                   stroke-width="1.5" />
                 <rect x="88" y="110" width="38" height="26" rx="7" fill="#F1F5F9" />
-                <text x="107" y="128" fill="#2563EB" font-family="'Roboto', sans-serif" font-weight="900" font-size="14"
+                <text x="107" y="128" fill="#2563EB" font-family="'Inter', sans-serif" font-weight="900" font-size="14"
                   text-anchor="middle">AI</text>
                 <rect x="65" y="40" width="85" height="60" rx="28" fill="url(#botGrad)" stroke="#CBD5E1"
                   stroke-width="1.5" />
@@ -2717,7 +3456,7 @@
                 <path d="M125 130 L165 130 L175 155 L115 155 Z" fill="#334155" />
                 <rect x="128" y="105" width="38" height="28" rx="4" fill="url(#screenGrad)" stroke="#475569"
                   stroke-width="1" />
-                <text x="147" y="123" fill="#38BDF8" font-family="'Roboto', sans-serif" font-weight="700" font-size="10"
+                <text x="147" y="123" fill="#38BDF8" font-family="'Inter', sans-serif" font-weight="700" font-size="10"
                   text-anchor="middle">AI</text>
 <ellipse cx="120" cy="145" rx="8" ry="6" fill="#E2E8F0" />
               </g>
@@ -2728,374 +3467,561 @@
 
       <!-- 2-COLUMN STUDIO LAYOUT -->
       <div class="studio-layout">
-        <!-- MAIN WORKSPACE: THE BRIEF + QUESTION PAPER -->
         <div class="studio-main-col">
           <div class="card">
             <div class="card-head">
               <span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path d="M4 5h16M4 12h16M4 19h10" />
                 </svg></span>
-              <span class="ct">The brief</span>
+              <div class="card-head-text">
+                <h1 class="ct">The brief</h1>
+                <p class="ct-sub">Set up the context for your interview prep</p>
+              </div>
             </div>
             <div class="form">
-              <!-- QUICK PRESETS -->
-              <div class="preset-section">
-                <div class="preset-label">Role Presets:</div>
-                <div class="preset-chips">
-                  <button type="button" class="chip" onclick="applyPreset('ux')">🎨 UX Designer</button>
-                  <button type="button" class="chip" onclick="applyPreset('product')">💡 Product Designer</button>
-                  <button type="button" class="chip" onclick="applyPreset('uiux')">🎨 UI/UX Designer</button>
-                  <button type="button" class="chip" onclick="applyPreset('frontend')">⚛️ Frontend Developer</button>
-                  <button type="button" class="chip" onclick="applyPreset('backend')">⚙️ Backend Developer</button>
-                  <button type="button" class="chip" onclick="applyPreset('genai')">🤖 GenAI Engineer</button>
+              <!-- SECTION 01: ROLE PRESETS & FOCUS (Pixel-Perfect from Design Mockup) -->
+              <div class="brief-section" id="sectionRolePresets">
+                <div class="role-section-header">
+                  <div class="role-header-top">
+                    <span class="role-num-badge">01</span>
+                    <span class="role-header-title">ROLE PRESETS</span>
+                  </div>
+                  <div class="role-header-desc">Choose a role preset to auto-fill the brief</div>
+                </div>
+
+                <!-- 6 Role Cards Grid (Top Grid) -->
+                <div class="role-cards-grid" id="roleCardsGrid" role="radiogroup" aria-label="Role Presets">
+                  <div class="role-card selected" role="radio" tabindex="0" aria-checked="true" data-role="ux" onclick="selectRole('ux')" onkeydown="handleRoleCardKeydown(event, 'ux')">
+                    <div class="role-avatar-wrap" style="background:#E6F7F0">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M2 22h20M2 22l18-18M2 22V4a2 2 0 0 1 2-2h1m11 0h4a2 2 0 0 1 2 2v1"/><path d="M7 17l2-2M10 14l2-2M13 11l2-2M16 8l2-2"/></svg>
+                    </div>
+                    <div class="role-info-wrap">
+                      <div class="role-card-name">UX Designer</div>
+                      <div class="role-card-keywords">
+                        <div>Research • UX Strategy •</div>
+                        <div>User Experience</div>
+                      </div>
+                    </div>
+                    <div class="role-check-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                  </div>
+                  <div class="role-card" role="radio" tabindex="0" aria-checked="false" data-role="product" onclick="selectRole('product')" onkeydown="handleRoleCardKeydown(event, 'product')">
+                    <div class="role-avatar-wrap" style="background:#EFF6FF">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polygon points="6 3 18 3 22 9 12 22 2 9 6 3"/><line x1="2" y1="9" x2="22" y2="9"/><line x1="12" y1="22" x2="8" y2="9"/><line x1="12" y1="22" x2="16" y2="9"/><line x1="6" y1="3" x2="10" y2="9"/><line x1="18" y1="3" x2="14" y2="9"/></svg>
+                    </div>
+                    <div class="role-info-wrap">
+                      <div class="role-card-name">Product Designer</div>
+                      <div class="role-card-keywords">
+                        <div>Product Thinking • Strategy •</div>
+                        <div>Design Systems</div>
+                      </div>
+                    </div>
+                    <div class="role-check-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                  </div>
+                  <div class="role-card" role="radio" tabindex="0" aria-checked="false" data-role="uiux" onclick="selectRole('uiux')" onkeydown="handleRoleCardKeydown(event, 'uiux')">
+                    <div class="role-avatar-wrap" style="background:#FFF1F2">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><circle cx="13.5" cy="6.5" r=".5" fill="#EA580C"/><circle cx="17.5" cy="10.5" r=".5" fill="#EA580C"/><circle cx="8.5" cy="7.5" r=".5" fill="#EA580C"/><circle cx="6.5" cy="12.5" r=".5" fill="#EA580C"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.563-2.512 5.563-5.563C22 6.5 17.5 2 12 2z"/></svg>
+                    </div>
+                    <div class="role-info-wrap">
+                      <div class="role-card-name">UI/UX Designer</div>
+                      <div class="role-card-keywords">
+                        <div>UI Design • Visual Design •</div>
+                        <div>Interaction Design</div>
+                      </div>
+                    </div>
+                    <div class="role-check-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                  </div>
+                  <div class="role-card" role="radio" tabindex="0" aria-checked="false" data-role="frontend" onclick="selectRole('frontend')" onkeydown="handleRoleCardKeydown(event, 'frontend')">
+                    <div class="role-avatar-wrap" style="background:#F5F3FF">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><polyline points="7 8 5 10 7 12"/><polyline points="17 8 19 10 17 12"/><line x1="13" y1="7" x2="11" y2="13"/></svg>
+                    </div>
+                    <div class="role-info-wrap">
+                      <div class="role-card-name">Frontend Developer</div>
+                      <div class="role-card-keywords">
+                        <div>React • JavaScript •</div>
+                        <div>UI Development</div>
+                      </div>
+                    </div>
+                    <div class="role-check-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                  </div>
+                  <div class="role-card" role="radio" tabindex="0" aria-checked="false" data-role="backend" onclick="selectRole('backend')" onkeydown="handleRoleCardKeydown(event, 'backend')">
+                    <div class="role-avatar-wrap" style="background:#FEF3C7">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                    </div>
+                    <div class="role-info-wrap">
+                      <div class="role-card-name">Backend Developer</div>
+                      <div class="role-card-keywords">
+                        <div>APIs • Databases •</div>
+                        <div>Server Logic</div>
+                      </div>
+                    </div>
+                    <div class="role-check-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                  </div>
+                  <div class="role-card" role="radio" tabindex="0" aria-checked="false" data-role="genai" onclick="selectRole('genai')" onkeydown="handleRoleCardKeydown(event, 'genai')">
+                    <div class="role-avatar-wrap" style="background:#F3E8FF">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#9333EA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8.01" y2="16" stroke-width="3"/><line x1="16" y1="16" x2="16.01" y2="16" stroke-width="3"/><path d="M9 19h6"/></svg>
+                    </div>
+                    <div class="role-info-wrap">
+                      <div class="role-card-name">GenAI Engineer</div>
+                      <div class="role-card-keywords">
+                        <div>LLMs • RAG • Agents •</div>
+                        <div>Prompt Engineering</div>
+                      </div>
+                    </div>
+                    <div class="role-check-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                  </div>
+                </div>
+
+                <!-- Sub-banner: We'll tailor your interview questions... -->
+                <div class="role-tailor-banner">
+                  <span class="banner-sparkle">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                      <path d="M12 3l1.912 5.885L20 10.5l-4.75 4.385L16.424 21 12 17.5 7.576 21l1.174-6.115L4 10.5l6.088-1.615L12 3z"/>
+                    </svg>
+                  </span>
+                  <span>We'll tailor your interview questions, evaluation criteria, and mock interviews based on the role you select.</span>
+                </div>
+
+                <!-- Downward Connector Chevron -->
+                <div class="role-connector-row">
+                  <div class="role-connector-circle">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
+                  </div>
+                </div>
+
+                <!-- Bottom Split Panel: SELECTED ROLE Summary on Left + Focus Areas on Right -->
+                <div class="role-focus-split">
+                  <!-- Left: SELECTED ROLE Summary -->
+                  <div class="role-selected-card" id="roleSelectedSummary">
+                    <div class="role-selected-avatar" style="background:#E6F7F0">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M2 22h20M2 22l18-18M2 22V4a2 2 0 0 1 2-2h1m11 0h4a2 2 0 0 1 2 2v1"/><path d="M7 17l2-2M10 14l2-2M13 11l2-2M16 8l2-2"/></svg>
+                    </div>
+                    <div class="role-selected-overline">SELECTED ROLE</div>
+                    <div class="role-selected-title">UX Designer</div>
+                    <div class="role-selected-desc">We'll customize your interview experience to match UX Designer expectations.</div>
+                  </div>
+
+                  <!-- Right: What would you like to focus on? -->
+                  <div class="focus-panel-right">
+                    <div class="focus-panel-heading">What would you like to focus on?</div>
+                    <div class="focus-cards-grid" id="focusCardsGrid" role="group" aria-label="Interview Focus Areas">
+                      <div class="focus-card selected" role="checkbox" tabindex="0" aria-checked="true" data-focus="User Research" onclick="toggleFocusArea('User Research')" onkeydown="handleFocusCardKeydown(event, 'User Research')">
+                        <div class="focus-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7"/><path d="M21 21l-6-6"/><circle cx="10" cy="9" r="2.5"/><path d="M6 14a4 4 0 0 1 8 0"/></svg></div>
+                        <span class="focus-card-text">User Research</span>
+                      </div>
+                      <div class="focus-card selected" role="checkbox" tabindex="0" aria-checked="true" data-focus="UX Strategy" onclick="toggleFocusArea('UX Strategy')" onkeydown="handleFocusCardKeydown(event, 'UX Strategy')">
+                        <div class="focus-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
+                        <span class="focus-card-text">UX Strategy</span>
+                      </div>
+                      <div class="focus-card selected" role="checkbox" tabindex="0" aria-checked="true" data-focus="Information Architecture" onclick="toggleFocusArea('Information Architecture')" onkeydown="handleFocusCardKeydown(event, 'Information Architecture')">
+                        <div class="focus-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="4" rx="1"/><rect x="3" y="17" width="6" height="4" rx="1"/><rect x="15" y="17" width="6" height="4" rx="1"/><path d="M12 7v4M6 17v-3h12v3M12 11h-6M12 11h6"/></svg></div>
+                        <span class="focus-card-text">Information Architecture</span>
+                      </div>
+                      <div class="focus-card" role="checkbox" tabindex="0" aria-checked="false" data-focus="Wireframing" onclick="toggleFocusArea('Wireframing')" onkeydown="handleFocusCardKeydown(event, 'Wireframing')">
+                        <div class="focus-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="9" x2="9" y2="21"/></svg></div>
+                        <span class="focus-card-text">Wireframing</span>
+                      </div>
+                      <div class="focus-card" role="checkbox" tabindex="0" aria-checked="false" data-focus="Usability Testing" onclick="toggleFocusArea('Usability Testing')" onkeydown="handleFocusCardKeydown(event, 'Usability Testing')">
+                        <div class="focus-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+                        <span class="focus-card-text">Usability Testing</span>
+                      </div>
+                      <div class="focus-card" role="checkbox" tabindex="0" aria-checked="false" data-focus="Design Systems" onclick="toggleFocusArea('Design Systems')" onkeydown="handleFocusCardKeydown(event, 'Design Systems')">
+                        <div class="focus-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+                        <span class="focus-card-text">Design Systems</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Action Footer Row: Tip on Left + Auto-fill CTA on Right -->
+                <div class="role-action-footer">
+                  <div class="role-tip-badge">
+                    <span>💡</span>
+                    <span>Tip: You can update these later in your settings.</span>
+                  </div>
+                  <button type="button" class="btn-autofill" id="autofillBtn" onclick="handleAutoFillBrief()" aria-label="Auto-fill Interview Brief">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15">
+                      <path d="M12 2L14.4 8.6L21 11L14.4 13.4L12 20L9.6 13.4L3 11L9.6 8.6L12 2Z"/>
+                    </svg>
+                    <span>Auto-fill Interview Brief</span>
+                    <svg class="autofill-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="15" height="15">
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  </button>
                 </div>
               </div>
 
-              <div class="fgrid">
-                <div class="field">
-                  <label class="label" for="role">Role / position</label>
-                  <div class="control">
-                    <span class="lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <rect x="3" y="7" width="18" height="13" rx="2" />
-                        <path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" />
-                      </svg></span>
-                    <input class="input" id="role" value="UX Designer" placeholder="e.g. Senior UX Designer">
-                  </div>
+              <!-- SECTION 02: INTERVIEW CONTEXT -->
+              <div class="brief-section" id="sectionInterviewContext">
+                <div class="section-header">
+                  <div class="section-num-title">02 · INTERVIEW CONTEXT</div>
                 </div>
-                <div class="field">
-                  <label class="label" for="exp">Experience</label>
-                  <div class="control custom-select-wrap" id="expSelectWrap">
-                    <span class="lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <path d="M4 20V10M10 20V4M16 20v-8M22 20H2" />
-                      </svg></span>
-                    <select class="select" id="exp" style="display:none">
-                      <option value="Intern / Fresher">Intern / Fresher</option>
-                      <option value="1 Year">1 Year</option>
-                      <option value="2 Years">2 Years</option>
-                      <option value="3 Years">3 Years</option>
-                      <option value="5 Years" selected>5 Years</option>
-                      <option value="8+ Years">8+ Years</option>
-                    </select>
-                    <button type="button" class="custom-select-trigger" id="expTrigger" aria-haspopup="listbox"
-                      aria-expanded="false">
-                      <span class="c-val" id="expDisplayVal">5 Years</span>
-                      <span class="c-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                          <path d="M6 9l6 6 6-6" />
+                <div class="fgrid">
+                  <!-- Row 1: Role / Position + Experience -->
+                  <div class="field">
+                    <label class="label" for="role">ROLE / POSITION</label>
+                    <div class="control">
+                      <span class="lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <rect x="3" y="7" width="18" height="13" rx="2" />
+                          <path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" />
                         </svg></span>
-                    </button>
-                    <div class="custom-select-menu" id="expMenu" role="listbox">
-                      <div class="c-opt" role="option" data-val="Intern / Fresher">
-                        <div class="c-opt-info">
-                          <span class="c-opt-title">Intern / Fresher</span>
-                          <span class="c-opt-sub">Foundational concepts &amp; core principles</span>
-                        </div>
-                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5">
-                            <polyline points="20 6 9 17 4 12" />
+                      <input class="input" id="role" value="UX Designer" placeholder="e.g. Senior UX Designer">
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label class="label" for="exp">EXPERIENCE</label>
+                    <div class="control custom-select-wrap" id="expSelectWrap">
+                      <span class="lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <path d="M4 20V10M10 20V4M16 20v-8M22 20H2" />
+                        </svg></span>
+                      <select class="select" id="exp" style="display:none">
+                        <option value="Intern / Fresher">Intern / Fresher</option>
+                        <option value="1 Year">1 Year</option>
+                        <option value="2 Years">2 Years</option>
+                        <option value="3 Years">3 Years</option>
+                        <option value="5 Years" selected>5 Years</option>
+                        <option value="8+ Years">8+ Years</option>
+                      </select>
+                      <button type="button" class="custom-select-trigger" id="expTrigger" aria-haspopup="listbox"
+                        aria-expanded="false">
+                        <span class="c-val" id="expDisplayVal">5 Years</span>
+                        <span class="c-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M6 9l6 6 6-6" />
                           </svg></span>
+                      </button>
+                      <div class="custom-select-menu" id="expMenu" role="listbox">
+                        <div class="c-opt" role="option" data-val="Intern / Fresher">
+                          <div class="c-opt-info">
+                            <span class="c-opt-title">Intern / Fresher</span>
+                            <span class="c-opt-sub">Foundational concepts &amp; core principles</span>
+                          </div>
+                          <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                              stroke-width="2.5">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg></span>
+                        </div>
+                        <div class="c-opt" role="option" data-val="1 Year">
+                          <div class="c-opt-info">
+                            <span class="c-opt-title">1 Year</span>
+                            <span class="c-opt-sub">Junior level practical problem solving</span>
+                          </div>
+                          <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                              stroke-width="2.5">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg></span>
+                        </div>
+                        <div class="c-opt" role="option" data-val="2 Years">
+                          <div class="c-opt-info">
+                            <span class="c-opt-title">2 Years</span>
+                            <span class="c-opt-sub">Mid-level feature execution &amp; tooling</span>
+                          </div>
+                          <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                              stroke-width="2.5">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg></span>
+                        </div>
+                        <div class="c-opt" role="option" data-val="3 Years">
+                          <div class="c-opt-info">
+                            <span class="c-opt-title">3 Years</span>
+                            <span class="c-opt-sub">Solid autonomous engineering &amp; design</span>
+                          </div>
+                          <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                              stroke-width="2.5">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg></span>
+                        </div>
+                        <div class="c-opt selected" role="option" data-val="5 Years" aria-selected="true">
+                          <div class="c-opt-info">
+                            <span class="c-opt-title">5 Years</span>
+                            <span class="c-opt-sub">Senior architecture &amp; trade-off evaluation</span>
+                          </div>
+                          <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                              stroke-width="2.5">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg></span>
+                        </div>
+                        <div class="c-opt" role="option" data-val="8+ Years">
+                          <div class="c-opt-info">
+                            <span class="c-opt-title">8+ Years</span>
+                            <span class="c-opt-sub">Staff / Principal leadership &amp; systems scale</span>
+                          </div>
+                          <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                              stroke-width="2.5">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg></span>
+                        </div>
                       </div>
-                      <div class="c-opt" role="option" data-val="1 Year">
-                        <div class="c-opt-info">
-                          <span class="c-opt-title">1 Year</span>
-                          <span class="c-opt-sub">Junior level practical problem solving</span>
+                    </div>
+                  </div>
+
+                  <!-- Row 2: Target Company + Interview Format -->
+                  <div class="field">
+                    <label class="label" for="company">TARGET COMPANY</label>
+                    <div class="control custom-select-wrap" id="companySelectWrap">
+                      <span class="lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                          <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
+                        </svg></span>
+                      <select class="select" id="company" style="display:none">
+                        <option value="General Tech" selected>General Tech Unicorn</option>
+                        <option value="Google">Google (GCA &amp; RRK Rubric)</option>
+                        <option value="Amazon">Amazon (16 Leadership Principles)</option>
+                        <option value="Meta">Meta (Execution &amp; Scale Bar)</option>
+                        <option value="Microsoft">Microsoft (Systems &amp; Growth Mindset)</option>
+                        <option value="Apple">Apple (Hardware &amp; Precision)</option>
+                        <option value="Netflix">Netflix (Freedom &amp; Chaos)</option>
+                        <option value="OpenAI">OpenAI / Anthropic (AI Architecture)</option>
+                        <option value="Stripe">Stripe (API &amp; Rigorous Code)</option>
+                      </select>
+                      <button type="button" class="custom-select-trigger" id="companyTrigger" aria-haspopup="listbox" aria-expanded="false">
+                        <span class="c-val" id="companyDisplayVal">General Tech Unicorn</span>
+                        <span class="c-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></span>
+                      </button>
+                      <div class="custom-select-menu" id="companyMenu" role="listbox">
+                        <div class="c-opt selected" role="option" data-val="General Tech" aria-selected="true">
+                          <div class="c-opt-info"><span class="c-opt-title">General Tech Unicorn</span><span class="c-opt-sub">Standard modern industry assessment</span></div>
+                          <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
                         </div>
-                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg></span>
+                        <div class="c-opt" role="option" data-val="Google">
+                          <div class="c-opt-info"><span class="c-opt-title">Google (GCA &amp; RRK)</span><span class="c-opt-sub">General Cognitive Ability &amp; Googleyness</span></div>
+                          <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+                        </div>
+                        <div class="c-opt" role="option" data-val="Amazon">
+                          <div class="c-opt-info"><span class="c-opt-title">Amazon (16 LPs)</span><span class="c-opt-sub">Deep behavioral STAR &amp; Customer Obsession</span></div>
+                          <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+                        </div>
+                        <div class="c-opt" role="option" data-val="Meta">
+                          <div class="c-opt-info"><span class="c-opt-title">Meta (Execution &amp; Scale)</span><span class="c-opt-sub">Fast problem solving &amp; architecture</span></div>
+                          <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+                        </div>
+                        <div class="c-opt" role="option" data-val="Microsoft">
+                          <div class="c-opt-info"><span class="c-opt-title">Microsoft (Systems)</span><span class="c-opt-sub">Growth mindset &amp; enterprise scale</span></div>
+                          <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+                        </div>
+                        <div class="c-opt" role="option" data-val="Netflix">
+                          <div class="c-opt-info"><span class="c-opt-title">Netflix (Freedom &amp; Chaos)</span><span class="c-opt-sub">Extreme ownership &amp; chaos engineering</span></div>
+                          <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+                        </div>
+                        <div class="c-opt" role="option" data-val="OpenAI">
+                          <div class="c-opt-info"><span class="c-opt-title">OpenAI / Anthropic</span><span class="c-opt-sub">RAG, LLM inference &amp; model alignment</span></div>
+                          <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+                        </div>
+                        <div class="c-opt" role="option" data-val="Stripe">
+                          <div class="c-opt-info"><span class="c-opt-title">Stripe (API &amp; Rigor)</span><span class="c-opt-sub">Idempotency &amp; distributed transactions</span></div>
+                          <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+                        </div>
                       </div>
-                      <div class="c-opt" role="option" data-val="2 Years">
-                        <div class="c-opt-info">
-                          <span class="c-opt-title">2 Years</span>
-                          <span class="c-opt-sub">Mid-level feature execution &amp; tooling</span>
+                    </div>
+                  </div>
+
+                  <div class="field">
+                    <label class="label" for="interviewType">INTERVIEW ROUND / FORMAT</label>
+                    <div class="control custom-select-wrap" id="typeSelectWrap">
+                      <span class="lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                          <polyline points="2 17 12 22 22 17"/>
+                          <polyline points="2 12 12 17 22 12"/>
+                        </svg></span>
+                      <select class="select" id="interviewType" style="display:none">
+                        <option value="Technical &amp; Architecture" selected>Technical &amp; Architecture</option>
+                        <option value="System Design &amp; Scale">System Design &amp; Scale</option>
+                        <option value="STAR Behavioral &amp; Leadership">STAR Behavioral &amp; Leadership</option>
+                        <option value="Coding &amp; Algorithms">Coding &amp; Algorithms</option>
+                        <option value="Full Mixed Round">Full Mixed Round (Comprehensive)</option>
+                      </select>
+                      <button type="button" class="custom-select-trigger" id="typeTrigger" aria-haspopup="listbox" aria-expanded="false">
+                        <span class="c-val" id="typeDisplayVal">Technical &amp; Architecture</span>
+                        <span class="c-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></span>
+                      </button>
+                      <div class="custom-select-menu" id="typeMenu" role="listbox">
+                        <div class="c-opt selected" role="option" data-val="Technical &amp; Architecture" aria-selected="true">
+                          <div class="c-opt-info"><span class="c-opt-title">Technical &amp; Architecture</span><span class="c-opt-sub">Deep domain, concurrency &amp; trade-offs</span></div>
+                          <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
                         </div>
-                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg></span>
-                      </div>
-                      <div class="c-opt" role="option" data-val="3 Years">
-                        <div class="c-opt-info">
-                          <span class="c-opt-title">3 Years</span>
-                          <span class="c-opt-sub">Solid autonomous engineering &amp; design</span>
+                        <div class="c-opt" role="option" data-val="System Design &amp; Scale">
+                          <div class="c-opt-info"><span class="c-opt-title">System Design &amp; Scale</span><span class="c-opt-sub">High throughput, partitioning &amp; latency</span></div>
+                          <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
                         </div>
-                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg></span>
-                      </div>
-                      <div class="c-opt selected" role="option" data-val="5 Years" aria-selected="true">
-                        <div class="c-opt-info">
-                          <span class="c-opt-title">5 Years</span>
-                          <span class="c-opt-sub">Senior architecture &amp; trade-off evaluation</span>
+                        <div class="c-opt" role="option" data-val="STAR Behavioral &amp; Leadership">
+                          <div class="c-opt-info"><span class="c-opt-title">STAR Behavioral &amp; Leadership</span><span class="c-opt-sub">Situation, Task, Action, Metric Result</span></div>
+                          <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
                         </div>
-                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg></span>
-                      </div>
-                      <div class="c-opt" role="option" data-val="8+ Years">
-                        <div class="c-opt-info">
-                          <span class="c-opt-title">8+ Years</span>
-                          <span class="c-opt-sub">Staff / Principal leadership &amp; systems scale</span>
+                        <div class="c-opt" role="option" data-val="Coding &amp; Algorithms">
+                          <div class="c-opt-info"><span class="c-opt-title">Coding &amp; Algorithms</span><span class="c-opt-sub">Data structures &amp; time complexity</span></div>
+                          <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
                         </div>
-                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg></span>
+                        <div class="c-opt" role="option" data-val="Full Mixed Round">
+                          <div class="c-opt-info"><span class="c-opt-title">Full Mixed Round</span><span class="c-opt-sub">Comprehensive multi-stage assessment</span></div>
+                          <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
+              </div>
 
-                <!-- TARGET COMPANY BAR -->
-                <div class="field">
-                  <label class="label" for="company">Target Company Bar</label>
-                  <div class="control custom-select-wrap" id="companySelectWrap">
-                    <span class="lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-                        <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
-                      </svg></span>
-                    <select class="select" id="company" style="display:none">
-                      <option value="General Tech" selected>General Tech Unicorn</option>
-                      <option value="Google">Google (GCA &amp; RRK Rubric)</option>
-                      <option value="Amazon">Amazon (16 Leadership Principles)</option>
-                      <option value="Meta">Meta (Execution &amp; Scale Bar)</option>
-                      <option value="Microsoft">Microsoft (Systems &amp; Growth Mindset)</option>
-                      <option value="Apple">Apple (Hardware &amp; Precision)</option>
-                      <option value="Netflix">Netflix (Freedom &amp; Chaos)</option>
-                      <option value="OpenAI">OpenAI / Anthropic (AI Architecture)</option>
-                      <option value="Stripe">Stripe (API &amp; Rigorous Code)</option>
-                    </select>
-                    <button type="button" class="custom-select-trigger" id="companyTrigger" aria-haspopup="listbox" aria-expanded="false">
-                      <span class="c-val" id="companyDisplayVal">General Tech Unicorn</span>
-                      <span class="c-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></span>
-                    </button>
-                    <div class="custom-select-menu" id="companyMenu" role="listbox">
-                      <div class="c-opt selected" role="option" data-val="General Tech" aria-selected="true">
-                        <div class="c-opt-info"><span class="c-opt-title">General Tech Unicorn</span><span class="c-opt-sub">Standard modern industry assessment</span></div>
-                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
-                      </div>
-                      <div class="c-opt" role="option" data-val="Google">
-                        <div class="c-opt-info"><span class="c-opt-title">Google (GCA &amp; RRK)</span><span class="c-opt-sub">General Cognitive Ability &amp; Googleyness</span></div>
-                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
-                      </div>
-                      <div class="c-opt" role="option" data-val="Amazon">
-                        <div class="c-opt-info"><span class="c-opt-title">Amazon (16 LPs)</span><span class="c-opt-sub">Deep behavioral STAR &amp; Customer Obsession</span></div>
-                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
-                      </div>
-                      <div class="c-opt" role="option" data-val="Meta">
-                        <div class="c-opt-info"><span class="c-opt-title">Meta (Execution &amp; Scale)</span><span class="c-opt-sub">Fast problem solving &amp; architecture</span></div>
-                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
-                      </div>
-                      <div class="c-opt" role="option" data-val="Microsoft">
-                        <div class="c-opt-info"><span class="c-opt-title">Microsoft (Systems)</span><span class="c-opt-sub">Growth mindset &amp; enterprise scale</span></div>
-                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
-                      </div>
-                      <div class="c-opt" role="option" data-val="Netflix">
-                        <div class="c-opt-info"><span class="c-opt-title">Netflix (Freedom &amp; Chaos)</span><span class="c-opt-sub">Extreme ownership &amp; chaos engineering</span></div>
-                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
-                      </div>
-                      <div class="c-opt" role="option" data-val="OpenAI">
-                        <div class="c-opt-info"><span class="c-opt-title">OpenAI / Anthropic</span><span class="c-opt-sub">RAG, LLM inference &amp; model alignment</span></div>
-                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
-                      </div>
-                      <div class="c-opt" role="option" data-val="Stripe">
-                        <div class="c-opt-info"><span class="c-opt-title">Stripe (API &amp; Rigor)</span><span class="c-opt-sub">Idempotency &amp; distributed transactions</span></div>
-                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
-                      </div>
-                    </div>
-                  </div>
+              <!-- SECTION 03: SKILLS & STACK -->
+              <div class="brief-section" id="sectionSkillsStack">
+                <div class="section-header">
+                  <div class="section-num-title">03 · SKILLS &amp; STACK</div>
+                  <div class="section-desc">Add the key skills and tools relevant to this role</div>
                 </div>
-
-                <!-- INTERVIEW ROUND / FORMAT -->
-                <div class="field">
-                  <label class="label" for="interviewType">Interview Round / Format</label>
-                  <div class="control custom-select-wrap" id="typeSelectWrap">
-                    <span class="lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <polygon points="12 2 2 7 12 12 22 7 12 2"/>
-                        <polyline points="2 17 12 22 22 17"/>
-                        <polyline points="2 12 12 17 22 12"/>
-                      </svg></span>
-                    <select class="select" id="interviewType" style="display:none">
-                      <option value="Technical &amp; Architecture" selected>Technical &amp; Architecture</option>
-                      <option value="System Design &amp; Scale">System Design &amp; Scale</option>
-                      <option value="STAR Behavioral &amp; Leadership">STAR Behavioral &amp; Leadership</option>
-                      <option value="Coding &amp; Algorithms">Coding &amp; Algorithms</option>
-                      <option value="Full Mixed Round">Full Mixed Round (Comprehensive)</option>
-                    </select>
-                    <button type="button" class="custom-select-trigger" id="typeTrigger" aria-haspopup="listbox" aria-expanded="false">
-                      <span class="c-val" id="typeDisplayVal">Technical &amp; Architecture</span>
-                      <span class="c-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></span>
-                    </button>
-                    <div class="custom-select-menu" id="typeMenu" role="listbox">
-                      <div class="c-opt selected" role="option" data-val="Technical &amp; Architecture" aria-selected="true">
-                        <div class="c-opt-info"><span class="c-opt-title">Technical &amp; Architecture</span><span class="c-opt-sub">Deep domain, concurrency &amp; trade-offs</span></div>
-                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
-                      </div>
-                      <div class="c-opt" role="option" data-val="System Design &amp; Scale">
-                        <div class="c-opt-info"><span class="c-opt-title">System Design &amp; Scale</span><span class="c-opt-sub">High throughput, partitioning &amp; latency</span></div>
-                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
-                      </div>
-                      <div class="c-opt" role="option" data-val="STAR Behavioral &amp; Leadership">
-                        <div class="c-opt-info"><span class="c-opt-title">STAR Behavioral &amp; Leadership</span><span class="c-opt-sub">Situation, Task, Action, Metric Result</span></div>
-                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
-                      </div>
-                      <div class="c-opt" role="option" data-val="Coding &amp; Algorithms">
-                        <div class="c-opt-info"><span class="c-opt-title">Coding &amp; Algorithms</span><span class="c-opt-sub">Data structures &amp; time complexity</span></div>
-                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
-                      </div>
-                      <div class="c-opt" role="option" data-val="Full Mixed Round">
-                        <div class="c-opt-info"><span class="c-opt-title">Full Mixed Round</span><span class="c-opt-sub">Comprehensive multi-stage assessment</span></div>
-                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
                 <div class="field full">
-                  <label class="label">Skills &amp; stack <span
-                      style="color:var(--ink-faint);text-transform:none;letter-spacing:0;font-family:var(--f-ui)">— type
-                      and press enter</span></label>
                   <div class="control">
                     <span class="lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path d="M8 9l-4 3 4 3M16 9l4 3-4 3M13 6l-2 12" />
                       </svg></span>
                     <div class="tagbox" id="tagbox">
-                      <input id="tagInput" placeholder="Add a skill…">
+                      <input id="tagInput" placeholder="Add a skill and press Enter">
                     </div>
-                  </div>
-                </div>
-
-                <!-- SPECIFIC FOCUS QUESTION / SEED TOPIC FIELD -->
-                <div class="field full" style="margin-top:4px">
-                  <div style="display:flex;justify-content:space-between;align-items:center">
-                    <label class="label" for="customQuestion">
-                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"
-                        stroke-width="2.2">
-                        <circle cx="12" cy="12" r="10" />
-                        <path d="M12 16v-4M12 8h.01" />
-                      </svg>
-                      Specific Focus Question / Seed Topic (Optional)
-                    </label>
-                    <span style="font-size:11px;font-family:var(--f-mono);color:var(--pen);font-weight:600">Generates
-                      related deep-dive questions</span>
-                  </div>
-                  <div class="control">
-                    <span class="lead" style="top:18px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <circle cx="11" cy="11" r="8" />
-                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                      </svg></span>
-                    <textarea class="input" id="customQuestion" rows="2"
-                      style="padding:10px 14px 10px 40px;height:auto;resize:vertical;min-height:48px;font-family:var(--f-ui);font-size:13.5px;line-height:1.45"
-                      placeholder="e.g. How do you design, prototype, and usability-test a multi-step checkout experience in Figma?"></textarea>
-                  </div>
-                  <!-- INSPIRATION PILLS -->
-                  <div class="seed-section">
-                    <div class="seed-label">Quick Seed:</div>
-                    <div class="seed-pills">
-                      <button type="button" class="seed-pill"
-                        onclick="setSeedTopic('How do you structure design tokens and variable modes in Figma for multi-brand design systems?')">Figma
-                        Design Tokens</button>
-                      <button type="button" class="seed-pill"
-                        onclick="setSeedTopic('How do you conduct unmoderated usability testing on an interactive Figma prototype to reduce cart abandonment?')">Usability
-                        Testing Case</button>
-                      <button type="button" class="seed-pill"
-                        onclick="setSeedTopic('How do you balance WCAG 2.2 AAA accessibility contrast with modern dark mode aesthetic guidelines?')">Accessibility
-                        &amp; WCAG</button>
-                      <button type="button" class="seed-pill"
-                        onclick="setSeedTopic('How do you facilitate a design critique when engineering and PM have conflicting performance vs UX trade-offs?')">Stakeholder
-                        Trade-offs</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="field">
-                  <label class="label" for="diff">Difficulty</label>
-                  <div class="control custom-select-wrap" id="diffSelectWrap">
-                    <span class="lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <path d="M12 3l3 6 6 .5-4.5 4L18 20l-6-3.3L6 20l1.5-6.5L3 9.5 9 9z" />
-                      </svg></span>
-                    <select class="select" id="diff" style="display:none">
-                      <option value="Warm-up">Warm-up</option>
-                      <option value="Medium">Medium</option>
-                      <option value="Hard" selected>Hard</option>
-                      <option value="Brutal">Brutal</option>
-                    </select>
-                    <button type="button" class="custom-select-trigger" id="diffTrigger" aria-haspopup="listbox"
-                      aria-expanded="false">
-                      <span class="c-val" id="diffDisplayVal">Hard</span>
-                      <span class="c-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                          <path d="M6 9l6 6 6-6" />
-                        </svg></span>
-                    </button>
-                    <div class="custom-select-menu" id="diffMenu" role="listbox">
-                      <div class="c-opt" role="option" data-val="Warm-up">
-                        <div class="c-opt-info">
-                          <span class="c-opt-title">Warm-up</span>
-                          <span class="c-opt-sub">Fundamentals &amp; conceptual refresher</span>
-                        </div>
-                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg></span>
-                      </div>
-                      <div class="c-opt" role="option" data-val="Medium">
-                        <div class="c-opt-info">
-                          <span class="c-opt-title">Medium</span>
-                          <span class="c-opt-sub">Standard production scenarios &amp; edge cases</span>
-                        </div>
-                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg></span>
-                      </div>
-                      <div class="c-opt selected" role="option" data-val="Hard" aria-selected="true">
-                        <div class="c-opt-info">
-                          <span class="c-opt-title">Hard</span>
-                          <span class="c-opt-sub">Surgical trade-offs, architecture &amp; failure modes</span>
-                        </div>
-                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg></span>
-                      </div>
-                      <div class="c-opt" role="option" data-val="Brutal">
-                        <div class="c-opt-info">
-                          <span class="c-opt-title">Brutal</span>
-                          <span class="c-opt-sub">FAANG Staff-level high pressure grill questions</span>
-                        </div>
-                        <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg></span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="field">
-                  <label class="label">Questions</label>
-                  <div class="count-row">
-                    <span class="num" id="countNum">10</span>
-                    <div class="stepper">
-                      <button id="minus" aria-label="Fewer">−</button>
-                      <button id="plus" aria-label="More">+</button>
-                    </div>
-                    <input class="range" id="range" type="range" min="3" max="20" value="10">
                   </div>
                 </div>
               </div>
 
-              <button class="generate" id="genBtn">
-                <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                  <line x1="16" y1="13" x2="8" y2="13" />
-                  <line x1="16" y1="17" x2="8" y2="17" />
-                </svg>
-                Compose question paper
-              </button>
+              <!-- SECTION 04: AI FOCUS -->
+              <div class="brief-section" id="sectionAiFocus">
+                <div class="section-header">
+                  <div class="section-num-title">04 · AI FOCUS</div>
+                </div>
+                <div class="ai-focus-group">
+                  <!-- Specific Focus Question -->
+                  <div class="field full">
+                    <div class="field-head-row">
+                      <label class="label" for="customQuestion">
+                        SPECIFIC FOCUS QUESTION / SEED TOPIC (OPTIONAL)
+                      </label>
+                      <span class="action-hint">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L14.4 8.6L21 11L14.4 13.4L12 20L9.6 13.4L3 11L9.6 8.6L12 2Z"/></svg>
+                        Generates related deep-dive questions
+                      </span>
+                    </div>
+                    <div class="control">
+                      <span class="lead" style="top:18px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <circle cx="11" cy="11" r="8" />
+                          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg></span>
+                      <textarea class="input" id="customQuestion" rows="2"
+                        style="padding:10px 14px 10px 40px;height:auto;resize:vertical;min-height:48px;font-family:var(--f-ui);font-size:13.5px;line-height:1.45"
+                        placeholder="e.g. How do you design, prototype, and usability-test a multi-step checkout experience in Figma?"></textarea>
+                    </div>
+                  </div>
+
+                  <!-- Quick Seed -->
+                  <div class="field full">
+                    <div class="field-head-row">
+                      <label class="label">QUICK SEED (OPTIONAL)</label>
+                      <span class="field-sub-desc">Add any notes, context, or areas you want to focus on</span>
+                    </div>
+                    <div class="seed-section">
+                      <div class="seed-pills">
+                        <button type="button" class="seed-pill"
+                          onclick="setSeedTopic('How do you structure design tokens and variable modes in Figma for multi-brand design systems?')">Figma Design Tokens</button>
+                        <button type="button" class="seed-pill"
+                          onclick="setSeedTopic('How do you conduct unmoderated usability testing on an interactive Figma prototype to reduce cart abandonment?')">Usability Testing Case</button>
+                        <button type="button" class="seed-pill"
+                          onclick="setSeedTopic('How do you balance WCAG 2.2 AAA accessibility contrast with modern dark mode aesthetic guidelines?')">Accessibility &amp; WCAG</button>
+                        <button type="button" class="seed-pill"
+                          onclick="setSeedTopic('How do you facilitate a design critique when engineering and PM have conflicting performance vs UX trade-offs?')">Stakeholder Trade-offs</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- SECTION 05: EXAM CONFIGURATION -->
+              <div class="brief-section brief-config-section">
+                <div class="section-header">
+                  <div class="section-num-title">05 · EXAM CONFIGURATION</div>
+                </div>
+                <div class="fgrid">
+                  <div class="field">
+                    <label class="label" for="diff">DIFFICULTY</label>
+                    <div class="control custom-select-wrap dropup" id="diffSelectWrap">
+                      <span class="lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <path d="M12 3l3 6 6 .5-4.5 4L18 20l-6-3.3L6 20l1.5-6.5L3 9.5 9 9z" />
+                        </svg></span>
+                      <select class="select" id="diff" style="display:none">
+                        <option value="Warm-up">Warm-up</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Hard" selected>Hard</option>
+                        <option value="Brutal">Brutal</option>
+                      </select>
+                      <button type="button" class="custom-select-trigger" id="diffTrigger" aria-haspopup="listbox"
+                        aria-expanded="false">
+                        <span class="c-val" id="diffDisplayVal">Hard</span>
+                        <span class="c-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M6 9l6 6 6-6" />
+                          </svg></span>
+                      </button>
+                      <div class="custom-select-menu" id="diffMenu" role="listbox">
+                        <div class="c-opt" role="option" data-val="Warm-up">
+                          <div class="c-opt-info">
+                            <span class="c-opt-title">Warm-up</span>
+                            <span class="c-opt-sub">Fundamentals &amp; conceptual refresher</span>
+                          </div>
+                          <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                              stroke-width="2.5">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg></span>
+                        </div>
+                        <div class="c-opt" role="option" data-val="Medium">
+                          <div class="c-opt-info">
+                            <span class="c-opt-title">Medium</span>
+                            <span class="c-opt-sub">Standard production scenarios &amp; edge cases</span>
+                          </div>
+                          <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                              stroke-width="2.5">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg></span>
+                        </div>
+                        <div class="c-opt selected" role="option" data-val="Hard" aria-selected="true">
+                          <div class="c-opt-info">
+                            <span class="c-opt-title">Hard</span>
+                            <span class="c-opt-sub">Surgical trade-offs, architecture &amp; failure modes</span>
+                          </div>
+                          <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                              stroke-width="2.5">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg></span>
+                        </div>
+                        <div class="c-opt" role="option" data-val="Brutal">
+                          <div class="c-opt-info">
+                            <span class="c-opt-title">Brutal</span>
+                            <span class="c-opt-sub">FAANG Staff-level high pressure grill questions</span>
+                          </div>
+                          <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                              stroke-width="2.5">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg></span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="field">
+                    <label class="label">QUESTIONS</label>
+                    <div class="count-row">
+                      <span class="num" id="countNum">10</span>
+                      <div class="stepper">
+                        <button id="minus" aria-label="Fewer">−</button>
+                        <button id="plus" aria-label="More">+</button>
+                      </div>
+                      <input class="range" id="range" type="range" min="3" max="20" value="10">
+                    </div>
+                  </div>
+                </div>
+
+                <button class="generate" id="genBtn" style="margin-top:10px">
+                  <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                  </svg>
+                  Compose question paper
+                </button>
+              </div>
             </div>
           </div>
 
@@ -3146,7 +4072,6 @@
 
             <div class="sheet" id="sheet">
               <div class="sheet-head">
-                <div class="sheet-stamp">For practice</div>
                 <div class="sheet-title" id="sheetTitle">UX Designer</div>
                 <div class="sheet-meta" id="sheetMeta">
                   <span>Level <b>Hard</b></span>
@@ -3168,9 +4093,14 @@
         <div class="studio-side-col">
           <!-- TIPS -->
           <aside class="card tips">
-            <div class="th"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M9 18h6M10 21h4M12 3a6 6 0 013.5 10.9c-.6.5-1 1.2-1 2H9.5c0-.8-.4-1.5-1-2A6 6 0 0112 3z" />
-              </svg> Sharper briefs, sharper questions</div>
+            <div class="th">
+              <span class="th-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M9 18h6M10 21h4M12 3a6 6 0 013.5 10.9c-.6.5-1 1.2-1 2H9.5c0-.8-.4-1.5-1-2A6 6 0 0112 3z" />
+                </svg>
+              </span>
+              <span class="th-text">Sharper briefs, sharper questions</span>
+            </div>
             <div class="thh">Marker's notes</div>
             <div class="tip"><span class="tn">01</span>
               <p>Provide a <b>specific seed question</b> above to generate deep-dive related questions.</p>
@@ -3193,13 +4123,16 @@
                   <circle cx="12" cy="12" r="9" />
                   <path d="M12 7v5l3 2" />
                 </svg></span>
-              <span class="ct">Recent papers</span>
+              <span class="ct">Recent Papers</span>
+            </div>
             <div class="hist" id="hist">
               <!-- Dynamically populated from backend /history -->
             </div>
           </aside>
+        </div>
+      </div>
 
-      <div class="foot">© 2026 Ravi GenAI Studio — built for the hot seat.</div>
+      <div class="foot">© 2026 RaviGen AI Interview Studio — built for the hot seat.</div>
     </main>
   </div>
 
@@ -3417,6 +4350,16 @@
       toastT = setTimeout(() => t.classList.remove('show'), 2400);
     }
 
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
     /* ---------- Professional Custom Select Dropdowns Controller ---------- */
     function initCustomDropdowns() {
       document.querySelectorAll('.custom-select-wrap').forEach(wrap => {
@@ -3438,6 +4381,16 @@
               w.querySelector('.custom-select-trigger')?.setAttribute('aria-expanded', 'false');
             }
           });
+
+          // Check if should open upward (dropup)
+          const rect = wrap.getBoundingClientRect();
+          const spaceBelow = window.innerHeight - rect.bottom;
+          if (wrap.id === 'diffSelectWrap' || wrap.classList.contains('dropup') || spaceBelow < 250) {
+            wrap.classList.add('dropup');
+          } else {
+            wrap.classList.remove('dropup');
+          }
+
           wrap.classList.toggle('open', !isOpen);
           trigger.setAttribute('aria-expanded', !isOpen ? 'true' : 'false');
         });
@@ -3981,62 +4934,401 @@
 
     const API_BASE = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') || window.location.protocol === 'file:' ? 'http://127.0.0.1:8000' : '';
 
-    function applyPreset(type) {
-      if (type === 'ux') {
-        $('#role').value = 'UX Designer';
-        $('#exp').value = '5 Years';
-        $('#diff').value = 'Hard';
-        if ($('#company')) $('#company').value = 'Google';
-        if ($('#interviewType')) $('#interviewType').value = 'Technical & Architecture';
-        skills = ['User Research', 'Usability Testing', 'Information Architecture', 'Wireframes', 'Figma', 'Design Systems', 'WCAG 2.2'];
-        $('#customQuestion').value = 'How do you conduct usability testing on a Figma prototype for an e-commerce checkout flow?';
-      } else if (type === 'product') {
-        $('#role').value = 'Product Designer';
-        $('#exp').value = '5 Years';
-        $('#diff').value = 'Hard';
-        if ($('#company')) $('#company').value = 'Amazon';
-        if ($('#interviewType')) $('#interviewType').value = 'STAR Behavioral & Leadership';
-        skills = ['Product Thinking', 'UX Strategy', 'Product Metrics', 'User Research', 'Design Systems', 'PM Collaboration'];
-        $('#customQuestion').value = 'How do you balance business conversion goals with user friction in a subscription upgrade flow?';
-      } else if (type === 'uiux') {
-        $('#role').value = 'UI/UX Designer';
-        $('#exp').value = '5 Years';
-        $('#diff').value = 'Hard';
-        if ($('#company')) $('#company').value = 'Meta';
-        if ($('#interviewType')) $('#interviewType').value = 'Technical & Architecture';
-        skills = ['Visual Hierarchy', 'Micro-interactions', 'Design Tokens', 'Figma Auto Layout', 'Responsive Grids', 'Component States'];
-        $('#customQuestion').value = 'How do you build a responsive design system in Figma using tokens and variable modes?';
-      } else if (type === 'frontend') {
-        $('#role').value = 'Frontend Developer';
-        $('#exp').value = '5 Years';
-        $('#diff').value = 'Hard';
-        if ($('#company')) $('#company').value = 'Meta';
-        if ($('#interviewType')) $('#interviewType').value = 'Technical & Architecture';
-        skills = ['HTML5', 'CSS3', 'JavaScript ESNext', 'React 19', 'Next.js', 'Performance', 'a11y', 'State Management'];
-        $('#customQuestion').value = 'How do you optimize Core Web Vitals (LCP, INP, CLS) in a large-scale React/Next.js application?';
-      } else if (type === 'backend') {
-        $('#role').value = 'Backend Developer';
-        $('#exp').value = '5 Years';
-        $('#diff').value = 'Hard';
-        if ($('#company')) $('#company').value = 'Google';
-        if ($('#interviewType')) $('#interviewType').value = 'System Design & Scale';
-        skills = ['Python', 'FastAPI', 'PostgreSQL', 'Redis', 'System Design', 'Distributed Systems', 'JWT Auth', 'Microservices'];
-        $('#customQuestion').value = 'How do you design a high-throughput, idempotent payment webhook processing service in FastAPI and PostgreSQL?';
-      } else if (type === 'genai') {
-        $('#role').value = 'GenAI Engineer';
-        $('#exp').value = '5 Years';
-        $('#diff').value = 'Hard';
-        if ($('#company')) $('#company').value = 'OpenAI';
-        if ($('#interviewType')) $('#interviewType').value = 'Technical & Architecture';
-        skills = ['LLMs', 'RAG Architecture', 'Vector Databases', 'Embeddings', 'LangGraph Agents', 'Hallucination Evaluation', 'Prompt Engineering'];
-        $('#customQuestion').value = 'How do you architect a multi-tenant enterprise RAG pipeline with hybrid search and strict document access control?';
+    /* ==========================================================================
+       01 · ROLE PRESETS COMPONENT DATA & RENDER CONTROLLER
+       ========================================================================== */
+    function getFocusIconSvg(iconType) {
+      switch (iconType) {
+        case 'user-search':
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7"/><path d="M21 21l-6-6"/><circle cx="10" cy="9" r="2.5"/><path d="M6 14a4 4 0 0 1 8 0"/></svg>`;
+        case 'target':
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`;
+        case 'tree':
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="4" rx="1"/><rect x="3" y="17" width="6" height="4" rx="1"/><rect x="15" y="17" width="6" height="4" rx="1"/><path d="M12 7v4M6 17v-3h12v3M12 11h-6M12 11h6"/></svg>`;
+        case 'layout':
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="9" x2="9" y2="21"/></svg>`;
+        case 'users':
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
+        case 'layers':
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>`;
+        case 'palette':
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.6-.7 1.6-1.7 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.7-1.7 1.7-1.7h2c3 0 5.6-2.5 5.6-5.6C22 6.5 17.5 2 12 2z"/></svg>`;
+        case 'sparkle':
+        default:
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L14.4 8.6L21 11L14.4 13.4L12 20L9.6 13.4L3 11L9.6 8.6L12 2Z"/></svg>`;
       }
+    }
+
+    const ROLE_PRESETS_DATA = {
+      ux: {
+        id: "ux",
+        title: "UX Designer",
+        bg: "#E6F7F0",
+        color: "#059669",
+        iconSvg: `<svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+          <path d="M2 22h20M2 22l18-18M2 22V4a2 2 0 0 1 2-2h1m11 0h4a2 2 0 0 1 2 2v1"/>
+          <path d="M7 17l2-2M10 14l2-2M13 11l2-2M16 8l2-2"/>
+        </svg>`,
+        keywordsLine1: "Research • UX Strategy •",
+        keywordsLine2: "User Experience",
+        defaultRoleInput: "UX Designer",
+        defaultExp: "5 Years",
+        defaultDiff: "Hard",
+        defaultCompany: "Google",
+        defaultType: "Technical & Architecture",
+        defaultPrompt: "How do you conduct usability testing on a Figma prototype for an e-commerce checkout flow?",
+        focusAreas: [
+          { name: "User Research", icon: "user-search" },
+          { name: "UX Strategy", icon: "target" },
+          { name: "Information Architecture", icon: "tree" },
+          { name: "Wireframing", icon: "layout" },
+          { name: "Usability Testing", icon: "users" },
+          { name: "Design Systems", icon: "layers" }
+        ],
+        defaultSelectedFocus: ["User Research", "UX Strategy", "Information Architecture"]
+      },
+      product: {
+        id: "product",
+        title: "Product Designer",
+        bg: "#EFF6FF",
+        color: "#2563EB",
+        iconSvg: `<svg viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+          <polygon points="6 3 18 3 22 9 12 22 2 9 6 3"/>
+          <line x1="2" y1="9" x2="22" y2="9"/>
+          <line x1="12" y1="22" x2="8" y2="9"/>
+          <line x1="12" y1="22" x2="16" y2="9"/>
+          <line x1="6" y1="3" x2="10" y2="9"/>
+          <line x1="18" y1="3" x2="14" y2="9"/>
+        </svg>`,
+        keywordsLine1: "Product Thinking • Strategy •",
+        keywordsLine2: "Design Systems",
+        defaultRoleInput: "Product Designer",
+        defaultExp: "5 Years",
+        defaultDiff: "Hard",
+        defaultCompany: "Amazon",
+        defaultType: "STAR Behavioral & Leadership",
+        defaultPrompt: "How do you balance business conversion goals with user friction in a subscription upgrade flow?",
+        focusAreas: [
+          { name: "Product Strategy", icon: "target" },
+          { name: "UX Research", icon: "user-search" },
+          { name: "Interaction Design", icon: "layout" },
+          { name: "Design Systems", icon: "layers" },
+          { name: "Stakeholder Management", icon: "users" },
+          { name: "AI Products", icon: "sparkle" }
+        ],
+        defaultSelectedFocus: ["Product Strategy", "UX Research", "Interaction Design"]
+      },
+      uiux: {
+        id: "uiux",
+        title: "UI/UX Designer",
+        bg: "#FFF1F2",
+        color: "#EA580C",
+        iconSvg: `<svg viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+          <circle cx="13.5" cy="6.5" r=".5" fill="#EA580C"/>
+          <circle cx="17.5" cy="10.5" r=".5" fill="#EA580C"/>
+          <circle cx="8.5" cy="7.5" r=".5" fill="#EA580C"/>
+          <circle cx="6.5" cy="12.5" r=".5" fill="#EA580C"/>
+          <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.563-2.512 5.563-5.563C22 6.5 17.5 2 12 2z"/>
+        </svg>`,
+        keywordsLine1: "UI Design • Visual Design •",
+        keywordsLine2: "Interaction Design",
+        defaultRoleInput: "UI/UX Designer",
+        defaultExp: "5 Years",
+        defaultDiff: "Hard",
+        defaultCompany: "Meta",
+        defaultType: "Technical & Architecture",
+        defaultPrompt: "How do you build a responsive design system in Figma using tokens and variable modes?",
+        focusAreas: [
+          { name: "Visual Design", icon: "palette" },
+          { name: "Interaction Design", icon: "layout" },
+          { name: "Design Systems", icon: "layers" },
+          { name: "Prototyping", icon: "tree" },
+          { name: "Accessibility", icon: "users" },
+          { name: "Usability", icon: "user-search" }
+        ],
+        defaultSelectedFocus: ["Visual Design", "Interaction Design", "Design Systems"]
+      },
+      frontend: {
+        id: "frontend",
+        title: "Frontend Developer",
+        bg: "#F5F3FF",
+        color: "#7C3AED",
+        iconSvg: `<svg viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+          <line x1="8" y1="21" x2="16" y2="21"/>
+          <line x1="12" y1="17" x2="12" y2="21"/>
+          <polyline points="7 8 5 10 7 12"/>
+          <polyline points="17 8 19 10 17 12"/>
+          <line x1="13" y1="7" x2="11" y2="13"/>
+        </svg>`,
+        keywordsLine1: "React • JavaScript •",
+        keywordsLine2: "UI Development",
+        defaultRoleInput: "Frontend Developer",
+        defaultExp: "5 Years",
+        defaultDiff: "Hard",
+        defaultCompany: "Meta",
+        defaultType: "Technical & Architecture",
+        defaultPrompt: "How do you optimize Core Web Vitals (LCP, INP, CLS) in a large-scale React/Next.js application?",
+        focusAreas: [
+          { name: "React", icon: "layout" },
+          { name: "JavaScript", icon: "tree" },
+          { name: "HTML/CSS", icon: "palette" },
+          { name: "Performance", icon: "target" },
+          { name: "Accessibility", icon: "users" },
+          { name: "Frontend Architecture", icon: "layers" }
+        ],
+        defaultSelectedFocus: ["React", "JavaScript", "Frontend Architecture"]
+      },
+      backend: {
+        id: "backend",
+        title: "Backend Developer",
+        bg: "#FEF3C7",
+        color: "#D97706",
+        iconSvg: `<svg viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+          <ellipse cx="12" cy="5" rx="9" ry="3"/>
+          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+        </svg>`,
+        keywordsLine1: "APIs • Databases •",
+        keywordsLine2: "Server Logic",
+        defaultRoleInput: "Backend Developer",
+        defaultExp: "5 Years",
+        defaultDiff: "Hard",
+        defaultCompany: "Google",
+        defaultType: "System Design & Scale",
+        defaultPrompt: "How do you design a high-throughput, idempotent payment webhook processing service in FastAPI and PostgreSQL?",
+        focusAreas: [
+          { name: "APIs", icon: "layout" },
+          { name: "Databases", icon: "layers" },
+          { name: "System Design", icon: "tree" },
+          { name: "Authentication", icon: "users" },
+          { name: "Backend Architecture", icon: "target" },
+          { name: "Performance", icon: "sparkle" }
+        ],
+        defaultSelectedFocus: ["APIs", "Databases", "System Design"]
+      },
+      genai: {
+        id: "genai",
+        title: "GenAI Engineer",
+        bg: "#F3E8FF",
+        color: "#9333EA",
+        iconSvg: `<svg viewBox="0 0 24 24" fill="none" stroke="#9333EA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+          <rect x="3" y="11" width="18" height="10" rx="2"/>
+          <circle cx="12" cy="5" r="2"/>
+          <path d="M12 7v4"/>
+          <line x1="8" y1="16" x2="8.01" y2="16" stroke-width="3"/>
+          <line x1="16" y1="16" x2="16.01" y2="16" stroke-width="3"/>
+          <path d="M9 19h6"/>
+        </svg>`,
+        keywordsLine1: "LLMs • RAG • Agents •",
+        keywordsLine2: "Prompt Engineering",
+        defaultRoleInput: "GenAI Engineer",
+        defaultExp: "5 Years",
+        defaultDiff: "Hard",
+        defaultCompany: "OpenAI",
+        defaultType: "Technical & Architecture",
+        defaultPrompt: "How do you architect a multi-tenant enterprise RAG pipeline with hybrid search and strict document access control?",
+        focusAreas: [
+          { name: "LLMs", icon: "sparkle" },
+          { name: "Prompt Engineering", icon: "target" },
+          { name: "RAG", icon: "layers" },
+          { name: "AI Agents", icon: "users" },
+          { name: "Vector Databases", icon: "tree" },
+          { name: "LLM Evaluation", icon: "user-search" }
+        ],
+        defaultSelectedFocus: ["LLMs", "Prompt Engineering", "RAG"]
+      }
+    };
+
+    let selectedRoleId = "ux";
+    let selectedFocusAreas = new Set(["User Research", "UX Strategy", "Information Architecture"]);
+
+    function renderRoleCards() {
+      const grid = document.getElementById("roleCardsGrid");
+      if (!grid) return;
+
+      const roles = Object.values(ROLE_PRESETS_DATA);
+      grid.innerHTML = roles.map(role => {
+        const isSelected = role.id === selectedRoleId;
+        return `
+          <div class="role-card ${isSelected ? 'selected' : ''}"
+               role="radio"
+               tabindex="0"
+               aria-checked="${isSelected ? 'true' : 'false'}"
+               data-role="${role.id}"
+               onclick="selectRole('${role.id}')"
+               onkeydown="handleRoleCardKeydown(event, '${role.id}')">
+            <div class="role-avatar-wrap" style="background:${role.bg}">
+              ${role.iconSvg}
+            </div>
+            <div class="role-info-wrap">
+              <div class="role-card-name">${role.title}</div>
+              <div class="role-card-keywords">
+                <div>${role.keywordsLine1}</div>
+                <div>${role.keywordsLine2}</div>
+              </div>
+            </div>
+            <div class="role-check-badge">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderRoleSelectedSummary() {
+      const container = document.getElementById("roleSelectedSummary");
+      if (!container) return;
+
+      const role = ROLE_PRESETS_DATA[selectedRoleId] || ROLE_PRESETS_DATA.ux;
+      container.innerHTML = `
+        <div class="role-selected-avatar" style="background:${role.bg}">
+          ${role.iconSvg}
+        </div>
+        <div class="role-selected-overline">SELECTED ROLE</div>
+        <div class="role-selected-title">${role.title}</div>
+        <div class="role-selected-desc">We'll customize your interview experience to match ${role.title} expectations.</div>
+      `;
+    }
+
+    function renderFocusCards() {
+      const grid = document.getElementById("focusCardsGrid");
+      if (!grid) return;
+
+      const currentRole = ROLE_PRESETS_DATA[selectedRoleId];
+      if (!currentRole) {
+        grid.innerHTML = `<div style="grid-column:1/-1;font-size:13.5px;color:var(--ink-soft);padding:8px 0;">Please select a primary role above.</div>`;
+        return;
+      }
+
+      grid.innerHTML = currentRole.focusAreas.map(item => {
+        const areaName = typeof item === 'object' ? item.name : item;
+        const iconType = typeof item === 'object' ? item.icon : 'sparkle';
+        const isChecked = selectedFocusAreas.has(areaName);
+        return `
+          <div class="focus-card ${isChecked ? 'selected' : ''}"
+               role="checkbox"
+               tabindex="0"
+               aria-checked="${isChecked ? 'true' : 'false'}"
+               data-focus="${escapeHtml(areaName)}"
+               onclick="toggleFocusArea('${escapeHtml(areaName)}')"
+               onkeydown="handleFocusCardKeydown(event, '${escapeHtml(areaName)}')">
+            <div class="focus-card-icon">
+              ${getFocusIconSvg(iconType)}
+            </div>
+            <span class="focus-card-text">${escapeHtml(areaName)}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectRole(roleId, isFromAuto = false) {
+      if (!ROLE_PRESETS_DATA[roleId]) return;
+      selectedRoleId = roleId;
+      const roleData = ROLE_PRESETS_DATA[roleId];
+
+      // Automatically populate default recommended focus areas for new role
+      selectedFocusAreas = new Set(roleData.defaultSelectedFocus || roleData.focusAreas.map(f => f.name).slice(0, 3));
+
+      renderRoleCards();
+      renderRoleSelectedSummary();
+      renderFocusCards();
+
+      if (!isFromAuto) {
+        toast(`Selected ${roleData.title}`);
+      }
+    }
+
+    function toggleFocusArea(area) {
+      if (selectedFocusAreas.has(area)) {
+        selectedFocusAreas.delete(area);
+      } else {
+        selectedFocusAreas.add(area);
+      }
+      renderFocusCards();
+    }
+
+    function handleRoleCardKeydown(e, roleId) {
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        selectRole(roleId);
+      } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        const keys = Object.keys(ROLE_PRESETS_DATA);
+        const nextIdx = (keys.indexOf(roleId) + 1) % keys.length;
+        selectRole(keys[nextIdx]);
+        document.querySelector(`.role-card[data-role="${keys[nextIdx]}"]`)?.focus();
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const keys = Object.keys(ROLE_PRESETS_DATA);
+        const prevIdx = (keys.indexOf(roleId) - 1 + keys.length) % keys.length;
+        selectRole(keys[prevIdx]);
+        document.querySelector(`.role-card[data-role="${keys[prevIdx]}"]`)?.focus();
+      }
+    }
+
+    function handleFocusCardKeydown(e, area) {
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        toggleFocusArea(area);
+      }
+    }
+
+    function handleAutoFillBrief() {
+      if (!selectedRoleId || !ROLE_PRESETS_DATA[selectedRoleId]) {
+        toast('Please select a primary role first');
+        return;
+      }
+
+      const role = ROLE_PRESETS_DATA[selectedRoleId];
+      const selectedFocus = Array.from(selectedFocusAreas);
+
+      // 1. Populate Target Role
+      $('#role').value = role.title;
+
+      // 2. Populate Skills Stack with selected focus areas
+      if (selectedFocus.length > 0) {
+        skills = [...selectedFocus];
+      } else {
+        skills = role.focusAreas.map(f => f.name).slice(0, 4);
+      }
+      renderTags();
+
+      // 3. Set suitable defaults
+      if ($('#exp')) $('#exp').value = role.defaultExp || '5 Years';
+      if ($('#diff')) $('#diff').value = role.defaultDiff || 'Hard';
+      if ($('#company')) $('#company').value = role.defaultCompany || 'General Tech';
+      if ($('#interviewType')) $('#interviewType').value = role.defaultType || 'Technical & Architecture';
+
+      // 4. Update custom prompt/focus question
+      if ($('#customQuestion')) {
+        $('#customQuestion').value = role.defaultPrompt || '';
+      }
+
+      // 5. Sync custom dropdown controls
       syncCustomSelect('exp');
       syncCustomSelect('diff');
       syncCustomSelect('company');
       syncCustomSelect('interviewType');
-      renderTags();
-      toast(`Applied ${$('#role').value} preset`);
+
+      // 6. Provide user feedback and smooth scroll
+      toast(`✓ Auto-filled brief for ${role.title}!`);
+
+      const targetEl = document.getElementById('sectionInterviewContext');
+      if (targetEl) {
+        targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        targetEl.style.transition = 'box-shadow 0.3s ease';
+        targetEl.style.boxShadow = '0 0 0 2px rgba(16, 185, 129, 0.4)';
+        setTimeout(() => { targetEl.style.boxShadow = 'none'; }, 1200);
+      }
+    }
+
+    // Backward compatibility wrapper
+    function applyPreset(type) {
+      selectRole(type, true);
+      handleAutoFillBrief();
     }
 
     function renderSkeletonLoading(n = 5) {
@@ -4498,11 +5790,158 @@
       toast('All questions copied to clipboard');
     };
 
-    $('#exportBtn').onclick = () => {
-      if (!currentQs.length) { toast('Compose a paper first'); return }
-      toast('Opening print dialog…');
-      setTimeout(() => window.print(), 400);
-    };
+    function exportQuestionsOnlyPDF() {
+      if (!currentQs.length) {
+        toast('Generate questions first');
+        return;
+      }
+
+      const role = $("#role").value.trim() || $("#sheetTitle").textContent || "Interview Question Paper";
+      const qs = getCleanQuestionsArray();
+      const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+      // Open clean isolated print window with ONLY the generated questions
+      const printWindow = window.open('', '_blank', 'width=880,height=960');
+      if (!printWindow) {
+        toast('Opening print dialog…');
+        window.print();
+        return;
+      }
+
+      const questionsHtml = qs.map((q, idx) => `
+        <div class="q-row">
+          <div class="q-num">Q${idx + 1}.</div>
+          <div class="q-text">${escapeHtml(q)}</div>
+        </div>
+      `).join('');
+
+      const docHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>${escapeHtml(role)} - Question Paper</title>
+          <link rel="preconnect" href="https://fonts.googleapis.com">
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+          <style>
+            @page {
+              size: A4 portrait;
+              margin: 18mm 16mm 18mm 16mm;
+            }
+            * { box-sizing: border-box; margin: 0; padding: 0; }
+            body {
+              font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+              color: #0F172A;
+              background: #FFFFFF;
+              font-size: 14.5px;
+              line-height: 1.65;
+              padding: 24px;
+            }
+            .header {
+              border-bottom: 2.5px solid #0F172A;
+              padding-bottom: 14px;
+              margin-bottom: 26px;
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-end;
+            }
+            .brand-title {
+              font-size: 20px;
+              font-weight: 800;
+              color: #0F172A;
+              letter-spacing: -0.02em;
+            }
+            .brand-title span {
+              color: #059669;
+            }
+            .role-title {
+              font-size: 16px;
+              font-weight: 700;
+              color: #334155;
+              margin-top: 4px;
+            }
+            .date-meta {
+              font-family: 'JetBrains Mono', monospace;
+              font-size: 11px;
+              color: #64748B;
+              font-weight: 600;
+              text-align: right;
+            }
+            .questions-container {
+              display: flex;
+              flex-direction: column;
+              gap: 20px;
+            }
+            .q-row {
+              display: flex;
+              align-items: flex-start;
+              gap: 12px;
+              page-break-inside: avoid;
+              padding-bottom: 18px;
+              border-bottom: 1px solid #E2E8F0;
+            }
+            .q-num {
+              font-family: 'JetBrains Mono', monospace;
+              font-size: 13px;
+              font-weight: 800;
+              color: #059669;
+              background: #ECFDF5;
+              padding: 3px 8px;
+              border-radius: 6px;
+              flex-shrink: 0;
+              border: 1px solid rgba(16, 185, 129, 0.25);
+            }
+            .q-text {
+              font-size: 15px;
+              font-weight: 600;
+              color: #0F172A;
+              line-height: 1.6;
+              flex: 1;
+            }
+            @media print {
+              body { padding: 0; }
+            }
+          <div class="candidate-fields" style="display: flex; gap: 32px; margin-bottom: 20px; font-size: 13px; color: #475569;">
+            <div class="c-field"><b>Candidate Name:</b> ___________________________</div>
+            <div class="c-field"><b>Interviewer:</b> ___________________________</div>
+          </div>
+
+          <div class="questions-container">
+            ${questionsHtml}
+          </div>
+
+          <div class="footer" style="margin-top: 32px; padding-top: 14px; border-top: 1px solid #E2E8F0; display: flex; justify-content: space-between; font-size: 11px; color: #94A3B8; font-family: 'JetBrains Mono', monospace;">
+            <div>RaviGen AI — Interview Studio</div>
+            <div>Confidential Interview Assessment Material</div>
+          </div>
+
+          <scr` + `ipt>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+              }, 300);
+            };
+          <\/scr` + `ipt>
+        </body>
+        </html>
+      `;
+
+      printWindow.document.open();
+      printWindow.document.write(docHtml);
+      printWindow.document.close();
+      toast('Generating Question-Only PDF… 📄');
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    $('#exportBtn').onclick = exportQuestionsOnlyPDF;
 
     /* ---------- question package builders & sharing ---------- */
     function getCleanQuestionsArray() {
@@ -4917,6 +6356,9 @@
     }
 
     // Initialize on page load
+    renderRoleCards();
+    renderRoleSelectedSummary();
+    renderFocusCards();
     const loadedFromUrl = initFromUrlParams();
     if (!loadedFromUrl) {
       currentQs = pickQuestions(skills, 10, 'Senior UX Designer');

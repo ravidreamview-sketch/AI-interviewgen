@@ -9,57 +9,65 @@
 <!-- Supabase Realtime Client CDN -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600;700&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
 
 :root {
-  --paper: #F8FAFC;
+  --paper: #F4F7F6;
   --paper-2: #FFFFFF;
   --sheet: #FFFFFF;
   --ink: #0F172A;
   --ink-soft: #475569;
   --ink-faint: #94A3B8;
-  --board: #0B0F19;
-  --board-2: #1E1B4B;
+  --board: #0A1926;
+  --board-2: #0D2130;
   --board-ink: #F8FAFC;
-  --primary: #4F46E5;
-  --primary-grad: linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);
-  --pen: #4F46E5;
-  --pen-soft: #6366F1;
-  --pen-wash: #EEF2FF;
-  --label-color: #2563EB;
+  --primary: #10B981;
+  --primary-dark: #059669;
+  --primary-forest: #166534;
+  --primary-blue: #3B82F6;
+  --primary-grad: linear-gradient(135deg, #166534 0%, #15803D 50%, #16A34A 100%);
+  --emerald-grad: linear-gradient(135deg, #059669 0%, #10B981 50%, #34D399 100%);
+  --pen: #10B981;
+  --pen-soft: #34D399;
+  --pen-wash: #ECFDF5;
+  --label-color: #10B981;
   --rule: #E2E8F0;
-  --rule-soft: #F1F5F9;
+  --rule-soft: #EDF2F0;
   --gold: #F59E0B;
   --pass: #10B981;
   --pass-wash: #ECFDF5;
-  --shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
+  --shadow: 0 4px 20px -2px rgba(10, 25, 38, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
   --radius: 16px;
-  --f-disp: "Roboto", system-ui, -apple-system, sans-serif;
-  --f-ui: "Roboto", system-ui, -apple-system, sans-serif;
-  --f-mono: "Roboto Mono", ui-monospace, monospace;
+  --f-disp: "Inter", system-ui, -apple-system, sans-serif;
+  --f-ui: "Inter", system-ui, -apple-system, sans-serif;
+  --f-mono: "JetBrains Mono", "Inter", ui-monospace, monospace;
 }
 
 [data-theme="dark"] {
-  --paper: #0B0F19;
-  --paper-2: #111827;
-  --sheet: #131D33;
+  --paper: #08141E;
+  --paper-2: #0D2130;
+  --sheet: #112B3E;
   --ink: #F8FAFC;
   --ink-soft: #94A3B8;
   --ink-faint: #64748B;
-  --board: #070A10;
-  --board-2: #1E1B4B;
+  --board: #050D14;
+  --board-2: #0A1926;
   --board-ink: #F8FAFC;
-  --primary: #6366F1;
-  --primary-grad: linear-gradient(135deg, #3B82F6 0%, #6366F1 50%, #8B5CF6 100%);
-  --pen: #818CF8;
-  --pen-soft: #A5B4FC;
-  --pen-wash: rgba(99, 102, 241, 0.15);
-  --label-color: #60A5FA;
-  --rule: #1E293B;
-  --rule-soft: #182234;
+  --primary: #34D399;
+  --primary-dark: #10B981;
+  --primary-forest: #15803D;
+  --primary-blue: #60A5FA;
+  --primary-grad: linear-gradient(135deg, #15803D 0%, #16A34A 50%, #22C55E 100%);
+  --emerald-grad: linear-gradient(135deg, #10B981 0%, #34D399 50%, #6EE7B7 100%);
+  --pen: #34D399;
+  --pen-soft: #6EE7B7;
+  --pen-wash: rgba(16, 185, 129, 0.15);
+  --label-color: #34D399;
+  --rule: #1A364E;
+  --rule-soft: #132738;
   --gold: #FBBF24;
   --pass: #34D399;
-  --pass-wash: rgba(16, 185, 129, 0.15);
+  --pass-wash: rgba(16, 185, 129, 0.18);
   --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
 }
 
@@ -84,13 +92,13 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
 
 /* sidebar */
 .sidebar {
-  flex: 0 0 280px;
-  width: 280px;
+  flex: 0 0 285px;
+  width: 285px;
   background: var(--board);
   color: var(--board-ink);
   display: flex;
   flex-direction: column;
-  padding: 22px 16px;
+  padding: 22px 14px;
   gap: 14px;
   position: sticky;
   top: 0;
@@ -104,43 +112,119 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
 .sidebar::-webkit-scrollbar { width: 4px; }
 .sidebar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 4px; }
 
-.brand { display: flex; align-items: center; gap: 12px; padding: 4px 8px 8px; }
+.brand { display: flex; align-items: center; gap: 12px; padding: 4px 8px 12px; margin-bottom: 8px; }
 .brand .brand-logo {
   width: 44px; height: 44px; border-radius: 50%; flex: none;
-  object-fit: cover; box-shadow: 0 0 18px rgba(59, 130, 246, 0.45);
-  border: 1.5px solid rgba(99, 102, 241, 0.6); background: #0B0F19;
+  object-fit: cover; box-shadow: 0 0 18px rgba(56, 189, 248, 0.45), 0 0 10px rgba(129, 140, 248, 0.4);
+  border: 1.5px solid rgba(56, 189, 248, 0.6); background: #0B0F19;
+  transition: transform .2s ease, box-shadow .2s ease;
 }
-.brand .word { font-weight: 700; font-size: 20px; letter-spacing: -.02em; line-height: 1.1; color: #FFFFFF; }
+.brand .brand-logo:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 24px rgba(56, 189, 248, 0.7);
+}
+.brand .word { font-weight: 800; font-size: 20px; letter-spacing: -.02em; line-height: 1.15; color: #FFFFFF; white-space: nowrap; }
+.brand .word .brand-name { color: #38BDF8; }
+.brand .word .brand-ai {
+  background: linear-gradient(135deg, #818CF8 0%, #C084FC 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
 .brand .brand-grad {
   background: linear-gradient(135deg, #38BDF8 0%, #818CF8 50%, #C084FC 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
-.brand .sub { font-family: var(--f-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #94A3B8; margin-top: 2px; font-weight: 600; }
+.brand .sub { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: #94A3B8; margin-top: 3px; font-weight: 700; white-space: nowrap; }
 
-.side-label { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: #64748B; padding: 4px 10px 0; margin-bottom: -6px; font-weight: 600; }
+.side-label { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: #64748B; padding: 4px 10px 0; margin-bottom: -6px; font-weight: 600; white-space: nowrap; }
 .nav { display: flex; flex-direction: column; gap: 3px; }
 .nav-link {
-  display: flex; align-items: center; gap: 12px;
-  padding: 10px 14px; border-radius: 12px;
-  color: #94A3B8; font-weight: 500; font-size: 14px;
+  display: flex; align-items: center; gap: 10px;
+  padding: 9.5px 12px; border-radius: 12px;
+  color: #94A3B8; font-weight: 500; font-size: 13.5px;
   position: relative; transition: all .2s ease;
+  white-space: nowrap;
 }
+.nav-link span { white-space: nowrap; }
 .nav-link svg { width: 18px; height: 18px; flex: none; stroke-width: 1.8; }
 .nav-link:hover { background: rgba(255, 255, 255, 0.06); color: #F8FAFC; }
 .nav-link.active {
-  background: linear-gradient(135deg, #1E40AF 0%, #4F46E5 50%, #7C3AED 100%);
-  color: #FFFFFF; box-shadow: 0 4px 16px rgba(79, 70, 229, 0.4); font-weight: 600;
+  background: linear-gradient(135deg, #059669 0%, #10B981 60%, #34D399 100%);
+  color: #FFFFFF; box-shadow: 0 4px 18px rgba(16, 185, 129, 0.45); font-weight: 700;
+  border: 1px solid rgba(52, 211, 153, 0.4);
 }
+.nav-link.active svg { color: #FFFFFF; }
 .nav-badge {
-  margin-left: auto; font-family: var(--f-mono); font-size: 9.5px; font-weight: 700;
-  letter-spacing: .04em; padding: 2.5px 7px; border-radius: 6px;
+  margin-left: auto; font-family: var(--f-mono); font-size: 9px; font-weight: 700;
+  letter-spacing: .04em; padding: 2.5px 6.5px; border-radius: 6px;
   background: rgba(255, 255, 255, 0.12); color: #FFFFFF;
+  flex-shrink: 0; white-space: nowrap;
 }
-.nav-badge.new { background: #8B5CF6; }
-.nav-badge.pro { background: linear-gradient(135deg, #F59E0B, #D97706); }
+.nav-badge.new { background: #10B981; }
+.nav-badge.pro { background: linear-gradient(135deg, #059669, #10B981); }
 
-.side-foot { margin-top: auto; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.07); }
+.side-foot { margin-top: auto; padding-top: 14px; display: flex; flex-direction: column; gap: 12px; }
+
+.upgrade-card {
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.12) 0%, #0A1926 60%, #0D2A3D 100%);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  border-radius: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  position: relative;
+  overflow: hidden;
+}
+
+.upgrade-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, #10B981, #34D399, #6EE7B7);
+}
+
+.upgrade-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(52, 211, 153, 0.8);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+}
+
+.upgrade-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  color: #FFFFFF;
+}
+
+.upgrade-top .crown-icon {
+  color: #FBBF24;
+  font-size: 15px;
+  filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.5));
+}
+
+.upgrade-top .chevron {
+  margin-left: auto;
+  color: #34D399;
+  display: flex;
+  align-items: center;
+  transition: transform 0.2s;
+}
+
+.upgrade-card:hover .chevron {
+  transform: translateX(3px);
+}
+
+.upgrade-desc {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #94A3B8;
+}
+
 .user { display: flex; align-items: center; gap: 11px; padding: 6px 8px; border-radius: 10px; }
 .user .av { width: 36px; height: 36px; border-radius: 50%; background: #4F46E5; flex: none; object-fit: cover; }
 .user .nm { font-weight: 600; font-size: 13.5px; color: #F8FAFC; line-height: 1.2; }
@@ -153,7 +237,7 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
 
 .topbar {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 20px 0 16px; border-bottom: 1px solid var(--rule-soft); margin-bottom: 24px;
+  padding: 20px 0 16px; border-bottom: 1px solid var(--rule); margin-bottom: 24px;
 }
 .crumb { font-family: var(--f-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-faint); font-weight: 700; }
 .top-actions { display: flex; align-items: center; gap: 10px; }
@@ -275,39 +359,507 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
   gap: 8px;
   margin-bottom: 14px;
 }
-.role-preset-chip {
-  font-family: var(--f-ui);
+
+/* ==========================================================================
+   01 · ROLE PRESETS COMPONENT (Pixel-Perfect to Design Mockup)
+   ========================================================================== */
+.role-presets-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.role-section-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.role-header-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.role-num-badge {
+  background: #059669;
+  color: #FFFFFF;
   font-size: 12.5px;
-  font-weight: 600;
-  padding: 6px 12px;
-  border-radius: 9px;
-  border: 1px solid var(--rule);
-  background: var(--paper);
-  color: var(--ink-soft);
-  cursor: pointer;
+  font-weight: 800;
+  border-radius: 6px;
+  padding: 3px 8px;
+  line-height: 1;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  transition: all .18s ease;
-  user-select: none;
+  justify-content: center;
 }
-.role-preset-chip:hover {
-  border-color: var(--pen);
-  color: var(--pen);
-  background: var(--pen-wash);
+
+.role-header-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink, #111827);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.role-header-desc {
+  font-size: 13.5px;
+  color: var(--ink-soft, #6B7280);
+  font-weight: 400;
+}
+
+/* 6 Role Cards Grid */
+.role-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .role-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .role-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.role-card {
+  background: var(--paper, #FFFFFF);
+  border: 1px solid var(--rule, #E5E7EB);
+  border-radius: 14px;
+  padding: 16px 18px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  user-select: none;
+  min-height: 94px;
+}
+
+.role-card:hover {
+  border-color: #10B981;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.1);
+}
+
+.role-card:focus-visible {
+  outline: 2px solid #10B981;
+  outline-offset: 2px;
+}
+
+.role-card.selected,
+.role-card[aria-checked="true"] {
+  border: 2px solid #10B981 !important;
+  background: var(--paper, #FFFFFF);
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.16);
+}
+
+[data-theme="dark"] .role-card {
+  background: #1E293B;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .role-card.selected,
+[data-theme="dark"] .role-card[aria-checked="true"] {
+  border: 2px solid #10B981 !important;
+  background: rgba(16, 185, 129, 0.1) !important;
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);
+}
+
+.role-avatar-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.role-card:hover .role-avatar-wrap {
+  transform: scale(1.06);
+}
+
+.role-info-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.role-card-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink, #111827);
+  line-height: 1.25;
+}
+
+.role-card.selected .role-card-name {
+  color: #059669;
+}
+
+[data-theme="dark"] .role-card.selected .role-card-name {
+  color: #34D399;
+}
+
+.role-card-keywords {
+  font-size: 12px;
+  color: var(--ink-soft, #6B7280);
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+.role-check-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #10B981;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4);
+  animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.role-card.selected .role-check-badge,
+.role-card[aria-checked="true"] .role-check-badge {
+  display: flex;
+}
+
+.role-check-badge svg {
+  width: 12px;
+  height: 12px;
+  stroke: #FFFFFF;
+  stroke-width: 3;
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Sub-banner: We'll tailor your interview questions... */
+.role-tailor-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #F0FDF4;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-size: 13.5px;
+  color: #374151;
+  line-height: 1.4;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+[data-theme="dark"] .role-tailor-banner {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(52, 211, 153, 0.22);
+  color: #D1FAE5;
+}
+
+.role-tailor-banner .banner-sparkle {
+  color: #059669;
+  font-size: 16px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+[data-theme="dark"] .role-tailor-banner .banner-sparkle {
+  color: #34D399;
+}
+
+/* Downward connector chevron */
+.role-connector-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 2px 0;
+}
+
+.role-connector-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #ECFDF5;
+  border: 1px solid #D1FAE5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #059669;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+
+[data-theme="dark"] .role-connector-circle {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(52, 211, 153, 0.3);
+  color: #34D399;
+}
+
+.role-connector-circle svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.5;
+}
+
+/* Bottom Focus Section (Split Panel) */
+.role-focus-split {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+  padding-top: 6px;
+}
+
+@media (max-width: 860px) {
+  .role-focus-split {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+}
+
+.role-selected-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 12px;
+  border-right: 1px solid var(--rule-soft, #F1F5F9);
+}
+
+@media (max-width: 860px) {
+  .role-selected-card {
+    border-right: none;
+    border-bottom: 1px solid var(--rule-soft, #F1F5F9);
+    padding-bottom: 16px;
+  }
+}
+
+.role-selected-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2px;
+}
+
+.role-selected-overline {
+  font-size: 11px;
+  font-weight: 800;
+  color: #059669;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+[data-theme="dark"] .role-selected-overline {
+  color: #34D399;
+}
+
+.role-selected-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink, #111827);
+  line-height: 1.2;
+}
+
+.role-selected-desc {
+  font-size: 13px;
+  color: var(--ink-soft, #6B7280);
+  line-height: 1.45;
+}
+
+.focus-panel-right {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.focus-panel-heading {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink, #111827);
+}
+
+.focus-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .focus-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 550px) {
+  .focus-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.focus-card {
+  background: var(--paper, #FFFFFF);
+  border: 1px solid var(--rule, #E5E7EB);
+  border-radius: 10px;
+  padding: 11px 13px;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  user-select: none;
+  min-height: 44px;
+}
+
+[data-theme="dark"] .focus-card {
+  background: #1E293B;
+  border-color: #334155;
+}
+
+.focus-card:hover {
+  border-color: #10B981;
+  background: var(--pen-wash, #F0FDF4);
   transform: translateY(-1px);
 }
-.role-preset-chip.active {
-  border-color: #4F46E5;
-  background: #EEF2FF;
-  color: #4F46E5;
-  font-weight: 700;
-  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.15);
+
+.focus-card:focus-visible {
+  outline: 2px solid #10B981;
+  outline-offset: 2px;
 }
-[data-theme="dark"] .role-preset-chip.active {
-  background: rgba(99, 102, 241, 0.2);
-  color: #A5B4FC;
-  border-color: #818CF8;
+
+.focus-card.selected,
+.focus-card[aria-checked="true"] {
+  border: 1.5px solid #10B981 !important;
+  background: #ECFDF5 !important;
+}
+
+[data-theme="dark"] .focus-card.selected,
+[data-theme="dark"] .focus-card[aria-checked="true"] {
+  border: 1.5px solid #10B981 !important;
+  background: rgba(16, 185, 129, 0.15) !important;
+}
+
+.focus-card-icon {
+  width: 18px;
+  height: 18px;
+  color: #059669;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .focus-card-icon {
+  color: #34D399;
+}
+
+.focus-card-icon svg {
+  width: 17px;
+  height: 17px;
+  stroke: currentColor;
+}
+
+.focus-card-text {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink, #111827);
+  line-height: 1.25;
+}
+
+.focus-card.selected .focus-card-text,
+.focus-card[aria-checked="true"] .focus-card-text {
+  color: #059669;
+}
+
+[data-theme="dark"] .focus-card.selected .focus-card-text,
+[data-theme="dark"] .focus-card[aria-checked="true"] .focus-card-text {
+  color: #34D399;
+}
+
+/* Bottom Action Footer Row */
+.role-action-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.role-tip-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--paper-2, #F9FAFB);
+  border: 1px solid var(--rule, #E5E7EB);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 12.5px;
+  color: var(--ink-soft, #6B7280);
+  line-height: 1.3;
+}
+
+[data-theme="dark"] .role-tip-badge {
+  background: #1E293B;
+  border-color: #334155;
+  color: #94A3B8;
+}
+
+.btn-autofill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-radius: 10px;
+  background: #059669;
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 14px;
+  border: none;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  min-height: 42px;
+}
+
+.btn-autofill:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
+  background: #047857;
+}
+
+.btn-autofill:active {
+  transform: translateY(0);
+}
+
+.btn-autofill svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s ease;
+}
+
+.btn-autofill:hover .autofill-arrow {
+  transform: translateX(3px);
 }
 
 .skills-tags-wrap {
@@ -645,10 +1197,10 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
 
 .start-btn {
   width: 100%;
-  padding: 16px;
-  border-radius: 12px;
-  border: none;
-  background: linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);
+  padding: 16px 24px;
+  border-radius: 14px;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  background: linear-gradient(135deg, #166534 0%, #15803D 50%, #16A34A 100%);
   color: #FFFFFF;
   font-weight: 700;
   font-size: 16px;
@@ -656,12 +1208,16 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
   align-items: center;
   justify-content: center;
   gap: 10px;
-  box-shadow: 0 8px 24px -4px rgba(79, 70, 229, 0.45);
+  box-shadow: 0 8px 24px -4px rgba(22, 163, 74, 0.45), 0 4px 14px -2px rgba(16, 185, 129, 0.35);
   cursor: pointer;
-  transition: all .2s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.start-btn:hover { filter: brightness(1.08); box-shadow: 0 14px 28px -4px rgba(79, 70, 229, 0.55); }
-.start-btn:active { transform: translateY(1px); }
+.start-btn:hover {
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px -4px rgba(22, 163, 74, 0.55), 0 6px 18px -2px rgba(16, 185, 129, 0.45);
+}
+.start-btn:active { transform: translateY(0); }
 
 /* ================== STAGE 2: LIVE VOICE ROOM ================== */
 .live-container { max-width: 920px; margin: 20px auto; text-align: center; }
@@ -854,13 +1410,13 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
 
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
-    <div class="brand">
-      <img class="brand-logo" src="logo.png" alt="Ravi GenAI Studio Logo">
-      <div>
-        <div class="word"><span class="brand-grad">RaviGenAI</span></div>
-        <div class="sub">STUDIO</div>
+      <div class="brand">
+        <img class="brand-logo" src="logo.png" alt="RaviGen AI Logo" onerror="this.onerror=null;this.src='logo.png';">
+        <div>
+          <div class="word"><span class="brand-name">RaviGen</span> <span class="brand-ai">AI</span></div>
+          <div class="sub">INTERVIEW STUDIO</div>
+        </div>
       </div>
-    </div>
     <div class="side-label">WORKSPACE</div>
     <nav class="nav">
       <a class="nav-link" href="Dashboard.html">
@@ -904,6 +1460,16 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
     </nav>
 
     <div class="side-foot">
+      <div class="upgrade-card" onclick="location.href='Upgrade-pro.html'" role="button" tabindex="0" aria-label="Go Pro Upgrade">
+        <div class="upgrade-top">
+          <span class="crown-icon">👑</span>
+          <span>Go Pro Plan</span>
+          <span class="chevron">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+          </span>
+        </div>
+        <p class="upgrade-desc">Unlock unlimited Gemini 2.5 Flash generations &amp; live voice mock tests.</p>
+      </div>
       <div class="user">
         <img class="av" alt="Ravi Chandran" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><rect width='40' height='40' fill='%234F46E5'/><circle cx='20' cy='15' r='8' fill='%23FFFFFF'/><path d='M6 38c0-8 6-13 14-13s14 5 14 13z' fill='%23FFFFFF'/></svg>">
         <div>
@@ -969,29 +1535,173 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
             </div>
           </div>
 
-          <!-- SECTION 2: INTERVIEW BRIEF & FOCUS AREA -->
-          <div class="card">
-            <div class="card-title">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-              2. Interview Brief &amp; Focus Area
+          <!-- SECTION 2: ROLE PRESETS & FOCUS AREA -->
+          <div class="card" id="sectionMockRolePresets">
+            <div class="role-section-header" style="margin-bottom:14px">
+              <div class="role-header-top">
+                <span class="role-num-badge">01</span>
+                <span class="role-header-title">ROLE PRESETS</span>
+              </div>
+              <div class="role-header-desc">Choose a role preset to auto-fill the brief</div>
             </div>
 
-            <!-- ROLE QUICK PRESETS -->
-            <div style="margin-bottom:14px">
-              <div style="font-family:var(--f-mono);font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--label-color);margin-bottom:8px">
-                POPULAR ROLE PRESETS:
+            <!-- 6 Role Cards Grid -->
+            <div class="role-cards-grid" id="mockRoleCardsGrid" role="radiogroup" aria-label="Role Presets">
+              <div class="role-card selected" role="radio" tabindex="0" aria-checked="true" data-role="ux" onclick="selectMockRole('ux')">
+                <div class="role-avatar-wrap" style="background:#E6F7F0">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M2 22h20M2 22l18-18M2 22V4a2 2 0 0 1 2-2h1m11 0h4a2 2 0 0 1 2 2v1"/><path d="M7 17l2-2M10 14l2-2M13 11l2-2M16 8l2-2"/></svg>
+                </div>
+                <div class="role-info-wrap">
+                  <div class="role-card-name">UX Designer</div>
+                  <div class="role-card-keywords">
+                    <div>Research • UX Strategy •</div>
+                    <div>User Experience</div>
+                  </div>
+                </div>
+                <div class="role-check-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
               </div>
-              <div class="preset-chips-wrap" id="rolePresetsContainer">
-                <button type="button" class="role-preset-chip active" data-preset="backend" onclick="selectRolePreset('backend')">⚙️ Backend Developer</button>
-                <button type="button" class="role-preset-chip" data-preset="frontend" onclick="selectRolePreset('frontend')">⚛️ Frontend Developer</button>
-                <button type="button" class="role-preset-chip" data-preset="ux" onclick="selectRolePreset('ux')">🎨 UX Designer</button>
-                <button type="button" class="role-preset-chip" data-preset="product" onclick="selectRolePreset('product')">💡 Product Designer</button>
-                <button type="button" class="role-preset-chip" data-preset="uiux" onclick="selectRolePreset('uiux')">✨ UI/UX Designer</button>
-                <button type="button" class="role-preset-chip" data-preset="genai" onclick="selectRolePreset('genai')">🤖 GenAI / LLM Engineer</button>
-                <button type="button" class="role-preset-chip" data-preset="fullstack" onclick="selectRolePreset('fullstack')">🌐 Full Stack Developer</button>
-                <button type="button" class="role-preset-chip" data-preset="devops" onclick="selectRolePreset('devops')">☁️ DevOps &amp; Cloud</button>
-                <button type="button" class="role-preset-chip" data-preset="data" onclick="selectRolePreset('data')">📊 Data Engineer</button>
+              <div class="role-card" role="radio" tabindex="0" aria-checked="false" data-role="product" onclick="selectMockRole('product')">
+                <div class="role-avatar-wrap" style="background:#EFF6FF">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polygon points="6 3 18 3 22 9 12 22 2 9 6 3"/><line x1="2" y1="9" x2="22" y2="9"/><line x1="12" y1="22" x2="8" y2="9"/><line x1="12" y1="22" x2="16" y2="9"/><line x1="6" y1="3" x2="10" y2="9"/><line x1="18" y1="3" x2="14" y2="9"/></svg>
+                </div>
+                <div class="role-info-wrap">
+                  <div class="role-card-name">Product Designer</div>
+                  <div class="role-card-keywords">
+                    <div>Product Thinking • Strategy •</div>
+                    <div>Design Systems</div>
+                  </div>
+                </div>
+                <div class="role-check-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
               </div>
+              <div class="role-card" role="radio" tabindex="0" aria-checked="false" data-role="uiux" onclick="selectMockRole('uiux')">
+                <div class="role-avatar-wrap" style="background:#FFF1F2">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><circle cx="13.5" cy="6.5" r=".5" fill="#EA580C"/><circle cx="17.5" cy="10.5" r=".5" fill="#EA580C"/><circle cx="8.5" cy="7.5" r=".5" fill="#EA580C"/><circle cx="6.5" cy="12.5" r=".5" fill="#EA580C"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.563-2.512 5.563-5.563C22 6.5 17.5 2 12 2z"/></svg>
+                </div>
+                <div class="role-info-wrap">
+                  <div class="role-card-name">UI/UX Designer</div>
+                  <div class="role-card-keywords">
+                    <div>UI Design • Visual Design •</div>
+                    <div>Interaction Design</div>
+                  </div>
+                </div>
+                <div class="role-check-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+              </div>
+              <div class="role-card" role="radio" tabindex="0" aria-checked="false" data-role="frontend" onclick="selectMockRole('frontend')">
+                <div class="role-avatar-wrap" style="background:#F5F3FF">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><polyline points="7 8 5 10 7 12"/><polyline points="17 8 19 10 17 12"/><line x1="13" y1="7" x2="11" y2="13"/></svg>
+                </div>
+                <div class="role-info-wrap">
+                  <div class="role-card-name">Frontend Developer</div>
+                  <div class="role-card-keywords">
+                    <div>React • JavaScript •</div>
+                    <div>UI Development</div>
+                  </div>
+                </div>
+                <div class="role-check-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+              </div>
+              <div class="role-card" role="radio" tabindex="0" aria-checked="false" data-role="backend" onclick="selectMockRole('backend')">
+                <div class="role-avatar-wrap" style="background:#FEF3C7">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                </div>
+                <div class="role-info-wrap">
+                  <div class="role-card-name">Backend Developer</div>
+                  <div class="role-card-keywords">
+                    <div>APIs • Databases •</div>
+                    <div>Server Logic</div>
+                  </div>
+                </div>
+                <div class="role-check-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+              </div>
+              <div class="role-card" role="radio" tabindex="0" aria-checked="false" data-role="genai" onclick="selectMockRole('genai')">
+                <div class="role-avatar-wrap" style="background:#F3E8FF">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#9333EA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8.01" y2="16" stroke-width="3"/><line x1="16" y1="16" x2="16.01" y2="16" stroke-width="3"/><path d="M9 19h6"/></svg>
+                </div>
+                <div class="role-info-wrap">
+                  <div class="role-card-name">GenAI Engineer</div>
+                  <div class="role-card-keywords">
+                    <div>LLMs • RAG • Agents •</div>
+                    <div>Prompt Engineering</div>
+                  </div>
+                </div>
+                <div class="role-check-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+              </div>
+            </div>
+
+            <!-- AI Recommendation Banner -->
+            <div class="role-tailor-banner">
+              <span class="banner-sparkle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                  <path d="M12 3l1.912 5.885L20 10.5l-4.75 4.385L16.424 21 12 17.5 7.576 21l1.174-6.115L4 10.5l6.088-1.615L12 3z"/>
+                </svg>
+              </span>
+              <span>We'll tailor your interview questions, evaluation criteria, and mock interviews based on the role you select.</span>
+            </div>
+
+            <!-- Downward Connector Chevron -->
+            <div class="role-connector-row">
+              <div class="role-connector-circle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </div>
+            </div>
+
+            <!-- Split Panel: SELECTED ROLE on Left + Focus Areas on Right -->
+            <div class="role-focus-split">
+              <div class="role-selected-card" id="mockRoleSelectedSummary">
+                <div class="role-selected-avatar" style="background:#E6F7F0">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M2 22h20M2 22l18-18M2 22V4a2 2 0 0 1 2-2h1m11 0h4a2 2 0 0 1 2 2v1"/><path d="M7 17l2-2M10 14l2-2M13 11l2-2M16 8l2-2"/></svg>
+                </div>
+                <div class="role-selected-overline">SELECTED ROLE</div>
+                <div class="role-selected-title">UX Designer</div>
+                <div class="role-selected-desc">We'll customize your interview experience to match UX Designer expectations.</div>
+              </div>
+              <div class="focus-panel-right">
+                <div class="focus-panel-heading">What would you like to focus on?</div>
+                <div class="focus-cards-grid" id="mockFocusCardsGrid" role="group" aria-label="Interview Focus Areas">
+                  <div class="focus-card selected" role="checkbox" tabindex="0" aria-checked="true" data-focus="User Research" onclick="toggleMockFocusArea('User Research')">
+                    <div class="focus-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7"/><path d="M21 21l-6-6"/><circle cx="10" cy="9" r="2.5"/><path d="M6 14a4 4 0 0 1 8 0"/></svg></div>
+                    <span class="focus-card-text">User Research</span>
+                  </div>
+                  <div class="focus-card selected" role="checkbox" tabindex="0" aria-checked="true" data-focus="UX Strategy" onclick="toggleMockFocusArea('UX Strategy')">
+                    <div class="focus-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
+                    <span class="focus-card-text">UX Strategy</span>
+                  </div>
+                  <div class="focus-card selected" role="checkbox" tabindex="0" aria-checked="true" data-focus="Information Architecture" onclick="toggleMockFocusArea('Information Architecture')">
+                    <div class="focus-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="4" rx="1"/><rect x="3" y="17" width="6" height="4" rx="1"/><rect x="15" y="17" width="6" height="4" rx="1"/><path d="M12 7v4M6 17v-3h12v3M12 11h-6M12 11h6"/></svg></div>
+                    <span class="focus-card-text">Information Architecture</span>
+                  </div>
+                  <div class="focus-card" role="checkbox" tabindex="0" aria-checked="false" data-focus="Wireframing" onclick="toggleMockFocusArea('Wireframing')">
+                    <div class="focus-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="9" x2="9" y2="21"/></svg></div>
+                    <span class="focus-card-text">Wireframing</span>
+                  </div>
+                  <div class="focus-card" role="checkbox" tabindex="0" aria-checked="false" data-focus="Usability Testing" onclick="toggleMockFocusArea('Usability Testing')">
+                    <div class="focus-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+                    <span class="focus-card-text">Usability Testing</span>
+                  </div>
+                  <div class="focus-card" role="checkbox" tabindex="0" aria-checked="false" data-focus="Design Systems" onclick="toggleMockFocusArea('Design Systems')">
+                    <div class="focus-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+                    <span class="focus-card-text">Design Systems</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Footer Row -->
+            <div class="role-action-footer" style="margin-bottom:18px">
+              <div class="role-tip-badge">
+                <span>💡</span>
+                <span>Tip: You can update these later in your settings.</span>
+              </div>
+              <button type="button" class="btn-autofill" id="mockAutofillBtn" onclick="handleMockAutoFill()" aria-label="Auto-fill Interview Brief">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15">
+                  <path d="M12 2L14.4 8.6L21 11L14.4 13.4L12 20L9.6 13.4L3 11L9.6 8.6L12 2Z"/>
+                </svg>
+                <span>Auto-fill Interview Brief</span>
+                <svg class="autofill-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="15" height="15">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </button>
             </div>
 
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
@@ -1282,7 +1992,7 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
               Retry Interview
             </button>
-            <button class="action-pill-btn" onclick="window.print()">
+            <button class="action-pill-btn" onclick="exportMockQuestionsOnlyPDF()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
               Export PDF
             </button>
@@ -1744,27 +2454,357 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
     }
   }
 
+  /* ==========================================================================
+     01 · ROLE PRESETS COMPONENT DATA & RENDER CONTROLLER (MOCK INTERVIEW)
+     ========================================================================== */
+  function getFocusIconSvg(iconType) {
+    switch (iconType) {
+      case 'user-search':
+        return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7"/><path d="M21 21l-6-6"/><circle cx="10" cy="9" r="2.5"/><path d="M6 14a4 4 0 0 1 8 0"/></svg>`;
+      case 'target':
+        return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`;
+      case 'tree':
+        return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="4" rx="1"/><rect x="3" y="17" width="6" height="4" rx="1"/><rect x="15" y="17" width="6" height="4" rx="1"/><path d="M12 7v4M6 17v-3h12v3M12 11h-6M12 11h6"/></svg>`;
+      case 'layout':
+        return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="9" x2="9" y2="21"/></svg>`;
+      case 'users':
+        return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
+      case 'layers':
+        return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>`;
+      case 'palette':
+        return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.6-.7 1.6-1.7 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.7-1.7 1.7-1.7h2c3 0 5.6-2.5 5.6-5.6C22 6.5 17.5 2 12 2z"/></svg>`;
+      case 'sparkle':
+      default:
+        return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L14.4 8.6L21 11L14.4 13.4L12 20L9.6 13.4L3 11L9.6 8.6L12 2Z"/></svg>`;
+    }
+  }
+
+  const MOCK_ROLE_PRESETS_DATA = {
+    ux: {
+      id: "ux",
+      title: "UX Designer",
+      bg: "#E6F7F0",
+      color: "#059669",
+      persona: "Elena",
+      iconSvg: `<svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+        <path d="M2 22h20M2 22l18-18M2 22V4a2 2 0 0 1 2-2h1m11 0h4a2 2 0 0 1 2 2v1"/>
+        <path d="M7 17l2-2M10 14l2-2M13 11l2-2M16 8l2-2"/>
+      </svg>`,
+      keywordsLine1: "Research • UX Strategy •",
+      keywordsLine2: "User Experience",
+      defaultRoleInput: "Senior UX Designer",
+      defaultExp: "Mid Level (3-5 Years)",
+      defaultType: "Product / UX Design",
+      defaultCompany: "Google",
+      focusAreas: [
+        { name: "User Research", icon: "user-search" },
+        { name: "UX Strategy", icon: "target" },
+        { name: "Information Architecture", icon: "tree" },
+        { name: "Wireframing", icon: "layout" },
+        { name: "Usability Testing", icon: "users" },
+        { name: "Design Systems", icon: "layers" }
+      ],
+      defaultSelectedFocus: ["User Research", "UX Strategy", "Information Architecture"]
+    },
+    product: {
+      id: "product",
+      title: "Product Designer",
+      bg: "#EFF6FF",
+      color: "#2563EB",
+      persona: "Marcus",
+      iconSvg: `<svg viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+        <polygon points="6 3 18 3 22 9 12 22 2 9 6 3"/>
+        <line x1="2" y1="9" x2="22" y2="9"/>
+        <line x1="12" y1="22" x2="8" y2="9"/>
+        <line x1="12" y1="22" x2="16" y2="9"/>
+        <line x1="6" y1="3" x2="10" y2="9"/>
+        <line x1="18" y1="3" x2="14" y2="9"/>
+      </svg>`,
+      keywordsLine1: "Product Thinking • Strategy •",
+      keywordsLine2: "Design Systems",
+      defaultRoleInput: "Senior Product Designer",
+      defaultExp: "Mid Level (3-5 Years)",
+      defaultType: "Behavioral & Leadership",
+      defaultCompany: "Amazon (Leadership Principles)",
+      focusAreas: [
+        { name: "Product Strategy", icon: "target" },
+        { name: "UX Research", icon: "user-search" },
+        { name: "Interaction Design", icon: "layout" },
+        { name: "Design Systems", icon: "layers" },
+        { name: "Stakeholder Management", icon: "users" },
+        { name: "AI Products", icon: "sparkle" }
+      ],
+      defaultSelectedFocus: ["Product Strategy", "UX Research", "Interaction Design"]
+    },
+    uiux: {
+      id: "uiux",
+      title: "UI/UX Designer",
+      bg: "#FFF1F2",
+      color: "#EA580C",
+      persona: "Elena",
+      iconSvg: `<svg viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+        <circle cx="13.5" cy="6.5" r=".5" fill="#EA580C"/>
+        <circle cx="17.5" cy="10.5" r=".5" fill="#EA580C"/>
+        <circle cx="8.5" cy="7.5" r=".5" fill="#EA580C"/>
+        <circle cx="6.5" cy="12.5" r=".5" fill="#EA580C"/>
+        <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.563-2.512 5.563-5.563C22 6.5 17.5 2 12 2z"/>
+      </svg>`,
+      keywordsLine1: "UI Design • Visual Design •",
+      keywordsLine2: "Interaction Design",
+      defaultRoleInput: "UI/UX Designer",
+      defaultExp: "Mid Level (3-5 Years)",
+      defaultType: "Product / UX Design",
+      defaultCompany: "Meta",
+      focusAreas: [
+        { name: "Visual Design", icon: "palette" },
+        { name: "Interaction Design", icon: "layout" },
+        { name: "Design Systems", icon: "layers" },
+        { name: "Prototyping", icon: "tree" },
+        { name: "Accessibility", icon: "users" },
+        { name: "Usability", icon: "user-search" }
+      ],
+      defaultSelectedFocus: ["Visual Design", "Interaction Design", "Design Systems"]
+    },
+    frontend: {
+      id: "frontend",
+      title: "Frontend Developer",
+      bg: "#F5F3FF",
+      color: "#7C3AED",
+      persona: "Alex",
+      iconSvg: `<svg viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+        <line x1="8" y1="21" x2="16" y2="21"/>
+        <line x1="12" y1="17" x2="12" y2="21"/>
+        <polyline points="7 8 5 10 7 12"/>
+        <polyline points="17 8 19 10 17 12"/>
+        <line x1="13" y1="7" x2="11" y2="13"/>
+      </svg>`,
+      keywordsLine1: "React • JavaScript •",
+      keywordsLine2: "UI Development",
+      defaultRoleInput: "Senior Frontend Engineer",
+      defaultExp: "Mid Level (3-5 Years)",
+      defaultType: "Technical & System Architecture",
+      defaultCompany: "Meta",
+      focusAreas: [
+        { name: "React", icon: "layout" },
+        { name: "JavaScript", icon: "tree" },
+        { name: "HTML/CSS", icon: "palette" },
+        { name: "Performance", icon: "target" },
+        { name: "Accessibility", icon: "users" },
+        { name: "Frontend Architecture", icon: "layers" }
+      ],
+      defaultSelectedFocus: ["React", "JavaScript", "Frontend Architecture"]
+    },
+    backend: {
+      id: "backend",
+      title: "Backend Developer",
+      bg: "#FEF3C7",
+      color: "#D97706",
+      persona: "Alex",
+      iconSvg: `<svg viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+        <ellipse cx="12" cy="5" rx="9" ry="3"/>
+        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+      </svg>`,
+      keywordsLine1: "APIs • Databases •",
+      keywordsLine2: "Server Logic",
+      defaultRoleInput: "Python Backend Engineer",
+      defaultExp: "Mid Level (3-5 Years)",
+      defaultType: "Technical & System Architecture",
+      defaultCompany: "Google",
+      focusAreas: [
+        { name: "APIs", icon: "layout" },
+        { name: "Databases", icon: "layers" },
+        { name: "System Design", icon: "tree" },
+        { name: "Authentication", icon: "users" },
+        { name: "Backend Architecture", icon: "target" },
+        { name: "Performance", icon: "sparkle" }
+      ],
+      defaultSelectedFocus: ["APIs", "Databases", "System Design"]
+    },
+    genai: {
+      id: "genai",
+      title: "GenAI Engineer",
+      bg: "#F3E8FF",
+      color: "#9333EA",
+      persona: "Elena",
+      iconSvg: `<svg viewBox="0 0 24 24" fill="none" stroke="#9333EA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+        <rect x="3" y="11" width="18" height="10" rx="2"/>
+        <circle cx="12" cy="5" r="2"/>
+        <path d="M12 7v4"/>
+        <line x1="8" y1="16" x2="8.01" y2="16" stroke-width="3"/>
+        <line x1="16" y1="16" x2="16.01" y2="16" stroke-width="3"/>
+        <path d="M9 19h6"/>
+      </svg>`,
+      keywordsLine1: "LLMs • RAG • Agents •",
+      keywordsLine2: "Prompt Engineering",
+      defaultRoleInput: "GenAI / LLM Engineer",
+      defaultExp: "Mid Level (3-5 Years)",
+      defaultType: "Technical & System Architecture",
+      defaultCompany: "OpenAI",
+      focusAreas: [
+        { name: "LLMs", icon: "sparkle" },
+        { name: "Prompt Engineering", icon: "target" },
+        { name: "RAG", icon: "layers" },
+        { name: "AI Agents", icon: "users" },
+        { name: "Vector Databases", icon: "tree" },
+        { name: "LLM Evaluation", icon: "user-search" }
+      ],
+      defaultSelectedFocus: ["LLMs", "Prompt Engineering", "RAG"]
+    }
+  };
+
+  let selectedMockRoleId = "ux";
+  let selectedMockFocusAreas = new Set(["User Research", "UX Strategy", "Information Architecture"]);
+
+  function renderMockRoleCards() {
+    const grid = document.getElementById("mockRoleCardsGrid");
+    if (!grid) return;
+
+    const roles = Object.values(MOCK_ROLE_PRESETS_DATA);
+    grid.innerHTML = roles.map(role => {
+      const isSelected = role.id === selectedMockRoleId;
+      return `
+        <div class="role-card ${isSelected ? 'selected' : ''}"
+             role="radio"
+             tabindex="0"
+             aria-checked="${isSelected ? 'true' : 'false'}"
+             data-role="${role.id}"
+             onclick="selectMockRole('${role.id}')"
+             onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();selectMockRole('${role.id}');}">
+          <div class="role-avatar-wrap" style="background:${role.bg}">
+            ${role.iconSvg}
+          </div>
+          <div class="role-info-wrap">
+            <div class="role-card-name">${role.title}</div>
+            <div class="role-card-keywords">
+              <div>${role.keywordsLine1}</div>
+              <div>${role.keywordsLine2}</div>
+            </div>
+          </div>
+          <div class="role-check-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderMockRoleSelectedSummary() {
+    const container = document.getElementById("mockRoleSelectedSummary");
+    if (!container) return;
+
+    const role = MOCK_ROLE_PRESETS_DATA[selectedMockRoleId] || MOCK_ROLE_PRESETS_DATA.ux;
+    container.innerHTML = `
+      <div class="role-selected-avatar" style="background:${role.bg}">
+        ${role.iconSvg}
+      </div>
+      <div class="role-selected-overline">SELECTED ROLE</div>
+      <div class="role-selected-title">${role.title}</div>
+      <div class="role-selected-desc">We'll customize your interview experience to match ${role.title} expectations.</div>
+    `;
+  }
+
+  function renderMockFocusCards() {
+    const grid = document.getElementById("mockFocusCardsGrid");
+    if (!grid) return;
+
+    const currentRole = MOCK_ROLE_PRESETS_DATA[selectedMockRoleId];
+    if (!currentRole) return;
+
+    grid.innerHTML = currentRole.focusAreas.map(item => {
+      const areaName = typeof item === 'object' ? item.name : item;
+      const iconType = typeof item === 'object' ? item.icon : 'sparkle';
+      const isChecked = selectedMockFocusAreas.has(areaName);
+      return `
+        <div class="focus-card ${isChecked ? 'selected' : ''}"
+             role="checkbox"
+             tabindex="0"
+             aria-checked="${isChecked ? 'true' : 'false'}"
+             data-focus="${escapeHtml(areaName)}"
+             onclick="toggleMockFocusArea('${escapeHtml(areaName)}')"
+             onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();toggleMockFocusArea('${escapeHtml(areaName)}');}">
+          <div class="focus-card-icon">
+            ${getFocusIconSvg(iconType)}
+          </div>
+          <span class="focus-card-text">${escapeHtml(areaName)}</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function selectMockRole(roleId) {
+    if (!MOCK_ROLE_PRESETS_DATA[roleId]) return;
+    selectedMockRoleId = roleId;
+    const roleData = MOCK_ROLE_PRESETS_DATA[roleId];
+
+    selectedMockFocusAreas = new Set(roleData.defaultSelectedFocus || roleData.focusAreas.map(f => f.name).slice(0, 3));
+
+    renderMockRoleCards();
+    renderMockRoleSelectedSummary();
+    renderMockFocusCards();
+
+    // Auto-select recommended persona
+    if (roleData.persona) {
+      $$('.persona-card').forEach(c => {
+        const match = c.dataset.persona === roleData.persona;
+        c.classList.toggle('selected', match);
+        if (match) {
+          currentPersona = {
+            name: c.dataset.persona,
+            role: c.dataset.personaRole,
+            avatar: c.dataset.avatar
+          };
+        }
+      });
+    }
+  }
+
+  function toggleMockFocusArea(area) {
+    if (selectedMockFocusAreas.has(area)) {
+      selectedMockFocusAreas.delete(area);
+    } else {
+      selectedMockFocusAreas.add(area);
+    }
+    renderMockFocusCards();
+  }
+
+  function handleMockAutoFill() {
+    const roleData = MOCK_ROLE_PRESETS_DATA[selectedMockRoleId];
+    if (!roleData) return;
+
+    if ($('#mockRole')) $('#mockRole').value = roleData.defaultRoleInput || roleData.title;
+    if ($('#mockExp')) $('#mockExp').value = roleData.defaultExp || 'Mid Level (3-5 Years)';
+    if ($('#mockType')) $('#mockType').value = roleData.defaultType || 'Technical & System Architecture';
+    
+    // Update skill pills from selected focus areas
+    const focusArr = Array.from(selectedMockFocusAreas);
+    const wrap = $('#mockSkillsWrap');
+    if (wrap) {
+      wrap.innerHTML = focusArr.map(s => `
+        <span class="skill-tag-pill">
+          <span style="color:#059669">●</span> ${s}
+        </span>
+      `).join('');
+      const countText = $('#skillsCountText');
+      if (countText) countText.textContent = `${focusArr.length} Target Competencies`;
+    }
+
+    const previewHeading = $('#previewHeadingRole');
+    if (previewHeading) previewHeading.textContent = `${roleData.title} — Role Questions Staged`;
+
+    alert(`✓ Auto-filled brief for ${roleData.title}!`);
+  }
+
   // Extract role-calibrated skills for any role
   function getSkillsForRole(role) {
     const r = (role || '').toLowerCase();
-    if (r.includes('ux') && !r.includes('product') && !r.includes('ui/ux')) {
-      return ROLE_PRESET_CONFIG.ux.skills;
-    } else if (r.includes('product designer') || r.includes('product design')) {
-      return ROLE_PRESET_CONFIG.product.skills;
-    } else if (r.includes('ui/ux') || r.includes('visual') || r.includes('ui designer')) {
-      return ROLE_PRESET_CONFIG.uiux.skills;
-    } else if (r.includes('frontend') || r.includes('react') || r.includes('web') || r.includes('next.js')) {
-      return ROLE_PRESET_CONFIG.frontend.skills;
-    } else if (r.includes('genai') || r.includes('llm') || r.includes('ai') || r.includes('machine learning')) {
-      return ROLE_PRESET_CONFIG.genai.skills;
-    } else if (r.includes('fullstack') || r.includes('full stack')) {
-      return ROLE_PRESET_CONFIG.fullstack.skills;
-    } else if (r.includes('devops') || r.includes('cloud') || r.includes('sre') || r.includes('infrastructure')) {
-      return ROLE_PRESET_CONFIG.devops.skills;
-    } else if (r.includes('data engineer') || r.includes('data') || r.includes('analytics engineer')) {
-      return ROLE_PRESET_CONFIG.data.skills;
-    } else if (r.includes('backend') || r.includes('python') || r.includes('api') || r.includes('java') || r.includes('golang') || r.includes('systems')) {
-      return ROLE_PRESET_CONFIG.backend.skills;
+    for (const [key, data] of Object.entries(MOCK_ROLE_PRESETS_DATA)) {
+      if (r.includes(key) || data.title.toLowerCase().includes(r)) {
+        return data.focusAreas.map(f => f.name);
+      }
     }
     return ['System Architecture', 'Scalability & Trade-offs', 'Problem Solving', 'Data Structures & Algorithms', 'Production Resilience'];
   }
@@ -1776,58 +2816,17 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
     const skills = getSkillsForRole(role);
     wrap.innerHTML = skills.map(s => `
       <span class="skill-tag-pill">
-        <span style="color:#4F46E5">●</span> ${s}
+        <span style="color:#059669">●</span> ${s}
       </span>
     `).join('');
     const countText = $('#skillsCountText');
     if (countText) countText.textContent = `${skills.length} Target Competencies`;
   }
 
-  // Role Preset Selection Handler
+  // Backward compatibility alias
   function selectRolePreset(presetKey) {
-    const cfg = ROLE_PRESET_CONFIG[presetKey];
-    if (!cfg) return;
-
-    // Update active preset button style
-    $$('.role-preset-chip').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.preset === presetKey);
-    });
-
-    // Update input values
-    const roleInput = $('#mockRole');
-    if (roleInput) roleInput.value = cfg.name;
-
-    const typeSelect = $('#mockType');
-    if (typeSelect && cfg.type) {
-      for (let opt of typeSelect.options) {
-        if (opt.value.includes(cfg.type) || cfg.type.includes(opt.value)) {
-          typeSelect.value = opt.value;
-          break;
-        }
-      }
-    }
-
-    // Auto-select recommended persona
-    if (cfg.persona) {
-      $$('.persona-card').forEach(c => {
-        const match = c.dataset.persona === cfg.persona;
-        c.classList.toggle('selected', match);
-        if (match) {
-          currentPersona = {
-            name: c.dataset.persona,
-            role: c.dataset.personaRole,
-            avatar: c.dataset.avatar
-          };
-        }
-      });
-    }
-
-    // Refresh dynamic skills
-    renderRoleSkills(cfg.name);
-
-    // Update staged preview heading if open
-    const previewHeading = $('#previewHeadingRole');
-    if (previewHeading) previewHeading.textContent = `${cfg.name} — Role Questions Staged`;
+    selectMockRole(presetKey);
+    handleMockAutoFill();
   }
 
   // Role input typing handler with debounced skill sync
@@ -1837,17 +2836,17 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
       const roleVal = $('#mockRole').value.trim();
       renderRoleSkills(roleVal);
 
-      // Match preset chip if typed role matches
+      // Match role card if typed role matches
       let matchedKey = null;
-      for (const [key, cfg] of Object.entries(ROLE_PRESET_CONFIG)) {
-        if (roleVal.toLowerCase().includes(key) || cfg.name.toLowerCase().includes(roleVal.toLowerCase())) {
+      for (const [key, cfg] of Object.entries(MOCK_ROLE_PRESETS_DATA)) {
+        if (roleVal.toLowerCase().includes(key) || cfg.title.toLowerCase().includes(roleVal.toLowerCase())) {
           matchedKey = key;
           break;
         }
       }
-      $$('.role-preset-chip').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.preset === matchedKey);
-      });
+      if (matchedKey && matchedKey !== selectedMockRoleId) {
+        selectMockRole(matchedKey);
+      }
 
       const previewHeading = $('#previewHeadingRole');
       if (previewHeading) previewHeading.textContent = `${roleVal || 'Custom Role'} — Role Questions Staged`;
@@ -2481,6 +3480,135 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
       generateAndPreviewQuestions();
     }
   });
+
+  function exportMockQuestionsOnlyPDF() {
+    const qs = interviewQuestions && interviewQuestions.length ? interviewQuestions : [];
+    if (!qs.length) {
+      window.print();
+      return;
+    }
+
+    const role = $('#mockRole')?.value || $('#scorecardTitle')?.textContent || "Mock Technical Interview";
+    const exp = $('#mockExp')?.value || "Mid Level";
+    const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    const printWindow = window.open('', '_blank', 'width=880,height=960');
+    if (!printWindow) {
+      window.print();
+      return;
+    }
+
+    const questionsHtml = qs.map((item, idx) => {
+      const qText = typeof item === 'string' ? item : (item.q || item.question || item.text || JSON.stringify(item));
+      return `
+        <div class="q-item">
+          <div class="q-header">
+            <span class="q-num">Question ${idx + 1}</span>
+          </div>
+          <div class="q-text">${escapeHtml(qText)}</div>
+          <div class="q-notes-space">
+            <span class="q-notes-label">Candidate Notes / Answer:</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    const docHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${escapeHtml(role)} - Mock Interview Questions</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+        <style>
+          @page { size: A4 portrait; margin: 16mm 14mm 16mm 14mm; }
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #0F172A; background: #FFFFFF; font-size: 14px; line-height: 1.6; padding: 24px;
+          }
+          .header {
+            border-bottom: 2px solid #0F172A; padding-bottom: 16px; margin-bottom: 22px;
+            display: flex; justify-content: space-between; align-items: flex-start;
+          }
+          .brand-title { font-size: 20px; font-weight: 800; color: #0F172A; }
+          .brand-title span { color: #059669; }
+          .paper-tag { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; color: #64748B; text-transform: uppercase; margin-top: 2px; }
+          .meta-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+            background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; font-size: 13px;
+          }
+          .meta-item b { display: block; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; color: #64748B; margin-bottom: 2px; }
+          .candidate-fields {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 22px; padding: 12px 16px; border: 1px dashed #CBD5E1; border-radius: 8px; font-size: 13px;
+          }
+          .c-field { border-bottom: 1px solid #94A3B8; padding-bottom: 4px; color: #475569; }
+          .section-title {
+            font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; font-family: 'JetBrains Mono', monospace; color: #059669; margin-bottom: 16px; padding-bottom: 6px; border-bottom: 1px solid #E2E8F0;
+          }
+          .q-item { margin-bottom: 20px; page-break-inside: avoid; border-bottom: 1px solid #F1F5F9; padding-bottom: 16px; }
+          .q-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+          .q-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; background: #ECFDF5; color: #059669; padding: 2.5px 7px; border-radius: 4px; border: 1px solid rgba(16,185,129,0.2); }
+          .q-text { font-size: 14.5px; font-weight: 600; color: #0F172A; line-height: 1.55; }
+          .q-notes-space { margin-top: 10px; min-height: 38px; border-bottom: 1px dotted #CBD5E1; }
+          .q-notes-label { font-size: 10.5px; color: #94A3B8; font-style: italic; }
+          .footer { margin-top: 28px; padding-top: 12px; border-top: 1px solid #E2E8F0; display: flex; justify-content: space-between; font-size: 11px; color: #94A3B8; font-family: 'JetBrains Mono', monospace; }
+          @media print { body { padding: 0; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div>
+            <div class="brand-title">RaviGen <span>AI</span> · Mock Interview Questions</div>
+            <div class="paper-tag">Interview Assessment Sheet (Questions Only)</div>
+          </div>
+          <div style="text-align: right; font-size: 12px; color: #64748B;">
+            <div><b>Date:</b> ${dateStr}</div>
+            <div><b>Total Questions:</b> ${qs.length}</div>
+          </div>
+        </div>
+        <div class="meta-grid">
+          <div class="meta-item"><b>Target Role</b>${escapeHtml(role)}</div>
+          <div class="meta-item"><b>Level / Experience</b>${escapeHtml(exp)}</div>
+          <div class="meta-item"><b>Questions Count</b>${qs.length} Qs</div>
+        </div>
+        <div class="candidate-fields">
+          <div class="c-field"><b>Candidate Name:</b> </div>
+          <div class="c-field"><b>Interviewer:</b> </div>
+        </div>
+        <div class="section-title">Interview Questions (${qs.length})</div>
+        <div class="questions-list">${questionsHtml}</div>
+        <div class="footer">
+          <div>RaviGen AI — Interview Studio</div>
+          <div>Confidential Interview Material</div>
+        </div>
+        <scr` + `ipt>
+          window.onload = function() {
+            setTimeout(function() { window.print(); }, 300);
+          };
+        <\/scr` + `ipt>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.open();
+    printWindow.document.write(docHtml);
+    printWindow.document.close();
+  }
+
+  function escapeHtml(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // Initialize Role Presets on page load
+  renderMockRoleCards();
+  renderMockRoleSelectedSummary();
+  renderMockFocusCards();
 </script>
 <script src="analytics-tracker.js"></script>
 </body>

@@ -8,8 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400;1,700&display=swap');
-
+    @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
     :root {
       --paper: #F8FAFC;
       --paper-2: #FFFFFF;
@@ -17,48 +16,54 @@
       --ink: #0F172A;
       --ink-soft: #475569;
       --ink-faint: #94A3B8;
-      --board: #0B0F19;
-      --board-2: #1E1B4B;
+      --board: #0A1926;
+      --board-2: #0D2130;
       --board-ink: #F8FAFC;
-      --primary: #4F46E5;
-      --primary-grad: linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);
-      --pen: #4F46E5;
-      --pen-soft: #6366F1;
-      --pen-wash: #EEF2FF;
-      --label-color: #2563EB;
+      --primary: #10B981;
+      --primary-dark: #059669;
+      --primary-forest: #166534;
+      --primary-grad: linear-gradient(135deg, #166534 0%, #15803D 50%, #16A34A 100%);
+      --emerald-grad: linear-gradient(135deg, #059669 0%, #10B981 50%, #34D399 100%);
+      --pen: #10B981;
+      --pen-soft: #34D399;
+      --pen-wash: #ECFDF5;
+      --label-color: #10B981;
       --rule: #E2E8F0;
-      --rule-soft: #F1F5F9;
+      --rule-soft: #EDF2F0;
       --gold: #F59E0B;
       --pass: #10B981;
       --pass-wash: #ECFDF5;
-      --shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
+      --shadow: 0 4px 20px -2px rgba(10, 25, 38, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
       --radius: 16px;
-      --f-disp: "Roboto", system-ui, -apple-system, sans-serif;
-      --f-ui: "Roboto", system-ui, -apple-system, sans-serif;
-      --f-mono: "Roboto Mono", ui-monospace, monospace;
+      --f-disp: "Inter", system-ui, -apple-system, sans-serif;
+      --f-ui: "Inter", system-ui, -apple-system, sans-serif;
+      --f-mono: "JetBrains Mono", "Inter", ui-monospace, monospace;
     }
 
     [data-theme="dark"] {
-      --paper: #0B0F19;
-      --paper-2: #111827;
-      --sheet: #131D33;
+      --paper: #08141E;
+      --paper-2: #0D2130;
+      --sheet: #112B3E;
       --ink: #F8FAFC;
       --ink-soft: #94A3B8;
       --ink-faint: #64748B;
-      --board: #070A10;
-      --board-2: #1E1B4B;
+      --board: #050D14;
+      --board-2: #0A1926;
       --board-ink: #F8FAFC;
-      --primary: #6366F1;
-      --primary-grad: linear-gradient(135deg, #3B82F6 0%, #6366F1 50%, #8B5CF6 100%);
-      --pen: #818CF8;
-      --pen-soft: #A5B4FC;
-      --pen-wash: rgba(99, 102, 241, 0.15);
-      --label-color: #60A5FA;
-      --rule: #1E293B;
-      --rule-soft: #182234;
+      --primary: #34D399;
+      --primary-dark: #10B981;
+      --primary-forest: #15803D;
+      --primary-grad: linear-gradient(135deg, #15803D 0%, #16A34A 50%, #22C55E 100%);
+      --emerald-grad: linear-gradient(135deg, #10B981 0%, #34D399 50%, #6EE7B7 100%);
+      --pen: #34D399;
+      --pen-soft: #6EE7B7;
+      --pen-wash: rgba(16, 185, 129, 0.15);
+      --label-color: #34D399;
+      --rule: #1A364E;
+      --rule-soft: #132738;
       --gold: #FBBF24;
       --pass: #34D399;
-      --pass-wash: rgba(16, 185, 129, 0.15);
+      --pass-wash: rgba(16, 185, 129, 0.18);
       --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
     }
 
@@ -115,13 +120,13 @@
 
     /* ---------- sidebar ---------- */
     .sidebar {
-      flex: 0 0 270px;
-      width: 270px;
+      flex: 0 0 285px;
+      width: 285px;
       background: var(--board);
       color: var(--board-ink);
       display: flex;
       flex-direction: column;
-      padding: 22px 16px;
+      padding: 22px 14px;
       gap: 14px;
       position: sticky;
       top: 0;
@@ -154,17 +159,34 @@
       border-radius: 50%;
       flex: none;
       object-fit: cover;
-      box-shadow: 0 0 18px rgba(59, 130, 246, 0.45);
-      border: 1.5px solid rgba(99, 102, 241, 0.6);
+      box-shadow: 0 0 18px rgba(56, 189, 248, 0.45), 0 0 10px rgba(129, 140, 248, 0.4);
+      border: 1.5px solid rgba(56, 189, 248, 0.6);
       background: #0B0F19;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+    .brand .brand-logo:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 24px rgba(56, 189, 248, 0.7);
     }
 
     .brand .word {
-      font-weight: 700;
+      font-weight: 800;
       font-size: 20px;
       letter-spacing: -.02em;
-      line-height: 1.1;
-      color: #FFFFFF
+      line-height: 1.15;
+      color: #FFFFFF;
+      white-space: nowrap;
+    }
+
+    .brand .word .brand-name {
+      color: #38BDF8;
+    }
+
+    .brand .word .brand-ai {
+      background: linear-gradient(135deg, #818CF8 0%, #C084FC 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .brand .brand-grad {
@@ -175,12 +197,13 @@
 
     .brand .sub {
       font-family: var(--f-mono);
-      font-size: 11px;
-      letter-spacing: .14em;
+      font-size: 10.5px;
+      letter-spacing: .16em;
       text-transform: uppercase;
       color: #94A3B8;
-      margin-top: 2px;
-      font-weight: 600
+      margin-top: 3px;
+      font-weight: 700;
+      white-space: nowrap;
     }
 
     .side-label {
@@ -191,7 +214,8 @@
       color: #64748B;
       padding: 4px 10px 0;
       margin-bottom: -6px;
-      font-weight: 600
+      font-weight: 600;
+      white-space: nowrap;
     }
 
     .nav {
@@ -203,14 +227,19 @@
     .nav-link {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 10px 14px;
+      gap: 10px;
+      padding: 9.5px 12px;
       border-radius: 12px;
       color: #94A3B8;
       font-weight: 500;
-      font-size: 14px;
+      font-size: 13.5px;
       position: relative;
       transition: all .2s ease;
+      white-space: nowrap;
+    }
+
+    .nav-link span {
+      white-space: nowrap;
     }
 
     .nav-link svg {
@@ -226,10 +255,15 @@
     }
 
     .nav-link.active {
-      background: linear-gradient(135deg, #1E40AF 0%, #4F46E5 50%, #7C3AED 100%);
+      background: linear-gradient(135deg, #059669 0%, #10B981 60%, #34D399 100%);
       color: #FFFFFF;
-      box-shadow: 0 4px 16px rgba(79, 70, 229, 0.4);
-      font-weight: 600;
+      box-shadow: 0 4px 18px rgba(16, 185, 129, 0.45);
+      font-weight: 700;
+      border: 1px solid rgba(52, 211, 153, 0.4);
+    }
+
+    .nav-link.active svg {
+      color: #FFFFFF;
     }
 
     .nav-link.active::before {
@@ -239,24 +273,25 @@
     .nav-badge {
       margin-left: auto;
       font-family: var(--f-mono);
-      font-size: 9.5px;
+      font-size: 9px;
       font-weight: 700;
       letter-spacing: .04em;
-      padding: 2.5px 7px;
+      padding: 2.5px 6.5px;
       border-radius: 6px;
       background: rgba(255, 255, 255, .12);
-      color: #FFFFFF
+      color: #FFFFFF;
+      flex-shrink: 0;
+      white-space: nowrap;
     }
 
     .nav-badge.new {
-      background: #7C3AED;
+      background: #10B981;
       color: #FFFFFF
     }
 
     .nav-badge.pro {
-      background: #6366F1;
-      color: #FFFFFF;
-      border: none
+      background: linear-gradient(135deg, #059669, #10B981);
+      color: #FFFFFF
     }
 
     .nav-sep {
@@ -272,47 +307,63 @@
       gap: 12px
     }
 
-    .upgrade {
-      background: linear-gradient(145deg, #0F172A 0%, #1E1B4B 100%);
-      border: 1px solid rgba(99, 102, 241, 0.35);
+    .upgrade-card {
+      background: linear-gradient(145deg, rgba(16, 185, 129, 0.12) 0%, #0A1926 60%, #0D2A3D 100%);
+      border: 1px solid rgba(52, 211, 153, 0.35);
       border-radius: 14px;
       padding: 14px 16px;
       cursor: pointer;
-      transition: transform .18s, border-color .18s;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+      position: relative;
+      overflow: hidden;
     }
 
-    .upgrade:hover {
-      transform: translateY(-1px);
-      border-color: rgba(99, 102, 241, 0.6)
+    .upgrade-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, #10B981, #34D399, #6EE7B7);
     }
 
-    .upgrade .u-top {
+    .upgrade-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(52, 211, 153, 0.8);
+      box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+    }
+
+    .upgrade-top {
       display: flex;
       align-items: center;
       gap: 8px;
       font-weight: 700;
+      font-size: 14px;
+      color: #FFFFFF;
+    }
+
+    .upgrade-top .crown-icon {
+      color: #FBBF24;
       font-size: 15px;
-      color: #FFFFFF
+      filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.5));
     }
 
-    .upgrade .u-top .star {
-      color: #818CF8;
-      font-size: 16px
-    }
-
-    .upgrade .u-top .u-chev {
+    .upgrade-top .chevron {
       margin-left: auto;
-      color: #818CF8;
-      display: grid;
-      place-items: center
+      color: #34D399;
+      display: flex;
+      align-items: center;
+      transition: transform 0.2s;
     }
 
-    .upgrade p {
-      margin: 4px 0 0;
+    .upgrade-card:hover .chevron {
+      transform: translateX(3px);
+    }
+
+    .upgrade-desc {
+      margin-top: 6px;
       font-size: 12px;
-      line-height: 1.4;
-      color: #94A3B8
+      line-height: 1.45;
+      color: #94A3B8;
     }
 
     .u-btn {
@@ -390,11 +441,13 @@
       display: flex;
       align-items: center;
       gap: 16px;
-      padding: 22px 0 8px;
+      padding: 18px 0 16px;
+      margin-bottom: 24px;
       position: sticky;
       top: 0;
       z-index: 20;
-      background: linear-gradient(var(--paper) 72%, transparent)
+      background: var(--paper);
+      border-bottom: 1px solid var(--rule);
     }
 
     .crumb {
@@ -1203,10 +1256,10 @@
     <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
       <div class="brand">
-        <img class="brand-logo" src="logo.png" alt="Ravi GenAI Studio Logo">
+        <img class="brand-logo" src="logo.png" alt="RaviGen AI Logo" onerror="this.onerror=null;this.src='logo.png';">
         <div>
-          <div class="word"><span class="brand-grad">RaviGenAI</span></div>
-          <div class="sub">STUDIO</div>
+          <div class="word"><span class="brand-name">RaviGen</span> <span class="brand-ai">AI</span></div>
+          <div class="sub">INTERVIEW STUDIO</div>
         </div>
       </div>
       <div class="side-label">WORKSPACE</div>
@@ -1281,13 +1334,6 @@
 
       <div class="side-label" style="margin-top:14px">PREFERENCES</div>
       <nav class="nav">
-        <a class="nav-link" href="Analytics.html">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path d="M18 20V10M12 20V4M6 20v-6" />
-          </svg>
-          <span>Live Analytics</span>
-          <span class="nav-badge new" style="background:rgba(16,185,129,0.15);color:#10B981">LIVE</span>
-        </a>
         <a class="nav-link" href="javascript:void(0)"
           onclick="alert('Model: Gemini 2.5 Flash\nStatus: Operational\nAPI Base: Ready')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -1300,6 +1346,16 @@
       </nav>
 
       <div class="side-foot">
+        <div class="upgrade-card" onclick="location.href='Upgrade-pro.html'" role="button" tabindex="0" aria-label="Go Pro Upgrade">
+          <div class="upgrade-top">
+            <span class="crown-icon">👑</span>
+            <span>Go Pro Plan</span>
+            <span class="chevron">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+            </span>
+          </div>
+          <p class="upgrade-desc">Unlock unlimited Gemini 2.5 Flash generations &amp; live voice mock tests.</p>
+        </div>
         <div class="user">
           <img class="av" alt="Ravi Chandran"
             src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><rect width='40' height='40' fill='%234F46E5'/><circle cx='20' cy='15' r='8' fill='%23FFFFFF'/><path d='M6 38c0-8 6-13 14-13s14 5 14 13z' fill='%23FFFFFF'/></svg>">
