@@ -1,0 +1,20 @@
+.git
+.gitignore
+venv
+.venv
+env
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+tests
+AI-Interview-Generator
+Flow diagram.png
+Interface.png
+Project Structure.png
+interview.db
+New Text Document.txt
+html.txt
+interview gen
+run_app.bat
+Dockerfile
