@@ -55,7 +55,10 @@ Base = declarative_base()
 
 def init_db():
     from app import db_models  # noqa: F401
-    Base.metadata.create_all(bind=engine)
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as create_err:
+        logger.warning(f"[DB Init Notice] create_all notice: {create_err}")
 
     # Dialect-agnostic schema migration for SQLite and PostgreSQL
     dialect = engine.dialect.name
