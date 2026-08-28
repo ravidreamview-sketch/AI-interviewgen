@@ -67,15 +67,15 @@ from app.auth_deps import get_current_user
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize database tables and migrations on startup
+    logger.info("Starting application lifespan startup")
     try:
-        logger.info("[Lifespan Startup] Application startup initiated; verifying database schema.")
+        logger.info("Initializing database schema from lifespan handler")
         init_db()
-        logger.info("[Lifespan Startup] Database schema initialized and verified.")
+        logger.info("Database schema initialized and verified successfully")
     except Exception as e:
-        logger.warning(f"[Lifespan Startup] init_db notice: {e}")
+        logger.warning(f"[Lifespan Startup] Database initialization notice: {e}")
     yield
-    logger.info("[Lifespan Shutdown] Application shutdown.")
+    logger.info("Application lifespan shutdown completed")
 
 # Configure trusted CORS origins for local dev and production
 DEFAULT_ALLOWED_ORIGINS = [
@@ -107,6 +107,13 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
+
+@app.get("/api/health")
+@app.get("/health")
+def health_check():
+    """Lightweight health probe — does not touch the database."""
+    return {"status": "ok", "service": "RaviGen AI Interview Studio"}
+
 
 @app.get("/api/debug-status", include_in_schema=False)
 @app.get("/debug-status", include_in_schema=False)
@@ -1446,9 +1453,8 @@ def serve_logo():
     return FileResponse(f) if f.exists() else HTTPException(404, "logo.png not found")
 
 
-# Ensure database tables and migrations are ready on serverless cold-start
-try:
-    from app.database import ensure_db_initialized
-    ensure_db_initialized()
-except Exception as e:
-    print(f"[Main Startup Notice] ensure_db_initialized: {e}")
+# NOTE: Database initialization is handled by:
+# 1. The FastAPI lifespan handler (on app startup)
+# 2. The get_db() dependency (on first request)
+# Module-level DB init was REMOVED to prevent FUNCTION_INVOCATION_FAILED on Vercel.
+# See: https://vercel.com/docs/functions/runtimes/python — import must be side-effect free.
