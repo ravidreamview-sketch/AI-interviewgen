@@ -26,6 +26,7 @@ from app.models import (
     JobURLExtractRequest,
     JobURLExtractResponse,
     JobUploadExtractResponse,
+    ResumeUploadExtractResponse,
     NormalizedJobDescription,
     NormalizedResume,
     SkillMatrixItem,
@@ -665,6 +666,100 @@ async def upload_jd_document(
     )
 
 
+@app.post("/api/candidate/resume/upload", response_model=ResumeUploadExtractResponse)
+@app.post("/candidate/resume/upload", response_model=ResumeUploadExtractResponse)
+async def upload_resume_document(
+    file: UploadFile = File(...),
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Extracts candidate resume text and structure from uploaded document (PDF, DOCX, TXT).
+    """
+    filename = file.filename or "uploaded_resume.txt"
+    fname_lower = filename.lower()
+    if not (fname_lower.endswith(".pdf") or fname_lower.endswith(".docx") or fname_lower.endswith(".doc") or fname_lower.endswith(".txt")):
+        return ResumeUploadExtractResponse(
+            success=False,
+            status="fallback_required",
+            fallback_required=True,
+            filename=filename,
+            message="Unsupported document format. Please upload a PDF, DOCX, or TXT file, or paste your resume text directly.",
+            extracted_text=None,
+            normalized_resume=None
+        )
+        
+    try:
+        content_bytes = await file.read()
+    except Exception as e:
+        return ResumeUploadExtractResponse(
+            success=False,
+            status="fallback_required",
+            fallback_required=True,
+            filename=filename,
+            message=f"Failed to read uploaded file: {str(e)}. Please paste the resume text directly.",
+            extracted_text=None,
+            normalized_resume=None
+        )
+        
+    if not content_bytes or len(content_bytes) < 10:
+        return ResumeUploadExtractResponse(
+            success=False,
+            status="fallback_required",
+            fallback_required=True,
+            filename=filename,
+            message="Uploaded document is empty. Please paste your resume text directly.",
+            extracted_text=None,
+            normalized_resume=None
+        )
+        
+    if len(content_bytes) > 5 * 1024 * 1024:
+        return ResumeUploadExtractResponse(
+            success=False,
+            status="fallback_required",
+            fallback_required=True,
+            filename=filename,
+            message="Uploaded file exceeds 5MB limit. Please upload a smaller file or paste your resume text directly.",
+            extracted_text=None,
+            normalized_resume=None
+        )
+
+    try:
+        raw_text = extract_text_from_document(filename, content_bytes)
+    except Exception as parse_err:
+        return ResumeUploadExtractResponse(
+            success=False,
+            status="fallback_required",
+            fallback_required=True,
+            filename=filename,
+            message=f"Error extracting text from document: {str(parse_err)}. Please paste the resume text directly.",
+            extracted_text=None,
+            normalized_resume=None
+        )
+        
+    if not raw_text or len(raw_text.strip()) < 10:
+        return ResumeUploadExtractResponse(
+            success=False,
+            status="fallback_required",
+            fallback_required=True,
+            filename=filename,
+            message="Could not extract readable text from document. Please copy and paste your resume text directly.",
+            extracted_text=None,
+            normalized_resume=None
+        )
+        
+    normalized = normalize_resume(raw_text)
+    return ResumeUploadExtractResponse(
+        success=True,
+        status="extracted",
+        fallback_required=False,
+        filename=filename,
+        message="Resume extracted from document successfully.",
+        extracted_text=raw_text,
+        normalized_resume=normalized
+    )
+
+
 # ==============================================================================
 # PHASE 5C: RESUME ↔ JD MATCH PERSISTENCE & RETRIEVAL API
 # ==============================================================================
@@ -697,15 +792,28 @@ async def create_resume_jd_match(
         normalized_jd = payload.normalized_jd
     elif payload.jd_url:
         fetch_result = safe_fetch_job_url(payload.jd_url)
-        if not fetch_result["success"]:
+        if isinstance(fetch_result, dict):
+            success = fetch_result.get("success", False)
+            text_or_err = fetch_result.get("extracted_text") or fetch_result.get("error", "")
+            final_url = fetch_result.get("source_url") or payload.jd_url
+        elif isinstance(fetch_result, (tuple, list)):
+            success = bool(fetch_result[0])
+            text_or_err = fetch_result[2] if len(fetch_result) > 2 else ""
+            final_url = fetch_result[3] if len(fetch_result) > 3 else payload.jd_url
+        else:
+            success = False
+            text_or_err = "Fetch failed"
+            final_url = payload.jd_url
+
+        if not success:
             raise HTTPException(
                 status_code=400,
-                detail=f"Unable to fetch JD from URL: {fetch_result.get('error', 'Fetch failed')}. Please paste the JD text directly."
+                detail=f"Unable to fetch JD from URL: {text_or_err}. Please paste the JD text directly."
             )
         normalized_jd = normalize_job_description(
-            raw_text=fetch_result["extracted_text"],
+            raw_text=text_or_err,
             source_type="public_url",
-            source_url=payload.jd_url
+            source_url=final_url
         )
     else:
         normalized_jd = normalize_job_description(
@@ -713,6 +821,7 @@ async def create_resume_jd_match(
             source_type=payload.source_type or "paste",
             source_url=payload.source_url
         )
+
 
     # 3. Extract & Normalize Resume
     if payload.normalized_resume:

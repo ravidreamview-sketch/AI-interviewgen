@@ -289,7 +289,36 @@ class TestPhase5EUIIntegration(unittest.TestCase):
         self.assertIn("invalidatePreviousAnalysis", html)
         self.assertIn("currentMatchState", html)
 
+    # --------------------------------------------------------------------------
+    # 9. Phase 5E: Resume Document Upload Endpoint
+    # --------------------------------------------------------------------------
+    def test_09_resume_document_upload_api(self):
+        sample_resume_txt = b"John Doe\nSenior Backend Engineer with 5 years in Python, FastAPI, PostgreSQL."
+        files = {"file": ("test_resume.txt", sample_resume_txt, "text/plain")}
+        resp = client.post(
+            "/api/candidate/resume/upload",
+            files=files,
+            headers=self.auth_headers
+        )
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data["success"])
+        self.assertIn("Python", data["extracted_text"])
+
+    # --------------------------------------------------------------------------
+    # 10. Phase 5E: Differentiated Error Messages in UI
+    # --------------------------------------------------------------------------
+    def test_10_ui_has_differentiated_error_messages(self):
+        resp = client.get("/candidate/resume-jd-match")
+        html = resp.text
+        self.assertIn("Your session has expired. Please sign in again.", html)
+        self.assertIn("Please provide a valid resume and job description.", html)
+        self.assertIn("Match service is unavailable.", html)
+        self.assertIn("We couldn't complete the match analysis. Please try again.", html)
+        self.assertIn("Unable to reach the match service. Please check your connection.", html)
+
 
 if __name__ == "__main__":
     unittest.main()
+
 

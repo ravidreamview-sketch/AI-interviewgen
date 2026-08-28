@@ -905,19 +905,54 @@ function switchJdTab(tab) {
 }
 
 // Resume File Upload
-resumeFileInput.addEventListener('change', (e) => {
+resumeFileInput.addEventListener('change', async (e) => {
+  if (e.target.files.length === 0) return;
   invalidatePreviousAnalysis();
-  if (e.target.files.length > 0) {
-    const file = e.target.files[0];
-    resumeDropText.textContent = `✓ Attached: ${file.name}`;
-    if (file.name.endsWith('.txt')) {
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        resumeTextEl.value = evt.target.result;
-        resumeCharCountEl.textContent = `${resumeTextEl.value.length} chars`;
-      };
-      reader.readAsText(file);
+  const file = e.target.files[0];
+  const fnameLower = file.name.toLowerCase();
+
+  resumeDropText.textContent = `⏳ Uploading ${file.name}...`;
+
+  if (fnameLower.endsWith('.txt')) {
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      resumeTextEl.value = evt.target.result;
+      resumeCharCountEl.textContent = `${resumeTextEl.value.length} chars`;
+      resumeDropText.textContent = `✓ Attached: ${file.name}`;
+      showToast('✓ Resume text attached successfully!', 'success');
+    };
+    reader.onerror = () => {
+      resumeDropText.textContent = `Upload Resume (PDF, DOCX, TXT)`;
+      showToast('Could not read resume text file. Please paste text directly.', 'error');
+    };
+    reader.readAsText(file);
+    return;
+  }
+
+  // Upload PDF, DOC, DOCX to server extractor
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const resp = await fetch('/api/candidate/resume/upload', {
+      method: 'POST',
+      credentials: 'include',
+      body: formData
+    });
+    const data = await resp.json();
+
+    if (resp.ok && data.success && data.extracted_text) {
+      resumeTextEl.value = data.extracted_text;
+      resumeCharCountEl.textContent = `${data.extracted_text.length} chars`;
+      resumeDropText.textContent = `✓ Attached: ${file.name}`;
+      showToast('✓ Resume extracted from document successfully!', 'success');
+    } else {
+      resumeDropText.textContent = `Upload Resume (PDF, DOCX, TXT)`;
+      showToast(data.message || 'Could not parse resume document. Please paste the resume text directly.', 'error');
     }
+  } catch (err) {
+    resumeDropText.textContent = `Upload Resume (PDF, DOCX, TXT)`;
+    showToast('Network error uploading resume file. Please paste the resume text directly.', 'error');
   }
 });
 
@@ -1085,6 +1120,7 @@ async function runResumeJdMatch() {
     source_url: sourceUrl
   };
 
+  let data;
   try {
     const resp = await fetch('/api/candidate/resume-jd/match', {
       method: 'POST',
@@ -1097,28 +1133,44 @@ async function runResumeJdMatch() {
       let errMsg = 'Failed to analyze resume and JD match.';
       if (resp.status === 401) {
         errMsg = 'Your session has expired. Please sign in again.';
-        showToast(errMsg, 'error');
+      } else if (resp.status === 422) {
+        errMsg = 'Please provide a valid resume and job description.';
+      } else if (resp.status === 404) {
+        errMsg = 'Match service is unavailable.';
+      } else if (resp.status >= 500) {
+        errMsg = "We couldn't complete the match analysis. Please try again.";
       } else {
         const errData = await resp.json().catch(() => ({}));
         errMsg = errData.detail || errMsg;
-        showToast(errMsg, 'error');
       }
+      showToast(errMsg, 'error');
       setMatchUIState('ERROR', null, errMsg);
       return;
     }
 
-    const data = await resp.json();
+    data = await resp.json();
+  } catch (networkErr) {
+    console.error('Match network request error:', networkErr);
+    const errMsg = 'Unable to reach the match service. Please check your connection.';
+    showToast(errMsg, 'error');
+    setMatchUIState('ERROR', null, errMsg);
+    return;
+  }
+
+  try {
     lastMatchResult = data;
     currentScanId = data.scan_id || null;
 
     setMatchUIState('SUCCESS', data);
     document.getElementById('resultsPanel').scrollIntoView({ behavior: 'smooth' });
-  } catch (err) {
-    const networkErr = 'Network error while evaluating match. Please check your connection.';
-    showToast(networkErr, 'error');
-    setMatchUIState('ERROR', null, networkErr);
+  } catch (renderErr) {
+    console.error('Match result render error:', renderErr);
+    const errMsg = "We couldn't complete the match analysis display. Please try again.";
+    showToast(errMsg, 'error');
+    setMatchUIState('ERROR', null, errMsg);
   }
 }
+
 
 // Render Results Authoritatively from Backend Response
 function renderMatchResults(data) {
