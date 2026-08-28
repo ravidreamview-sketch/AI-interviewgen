@@ -519,9 +519,9 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
       </div>
     </div>
 
-    <!-- PROGRESS BOX -->
+    <!-- PROGRESS BOX (LOADING STATE) -->
     <div class="progress-box" id="progressBox">
-      <div style="font-size:15px;font-weight:700;color:var(--ink)">Analyzing candidate resume against target job description...</div>
+      <div style="font-size:15px;font-weight:700;color:var(--ink)">Analyzing resume against job description...</div>
       <div class="progress-steps">
         <div class="progress-step done" id="pStep1">
           <div class="step-icon">✓</div>
@@ -546,22 +546,44 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
       </div>
     </div>
 
-    <!-- RESULTS PANEL -->
-    <div class="results-card" id="resultsPanel">
+    <!-- INITIAL STATE PANEL (NEUTRAL PLACEHOLDER) -->
+    <div class="card" id="initialStatePanel" style="margin-top:24px;text-align:center;padding:48px 24px;border:1.5px dashed var(--rule)">
+      <div style="width:52px;height:52px;border-radius:50%;background:var(--paper);border:1px solid var(--rule);display:grid;place-items:center;margin:0 auto 16px;font-size:24px">⚖️</div>
+      <div style="font-family:var(--f-mono);font-size:12px;font-weight:700;color:var(--primary);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px">RESUME ↔ JOB MATCH</div>
+      <h3 style="font-size:18px;font-weight:800;color:var(--ink);margin:0 0 8px">Match analysis not started</h3>
+      <p style="color:var(--ink-soft);font-size:14px;max-width:480px;margin:0 auto;line-height:1.5">Add your resume and target job description to calculate your match.<br>No match result available yet.</p>
+    </div>
+
+    <!-- ERROR STATE PANEL -->
+    <div class="card" id="errorStatePanel" style="margin-top:24px;display:none;background:var(--danger-wash);border:1.5px solid var(--danger-border);padding:24px;border-radius:var(--radius)">
+      <div style="display:flex;align-items:flex-start;gap:14px">
+        <div style="font-size:26px;line-height:1">⚠️</div>
+        <div style="flex:1">
+          <div style="font-size:16px;font-weight:800;color:var(--danger);margin-bottom:4px" id="errorTitle">Unable to complete the match analysis. Please try again.</div>
+          <div style="font-size:13.5px;color:var(--ink-soft);line-height:1.5" id="errorMessage">The server could not process the match request. Please verify your inputs or session status.</div>
+          <button onclick="runResumeJdMatch()" style="margin-top:14px;padding:9px 18px;border-radius:8px;background:var(--danger);color:#fff;font-weight:700;font-size:13px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+            <span>🔄 Try Again</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTS PANEL (SUCCESS STATE ONLY) -->
+    <div class="results-card" id="resultsPanel" style="display:none">
       <!-- HEADER BANNER -->
       <div class="score-banner">
         <div class="score-circle">
           <div style="font-family:var(--f-mono);font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase">Overall Match</div>
-          <div class="score-num" id="resOverallScore">0%</div>
+          <div class="score-num" id="resOverallScore">—</div>
           <div style="margin-top:6px">
-            <span class="confidence-badge HIGH" id="resConfidenceBadge">Confidence: HIGH</span>
+            <span class="confidence-badge" id="resConfidenceBadge" style="display:none"></span>
           </div>
         </div>
 
         <div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap">
             <span style="font-size:20px;font-weight:800;color:var(--ink)" id="resTargetRole">Target Role</span>
-            <span style="font-family:var(--f-mono);font-size:11px;padding:3px 8px;border-radius:6px;background:var(--paper);border:1px solid var(--rule);color:var(--ink-soft)" id="resCompanyContext">Target Company</span>
+            <span style="font-family:var(--f-mono);font-size:11px;padding:3px 8px;border-radius:6px;background:var(--paper);border:1px solid var(--rule);color:var(--ink-soft);display:none" id="resCompanyContext"></span>
           </div>
           <div style="font-size:13.5px;color:var(--ink-soft);line-height:1.5" id="resSummaryDesc">
             Multi-dimensional evaluation results calculated by the server matching engine.
@@ -573,27 +595,27 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
       <div class="subscores-grid">
         <div class="subscore-card">
           <div class="subscore-title">Required Skills</div>
-          <div class="subscore-val" id="subScoreReq">0%</div>
+          <div class="subscore-val" id="subScoreReq">—</div>
           <div class="subscore-bar-bg"><div class="subscore-bar-fill" id="subBarReq" style="width:0%"></div></div>
         </div>
         <div class="subscore-card">
           <div class="subscore-title">Experience</div>
-          <div class="subscore-val" id="subScoreExp">0%</div>
+          <div class="subscore-val" id="subScoreExp">—</div>
           <div class="subscore-bar-bg"><div class="subscore-bar-fill" id="subBarExp" style="width:0%"></div></div>
         </div>
         <div class="subscore-card">
           <div class="subscore-title">Domain</div>
-          <div class="subscore-val" id="subScoreDom">0%</div>
+          <div class="subscore-val" id="subScoreDom">—</div>
           <div class="subscore-bar-bg"><div class="subscore-bar-fill" id="subBarDom" style="width:0%"></div></div>
         </div>
         <div class="subscore-card">
           <div class="subscore-title">Responsibilities</div>
-          <div class="subscore-val" id="subScoreResp">0%</div>
+          <div class="subscore-val" id="subScoreResp">—</div>
           <div class="subscore-bar-bg"><div class="subscore-bar-fill" id="subBarResp" style="width:0%"></div></div>
         </div>
         <div class="subscore-card">
           <div class="subscore-title">Preferred Skills</div>
-          <div class="subscore-val" id="subScorePref">0%</div>
+          <div class="subscore-val" id="subScorePref">—</div>
           <div class="subscore-bar-bg"><div class="subscore-bar-fill" id="subBarPref" style="width:0%"></div></div>
         </div>
       </div>
@@ -613,7 +635,9 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
       <!-- STRENGTHS -->
       <div style="margin-top:24px">
         <div style="font-size:16px;font-weight:700;margin-bottom:10px;color:var(--ink)">Verified Candidate Strengths</div>
-        <div class="skill-tags" id="strengthsList"></div>
+        <div class="skill-tags" id="strengthsList">
+          <span style="font-size:13px;color:var(--ink-soft)">No verified strengths identified yet.</span>
+        </div>
       </div>
 
       <!-- OTHER SKILL GAPS -->
@@ -645,7 +669,11 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
                 <th>Status</th>
               </tr>
             </thead>
-            <tbody id="matrixTableBody"></tbody>
+            <tbody id="matrixTableBody">
+              <tr>
+                <td colspan="5" style="text-align:center;padding:20px;color:var(--ink-faint)">Run the analysis to see the skill matrix.</td>
+              </tr>
+            </tbody>
           </table>
         </div>
       </div>
@@ -662,7 +690,7 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
               The Adaptive Engine directly ingests this scan to drill your highest-priority JD gaps (60%) and core role competencies (40%).
             </div>
           </div>
-          <button id="deepPracticeBtn" onclick="launchDeepPractice()" style="padding:12px 22px;border-radius:10px;font-weight:700;font-size:14px;background:var(--primary-grad);color:#fff;display:inline-flex;align-items:center;gap:8px;cursor:pointer;border:none;box-shadow:0 4px 16px rgba(16,185,129,0.35);transition:all .18s">
+          <button id="deepPracticeBtn" onclick="launchDeepPractice()" disabled style="padding:12px 22px;border-radius:10px;font-weight:700;font-size:14px;background:var(--primary-grad);color:#fff;display:inline-flex;align-items:center;gap:8px;border:none;box-shadow:0 4px 16px rgba(16,185,129,0.35);transition:all .18s;opacity:0.6;cursor:not-allowed">
             <span>⚡ Start Targeted Practice</span>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"/></svg>
           </button>
@@ -687,7 +715,8 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
-// Global State
+// Global State Model: 'INITIAL' | 'LOADING' | 'SUCCESS' | 'ERROR'
+let currentMatchState = 'INITIAL';
 let currentJdTab = 'paste';
 let currentScanId = null;
 let extractedJdData = null;
@@ -702,11 +731,108 @@ const resumeFileInput = document.getElementById('fileInput');
 const resumeDropText = document.getElementById('dropText');
 const jdFileInput = document.getElementById('jdFileInput');
 const jdDropText = document.getElementById('jdDropText');
+const jdUrlInput = document.getElementById('jdUrlInput');
 
-// Update Character Count
+// State Management Controller
+function setMatchUIState(state, data = null, errorMsg = '') {
+  currentMatchState = state;
+  const initPanel = document.getElementById('initialStatePanel');
+  const progBox = document.getElementById('progressBox');
+  const resPanel = document.getElementById('resultsPanel');
+  const errPanel = document.getElementById('errorStatePanel');
+  const matchBtn = document.getElementById('matchBtn');
+  const deepBtn = document.getElementById('deepPracticeBtn');
+  const practiceQContainer = document.getElementById('practiceQuestionsContainer');
+
+  if (state === 'INITIAL') {
+    currentScanId = null;
+    lastMatchResult = null;
+    lastAdaptiveResponse = null;
+    if (initPanel) initPanel.style.display = 'block';
+    if (progBox) progBox.classList.remove('active');
+    if (resPanel) resPanel.style.display = 'none';
+    if (errPanel) errPanel.style.display = 'none';
+    if (practiceQContainer) practiceQContainer.style.display = 'none';
+    if (matchBtn) {
+      matchBtn.disabled = false;
+      matchBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Analyze Resume &amp; Job Match`;
+    }
+    if (deepBtn) {
+      deepBtn.disabled = true;
+      deepBtn.style.opacity = '0.6';
+      deepBtn.style.cursor = 'not-allowed';
+    }
+  } else if (state === 'LOADING') {
+    if (initPanel) initPanel.style.display = 'none';
+    if (progBox) progBox.classList.add('active');
+    if (resPanel) resPanel.style.display = 'none';
+    if (errPanel) errPanel.style.display = 'none';
+    if (practiceQContainer) practiceQContainer.style.display = 'none';
+    if (matchBtn) {
+      matchBtn.disabled = true;
+      matchBtn.innerHTML = `<span>⏳ Analyzing resume against job description...</span>`;
+    }
+    if (deepBtn) {
+      deepBtn.disabled = true;
+      deepBtn.style.opacity = '0.6';
+      deepBtn.style.cursor = 'not-allowed';
+    }
+  } else if (state === 'SUCCESS') {
+    if (initPanel) initPanel.style.display = 'none';
+    if (progBox) progBox.classList.remove('active');
+    if (errPanel) errPanel.style.display = 'none';
+    if (resPanel) {
+      resPanel.style.display = 'block';
+      renderMatchResults(data);
+    }
+    if (matchBtn) {
+      matchBtn.disabled = false;
+      matchBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Analyze Resume &amp; Job Match`;
+    }
+    if (deepBtn && currentScanId) {
+      deepBtn.disabled = false;
+      deepBtn.style.opacity = '1';
+      deepBtn.style.cursor = 'pointer';
+    }
+  } else if (state === 'ERROR') {
+    currentScanId = null;
+    lastMatchResult = null;
+    if (initPanel) initPanel.style.display = 'none';
+    if (progBox) progBox.classList.remove('active');
+    if (resPanel) resPanel.style.display = 'none';
+    if (errPanel) {
+      errPanel.style.display = 'block';
+      if (errorMsg) {
+        document.getElementById('errorMessage').textContent = errorMsg;
+      }
+    }
+    if (practiceQContainer) practiceQContainer.style.display = 'none';
+    if (matchBtn) {
+      matchBtn.disabled = false;
+      matchBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Analyze Resume &amp; Job Match`;
+    }
+    if (deepBtn) {
+      deepBtn.disabled = true;
+      deepBtn.style.opacity = '0.6';
+      deepBtn.style.cursor = 'not-allowed';
+    }
+  }
+}
+
+// Invalidation Handlers (Requirement 13: Invalidate previous match on input change)
+function invalidatePreviousAnalysis() {
+  if (currentMatchState !== 'INITIAL') {
+    setMatchUIState('INITIAL');
+  }
+}
+
+// Update Character Count and Invalidate
 resumeTextEl.addEventListener('input', () => {
   resumeCharCountEl.textContent = `${resumeTextEl.value.length} chars`;
+  invalidatePreviousAnalysis();
 });
+jdTextEl.addEventListener('input', invalidatePreviousAnalysis);
+jdUrlInput.addEventListener('input', invalidatePreviousAnalysis);
 
 // Theme Switcher
 document.getElementById('themeBtn').addEventListener('click', () => {
@@ -780,6 +906,7 @@ function switchJdTab(tab) {
 
 // Resume File Upload
 resumeFileInput.addEventListener('change', (e) => {
+  invalidatePreviousAnalysis();
   if (e.target.files.length > 0) {
     const file = e.target.files[0];
     resumeDropText.textContent = `✓ Attached: ${file.name}`;
@@ -796,18 +923,18 @@ resumeFileInput.addEventListener('change', (e) => {
 
 // Fetch JD from URL
 async function fetchJdFromUrl() {
-  const urlInput = document.getElementById('jdUrlInput');
-  const url = urlInput.value.trim();
+  const url = jdUrlInput.value.trim();
   const btn = document.getElementById('fetchJdUrlBtn');
   const statusMsg = document.getElementById('urlStatusMsg');
   const card = document.getElementById('urlExtractedCard');
 
   if (!url) {
     showToast('Please enter a valid job posting URL.', 'error');
-    urlInput.focus();
+    jdUrlInput.focus();
     return;
   }
 
+  invalidatePreviousAnalysis();
   btn.disabled = true;
   btn.innerHTML = `<span>⏳ Extracting...</span>`;
   statusMsg.textContent = 'Fetching and validating public job description webpage...';
@@ -855,6 +982,7 @@ async function fetchJdFromUrl() {
 // JD Document Upload
 jdFileInput.addEventListener('change', async (e) => {
   if (e.target.files.length === 0) return;
+  invalidatePreviousAnalysis();
   const file = e.target.files[0];
   const statusMsg = document.getElementById('uploadStatusMsg');
   const card = document.getElementById('uploadExtractedCard');
@@ -946,15 +1074,8 @@ async function runResumeJdMatch() {
     return;
   }
 
-  const matchBtn = document.getElementById('matchBtn');
-  const progressBox = document.getElementById('progressBox');
-  const resultsPanel = document.getElementById('resultsPanel');
-
-  matchBtn.disabled = true;
-  matchBtn.innerHTML = `<span>⏳ Analyzing Match...</span>`;
-  progressBox.classList.add('active');
-  resultsPanel.classList.remove('active');
-  progressBox.scrollIntoView({ behavior: 'smooth' });
+  setMatchUIState('LOADING');
+  document.getElementById('progressBox').scrollIntoView({ behavior: 'smooth' });
 
   const requestBody = {
     resume_text: resumeText,
@@ -973,64 +1094,88 @@ async function runResumeJdMatch() {
     });
 
     if (!resp.ok) {
+      let errMsg = 'Failed to analyze resume and JD match.';
       if (resp.status === 401) {
-        showToast('Your session has expired. Please sign in again.', 'error');
+        errMsg = 'Your session has expired. Please sign in again.';
+        showToast(errMsg, 'error');
       } else {
         const errData = await resp.json().catch(() => ({}));
-        showToast(errData.detail || 'Failed to analyze resume and JD match.', 'error');
+        errMsg = errData.detail || errMsg;
+        showToast(errMsg, 'error');
       }
-      progressBox.classList.remove('active');
-      matchBtn.disabled = false;
-      matchBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Analyze Resume &amp; Job Match`;
+      setMatchUIState('ERROR', null, errMsg);
       return;
     }
 
     const data = await resp.json();
     lastMatchResult = data;
-    currentScanId = data.scan_id;
+    currentScanId = data.scan_id || null;
 
-    // Render results
-    renderMatchResults(data);
-
-    progressBox.classList.remove('active');
-    resultsPanel.classList.add('active');
-    resultsPanel.scrollIntoView({ behavior: 'smooth' });
+    setMatchUIState('SUCCESS', data);
+    document.getElementById('resultsPanel').scrollIntoView({ behavior: 'smooth' });
   } catch (err) {
-    showToast('Network error while evaluating match. Please check your connection.', 'error');
-    progressBox.classList.remove('active');
-  } finally {
-    matchBtn.disabled = false;
-    matchBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Analyze Resume &amp; Job Match`;
+    const networkErr = 'Network error while evaluating match. Please check your connection.';
+    showToast(networkErr, 'error');
+    setMatchUIState('ERROR', null, networkErr);
   }
 }
 
-// Render Results
+// Render Results Authoritatively from Backend Response
 function renderMatchResults(data) {
-  const overall = Math.round(data.overall_match_score || 0);
-  const scoreNumEl = document.getElementById('resOverallScore');
-  scoreNumEl.textContent = `${overall}%`;
+  if (!data) return;
 
-  if (overall >= 70) {
-    scoreNumEl.style.color = '#10B981';
-  } else if (overall >= 50) {
-    scoreNumEl.style.color = '#F59E0B';
+  // 1. Overall Match Score
+  const scoreNumEl = document.getElementById('resOverallScore');
+  if (typeof data.overall_match_score === 'number') {
+    const overall = Math.round(data.overall_match_score);
+    scoreNumEl.textContent = `${overall}%`;
+    if (overall >= 70) {
+      scoreNumEl.style.color = '#10B981';
+    } else if (overall >= 50) {
+      scoreNumEl.style.color = '#F59E0B';
+    } else {
+      scoreNumEl.style.color = '#EF4444';
+    }
   } else {
-    scoreNumEl.style.color = '#EF4444';
+    scoreNumEl.textContent = '—';
+    scoreNumEl.style.color = 'var(--ink)';
   }
 
+  // 2. Match Confidence
   const confBadge = document.getElementById('resConfidenceBadge');
-  confBadge.textContent = `Confidence: ${data.match_confidence || 'HIGH'}`;
-  confBadge.className = `confidence-badge ${data.match_confidence || 'HIGH'}`;
+  if (data.match_confidence) {
+    const conf = String(data.match_confidence).toUpperCase();
+    confBadge.textContent = `Confidence: ${conf}`;
+    confBadge.className = `confidence-badge ${conf}`;
+    confBadge.style.display = 'inline-flex';
+  } else {
+    confBadge.style.display = 'none';
+  }
 
-  document.getElementById('resTargetRole').textContent = data.target_role || 'Target Role';
-  document.getElementById('resCompanyContext').textContent = data.source_type ? `SOURCE: ${data.source_type.toUpperCase()}` : 'VERIFIED MATCH';
+  // 3. Target Role & Context
+  const targetRole = data.target_role || (extractedJdData && extractedJdData.normalized && extractedJdData.normalized.job_title) || 'Target Role';
+  document.getElementById('resTargetRole').textContent = targetRole;
 
-  // Sub-scores
+  const companyEl = document.getElementById('resCompanyContext');
+  const comp = (extractedJdData && extractedJdData.normalized && extractedJdData.normalized.company) || (data.source_type ? `SOURCE: ${data.source_type.toUpperCase()}` : '');
+  if (comp) {
+    companyEl.textContent = comp;
+    companyEl.style.display = 'inline-block';
+  } else {
+    companyEl.style.display = 'none';
+  }
+
+  // 4. Sub-scores
   const subs = data.sub_scores || {};
   const setSub = (scoreId, barId, val) => {
-    const v = Math.round(val || 0);
-    document.getElementById(scoreId).textContent = `${v}%`;
-    document.getElementById(barId).style.width = `${Math.min(100, Math.max(0, v))}%`;
+    if (typeof val === 'number') {
+      const v = Math.round(val);
+      document.getElementById(scoreId).textContent = `${v}%`;
+      document.getElementById(barId).style.width = `${Math.min(100, Math.max(0, v))}%`;
+    } else {
+      document.getElementById(scoreId).textContent = '—';
+      document.getElementById(barId).style.width = '0%';
+    }
   };
   setSub('subScoreReq', 'subBarReq', subs.required_skills);
   setSub('subScoreExp', 'subBarExp', subs.experience);
@@ -1038,20 +1183,21 @@ function renderMatchResults(data) {
   setSub('subScoreResp', 'subBarResp', subs.responsibilities);
   setSub('subScorePref', 'subBarPref', subs.preferred_skills);
 
-  // Critical Gaps
+  // 5. Critical Gaps
   const critContainer = document.getElementById('criticalGapsContainer');
   const critList = document.getElementById('criticalGapsList');
   critList.innerHTML = '';
 
-  const matrix = data.skill_matrix || [];
-  const criticalItems = matrix.filter(item => 
+  const matrix = Array.isArray(data.skill_matrix) ? data.skill_matrix : [];
+  const criticalGaps = Array.isArray(data.critical_gaps) ? data.critical_gaps : [];
+  const highMatrixGaps = matrix.filter(item => 
     (item.importance === 'HIGH' && (item.gap_status === 'gap' || item.match_score < 60)) ||
-    (data.critical_gaps && data.critical_gaps.some(cg => cg.toLowerCase().includes(item.skill.toLowerCase())))
+    (criticalGaps.some(cg => cg.toLowerCase().includes((item.skill || '').toLowerCase())))
   );
 
-  if (criticalItems.length > 0 || (data.critical_gaps && data.critical_gaps.length > 0)) {
+  if (highMatrixGaps.length > 0 || criticalGaps.length > 0) {
     critContainer.style.display = 'block';
-    const displayGaps = criticalItems.length > 0 ? criticalItems : (data.critical_gaps || []).map(g => ({
+    const displayGaps = highMatrixGaps.length > 0 ? highMatrixGaps : criticalGaps.map(g => ({
       skill: g.replace(/Critical Gap:\s*/i, ''),
       importance: 'HIGH',
       match_score: 0,
@@ -1063,7 +1209,7 @@ function renderMatchResults(data) {
       card.className = 'critical-gap-card';
       const mScore = Math.round(item.match_score || 0);
       card.innerHTML = `
-        <div class="critical-gap-skill">⚠ ${item.skill}</div>
+        <div class="critical-gap-skill">⚠️ ${item.skill}</div>
         <div class="critical-gap-meta">
           <span>Match: <b>${mScore}%</b></span>
           <span style="color:#DC2626;font-weight:700">Importance: ${item.importance || 'HIGH'}</span>
@@ -1075,10 +1221,10 @@ function renderMatchResults(data) {
     critContainer.style.display = 'none';
   }
 
-  // Strengths
+  // 6. Strengths
   const strList = document.getElementById('strengthsList');
   strList.innerHTML = '';
-  const strengths = data.strengths || [];
+  const strengths = Array.isArray(data.strengths) ? data.strengths : [];
   if (strengths.length > 0) {
     strengths.forEach(s => {
       const tag = document.createElement('span');
@@ -1087,14 +1233,15 @@ function renderMatchResults(data) {
       strList.appendChild(tag);
     });
   } else {
-    strList.innerHTML = `<span style="font-size:13px;color:var(--ink-soft)">Core software engineering fundamentals verified.</span>`;
+    strList.innerHTML = `<span style="font-size:13px;color:var(--ink-soft)">No verified strengths identified yet.</span>`;
   }
 
-  // Skill Gaps
+  // 7. Skill Gaps
   const gapsList = document.getElementById('skillGapsList');
   gapsList.innerHTML = '';
-  const gaps = data.skill_gaps || [];
+  const gaps = Array.isArray(data.skill_gaps) ? data.skill_gaps : [];
   if (gaps.length > 0) {
+    document.getElementById('skillGapsWrap').style.display = 'block';
     gaps.forEach(g => {
       const tag = document.createElement('span');
       tag.className = 'stag gap';
@@ -1105,11 +1252,12 @@ function renderMatchResults(data) {
     document.getElementById('skillGapsWrap').style.display = 'none';
   }
 
-  // Recommendations
+  // 8. Recommendations
   const recList = document.getElementById('recommendationsList');
   recList.innerHTML = '';
-  const recs = data.recommendations || [];
+  const recs = Array.isArray(data.recommendations) ? data.recommendations : [];
   if (recs.length > 0) {
+    document.getElementById('recommendationsWrap').style.display = 'block';
     recs.forEach(r => {
       const li = document.createElement('li');
       li.textContent = r;
@@ -1119,32 +1267,36 @@ function renderMatchResults(data) {
     document.getElementById('recommendationsWrap').style.display = 'none';
   }
 
-  // Skill Matrix Table
+  // 9. Skill Matrix Table
   const tableBody = document.getElementById('matrixTableBody');
   tableBody.innerHTML = '';
-  matrix.forEach(item => {
-    const tr = document.createElement('tr');
-    const mScore = Math.round(item.match_score || 0);
-    let statusClass = 'match';
-    let statusLabel = '✓ Matched';
-    if (item.gap_status === 'gap' || mScore < 40) {
-      statusClass = 'gap';
-      statusLabel = '✗ Gap';
-    } else if (item.gap_status === 'partial' || mScore < 70) {
-      statusClass = 'partial';
-      statusLabel = '~ Partial';
-    }
+  if (matrix.length > 0) {
+    matrix.forEach(item => {
+      const tr = document.createElement('tr');
+      const mScore = Math.round(item.match_score || 0);
+      let statusClass = 'match';
+      let statusLabel = '✓ Matched';
+      if (item.gap_status === 'gap' || mScore < 40) {
+        statusClass = 'gap';
+        statusLabel = '✗ Gap';
+      } else if (item.gap_status === 'partial' || mScore < 70) {
+        statusClass = 'partial';
+        statusLabel = '~ Partial';
+      }
 
-    const evLevelText = item.evidence_level ? `Level ${item.evidence_level}` : 'Direct Evidence';
-    tr.innerHTML = `
-      <td style="font-weight:600">${item.skill}</td>
-      <td><span style="font-family:var(--f-mono);font-weight:700;font-size:12px">${item.importance || 'HIGH'}</span></td>
-      <td><b style="color:${mScore >= 70 ? 'var(--primary)' : (mScore >= 40 ? 'var(--gold)' : 'var(--danger)')}">${mScore}%</b></td>
-      <td style="font-size:12px;color:var(--ink-soft)">${evLevelText}</td>
-      <td><span class="stag ${statusClass}">${statusLabel}</span></td>
-    `;
-    tableBody.appendChild(tr);
-  });
+      const evLevelText = item.evidence_level ? `Level ${item.evidence_level}` : 'Direct Evidence';
+      tr.innerHTML = `
+        <td style="font-weight:600">${item.skill}</td>
+        <td><span style="font-family:var(--f-mono);font-weight:700;font-size:12px">${item.importance || 'HIGH'}</span></td>
+        <td><b style="color:${mScore >= 70 ? 'var(--primary)' : (mScore >= 40 ? 'var(--gold)' : 'var(--danger)')}">${mScore}%</b></td>
+        <td style="font-size:12px;color:var(--ink-soft)">${evLevelText}</td>
+        <td><span class="stag ${statusClass}">${statusLabel}</span></td>
+      `;
+      tableBody.appendChild(tr);
+    });
+  } else {
+    tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--ink-faint)">Run the analysis to see the skill matrix.</td></tr>`;
+  }
 }
 
 // Launch Deep Practice directly from verified server scan
@@ -1187,24 +1339,28 @@ async function launchDeepPractice() {
 
     // Render questions
     qList.innerHTML = '';
-    const questions = data.questions || [];
-    questions.forEach((q, idx) => {
-      const item = document.createElement('div');
-      item.className = 'q-gen-item';
-      const reasonTag = q.reason === 'jd_requirement' ? '🎯 JD REQUIREMENT' : 'ROLE COMPETENCY';
-      item.innerHTML = `
-        <div style="display:flex;align-items:center;justify-content:space-between">
-          <div class="q-tag-label">${q.target_skill ? `TARGET: ${q.target_skill}` : 'FOCUS AREA'}</div>
-          <span style="font-family:var(--f-mono);font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:var(--paper);border:1px solid var(--rule);color:#4F46E5">${reasonTag}</span>
-        </div>
-        <div class="q-text-line">${idx + 1}. "${q.question}"</div>
-      `;
-      qList.appendChild(item);
-    });
+    const questions = Array.isArray(data.questions) ? data.questions : [];
+    if (questions.length > 0) {
+      questions.forEach((q, idx) => {
+        const item = document.createElement('div');
+        item.className = 'q-gen-item';
+        const reasonTag = q.reason === 'jd_requirement' ? '🎯 JD REQUIREMENT' : 'ROLE COMPETENCY';
+        item.innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div class="q-tag-label">${q.target_skill ? `TARGET: ${q.target_skill}` : 'FOCUS AREA'}</div>
+            <span style="font-family:var(--f-mono);font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:var(--paper);border:1px solid var(--rule);color:#4F46E5">${reasonTag}</span>
+          </div>
+          <div class="q-text-line">${idx + 1}. "${q.question}"</div>
+        `;
+        qList.appendChild(item);
+      });
 
-    container.style.display = 'block';
-    container.scrollIntoView({ behavior: 'smooth' });
-    showToast('✓ Adaptive practice questions generated successfully!', 'success');
+      container.style.display = 'block';
+      container.scrollIntoView({ behavior: 'smooth' });
+      showToast('✓ Adaptive practice questions generated successfully!', 'success');
+    } else {
+      showToast('No adaptive questions generated for this scan.', 'info');
+    }
   } catch (err) {
     showToast('Network error generating adaptive questions.', 'error');
   } finally {
@@ -1235,6 +1391,7 @@ if (menuBtn && sidebar && scrim) {
   menuBtn.onclick = () => { sidebar.classList.add('open'); scrim.classList.add('show'); };
   scrim.onclick = () => { sidebar.classList.remove('open'); scrim.classList.remove('show'); };
 }
+
 </script>
 <script src="analytics-tracker.js"></script>
 </body>

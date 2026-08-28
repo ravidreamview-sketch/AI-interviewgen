@@ -247,6 +247,49 @@ class TestPhase5EUIIntegration(unittest.TestCase):
         self.assertEqual(practice_resp.status_code, 200)
         self.assertEqual(len(practice_resp.json()["questions"]), 3)
 
+    # --------------------------------------------------------------------------
+    # 7. Phase 5E Bug Fix: Verification of Static/Fake Data Removal
+    # --------------------------------------------------------------------------
+    def test_07_no_fake_static_match_data_in_initial_html(self):
+        resp = client.get("/candidate/resume-jd-match")
+        self.assertEqual(resp.status_code, 200)
+        html = resp.text
+
+        # 1. Initial neutral state panel
+        self.assertIn("initialStatePanel", html)
+        self.assertIn("Match analysis not started", html)
+        self.assertIn("No match result available yet.", html)
+
+        # 2. Error state panel
+        self.assertIn("errorStatePanel", html)
+        self.assertIn("Unable to complete the match analysis", html)
+
+        # 3. No fake strengths
+        self.assertNotIn("Core software engineering fundamentals verified.", html)
+        self.assertIn("No verified strengths identified yet.", html)
+
+        # 4. No hardcoded VERIFIED MATCH in initial template
+        self.assertNotIn(">VERIFIED MATCH<", html)
+
+        # 5. Deep practice button disabled by default
+        self.assertIn('id="deepPracticeBtn" onclick="launchDeepPractice()" disabled', html)
+
+        # 6. Skill matrix initial placeholder
+        self.assertIn("Run the analysis to see the skill matrix.", html)
+
+    # --------------------------------------------------------------------------
+    # 8. Phase 5E UI State Machine & Invalidation Logic
+    # --------------------------------------------------------------------------
+    def test_08_ui_state_model_and_invalidation(self):
+        resp = client.get("/candidate/resume-jd-match")
+        html = resp.text
+
+        # Verify state machine controller & invalidation handler in JS
+        self.assertIn("setMatchUIState", html)
+        self.assertIn("invalidatePreviousAnalysis", html)
+        self.assertIn("currentMatchState", html)
+
 
 if __name__ == "__main__":
     unittest.main()
+
