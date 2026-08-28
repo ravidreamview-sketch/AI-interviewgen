@@ -22,6 +22,8 @@
   --label-color:#10B981;
   --rule:#E2E8F0;       --rule-soft:#EDF2F0;
   --gold:#F59E0B;       --pass:#10B981;       --pass-wash:#ECFDF5;
+  --danger:#EF4444;     --danger-wash:#FEF2F2;--danger-border:#FECACA;
+  --warn:#F59E0B;       --warn-wash:#FFFBEB;  --warn-border:#FDE68A;
   --shadow:0 4px 20px -2px rgba(10, 25, 38, 0.05), 0 1px 3px rgba(0,0,0,0.02);
   --radius:16px;
   --f-disp:"Inter",system-ui,-apple-system,sans-serif;
@@ -39,6 +41,8 @@
   --label-color:#34D399;
   --rule:#1A364E;       --rule-soft:#132738;
   --gold:#FBBF24;       --pass:#34D399;       --pass-wash:rgba(16, 185, 129, 0.18);
+  --danger:#F87171;     --danger-wash:rgba(239, 68, 68, 0.15); --danger-border:rgba(239, 68, 68, 0.35);
+  --warn:#FBBF24;       --warn-wash:rgba(245, 158, 11, 0.15);  --warn-border:rgba(245, 158, 11, 0.35);
   --shadow:0 10px 30px -10px rgba(0, 0, 0, 0.5);
 }
 
@@ -85,10 +89,6 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
   background:linear-gradient(135deg, #818CF8 0%, #C084FC 100%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
 }
-.brand .brand-grad{
-  background:linear-gradient(135deg, #38BDF8 0%, #818CF8 50%, #C084FC 100%);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-}
 .brand .sub{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#94A3B8;margin-top:3px;font-weight:700;white-space:nowrap}
 
 .side-label{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#64748B;padding:4px 10px 0;margin-bottom:-6px;font-weight:600;white-space:nowrap}
@@ -112,29 +112,8 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 .nav-badge{margin-left:auto;font-family:var(--f-mono);font-size:9px;font-weight:700;letter-spacing:.04em;padding:2.5px 6.5px;border-radius:6px;background:rgba(255,255,255,.12);color:#FFFFFF;flex-shrink:0;white-space:nowrap}
 .nav-badge.new{background:#10B981;color:#FFFFFF}
 .nav-badge.pro{background:linear-gradient(135deg, #059669, #10B981);color:#FFFFFF}
-.nav-sep{height:1px;background:rgba(255,255,255,.08);margin:2px 8px}
 
 .side-foot{margin-top:auto;display:flex;flex-direction:column;gap:12px}
-.upgrade-card{
-  background:linear-gradient(145deg, rgba(16, 185, 129, 0.12) 0%, #0A1926 60%, #0D2A3D 100%);
-  border:1px solid rgba(52, 211, 153, 0.35);border-radius:14px;padding:14px 16px;
-  cursor:pointer;transition:all 0.2s ease;box-shadow:0 4px 20px rgba(0,0,0,0.35);
-  position:relative;overflow:hidden;
-}
-.upgrade-card::before{
-  content:"";position:absolute;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg, #10B981, #34D399, #6EE7B7);
-}
-.upgrade-card:hover{
-  transform:translateY(-2px);border-color:rgba(52, 211, 153, 0.8);
-  box-shadow:0 8px 24px rgba(16, 185, 129, 0.35);
-}
-.upgrade-top{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;color:#FFFFFF}
-.upgrade-top .crown-icon{color:#FBBF24;font-size:15px;filter:drop-shadow(0 0 6px rgba(251, 191, 36, 0.5))}
-.upgrade-top .chevron{margin-left:auto;color:#34D399;display:flex;align-items:center;transition:transform 0.2s}
-.upgrade-card:hover .chevron{transform:translateX(3px)}
-.upgrade-desc{margin-top:6px;font-size:12px;line-height:1.45;color:#94A3B8}
-
 .user{display:flex;align-items:center;gap:11px;padding:6px 4px}
 .user .av{width:38px;height:38px;border-radius:10px;flex:none;object-fit:cover;box-shadow:0 0 0 1px rgba(255,255,255,.14)}
 .user .nm{font-weight:600;font-size:13.5px;line-height:1.2;color:#FFFFFF}
@@ -155,33 +134,67 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 .icon-btn{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;border:1px solid var(--rule);background:var(--paper-2);color:var(--ink-soft);transition:all .18s;box-shadow:0 1px 2px rgba(0,0,0,0.03)}
 .icon-btn:hover{color:var(--ink);border-color:var(--pen);box-shadow:0 2px 8px rgba(99,102,241,0.15)}
 .icon-btn svg{width:19px;height:19px;stroke-width:1.7}
-.pro-btn{display:flex;align-items:center;gap:8px;padding:0 18px;height:40px;border-radius:10px;background:linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);color:#FFFFFF;font-weight:600;font-size:13.5px;border:none;box-shadow:0 4px 14px rgba(79, 70, 229, 0.35);transition:all .18s}
 
 /* resume match layout */
-.stage{animation:fadeIn .35s ease}
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-
 .split-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:20px}
-.card{background:var(--paper-2);border:1px solid var(--rule);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px}
+.card{background:var(--paper-2);border:1px solid var(--rule);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;display:flex;flex-direction:column}
 .card-head{font-size:17px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:10px;color:var(--ink)}
 .card-head svg{color:#4F46E5;width:20px;height:20px}
 
+/* tab group */
+.tab-group{display:flex;align-items:center;gap:6px;background:var(--paper);padding:4px;border-radius:12px;border:1px solid var(--rule);margin-bottom:16px}
+.tab-btn{
+  flex:1;padding:8px 12px;border-radius:8px;font-size:13px;font-weight:600;
+  color:var(--ink-soft);text-align:center;transition:all .2s ease;display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.tab-btn:hover{color:var(--ink);background:rgba(255,255,255,0.4)}
+[data-theme="dark"] .tab-btn:hover{background:rgba(255,255,255,0.06)}
+.tab-btn.active{
+  background:var(--paper-2);color:#4F46E5;box-shadow:0 2px 8px rgba(0,0,0,0.08);border:1px solid var(--rule);
+}
+[data-theme="dark"] .tab-btn.active{color:#818CF8;border-color:rgba(129,140,248,0.4)}
+
 /* upload dropzone */
 .dropzone{
-  border:2px dashed var(--rule);border-radius:14px;padding:32px 20px;text-align:center;
+  border:2px dashed var(--rule);border-radius:14px;padding:26px 18px;text-align:center;
   background:var(--paper);cursor:pointer;transition:all .2s ease;
 }
 .dropzone:hover{border-color:#4F46E5;background:#EEF2FF}
 [data-theme="dark"] .dropzone:hover{background:rgba(79,70,229,0.15)}
-.drop-icon{width:48px;height:48px;border-radius:50%;background:#EEF2FF;color:#4F46E5;display:grid;place-items:center;margin:0 auto 12px;font-size:20px}
+.drop-icon{width:44px;height:44px;border-radius:50%;background:#EEF2FF;color:#4F46E5;display:grid;place-items:center;margin:0 auto 10px;font-size:20px}
 [data-theme="dark"] .drop-icon{background:rgba(79,70,229,0.3);color:#A5B4FC}
 
 .textarea-box{
-  width:100%;height:140px;border-radius:12px;border:1px solid var(--rule);
-  background:var(--paper);color:var(--ink);padding:14px;font-family:var(--f-ui);font-size:14px;resize:vertical;
+  width:100%;height:160px;border-radius:12px;border:1px solid var(--rule);
+  background:var(--paper);color:var(--ink);padding:14px;font-family:var(--f-ui);font-size:14px;resize:vertical;line-height:1.5;
 }
 .textarea-box:focus{outline:none;border-color:#4F46E5;box-shadow:0 0 0 3px var(--pen-wash)}
 
+/* url input group */
+.url-input-wrap{display:flex;gap:8px;margin-bottom:12px}
+.url-input{
+  flex:1;border-radius:10px;border:1px solid var(--rule);background:var(--paper);
+  color:var(--ink);padding:12px 14px;font-size:13.5px;font-family:var(--f-ui);
+}
+.url-input:focus{outline:none;border-color:#4F46E5;box-shadow:0 0 0 3px var(--pen-wash)}
+.fetch-btn{
+  padding:0 18px;height:44px;border-radius:10px;background:#4F46E5;color:#fff;
+  font-weight:700;font-size:13.5px;display:inline-flex;align-items:center;gap:6px;transition:all .18s;flex-shrink:0;
+}
+.fetch-btn:hover{background:#4338CA;transform:translateY(-1px)}
+.fetch-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+
+/* job meta card */
+.job-meta-card{
+  background:var(--paper);border:1px solid var(--rule);border-radius:12px;padding:14px 16px;margin-top:12px;display:none;
+}
+.job-meta-card.active{display:block;animation:fadeIn .25s ease}
+.job-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12.5px;margin-top:8px}
+.job-meta-item{display:flex;flex-direction:column;gap:2px}
+.job-meta-label{font-family:var(--f-mono);font-size:10px;font-weight:700;color:var(--ink-faint);text-transform:uppercase}
+.job-meta-val{font-weight:600;color:var(--ink)}
+
+/* match CTA button */
 .match-btn{
   width:100%;padding:16px 24px;border-radius:14px;
   background:linear-gradient(90deg, #2563EB 0%, #3B82F6 20%, #4F46E5 50%, #7C3AED 80%, #8B5CF6 100%);
@@ -191,17 +204,72 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
   transition:all 0.2s cubic-bezier(0.16, 1, 0.3, 1);margin-top:20px;cursor:pointer;
 }
 .match-btn:hover{filter:brightness(1.08);transform:translateY(-2px);box-shadow:0 12px 30px -4px rgba(37, 99, 235, 0.55), 0 6px 18px -2px rgba(124, 58, 237, 0.5)}
+.match-btn:disabled{opacity:0.65;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* progress box */
+.progress-box{
+  background:var(--paper-2);border:1px solid var(--rule);border-radius:var(--radius);
+  padding:20px;margin-top:20px;display:none;
+}
+.progress-box.active{display:block;animation:fadeIn .25s ease}
+.progress-steps{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.progress-step{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--ink-soft)}
+.progress-step.done{color:var(--primary);font-weight:600}
+.progress-step.active{color:#4F46E5;font-weight:700}
+.step-icon{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-family:var(--f-mono);background:var(--paper);border:1px solid var(--rule);flex-shrink:0}
+.progress-step.done .step-icon{background:var(--primary);color:#fff;border-color:var(--primary)}
+.progress-step.active .step-icon{background:#4F46E5;color:#fff;border-color:#4F46E5;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(79,70,229,0.4)}50%{box-shadow:0 0 0 6px rgba(79,70,229,0)}}
 
 /* results analysis */
-.results-card{background:var(--paper-2);border:1px solid var(--rule);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px;margin-top:26px;display:none}
-.results-card.active{display:block}
+.results-card{background:var(--paper-2);border:1px solid var(--rule);border-radius:var(--radius);box-shadow:var(--shadow);padding:28px;margin-top:26px;display:none}
+.results-card.active{display:block;animation:fadeIn .35s ease}
 
-.score-banner{display:grid;grid-template-columns:220px 1fr;gap:24px;align-items:center;padding-bottom:20px;border-bottom:1px solid var(--rule-soft)}
+.score-banner{display:grid;grid-template-columns:220px 1fr;gap:24px;align-items:center;padding-bottom:24px;border-bottom:1px solid var(--rule-soft)}
 .score-circle{text-align:center;background:var(--paper);border-radius:14px;padding:20px;border:1px solid var(--rule)}
 .score-num{font-size:48px;font-weight:800;color:#4F46E5;line-height:1;margin:6px 0}
+.confidence-badge{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:8px;
+  font-family:var(--f-mono);font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+}
+.confidence-badge.HIGH{background:var(--pass-wash);color:var(--primary-forest);border:1px solid rgba(16,185,129,0.3)}
+.confidence-badge.MEDIUM{background:var(--warn-wash);color:#B45309;border:1px solid var(--warn-border)}
+.confidence-badge.LOW{background:var(--danger-wash);color:#B91C1C;border:1px solid var(--danger-border)}
+[data-theme="dark"] .confidence-badge.HIGH{background:rgba(16,185,129,0.2);color:#34D399}
+[data-theme="dark"] .confidence-badge.MEDIUM{background:rgba(245,158,11,0.2);color:#FBBF24}
+[data-theme="dark"] .confidence-badge.LOW{background:rgba(239,68,68,0.2);color:#F87171}
 
-.skill-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-.stag{padding:5px 12px;border-radius:8px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+/* subscores */
+.subscores-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;margin:20px 0}
+.subscore-card{background:var(--paper);border:1px solid var(--rule);border-radius:12px;padding:12px 14px}
+.subscore-title{font-family:var(--f-mono);font-size:10.5px;font-weight:700;color:var(--ink-faint);text-transform:uppercase}
+.subscore-val{font-size:20px;font-weight:800;color:var(--ink);margin:4px 0}
+.subscore-bar-bg{width:100%;height:6px;background:var(--rule);border-radius:4px;overflow:hidden}
+.subscore-bar-fill{height:100%;background:linear-gradient(90deg, #3B82F6, #10B981);border-radius:4px}
+
+/* critical gaps alert */
+.critical-gaps-box{
+  background:var(--danger-wash);border:1.5px solid var(--danger-border);border-radius:14px;
+  padding:20px;margin-top:20px;
+}
+.critical-gap-title{display:flex;align-items:center;gap:8px;color:#B91C1C;font-size:16px;font-weight:800}
+[data-theme="dark"] .critical-gap-title{color:#F87171}
+.critical-gap-cards{display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:12px;margin-top:14px}
+.critical-gap-card{
+  background:var(--paper-2);border:1px solid var(--danger-border);border-radius:10px;padding:12px 14px;
+  box-shadow:0 2px 6px rgba(239,68,68,0.08);
+}
+.critical-gap-skill{font-weight:700;font-size:15px;color:var(--ink);margin-bottom:4px}
+.critical-gap-meta{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--ink-soft)}
+
+/* skill matrix table */
+.matrix-table-wrap{overflow-x:auto;margin-top:16px;border:1px solid var(--rule);border-radius:12px}
+.matrix-table{width:100%;border-collapse:collapse;font-size:13.5px;text-align:left}
+.matrix-table th{background:var(--paper);padding:10px 14px;font-family:var(--f-mono);font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;border-bottom:1px solid var(--rule)}
+.matrix-table td{padding:10px 14px;border-bottom:1px solid var(--rule-soft);color:var(--ink)}
+.matrix-table tr:last-child td{border-bottom:none}
+
+.stag{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .stag.match{background:#ECFDF5;color:#059669;border:1px solid #A7F3D0}
 .stag.gap{background:#FEF2F2;color:#DC2626;border:1px solid #FECACA}
 .stag.partial{background:#FFFBEB;color:#D97706;border:1px solid #FDE68A}
@@ -209,16 +277,32 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 [data-theme="dark"] .stag.gap{background:rgba(239,68,68,0.2);color:#F87171;border-color:transparent}
 [data-theme="dark"] .stag.partial{background:rgba(245,158,11,0.2);color:#FBBF24;border-color:transparent}
 
-.q-gen-box{background:var(--paper);border-radius:14px;border:1px solid var(--rule);padding:20px;margin-top:20px}
-.q-gen-item{padding:12px 0;border-bottom:1px solid var(--rule-soft)}
+/* deep practice box */
+.q-gen-box{
+  background:linear-gradient(145deg, var(--paper-2) 0%, var(--paper) 100%);
+  border-radius:14px;border:1.5px solid rgba(79,70,229,0.3);padding:24px;margin-top:24px;
+  box-shadow:0 4px 20px rgba(79,70,229,0.08);
+}
+.q-gen-item{padding:14px 0;border-bottom:1px solid var(--rule-soft)}
 .q-gen-item:last-child{border-bottom:none}
-.q-tag-label{font-family:var(--f-mono);font-size:11px;font-weight:700;color:#DC2626;letter-spacing:.06em;text-transform:uppercase}
-.q-text-line{font-weight:600;font-size:15px;color:var(--ink);margin-top:4px}
+.q-tag-label{font-family:var(--f-mono);font-size:11px;font-weight:700;color:#4F46E5;letter-spacing:.06em;text-transform:uppercase;display:inline-flex;align-items:center;gap:6px}
+[data-theme="dark"] .q-tag-label{color:#818CF8}
+.q-text-line{font-weight:600;font-size:15px;color:var(--ink);margin-top:6px;line-height:1.45}
 
-@media(max-width:820px){
+/* toast */
+.toast-container{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:10px}
+.toast{
+  background:var(--board);color:var(--board-ink);border:1px solid rgba(255,255,255,0.15);
+  border-radius:10px;padding:12px 18px;font-size:13.5px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,0.35);
+  display:flex;align-items:center;gap:10px;animation:fadeIn .2s ease;
+}
+.toast.error{border-color:#EF4444;color:#FCA5A5}
+.toast.success{border-color:#10B981;color:#6EE7B7}
+
+@media(max-width:860px){
   .sidebar{position:fixed;left:0;top:0;bottom:0;width:280px;z-index:50;transform:translateX(-100%);transition:transform .3s ease}
   .sidebar.open{transform:none}
-  .main{padding:0 20px 24px}
+  .main{padding:0 16px 24px}
   .split-grid,.score-banner{grid-template-columns:1fr}
 }
 </style>
@@ -267,46 +351,20 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 16 14"/></svg>
         <span>Interview History</span>
       </a>
-      <a class="nav-link" href="Interview history.html">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-        <span>Question Bank</span>
-      </a>
       <a class="nav-link" href="Company-playbooks.html">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
         <span>Company Playbooks</span>
       </a>
     </nav>
 
-    <div class="side-label" style="margin-top:14px">PREFERENCES</div>
-    <nav class="nav">
-      <a class="nav-link" href="Dashboard.html#analytics">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
-        <span>Analytics</span>
-      </a>
-      <a class="nav-link" href="javascript:void(0)" onclick="alert('Model: Gemini 2.5 Flash\nStatus: Operational\nAPI Base: Ready')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-        <span>Model &amp; Settings</span>
-      </a>
-    </nav>
-
     <div class="side-foot">
-      <div class="upgrade-card" onclick="location.href='Upgrade-pro.html'" role="button" tabindex="0" aria-label="Go Pro Upgrade">
-        <div class="upgrade-top">
-          <span class="crown-icon">👑</span>
-          <span>Go Pro Plan</span>
-          <span class="chevron">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
-          </span>
-        </div>
-        <p class="upgrade-desc">Unlock unlimited Gemini 2.5 Flash generations &amp; live voice mock tests.</p>
-      </div>
       <div class="user">
-        <img class="av" alt="Ravi Chandran" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><rect width='40' height='40' fill='%234F46E5'/><circle cx='20' cy='15' r='8' fill='%23FFFFFF'/><path d='M6 38c0-8 6-13 14-13s14 5 14 13z' fill='%23FFFFFF'/></svg>">
+        <img class="av candidate-avatar" alt="Candidate Avatar" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><rect width='40' height='40' fill='%234F46E5'/><circle cx='20' cy='15' r='8' fill='%23FFFFFF'/><path d='M6 38c0-8 6-13 14-13s14 5 14 13z' fill='%23FFFFFF'/></svg>">
         <div>
-          <div class="nm">Ravi Chandran</div>
-          <div class="pl">Staff GenAI Lead</div>
+          <div class="nm candidate-name" id="userDisplayName">Candidate</div>
+          <div class="pl candidate-plan" id="userPlanDisplay">PRO TIER</div>
         </div>
-        <button class="logout-btn" title="Sign Out / Logout" onclick="handleLogout(event)">
+        <button class="logout-btn" title="Sign Out / Logout" onclick="handleLogout(event)" aria-label="Sign Out">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         </button>
       </div>
@@ -319,7 +377,7 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
   <main class="main">
     <div class="topbar">
       <div style="display:flex;align-items:center;gap:10px">
-        <button class="mob-btn" id="menuBtn" aria-label="Open Navigation">☰</button>
+        <button class="mob-btn" id="menuBtn" aria-label="Open Navigation" style="font-size:20px;cursor:pointer">☰</button>
         <span class="crumb"><a href="Dashboard.html" style="color:inherit;text-decoration:none">WORKSPACE</a> / RESUME &amp; JD MATCH</span>
       </div>
       <div class="top-actions">
@@ -332,9 +390,9 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
       </div>
     </div>
 
-    <header style="margin:20px 0">
-      <h1 style="font-size:32px;font-weight:700;margin:0 0 6px">Resume &amp; Job Description Matcher</h1>
-      <p style="color:var(--ink-soft);margin:0">Scan candidate resumes against target job descriptions to identify skill gaps and generate deep-probing interview questions.</p>
+    <header style="margin:10px 0 24px">
+      <h1 style="font-size:28px;font-weight:800;margin:0 0 6px;letter-spacing:-.02em">Resume &amp; Job Description Matcher</h1>
+      <p style="color:var(--ink-soft);margin:0;font-size:14.5px">Evaluate real candidate resumes against target job postings to detect multi-dimensional skill fit, uncover critical gaps, and generate tailored practice questions.</p>
     </header>
 
     <div class="split-grid">
@@ -345,16 +403,19 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
           1. Candidate Resume
         </div>
 
-        <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+        <div class="dropzone" id="resumeDropzone" onclick="document.getElementById('fileInput').click()" role="button" tabindex="0" aria-label="Upload Resume Document">
           <input type="file" id="fileInput" style="display:none" accept=".pdf,.doc,.docx,.txt">
           <div class="drop-icon">📄</div>
-          <div style="font-weight:700;font-size:15px;margin-bottom:4px" id="dropText">Upload Resume (PDF, DOCX, TXT)</div>
-          <div style="font-size:12.5px;color:var(--ink-soft)">Drag &amp; drop or click to browse files</div>
+          <div style="font-weight:700;font-size:14.5px;margin-bottom:4px" id="dropText">Upload Resume (PDF, DOCX, TXT)</div>
+          <div style="font-size:12px;color:var(--ink-soft)">Click or drag &amp; drop candidate resume file</div>
         </div>
 
-        <div style="margin-top:14px">
-          <label style="font-family:var(--f-mono);font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;display:block;margin-bottom:6px">Or Paste Raw Resume Text</label>
-          <textarea class="textarea-box" id="resumeText" placeholder="Paste candidate profile, work experience, projects, and skills here...">Senior Python Developer with 4 years experience building microservices with FastAPI, PostgreSQL, Redis, and Docker. Experience with AWS ECS and asynchronous Celery tasks.</textarea>
+        <div style="margin-top:16px;flex:1;display:flex;flex-direction:column">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <label style="font-family:var(--f-mono);font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase">Or Paste Resume Content</label>
+            <span style="font-size:11.5px;color:var(--primary);font-weight:600" id="resumeCharCount">0 chars</span>
+          </div>
+          <textarea class="textarea-box" id="resumeText" style="flex:1;min-height:160px" placeholder="Paste candidate profile, work experience, projects, tech stack, and skills here..."></textarea>
         </div>
       </div>
 
@@ -365,83 +426,288 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
           2. Target Job Description (JD)
         </div>
 
-        <div>
-          <label style="font-family:var(--f-mono);font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;display:block;margin-bottom:6px">Job Requirements &amp; Stack</label>
-          <textarea class="textarea-box" style="height:280px" id="jdText" placeholder="Paste full Job Description, responsibilities, and required qualifications...">We are looking for a Senior Backend Engineer.
-Requirements:
-- 4+ years Python / FastAPI / AsyncIO
-- Strong database optimization (PostgreSQL, Redis)
-- Experience with Kubernetes, Kafka event streaming, and gRPC
-- High-scale distributed systems design and Prometheus monitoring
-- Familiarity with CI/CD and AWS Cloud</textarea>
+        <!-- JD Mode Tabs -->
+        <div class="tab-group" role="tablist">
+          <button class="tab-btn active" id="tabPasteJd" onclick="switchJdTab('paste')" role="tab" aria-selected="true">📋 Paste JD</button>
+          <button class="tab-btn" id="tabUrlJd" onclick="switchJdTab('url')" role="tab" aria-selected="false">🔗 Job URL</button>
+          <button class="tab-btn" id="tabUploadJd" onclick="switchJdTab('upload')" role="tab" aria-selected="false">📤 Upload JD</button>
         </div>
 
-        <button class="match-btn" id="matchBtn">
+        <!-- TAB CONTENT: PASTE -->
+        <div id="panePasteJd" style="display:block;flex:1">
+          <label style="font-family:var(--f-mono);font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;display:block;margin-bottom:6px">Raw Job Description</label>
+          <textarea class="textarea-box" id="jdText" style="height:210px" placeholder="Paste complete Job Description, required qualifications, experience level, and tech stack..."></textarea>
+        </div>
+
+        <!-- TAB CONTENT: URL -->
+        <div id="paneUrlJd" style="display:none;flex:1">
+          <label style="font-family:var(--f-mono);font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;display:block;margin-bottom:6px">Public Job Posting URL</label>
+          <div class="url-input-wrap">
+            <input type="url" class="url-input" id="jdUrlInput" placeholder="https://careers.company.com/job/senior-engineer" aria-label="Public Job Posting URL">
+            <button class="fetch-btn" id="fetchJdUrlBtn" onclick="fetchJdFromUrl()">
+              <span>⚡ Fetch JD</span>
+            </button>
+          </div>
+          <div id="urlStatusMsg" style="font-size:12.5px;color:var(--ink-soft);margin-bottom:8px"></div>
+          
+          <div class="job-meta-card" id="urlExtractedCard">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+              <span style="font-weight:700;color:var(--primary);font-size:13px">✓ Job description imported</span>
+              <span style="font-family:var(--f-mono);font-size:10px;padding:2px 6px;border-radius:4px;background:var(--paper-2);border:1px solid var(--rule)">PUBLIC URL</span>
+            </div>
+            <div class="job-meta-grid">
+              <div class="job-meta-item">
+                <span class="job-meta-label">Job Title</span>
+                <span class="job-meta-val" id="urlMetaTitle">Not available</span>
+              </div>
+              <div class="job-meta-item">
+                <span class="job-meta-label">Company</span>
+                <span class="job-meta-val" id="urlMetaCompany">Not available</span>
+              </div>
+              <div class="job-meta-item">
+                <span class="job-meta-label">Location</span>
+                <span class="job-meta-val" id="urlMetaLocation">Not available</span>
+              </div>
+              <div class="job-meta-item">
+                <span class="job-meta-label">Experience</span>
+                <span class="job-meta-val" id="urlMetaExp">Not available</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT: UPLOAD -->
+        <div id="paneUploadJd" style="display:none;flex:1">
+          <div class="dropzone" id="jdDropzone" onclick="document.getElementById('jdFileInput').click()" role="button" tabindex="0" aria-label="Upload Job Description File">
+            <input type="file" id="jdFileInput" style="display:none" accept=".pdf,.doc,.docx,.txt">
+            <div class="drop-icon">📑</div>
+            <div style="font-weight:700;font-size:14.5px;margin-bottom:4px" id="jdDropText">Upload JD File (PDF, DOCX, TXT)</div>
+            <div style="font-size:12px;color:var(--ink-soft)">Click or drag &amp; drop job specification document</div>
+          </div>
+          <div id="uploadStatusMsg" style="font-size:12.5px;color:var(--ink-soft);margin-top:8px"></div>
+
+          <div class="job-meta-card" id="uploadExtractedCard">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+              <span style="font-weight:700;color:var(--primary);font-size:13px">✓ JD Document Extracted</span>
+              <span style="font-family:var(--f-mono);font-size:10px;padding:2px 6px;border-radius:4px;background:var(--paper-2);border:1px solid var(--rule)" id="uploadFileNameBadge">DOCUMENT</span>
+            </div>
+            <div class="job-meta-grid">
+              <div class="job-meta-item">
+                <span class="job-meta-label">Job Title</span>
+                <span class="job-meta-val" id="uploadMetaTitle">Not available</span>
+              </div>
+              <div class="job-meta-item">
+                <span class="job-meta-label">Company</span>
+                <span class="job-meta-val" id="uploadMetaCompany">Not available</span>
+              </div>
+              <div class="job-meta-item">
+                <span class="job-meta-label">Location</span>
+                <span class="job-meta-val" id="uploadMetaLocation">Not available</span>
+              </div>
+              <div class="job-meta-item">
+                <span class="job-meta-label">Experience</span>
+                <span class="job-meta-val" id="uploadMetaExp">Not available</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button class="match-btn" id="matchBtn" onclick="runResumeJdMatch()">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-          Analyze Skill Fit &amp; Generate Gap Questions
+          Analyze Resume &amp; Job Match
         </button>
+      </div>
+    </div>
+
+    <!-- PROGRESS BOX -->
+    <div class="progress-box" id="progressBox">
+      <div style="font-size:15px;font-weight:700;color:var(--ink)">Analyzing candidate resume against target job description...</div>
+      <div class="progress-steps">
+        <div class="progress-step done" id="pStep1">
+          <div class="step-icon">✓</div>
+          <span>Candidate resume detected &amp; parsed</span>
+        </div>
+        <div class="progress-step done" id="pStep2">
+          <div class="step-icon">✓</div>
+          <span>Target job description criteria validated</span>
+        </div>
+        <div class="progress-step active" id="pStep3">
+          <div class="step-icon">3</div>
+          <span>Executing multi-tier skill &amp; domain matching</span>
+        </div>
+        <div class="progress-step" id="pStep4">
+          <div class="step-icon">4</div>
+          <span>Evaluating anti-masking guards &amp; critical gaps</span>
+        </div>
+        <div class="progress-step" id="pStep5">
+          <div class="step-icon">5</div>
+          <span>Synthesizing recommendations &amp; calibration scores</span>
+        </div>
       </div>
     </div>
 
     <!-- RESULTS PANEL -->
     <div class="results-card" id="resultsPanel">
+      <!-- HEADER BANNER -->
       <div class="score-banner">
         <div class="score-circle">
-          <div style="font-family:var(--f-mono);font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase">Match Fit</div>
-          <div class="score-num">84%</div>
-          <div style="color:#10B981;font-weight:700;font-size:13.5px">✓ High Match / Qualified</div>
+          <div style="font-family:var(--f-mono);font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase">Overall Match</div>
+          <div class="score-num" id="resOverallScore">0%</div>
+          <div style="margin-top:6px">
+            <span class="confidence-badge HIGH" id="resConfidenceBadge">Confidence: HIGH</span>
+          </div>
         </div>
 
         <div>
-          <div style="font-size:18px;font-weight:700;margin-bottom:6px">Skill Matrix &amp; Gap Detection</div>
-          <div style="font-size:13.5px;color:var(--ink-soft);margin-bottom:12px">AI extracted keywords and mapped candidate qualifications against the JD criteria:</div>
-
-          <div class="skill-tags">
-            <span class="stag match">✓ Python (4 Yrs)</span>
-            <span class="stag match">✓ FastAPI &amp; AsyncIO</span>
-            <span class="stag match">✓ PostgreSQL</span>
-            <span class="stag match">✓ Redis &amp; Docker</span>
-            <span class="stag match">✓ AWS ECS</span>
-            <span class="stag gap">✗ Kafka Event Streaming (Missing)</span>
-            <span class="stag gap">✗ Kubernetes / K8s (Missing)</span>
-            <span class="stag partial">~ gRPC / Distributed Systems (Partial)</span>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap">
+            <span style="font-size:20px;font-weight:800;color:var(--ink)" id="resTargetRole">Target Role</span>
+            <span style="font-family:var(--f-mono);font-size:11px;padding:3px 8px;border-radius:6px;background:var(--paper);border:1px solid var(--rule);color:var(--ink-soft)" id="resCompanyContext">Target Company</span>
+          </div>
+          <div style="font-size:13.5px;color:var(--ink-soft);line-height:1.5" id="resSummaryDesc">
+            Multi-dimensional evaluation results calculated by the server matching engine.
           </div>
         </div>
       </div>
 
-      <!-- GAP-TARGETED INTERVIEW QUESTIONS -->
-      <div class="q-gen-box">
-        <div style="font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" stroke-width="2"><path d="M12 2.5l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg>
-          Tailored Skill-Gap &amp; Verification Questions
+      <!-- SUB-SCORES BREAKDOWN -->
+      <div class="subscores-grid">
+        <div class="subscore-card">
+          <div class="subscore-title">Required Skills</div>
+          <div class="subscore-val" id="subScoreReq">0%</div>
+          <div class="subscore-bar-bg"><div class="subscore-bar-fill" id="subBarReq" style="width:0%"></div></div>
         </div>
-
-        <div class="q-gen-item">
-          <div class="q-tag-label">Skill Gap: Kafka &amp; Event-Driven Architecture</div>
-          <div class="q-text-line">1. "Your resume shows Celery and Redis experience for background tasks. How would you architect an event-driven data pipeline using Apache Kafka to ensure ordered message processing and at-least-once delivery?"</div>
+        <div class="subscore-card">
+          <div class="subscore-title">Experience</div>
+          <div class="subscore-val" id="subScoreExp">0%</div>
+          <div class="subscore-bar-bg"><div class="subscore-bar-fill" id="subBarExp" style="width:0%"></div></div>
         </div>
-
-        <div class="q-gen-item">
-          <div class="q-tag-label">Skill Gap: Kubernetes &amp; High-Availability Deployments</div>
-          <div class="q-text-line">2. "The JD requires Kubernetes orchestration. How have you managed container rolling updates, liveness/readiness probes, and horizontal pod autoscaling under spiky load?"</div>
+        <div class="subscore-card">
+          <div class="subscore-title">Domain</div>
+          <div class="subscore-val" id="subScoreDom">0%</div>
+          <div class="subscore-bar-bg"><div class="subscore-bar-fill" id="subBarDom" style="width:0%"></div></div>
         </div>
-
-        <div class="q-gen-item">
-          <div class="q-tag-label">Project Verification: Microservices Scale</div>
-          <div class="q-text-line">3. "In your FastAPI microservices project, what specific strategies did you implement to handle database connection pooling and query bottlenecks under peak concurrency?"</div>
+        <div class="subscore-card">
+          <div class="subscore-title">Responsibilities</div>
+          <div class="subscore-val" id="subScoreResp">0%</div>
+          <div class="subscore-bar-bg"><div class="subscore-bar-fill" id="subBarResp" style="width:0%"></div></div>
         </div>
-
-        <button onclick="launchInStudio()" style="margin-top:16px;padding:11px 20px;border-radius:10px;font-weight:700;font-size:13.5px;background:var(--primary-grad);color:#fff;display:inline-flex;align-items:center;gap:8px;cursor:pointer;border:none;box-shadow:0 4px 14px rgba(79,70,229,0.35);transition:all .18s">
-          <span>⚡ Compose Full Question Paper in Studio</span>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"/></svg>
-        </button>
+        <div class="subscore-card">
+          <div class="subscore-title">Preferred Skills</div>
+          <div class="subscore-val" id="subScorePref">0%</div>
+          <div class="subscore-bar-bg"><div class="subscore-bar-fill" id="subBarPref" style="width:0%"></div></div>
+        </div>
       </div>
+
+      <!-- CRITICAL GAPS BOX (VISUALLY PROMINENT) -->
+      <div class="critical-gaps-box" id="criticalGapsContainer" style="display:none">
+        <div class="critical-gap-title">
+          <span>⚠️ CRITICAL JOB REQUIREMENTS GAP</span>
+          <span style="margin-left:auto;font-family:var(--f-mono);font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:rgba(239,68,68,0.2);color:#DC2626">ACTION REQUIRED</span>
+        </div>
+        <div style="font-size:13px;color:var(--ink-soft);margin-top:4px">
+          These essential high-importance requirements lack verified evidence in the resume. They are targeted with priority in practice sessions regardless of overall match score.
+        </div>
+        <div class="critical-gap-cards" id="criticalGapsList"></div>
+      </div>
+
+      <!-- STRENGTHS -->
+      <div style="margin-top:24px">
+        <div style="font-size:16px;font-weight:700;margin-bottom:10px;color:var(--ink)">Verified Candidate Strengths</div>
+        <div class="skill-tags" id="strengthsList"></div>
+      </div>
+
+      <!-- OTHER SKILL GAPS -->
+      <div style="margin-top:20px" id="skillGapsWrap">
+        <div style="font-size:16px;font-weight:700;margin-bottom:10px;color:var(--ink)">Skill &amp; Competency Gaps</div>
+        <div class="skill-tags" id="skillGapsList"></div>
+      </div>
+
+      <!-- RECOMMENDATIONS -->
+      <div style="margin-top:20px" id="recommendationsWrap">
+        <div style="font-size:16px;font-weight:700;margin-bottom:10px;color:var(--ink)">Targeted Improvement Recommendations</div>
+        <ul id="recommendationsList" style="margin:0;padding-left:20px;font-size:14px;color:var(--ink-soft);line-height:1.6"></ul>
+      </div>
+
+      <!-- SKILL MATRIX TABLE -->
+      <div style="margin-top:26px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:16px;font-weight:700;color:var(--ink)">Multi-Factor Skill Matrix</div>
+          <span style="font-family:var(--f-mono);font-size:11px;color:var(--ink-faint)">6-TIER EVIDENCE HIERARCHY</span>
+        </div>
+        <div class="matrix-table-wrap">
+          <table class="matrix-table">
+            <thead>
+              <tr>
+                <th>Skill / Competency</th>
+                <th>Importance</th>
+                <th>Match Fit</th>
+                <th>Evidence Tier</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="matrixTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- DEEP PRACTICE LAUNCH BOX -->
+      <div class="q-gen-box">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+          <div>
+            <div style="font-size:18px;font-weight:800;color:var(--ink);display:flex;align-items:center;gap:8px">
+              <span>🚀 Launch Deep Adaptive Practice</span>
+              <span class="nav-badge pro">ADAPTIVE</span>
+            </div>
+            <div style="font-size:13px;color:var(--ink-soft);margin-top:4px">
+              The Adaptive Engine directly ingests this scan to drill your highest-priority JD gaps (60%) and core role competencies (40%).
+            </div>
+          </div>
+          <button id="deepPracticeBtn" onclick="launchDeepPractice()" style="padding:12px 22px;border-radius:10px;font-weight:700;font-size:14px;background:var(--primary-grad);color:#fff;display:inline-flex;align-items:center;gap:8px;cursor:pointer;border:none;box-shadow:0 4px 16px rgba(16,185,129,0.35);transition:all .18s">
+            <span>⚡ Start Targeted Practice</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+
+        <div id="practiceQuestionsContainer" style="display:none;margin-top:16px;border-top:1px solid var(--rule);padding-top:16px">
+          <div style="font-size:15px;font-weight:700;margin-bottom:12px;color:var(--ink)">Generated Tailored Practice Questions:</div>
+          <div id="practiceQuestionsList"></div>
+          <button onclick="openQuestionsInStudio()" style="margin-top:18px;padding:11px 20px;border-radius:10px;font-weight:700;font-size:13.5px;background:#4F46E5;color:#fff;display:inline-flex;align-items:center;gap:8px;cursor:pointer;border:none;box-shadow:0 4px 14px rgba(79,70,229,0.35);transition:all .18s">
+            <span>⚡ Open in Interview Studio</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
+
     </div>
 
   </main>
 </div>
 
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
 <script>
+// Global State
+let currentJdTab = 'paste';
+let currentScanId = null;
+let extractedJdData = null;
+let lastMatchResult = null;
+let lastAdaptiveResponse = null;
+
+// DOM Elements
+const resumeTextEl = document.getElementById('resumeText');
+const jdTextEl = document.getElementById('jdText');
+const resumeCharCountEl = document.getElementById('resumeCharCount');
+const resumeFileInput = document.getElementById('fileInput');
+const resumeDropText = document.getElementById('dropText');
+const jdFileInput = document.getElementById('jdFileInput');
+const jdDropText = document.getElementById('jdDropText');
+
+// Update Character Count
+resumeTextEl.addEventListener('input', () => {
+  resumeCharCountEl.textContent = `${resumeTextEl.value.length} chars`;
+});
+
 // Theme Switcher
 document.getElementById('themeBtn').addEventListener('click', () => {
   const root = document.documentElement;
@@ -449,9 +715,46 @@ document.getElementById('themeBtn').addEventListener('click', () => {
   root.setAttribute('data-theme', currentTheme === 'dark' ? 'light' : 'dark');
 });
 
+// Toast Notifications
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
+}
+
+// Authentication Check
+async function initCandidateAuth() {
+  try {
+    const res = await fetch('/api/candidate/me', {
+      method: 'GET',
+      credentials: 'include',
+      headers: { 'Accept': 'application/json' }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.user) {
+        document.getElementById('userDisplayName').textContent = data.user.full_name || data.user.name || data.user.email.split('@')[0];
+        document.getElementById('userPlanDisplay').textContent = (data.user.plan_tier || 'pro').toUpperCase() + ' TIER';
+      }
+    } else if (res.status === 401) {
+      console.warn("Candidate unauthenticated or session expired.");
+    }
+  } catch (err) {
+    console.warn("Auth check error:", err);
+  }
+}
+initCandidateAuth();
+
+// Sign Out
 async function handleLogout(e) {
   if (e) e.stopPropagation();
-  if (confirm("Are you sure you want to log out from Ravi GenAI Studio?")) {
+  if (confirm("Are you sure you want to log out from RaviGen AI?")) {
     try {
       await fetch('/candidate/logout', {
         method: 'POST',
@@ -459,71 +762,470 @@ async function handleLogout(e) {
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
       });
     } catch (err) {}
-    localStorage.removeItem('candidate_token');
-    localStorage.removeItem('candidate_user');
     window.location.replace('/');
   }
 }
 
-function launchInStudio() {
+// JD Tab Switching
+function switchJdTab(tab) {
+  currentJdTab = tab;
+  document.getElementById('tabPasteJd').classList.toggle('active', tab === 'paste');
+  document.getElementById('tabUrlJd').classList.toggle('active', tab === 'url');
+  document.getElementById('tabUploadJd').classList.toggle('active', tab === 'upload');
+
+  document.getElementById('panePasteJd').style.display = tab === 'paste' ? 'block' : 'none';
+  document.getElementById('paneUrlJd').style.display = tab === 'url' ? 'block' : 'none';
+  document.getElementById('paneUploadJd').style.display = tab === 'upload' ? 'block' : 'none';
+}
+
+// Resume File Upload
+resumeFileInput.addEventListener('change', (e) => {
+  if (e.target.files.length > 0) {
+    const file = e.target.files[0];
+    resumeDropText.textContent = `✓ Attached: ${file.name}`;
+    if (file.name.endsWith('.txt')) {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        resumeTextEl.value = evt.target.result;
+        resumeCharCountEl.textContent = `${resumeTextEl.value.length} chars`;
+      };
+      reader.readAsText(file);
+    }
+  }
+});
+
+// Fetch JD from URL
+async function fetchJdFromUrl() {
+  const urlInput = document.getElementById('jdUrlInput');
+  const url = urlInput.value.trim();
+  const btn = document.getElementById('fetchJdUrlBtn');
+  const statusMsg = document.getElementById('urlStatusMsg');
+  const card = document.getElementById('urlExtractedCard');
+
+  if (!url) {
+    showToast('Please enter a valid job posting URL.', 'error');
+    urlInput.focus();
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = `<span>⏳ Extracting...</span>`;
+  statusMsg.textContent = 'Fetching and validating public job description webpage...';
+  card.classList.remove('active');
+
+  try {
+    const resp = await fetch('/api/candidate/jd/extract-url', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: url })
+    });
+
+    const data = await resp.json();
+
+    if (resp.ok && data.success) {
+      extractedJdData = {
+        raw_text: data.raw_jd || '',
+        normalized: data.normalized_jd || {},
+        source_type: 'public_url',
+        source_url: url
+      };
+
+      const norm = data.normalized_jd || {};
+      document.getElementById('urlMetaTitle').textContent = norm.job_title || 'Not available';
+      document.getElementById('urlMetaCompany').textContent = norm.company || 'Not available';
+      document.getElementById('urlMetaLocation').textContent = norm.location || 'Not available';
+      document.getElementById('urlMetaExp').textContent = norm.experience_required || 'Not available';
+      card.classList.add('active');
+      statusMsg.textContent = '';
+      showToast('✓ Job description imported successfully!', 'success');
+    } else {
+      statusMsg.innerHTML = `<span style="color:#DC2626">Unable to retrieve this job page. Please paste the JD text directly.</span>`;
+      showToast('Unable to extract job posting from URL. Please use Paste JD tab.', 'error');
+    }
+  } catch (err) {
+    statusMsg.innerHTML = `<span style="color:#DC2626">Unable to retrieve this job page. Please paste the JD text.</span>`;
+    showToast('Network error while extracting job URL.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<span>⚡ Fetch JD</span>`;
+  }
+}
+
+// JD Document Upload
+jdFileInput.addEventListener('change', async (e) => {
+  if (e.target.files.length === 0) return;
+  const file = e.target.files[0];
+  const statusMsg = document.getElementById('uploadStatusMsg');
+  const card = document.getElementById('uploadExtractedCard');
+
+  jdDropText.textContent = `⏳ Uploading ${file.name}...`;
+  statusMsg.textContent = 'Extracting document text & parsing job requirements...';
+  card.classList.remove('active');
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const resp = await fetch('/api/candidate/jd/upload', {
+      method: 'POST',
+      credentials: 'include',
+      body: formData
+    });
+    const data = await resp.json();
+
+    if (resp.ok && data.success) {
+      jdDropText.textContent = `✓ Attached: ${file.name}`;
+      document.getElementById('uploadFileNameBadge').textContent = file.name;
+      const norm = data.normalized_jd || {};
+      extractedJdData = {
+        raw_text: data.raw_jd || data.extracted_text || '',
+        normalized: norm,
+        source_type: 'document_upload',
+        source_url: null
+      };
+
+      document.getElementById('uploadMetaTitle').textContent = norm.job_title || 'Not available';
+      document.getElementById('uploadMetaCompany').textContent = norm.company || 'Not available';
+      document.getElementById('uploadMetaLocation').textContent = norm.location || 'Not available';
+      document.getElementById('uploadMetaExp').textContent = norm.experience_required || 'Not available';
+      card.classList.add('active');
+      statusMsg.textContent = '';
+      showToast('✓ JD imported from document successfully!', 'success');
+    } else {
+      jdDropText.textContent = `Upload JD File (PDF, DOCX, TXT)`;
+      statusMsg.innerHTML = `<span style="color:#DC2626">${data.message || 'Could not parse document. Please paste the JD text.'}</span>`;
+      showToast('Failed to parse JD file. Please paste text directly.', 'error');
+    }
+  } catch (err) {
+    jdDropText.textContent = `Upload JD File (PDF, DOCX, TXT)`;
+    statusMsg.innerHTML = `<span style="color:#DC2626">Upload error. Please paste the JD text.</span>`;
+    showToast('Network error uploading JD file.', 'error');
+  }
+});
+
+// Analyze Resume & JD Match
+async function runResumeJdMatch() {
+  const resumeText = resumeTextEl.value.trim();
+  let jdPayloadText = null;
+  let normalizedJd = null;
+  let sourceType = 'paste';
+  let sourceUrl = null;
+
+  if (currentJdTab === 'paste') {
+    jdPayloadText = jdTextEl.value.trim();
+    sourceType = 'paste';
+  } else if (currentJdTab === 'url') {
+    if (extractedJdData && extractedJdData.source_type === 'public_url') {
+      jdPayloadText = extractedJdData.raw_text;
+      normalizedJd = extractedJdData.normalized;
+      sourceType = 'public_url';
+      sourceUrl = extractedJdData.source_url;
+    } else {
+      showToast('Please fetch a valid Job URL first or paste the JD text.', 'error');
+      return;
+    }
+  } else if (currentJdTab === 'upload') {
+    if (extractedJdData && extractedJdData.source_type === 'document_upload') {
+      jdPayloadText = extractedJdData.raw_text;
+      normalizedJd = extractedJdData.normalized;
+      sourceType = 'upload';
+    } else {
+      showToast('Please upload a JD document first or paste the JD text.', 'error');
+      return;
+    }
+  }
+
+  if (!resumeText) {
+    showToast('Please paste or upload the candidate resume first.', 'error');
+    resumeTextEl.focus();
+    return;
+  }
+  if (!jdPayloadText && !normalizedJd) {
+    showToast('Please provide a job description (paste, URL, or file).', 'error');
+    return;
+  }
+
+  const matchBtn = document.getElementById('matchBtn');
+  const progressBox = document.getElementById('progressBox');
+  const resultsPanel = document.getElementById('resultsPanel');
+
+  matchBtn.disabled = true;
+  matchBtn.innerHTML = `<span>⏳ Analyzing Match...</span>`;
+  progressBox.classList.add('active');
+  resultsPanel.classList.remove('active');
+  progressBox.scrollIntoView({ behavior: 'smooth' });
+
+  const requestBody = {
+    resume_text: resumeText,
+    jd_text: jdPayloadText,
+    normalized_jd: normalizedJd,
+    source_type: sourceType,
+    source_url: sourceUrl
+  };
+
+  try {
+    const resp = await fetch('/api/candidate/resume-jd/match', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!resp.ok) {
+      if (resp.status === 401) {
+        showToast('Your session has expired. Please sign in again.', 'error');
+      } else {
+        const errData = await resp.json().catch(() => ({}));
+        showToast(errData.detail || 'Failed to analyze resume and JD match.', 'error');
+      }
+      progressBox.classList.remove('active');
+      matchBtn.disabled = false;
+      matchBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Analyze Resume &amp; Job Match`;
+      return;
+    }
+
+    const data = await resp.json();
+    lastMatchResult = data;
+    currentScanId = data.scan_id;
+
+    // Render results
+    renderMatchResults(data);
+
+    progressBox.classList.remove('active');
+    resultsPanel.classList.add('active');
+    resultsPanel.scrollIntoView({ behavior: 'smooth' });
+  } catch (err) {
+    showToast('Network error while evaluating match. Please check your connection.', 'error');
+    progressBox.classList.remove('active');
+  } finally {
+    matchBtn.disabled = false;
+    matchBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Analyze Resume &amp; Job Match`;
+  }
+}
+
+// Render Results
+function renderMatchResults(data) {
+  const overall = Math.round(data.overall_match_score || 0);
+  const scoreNumEl = document.getElementById('resOverallScore');
+  scoreNumEl.textContent = `${overall}%`;
+
+  if (overall >= 70) {
+    scoreNumEl.style.color = '#10B981';
+  } else if (overall >= 50) {
+    scoreNumEl.style.color = '#F59E0B';
+  } else {
+    scoreNumEl.style.color = '#EF4444';
+  }
+
+  const confBadge = document.getElementById('resConfidenceBadge');
+  confBadge.textContent = `Confidence: ${data.match_confidence || 'HIGH'}`;
+  confBadge.className = `confidence-badge ${data.match_confidence || 'HIGH'}`;
+
+  document.getElementById('resTargetRole').textContent = data.target_role || 'Target Role';
+  document.getElementById('resCompanyContext').textContent = data.source_type ? `SOURCE: ${data.source_type.toUpperCase()}` : 'VERIFIED MATCH';
+
+  // Sub-scores
+  const subs = data.sub_scores || {};
+  const setSub = (scoreId, barId, val) => {
+    const v = Math.round(val || 0);
+    document.getElementById(scoreId).textContent = `${v}%`;
+    document.getElementById(barId).style.width = `${Math.min(100, Math.max(0, v))}%`;
+  };
+  setSub('subScoreReq', 'subBarReq', subs.required_skills);
+  setSub('subScoreExp', 'subBarExp', subs.experience);
+  setSub('subScoreDom', 'subBarDom', subs.domain);
+  setSub('subScoreResp', 'subBarResp', subs.responsibilities);
+  setSub('subScorePref', 'subBarPref', subs.preferred_skills);
+
+  // Critical Gaps
+  const critContainer = document.getElementById('criticalGapsContainer');
+  const critList = document.getElementById('criticalGapsList');
+  critList.innerHTML = '';
+
+  const matrix = data.skill_matrix || [];
+  const criticalItems = matrix.filter(item => 
+    (item.importance === 'HIGH' && (item.gap_status === 'gap' || item.match_score < 60)) ||
+    (data.critical_gaps && data.critical_gaps.some(cg => cg.toLowerCase().includes(item.skill.toLowerCase())))
+  );
+
+  if (criticalItems.length > 0 || (data.critical_gaps && data.critical_gaps.length > 0)) {
+    critContainer.style.display = 'block';
+    const displayGaps = criticalItems.length > 0 ? criticalItems : (data.critical_gaps || []).map(g => ({
+      skill: g.replace(/Critical Gap:\s*/i, ''),
+      importance: 'HIGH',
+      match_score: 0,
+      evidence_level: 6
+    }));
+
+    displayGaps.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'critical-gap-card';
+      const mScore = Math.round(item.match_score || 0);
+      card.innerHTML = `
+        <div class="critical-gap-skill">⚠ ${item.skill}</div>
+        <div class="critical-gap-meta">
+          <span>Match: <b>${mScore}%</b></span>
+          <span style="color:#DC2626;font-weight:700">Importance: ${item.importance || 'HIGH'}</span>
+        </div>
+      `;
+      critList.appendChild(card);
+    });
+  } else {
+    critContainer.style.display = 'none';
+  }
+
+  // Strengths
+  const strList = document.getElementById('strengthsList');
+  strList.innerHTML = '';
+  const strengths = data.strengths || [];
+  if (strengths.length > 0) {
+    strengths.forEach(s => {
+      const tag = document.createElement('span');
+      tag.className = 'stag match';
+      tag.textContent = `✓ ${s}`;
+      strList.appendChild(tag);
+    });
+  } else {
+    strList.innerHTML = `<span style="font-size:13px;color:var(--ink-soft)">Core software engineering fundamentals verified.</span>`;
+  }
+
+  // Skill Gaps
+  const gapsList = document.getElementById('skillGapsList');
+  gapsList.innerHTML = '';
+  const gaps = data.skill_gaps || [];
+  if (gaps.length > 0) {
+    gaps.forEach(g => {
+      const tag = document.createElement('span');
+      tag.className = 'stag gap';
+      tag.textContent = `✗ ${g}`;
+      gapsList.appendChild(tag);
+    });
+  } else {
+    document.getElementById('skillGapsWrap').style.display = 'none';
+  }
+
+  // Recommendations
+  const recList = document.getElementById('recommendationsList');
+  recList.innerHTML = '';
+  const recs = data.recommendations || [];
+  if (recs.length > 0) {
+    recs.forEach(r => {
+      const li = document.createElement('li');
+      li.textContent = r;
+      recList.appendChild(li);
+    });
+  } else {
+    document.getElementById('recommendationsWrap').style.display = 'none';
+  }
+
+  // Skill Matrix Table
+  const tableBody = document.getElementById('matrixTableBody');
+  tableBody.innerHTML = '';
+  matrix.forEach(item => {
+    const tr = document.createElement('tr');
+    const mScore = Math.round(item.match_score || 0);
+    let statusClass = 'match';
+    let statusLabel = '✓ Matched';
+    if (item.gap_status === 'gap' || mScore < 40) {
+      statusClass = 'gap';
+      statusLabel = '✗ Gap';
+    } else if (item.gap_status === 'partial' || mScore < 70) {
+      statusClass = 'partial';
+      statusLabel = '~ Partial';
+    }
+
+    const evLevelText = item.evidence_level ? `Level ${item.evidence_level}` : 'Direct Evidence';
+    tr.innerHTML = `
+      <td style="font-weight:600">${item.skill}</td>
+      <td><span style="font-family:var(--f-mono);font-weight:700;font-size:12px">${item.importance || 'HIGH'}</span></td>
+      <td><b style="color:${mScore >= 70 ? 'var(--primary)' : (mScore >= 40 ? 'var(--gold)' : 'var(--danger)')}">${mScore}%</b></td>
+      <td style="font-size:12px;color:var(--ink-soft)">${evLevelText}</td>
+      <td><span class="stag ${statusClass}">${statusLabel}</span></td>
+    `;
+    tableBody.appendChild(tr);
+  });
+}
+
+// Launch Deep Practice directly from verified server scan
+async function launchDeepPractice() {
+  if (!currentScanId) {
+    showToast('Please run the Resume & JD match first to establish a verified scan ID.', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('deepPracticeBtn');
+  const container = document.getElementById('practiceQuestionsContainer');
+  const qList = document.getElementById('practiceQuestionsList');
+
+  btn.disabled = true;
+  btn.innerHTML = `<span>⏳ Synthesizing Practice Questions...</span>`;
+
+  try {
+    const resp = await fetch('/api/adaptive/from-match', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        scan_id: currentScanId,
+        number_of_questions: 5
+      })
+    });
+
+    if (!resp.ok) {
+      if (resp.status === 401) {
+        showToast('Your session has expired. Please sign in again.', 'error');
+      } else {
+        const errData = await resp.json().catch(() => ({}));
+        showToast(errData.detail || 'Failed to start adaptive practice session.', 'error');
+      }
+      return;
+    }
+
+    const data = await resp.json();
+    lastAdaptiveResponse = data;
+
+    // Render questions
+    qList.innerHTML = '';
+    const questions = data.questions || [];
+    questions.forEach((q, idx) => {
+      const item = document.createElement('div');
+      item.className = 'q-gen-item';
+      const reasonTag = q.reason === 'jd_requirement' ? '🎯 JD REQUIREMENT' : 'ROLE COMPETENCY';
+      item.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div class="q-tag-label">${q.target_skill ? `TARGET: ${q.target_skill}` : 'FOCUS AREA'}</div>
+          <span style="font-family:var(--f-mono);font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:var(--paper);border:1px solid var(--rule);color:#4F46E5">${reasonTag}</span>
+        </div>
+        <div class="q-text-line">${idx + 1}. "${q.question}"</div>
+      `;
+      qList.appendChild(item);
+    });
+
+    container.style.display = 'block';
+    container.scrollIntoView({ behavior: 'smooth' });
+    showToast('✓ Adaptive practice questions generated successfully!', 'success');
+  } catch (err) {
+    showToast('Network error generating adaptive questions.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<span>⚡ Start Targeted Practice</span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"/></svg>`;
+  }
+}
+
+// Open Questions in Interview Studio
+function openQuestionsInStudio() {
+  const role = (lastMatchResult && lastMatchResult.target_role) || 'Software Engineer';
+  const customQ = (lastAdaptiveResponse && lastAdaptiveResponse.recommended_focus && lastAdaptiveResponse.recommended_focus.skill) || '';
   const params = new URLSearchParams({
-    role: 'Senior Backend Developer',
-    exp: '4 Years',
+    role: role,
+    exp: '3-5 Years',
     diff: 'Hard',
-    skills: 'FastAPI, PostgreSQL, Redis, Kafka, Kubernetes, Docker',
-    customQ: 'How do you architect an event-driven data pipeline using Apache Kafka to ensure ordered message processing and at-least-once delivery?'
+    skills: (lastMatchResult && lastMatchResult.strengths ? lastMatchResult.strengths.slice(0, 4).join(', ') : 'Python, Backend'),
+    customQ: customQ ? `Targeting JD requirement: ${customQ}` : ''
   });
   window.location.href = `Interview-studio.html?${params.toString()}`;
 }
-
-// File upload handler
-const fileInput = document.getElementById('fileInput');
-const dropText = document.getElementById('dropText');
-fileInput.addEventListener('change', (e) => {
-  if (e.target.files.length > 0) {
-    dropText.textContent = `✓ Attached: ${e.target.files[0].name}`;
-  }
-});
-
-const SUPABASE_CONFIG = {
-  url: window.ENV_SUPABASE_URL || localStorage.getItem('SUPABASE_URL') || 'https://xyzcompany.supabase.co',
-  anonKey: window.ENV_SUPABASE_ANON_KEY || localStorage.getItem('SUPABASE_ANON_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummyKey'
-};
-
-async function pushResumeScanToSupabase() {
-  if (typeof supabase !== 'undefined' && SUPABASE_CONFIG.url && !SUPABASE_CONFIG.url.includes('xyzcompany')) {
-    try {
-      const sb = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
-      await sb.from('resume_scans').insert([{
-        candidate_name: 'Ravi Chandran',
-        target_role: 'Senior Backend Engineer',
-        match_score: 84.00,
-        matched_skills: ['Python', 'FastAPI', 'PostgreSQL', 'Redis', 'Docker'],
-        missing_skills: ['Kafka', 'Kubernetes'],
-        gap_questions: [
-          "How would you architect an event-driven data pipeline using Apache Kafka to ensure ordered message processing and at-least-once delivery?",
-          "How have you managed container rolling updates, liveness/readiness probes, and horizontal pod autoscaling under spiky load?"
-        ]
-      }]);
-      console.log('⚡ [Supabase Realtime] Pushed resume scan record to database');
-    } catch (e) {
-      console.warn('Supabase scan sync notice:', e.message);
-    }
-  }
-}
-
-// Match Trigger
-document.getElementById('matchBtn').addEventListener('click', () => {
-  const btn = document.getElementById('matchBtn');
-  btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin"><circle cx="12" cy="12" r="10"/></svg> Scanning & Matching...`;
-  
-  setTimeout(() => {
-    btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> Analyze Skill Fit & Generate Gap Questions`;
-    document.getElementById('resultsPanel').classList.add('active');
-    document.getElementById('resultsPanel').scrollIntoView({ behavior: 'smooth' });
-    pushResumeScanToSupabase();
-  }, 700);
-});
 
 // Mobile Drawer Setup
 const menuBtn = document.getElementById('menuBtn');

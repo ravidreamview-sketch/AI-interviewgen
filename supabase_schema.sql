@@ -41,22 +41,82 @@ CREATE TABLE IF NOT EXISTS public.mock_interviews (
 -- 4. CREATE TABLE: resume_scans (ATS & JD Match Analyses)
 CREATE TABLE IF NOT EXISTS public.resume_scans (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    candidate_name TEXT DEFAULT 'Ravi Chandran',
-    target_role TEXT NOT NULL,
+    scan_id TEXT UNIQUE,
+    matching_engine_version TEXT NOT NULL DEFAULT 'match-v1.0.0',
+    candidate_name TEXT DEFAULT 'Candidate',
+    target_role TEXT NOT NULL DEFAULT 'General Tech',
     match_score NUMERIC(5,2) NOT NULL DEFAULT 84.00,
+    overall_match_score NUMERIC(5,2) NOT NULL DEFAULT 84.00,
+    match_confidence TEXT NOT NULL DEFAULT 'MEDIUM',
+    sub_scores JSONB DEFAULT '{}'::jsonb,
+    skill_matrix JSONB DEFAULT '[]'::jsonb,
+    strengths JSONB DEFAULT '[]'::jsonb,
+    skill_gaps JSONB DEFAULT '[]'::jsonb,
+    critical_gaps JSONB DEFAULT '[]'::jsonb,
+    recommendations JSONB DEFAULT '[]'::jsonb,
+    normalized_jd JSONB DEFAULT '{}'::jsonb,
+    normalized_resume JSONB DEFAULT '{}'::jsonb,
     matched_skills TEXT[] NOT NULL DEFAULT '{}',
     missing_skills TEXT[] NOT NULL DEFAULT '{}',
     gap_questions JSONB DEFAULT '[]'::jsonb,
+    source_type TEXT NOT NULL DEFAULT 'paste',
+    source_url TEXT,
+    fetched_at TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE
 );
 
+-- 5. CREATE TABLE: candidate_skill_analytics (Adaptive Competency & Weakness Tracking)
+CREATE TABLE IF NOT EXISTS public.candidate_skill_analytics (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    skill TEXT NOT NULL,
+    score NUMERIC(5,2) NOT NULL DEFAULT 70.00,
+    trend TEXT NOT NULL DEFAULT 'flat',
+    role_relevance NUMERIC(3,2) NOT NULL DEFAULT 1.00,
+    evidence_count INTEGER NOT NULL DEFAULT 1,
+    confidence TEXT NOT NULL DEFAULT 'LOW',
+    weakness_status TEXT NOT NULL DEFAULT 'identified',
+    adaptive_session_id TEXT,
+    first_detected_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 6. CREATE TABLE: candidate_mistakes_ledger (Concept Gaps & Remediation)
+CREATE TABLE IF NOT EXISTS public.candidate_mistakes_ledger (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    interview_id BIGINT REFERENCES public.interview_papers(id) ON DELETE SET NULL,
+    adaptive_session_id TEXT NOT NULL,
+    skill TEXT NOT NULL,
+    mistake_category TEXT NOT NULL DEFAULT 'conceptual',
+    description TEXT NOT NULL,
+    evidence TEXT,
+    severity TEXT NOT NULL DEFAULT 'medium',
+    recommendation TEXT,
+    mistake_status TEXT NOT NULL DEFAULT 'identified',
+    evaluation_version TEXT NOT NULL DEFAULT 'eval-v1.2.0',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    resolved_at TIMESTAMPTZ
+);
+
 -- ==============================================================================
--- 5. ROW LEVEL SECURITY (RLS) POLICIES
+-- 7. ROW LEVEL SECURITY (RLS) POLICIES
 -- ==============================================================================
 ALTER TABLE public.interview_papers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.mock_interviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.resume_scans ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.candidate_skill_analytics ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.candidate_mistakes_ledger ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read on candidate_skill_analytics" ON public.candidate_skill_analytics FOR SELECT USING (true);
+CREATE POLICY "Allow public insert on candidate_skill_analytics" ON public.candidate_skill_analytics FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update on candidate_skill_analytics" ON public.candidate_skill_analytics FOR UPDATE USING (true);
+
+CREATE POLICY "Allow public read on candidate_mistakes_ledger" ON public.candidate_mistakes_ledger FOR SELECT USING (true);
+CREATE POLICY "Allow public insert on candidate_mistakes_ledger" ON public.candidate_mistakes_ledger FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update on candidate_mistakes_ledger" ON public.candidate_mistakes_ledger FOR UPDATE USING (true);
 
 -- Allow public read access (for portfolio/demo/dashboard views)
 CREATE POLICY "Allow public read on interview_papers" ON public.interview_papers FOR SELECT USING (true);
@@ -82,11 +142,15 @@ COMMIT;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.interview_papers;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.mock_interviews;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.resume_scans;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.candidate_skill_analytics;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.candidate_mistakes_ledger;
 
 -- Set replica identity to FULL so listeners receive complete old/new payloads
 ALTER TABLE public.interview_papers REPLICA IDENTITY FULL;
 ALTER TABLE public.mock_interviews REPLICA IDENTITY FULL;
 ALTER TABLE public.resume_scans REPLICA IDENTITY FULL;
+ALTER TABLE public.candidate_skill_analytics REPLICA IDENTITY FULL;
+ALTER TABLE public.candidate_mistakes_ledger REPLICA IDENTITY FULL;
 
 -- ==============================================================================
 -- 7. PERFORMANCE INDEXES
@@ -95,6 +159,13 @@ CREATE INDEX IF NOT EXISTS idx_interview_papers_created_at ON public.interview_p
 CREATE INDEX IF NOT EXISTS idx_interview_papers_role ON public.interview_papers (role);
 CREATE INDEX IF NOT EXISTS idx_mock_interviews_created_at ON public.mock_interviews (created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_resume_scans_created_at ON public.resume_scans (created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_resume_scans_scan_id ON public.resume_scans (scan_id);
+CREATE INDEX IF NOT EXISTS idx_resume_scans_user_created ON public.resume_scans (user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_skill_analytics_user ON public.candidate_skill_analytics (user_id);
+CREATE INDEX IF NOT EXISTS idx_skill_analytics_status ON public.candidate_skill_analytics (user_id, weakness_status);
+CREATE INDEX IF NOT EXISTS idx_skill_analytics_prof ON public.candidate_skill_analytics (user_id, score);
+CREATE INDEX IF NOT EXISTS idx_mistakes_user_status ON public.candidate_mistakes_ledger (user_id, mistake_status);
+CREATE INDEX IF NOT EXISTS idx_mistakes_asess ON public.candidate_mistakes_ledger (adaptive_session_id);
 
 -- ==============================================================================
 -- 8. SEED STARTER LIVE DEMO DATA

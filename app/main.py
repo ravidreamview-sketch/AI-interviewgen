@@ -1,9 +1,11 @@
 import os
+import uuid
+import json
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, Any, List
-from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi import FastAPI, Depends, HTTPException, Request, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 from sqlalchemy import func, desc, text
@@ -11,11 +13,50 @@ from sqlalchemy.orm import Session
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-from app.models import InterviewRequest, PageViewPayload, ClickEventPayload
+from app.models import (
+    InterviewRequest,
+    PageViewPayload,
+    ClickEventPayload,
+    AdaptiveProfileResponse,
+    AdaptiveGenerateResponse,
+    EvaluateResponseRequest,
+    ResponseEvaluationResult,
+    NextQuestionRequest,
+    AdaptiveNextQuestionResponse,
+    JobURLExtractRequest,
+    JobURLExtractResponse,
+    JobUploadExtractResponse,
+    NormalizedJobDescription,
+    NormalizedResume,
+    SkillMatrixItem,
+    SubScores,
+    ResumeJDMatchResult,
+    ResumeJDMatchRequest,
+    ResumeJDMatchResponse,
+    ResumeJDMatchSummaryItem,
+    AdaptiveFromMatchRequest,
+    AdaptiveFromMatchResponse
+)
 from app.prompts import interview_prompt
 from app.services import generate_ai_questions, parse_raw_questions, get_fallback_questions
+from app.adaptive_service import (
+    get_candidate_adaptive_profile,
+    generate_adaptive_question_package,
+    evaluate_candidate_response,
+    determine_adaptive_next_question,
+    generate_adaptive_from_match_service
+)
+from app.jd_service import (
+    safe_fetch_job_url,
+    extract_text_from_document,
+    normalize_job_description
+)
+from app.matching_service import (
+    calculate_resume_jd_match,
+    normalize_resume
+)
 from app.database import get_db, init_db
-from app.db_models import UserAccount, InterviewHistory, PageViewEvent, ClickEvent
+from app.db_models import UserAccount, InterviewHistory, PageViewEvent, ClickEvent, ResumeScan
 from app.admin_routes import admin_router, candidate_router
 from app.auth_deps import get_current_user
 
@@ -224,6 +265,9 @@ def format_interview_response(interview: InterviewHistory) -> dict:
         "questions": parsed_qs,
         "raw_questions": interview.questions,
         "count": len(parsed_qs),
+        "user_id": getattr(interview, "user_id", None),
+        "adaptive_session_id": getattr(interview, "adaptive_session_id", None),
+        "question_engine_version": getattr(interview, "question_engine_version", None) or "qengine-v1.0.0",
         "created_at": interview.created_at.isoformat() if getattr(interview, "created_at", None) else None
     }
 
@@ -310,6 +354,9 @@ def generate_questions(
             skills=", ".join(data.skills),
             difficulty=data.difficulty,
             questions=formatted_raw,
+            user_id=getattr(current_user, "id", None) if current_user else None,
+            adaptive_session_id=getattr(data, "adaptive_session_id", None),
+            question_engine_version="qengine-v1.0.0",
             created_at=datetime.utcnow()
         )
 
@@ -379,6 +426,471 @@ def delete_interview(interview_id: int, db: Session = Depends(get_db)):
     db.delete(interview)
     db.commit()
     return {"message": "Interview deleted successfully", "id": interview_id}
+
+
+# ---------- ADAPTIVE INTERVIEW QUESTION ENGINE APIS ----------
+
+@app.get("/api/adaptive/profile", response_model=AdaptiveProfileResponse)
+def get_adaptive_profile(
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Returns the authenticated candidate's real-time Adaptive Profile.
+    Evaluates interview readiness, persistent weaknesses, confirmed strengths,
+    open mistakes, and deterministic recommended focus areas.
+    """
+    try:
+        return get_candidate_adaptive_profile(current_user, db)
+    except Exception as e:
+        print(f"[Adaptive Profile Warning] Error calculating profile: {e}")
+        # Safe fallback: return baseline insufficient data state without HTTP 500
+        return AdaptiveProfileResponse(
+            readiness_score=None,
+            profile_status="insufficient_data",
+            interview_count=0,
+            last_interview_score=None,
+            improvement_since_first_interview=None,
+            strengths=[],
+            focus_areas=[],
+            open_mistakes=[],
+            recommended_focus=None
+        )
+
+
+@app.post("/api/adaptive/generate", response_model=AdaptiveGenerateResponse)
+def generate_adaptive_questions(
+    data: InterviewRequest,
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Generates personalized interview/practice questions using the candidate's Adaptive Profile.
+    Addresses highest-priority improvement opportunities (weaknesses/mistakes) with full metadata
+    and anti-duplication protection.
+    """
+    check_feature_enabled("Interview-studio.html", db)
+    return generate_adaptive_question_package(data, current_user, db)
+
+
+@app.post("/api/adaptive/evaluate-response", response_model=ResponseEvaluationResult)
+def evaluate_response_endpoint(
+    payload: EvaluateResponseRequest,
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Evaluates one candidate response against question target skill, focus skill, role,
+    and expected answer signals. Updates candidate_skill_analytics and candidate_mistakes_ledger.
+    """
+    return evaluate_candidate_response(payload, current_user, db)
+
+
+@app.post("/api/adaptive/next-question", response_model=AdaptiveNextQuestionResponse)
+def next_question_endpoint(
+    payload: NextQuestionRequest,
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Determines the next best question after the candidate's latest response,
+    choosing strategy based on candidate performance, recurring mistakes,
+    or advancing to the next priority weakness.
+    """
+    return determine_adaptive_next_question(payload, current_user, db)
+
+
+@app.post("/api/adaptive/from-match", response_model=AdaptiveFromMatchResponse)
+@app.post("/adaptive/from-match", response_model=AdaptiveFromMatchResponse)
+def adaptive_from_match_endpoint(
+    payload: AdaptiveFromMatchRequest,
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Phase 5D: Starts personalized adaptive interview practice targeting verified
+    server-side JD gaps loaded securely using scan_id.
+    """
+    return generate_adaptive_from_match_service(
+        scan_id=payload.scan_id,
+        number_of_questions=payload.number_of_questions,
+        user=current_user,
+        db=db
+    )
+
+
+# ---------- PHASE 5A: JOB DESCRIPTION EXTRACTION & SSRF-SAFE INGESTION APIS ----------
+
+@app.post("/api/candidate/jd/extract-url", response_model=JobURLExtractResponse)
+@app.post("/candidate/jd/extract-url", response_model=JobURLExtractResponse)
+def extract_jd_from_url(
+    payload: JobURLExtractRequest,
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Phase 5A: Safely fetches public job description webpage with multi-layered SSRF defenses,
+    Content-Type checks, timeout enforcement, streaming size limits, and text normalization.
+    """
+    success, status, text_or_err, final_url = safe_fetch_job_url(payload.url)
+    if not success:
+        return JobURLExtractResponse(
+            success=False,
+            status=status,
+            fallback_required=True,
+            message=text_or_err,
+            raw_jd=None,
+            normalized_jd=None
+        )
+    
+    normalized = normalize_job_description(
+        raw_text=text_or_err,
+        source_type="public_url",
+        source_url=final_url
+    )
+    return JobURLExtractResponse(
+        success=True,
+        status="extracted",
+        fallback_required=False,
+        message="Job description extracted successfully.",
+        raw_jd=text_or_err,
+        normalized_jd=normalized
+    )
+
+
+@app.post("/api/candidate/jd/upload", response_model=JobUploadExtractResponse)
+@app.post("/candidate/jd/upload", response_model=JobUploadExtractResponse)
+async def upload_jd_document(
+    file: UploadFile = File(...),
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Phase 5A: Extracts and normalizes job description text from uploaded document (PDF, DOCX, TXT).
+    """
+    filename = file.filename or "uploaded_jd.txt"
+    fname_lower = filename.lower()
+    if not (fname_lower.endswith(".pdf") or fname_lower.endswith(".docx") or fname_lower.endswith(".doc") or fname_lower.endswith(".txt")):
+        return JobUploadExtractResponse(
+            success=False,
+            status="fallback_required",
+            fallback_required=True,
+            filename=filename,
+            message="Unsupported document format. Please upload a PDF, DOCX, or TXT file, or paste the JD text directly.",
+            raw_jd=None,
+            normalized_jd=None
+        )
+        
+    try:
+        content_bytes = await file.read()
+    except Exception as e:
+        return JobUploadExtractResponse(
+            success=False,
+            status="fallback_required",
+            fallback_required=True,
+            filename=filename,
+            message=f"Failed to read uploaded file: {str(e)}. Please paste the JD text directly.",
+            raw_jd=None,
+            normalized_jd=None
+        )
+        
+    if not content_bytes or len(content_bytes) < 10:
+        return JobUploadExtractResponse(
+            success=False,
+            status="fallback_required",
+            fallback_required=True,
+            filename=filename,
+            message="Uploaded document is empty. Please paste the JD text directly.",
+            raw_jd=None,
+            normalized_jd=None
+        )
+        
+    # Enforce 5MB limit for uploaded files
+    if len(content_bytes) > 5 * 1024 * 1024:
+        return JobUploadExtractResponse(
+            success=False,
+            status="fallback_required",
+            fallback_required=True,
+            filename=filename,
+            message="Uploaded file exceeds 5MB limit. Please upload a smaller file or paste the JD text directly.",
+            raw_jd=None,
+            normalized_jd=None
+        )
+
+    try:
+        raw_text = extract_text_from_document(filename, content_bytes)
+    except Exception as parse_err:
+        return JobUploadExtractResponse(
+            success=False,
+            status="fallback_required",
+            fallback_required=True,
+            filename=filename,
+            message=f"Error extracting text from document: {str(parse_err)}. Please paste the JD text directly.",
+            raw_jd=None,
+            normalized_jd=None
+        )
+        
+    if not raw_text or len(raw_text.strip()) < 10:
+        return JobUploadExtractResponse(
+            success=False,
+            status="fallback_required",
+            fallback_required=True,
+            filename=filename,
+            message="Could not extract readable text from document. Please copy and paste the JD text directly.",
+            raw_jd=None,
+            normalized_jd=None
+        )
+        
+    normalized = normalize_job_description(
+        raw_text=raw_text,
+        source_type="document_upload",
+        source_url=None
+    )
+    return JobUploadExtractResponse(
+        success=True,
+        status="extracted",
+        fallback_required=False,
+        filename=filename,
+        message="Job description extracted from document successfully.",
+        raw_jd=raw_text,
+        normalized_jd=normalized
+    )
+
+
+# ==============================================================================
+# PHASE 5C: RESUME ↔ JD MATCH PERSISTENCE & RETRIEVAL API
+# ==============================================================================
+
+@app.post("/api/candidate/resume-jd/match", response_model=ResumeJDMatchResponse)
+@app.post("/candidate/resume-jd/match", response_model=ResumeJDMatchResponse)
+async def create_resume_jd_match(
+    payload: ResumeJDMatchRequest,
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Executes multi-dimensional match between Resume and JD and securely persists
+    the exact result tied to the authenticated user account with a unique scan_id.
+    """
+    # 1. Validate inputs
+    if not payload.resume_text and not payload.normalized_resume:
+        raise HTTPException(
+            status_code=400,
+            detail="Resume content is required. Please provide resume_text or normalized_resume."
+        )
+    if not payload.jd_text and not payload.jd_url and not payload.normalized_jd:
+        raise HTTPException(
+            status_code=400,
+            detail="Job description is required. Please provide jd_text, jd_url, or normalized_jd."
+        )
+
+    # 2. Extract & Normalize JD
+    if payload.normalized_jd:
+        normalized_jd = payload.normalized_jd
+    elif payload.jd_url:
+        fetch_result = safe_fetch_job_url(payload.jd_url)
+        if not fetch_result["success"]:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unable to fetch JD from URL: {fetch_result.get('error', 'Fetch failed')}. Please paste the JD text directly."
+            )
+        normalized_jd = normalize_job_description(
+            raw_text=fetch_result["extracted_text"],
+            source_type="public_url",
+            source_url=payload.jd_url
+        )
+    else:
+        normalized_jd = normalize_job_description(
+            raw_text=payload.jd_text or "",
+            source_type=payload.source_type or "paste",
+            source_url=payload.source_url
+        )
+
+    # 3. Extract & Normalize Resume
+    if payload.normalized_resume:
+        normalized_resume = payload.normalized_resume
+    else:
+        normalized_resume = normalize_resume(payload.resume_text or "")
+
+    # 4. Execute Multi-Dimensional Match Engine (Phase 5B)
+    try:
+        match_result = calculate_resume_jd_match(
+            jd_input=normalized_jd,
+            resume_input=normalized_resume
+        )
+    except Exception as match_err:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Matching calculation failed: {str(match_err)}"
+        )
+
+    # 5. Determine Metadata
+    target_role = (
+        payload.target_role or
+        normalized_jd.job_title or
+        "General Tech"
+    )
+    candidate_name = (
+        payload.candidate_name or
+        normalized_resume.candidate_name or
+        current_user.full_name or
+        "Candidate"
+    )
+    if payload.jd_url:
+        source_type = "public_url"
+        source_url = payload.jd_url
+    else:
+        source_type = payload.source_type if payload.source_type and payload.source_type != "paste" else (normalized_jd.source_type or "paste")
+        source_url = payload.source_url or normalized_jd.source_url
+
+    engine_version = "match-v1.0.0"
+
+    # 6. Generate Secure Unique Scan ID
+    scan_id = f"scan_{uuid.uuid4().hex}"
+
+    # 7. Persist to Database (Phase 5C)
+    now = datetime.utcnow()
+    try:
+        matched_skills_str = ", ".join([item.skill for item in match_result.skill_matrix if item.gap_status == "matched"])
+        missing_skills_str = ", ".join([item.skill for item in match_result.skill_matrix if item.gap_status == "gap"])
+
+        scan_record = ResumeScan(
+            scan_id=scan_id,
+            user_id=current_user.id,
+            matching_engine_version=engine_version,
+            candidate_name=candidate_name,
+            target_role=target_role,
+            match_score=match_result.overall_match_score,
+            overall_match_score=match_result.overall_match_score,
+            match_confidence=match_result.match_confidence,
+            sub_scores=json.dumps(match_result.sub_scores.model_dump()),
+            skill_matrix=json.dumps([item.model_dump() for item in match_result.skill_matrix]),
+            strengths=json.dumps(match_result.strengths),
+            skill_gaps=json.dumps(match_result.skill_gaps),
+            critical_gaps=json.dumps(match_result.critical_gaps),
+            recommendations=json.dumps(match_result.recommendations),
+            normalized_jd=json.dumps(normalized_jd.model_dump()),
+            normalized_resume=json.dumps(normalized_resume.model_dump()),
+            matched_skills=matched_skills_str,
+            missing_skills=missing_skills_str,
+            source_type=source_type,
+            source_url=source_url,
+            fetched_at=normalized_jd.fetched_at,
+            created_at=now,
+            updated_at=now
+        )
+        db.add(scan_record)
+        db.commit()
+        db.refresh(scan_record)
+    except Exception as db_err:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to persist match result to database: {str(db_err)}"
+        )
+
+    # 8. Return Validated Response
+    return ResumeJDMatchResponse(
+        scan_id=scan_id,
+        matching_engine_version=engine_version,
+        overall_match_score=match_result.overall_match_score,
+        match_confidence=match_result.match_confidence,
+        sub_scores=match_result.sub_scores,
+        skill_matrix=match_result.skill_matrix,
+        strengths=match_result.strengths,
+        skill_gaps=match_result.skill_gaps,
+        critical_gaps=match_result.critical_gaps,
+        recommendations=match_result.recommendations,
+        target_role=target_role,
+        candidate_name=candidate_name,
+        source_type=source_type,
+        source_url=source_url,
+        created_at=now.isoformat()
+    )
+
+
+@app.get("/api/candidate/resume-jd/match/{scan_id}", response_model=ResumeJDMatchResponse)
+@app.get("/candidate/resume-jd/match/{scan_id}", response_model=ResumeJDMatchResponse)
+def get_resume_jd_match(
+    scan_id: str,
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Retrieves exact persisted scan result for the authenticated candidate.
+    Returns 404 if not found or if the scan belongs to another user.
+    """
+    scan = (
+        db.query(ResumeScan)
+        .filter(ResumeScan.scan_id == scan_id, ResumeScan.user_id == current_user.id)
+        .first()
+    )
+
+    if not scan:
+        raise HTTPException(
+            status_code=404,
+            detail="Match result not found or access denied."
+        )
+
+    # Parse persisted JSON fields
+    sub_scores_data = json.loads(scan.sub_scores) if scan.sub_scores else {}
+    skill_matrix_data = json.loads(scan.skill_matrix) if scan.skill_matrix else []
+    strengths_data = json.loads(scan.strengths) if scan.strengths else []
+    skill_gaps_data = json.loads(scan.skill_gaps) if scan.skill_gaps else []
+    critical_gaps_data = json.loads(scan.critical_gaps) if scan.critical_gaps else []
+    recommendations_data = json.loads(scan.recommendations) if scan.recommendations else []
+
+    sub_scores = SubScores(**sub_scores_data) if sub_scores_data else SubScores()
+    skill_matrix = [SkillMatrixItem(**item) for item in skill_matrix_data]
+
+    return ResumeJDMatchResponse(
+        scan_id=scan.scan_id,
+        matching_engine_version=scan.matching_engine_version or "match-v1.0.0",
+        overall_match_score=scan.overall_match_score if scan.overall_match_score is not None else scan.match_score,
+        match_confidence=scan.match_confidence or "MEDIUM",
+        sub_scores=sub_scores,
+        skill_matrix=skill_matrix,
+        strengths=strengths_data,
+        skill_gaps=skill_gaps_data,
+        critical_gaps=critical_gaps_data,
+        recommendations=recommendations_data,
+        target_role=scan.target_role,
+        candidate_name=scan.candidate_name,
+        source_type=scan.source_type or "paste",
+        source_url=scan.source_url,
+        created_at=scan.created_at.isoformat() if scan.created_at else datetime.utcnow().isoformat()
+    )
+
+
+@app.get("/api/candidate/resume-jd/history", response_model=List[ResumeJDMatchSummaryItem])
+@app.get("/candidate/resume-jd/history", response_model=List[ResumeJDMatchSummaryItem])
+def get_resume_jd_history(
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Returns historical scan summaries for the authenticated candidate (privacy safe: no raw texts).
+    """
+    scans = (
+        db.query(ResumeScan)
+        .filter(ResumeScan.user_id == current_user.id, ResumeScan.scan_id.isnot(None))
+        .order_by(ResumeScan.created_at.desc())
+        .limit(50)
+        .all()
+    )
+
+    history = []
+    for s in scans:
+        history.append(ResumeJDMatchSummaryItem(
+            scan_id=s.scan_id,
+            target_role=s.target_role,
+            overall_match_score=s.overall_match_score if s.overall_match_score is not None else s.match_score,
+            match_confidence=s.match_confidence or "MEDIUM",
+            matching_engine_version=s.matching_engine_version or "match-v1.0.0",
+            source_type=s.source_type or "paste",
+            created_at=s.created_at.isoformat() if s.created_at else ""
+        ))
+    return history
 
 
 # ---------- VISITOR & CLICK ANALYTICS API ----------
@@ -710,6 +1222,8 @@ def serve_mock(db: Session = Depends(get_db)):
     if block_res: return block_res
     return get_html_response("Mock-interview.html", db)
 
+@app.get("/candidate/resume-jd-match", include_in_schema=False)
+@app.get("/api/candidate/resume-jd-match", include_in_schema=False)
 @app.get("/candidate/resume-match", include_in_schema=False)
 @app.get("/api/candidate/resume-match", include_in_schema=False)
 @app.get("/candidate/Resume-match.html", include_in_schema=False)

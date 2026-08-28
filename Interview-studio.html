@@ -5693,6 +5693,7 @@
         const response = await fetch(generateEndpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({
             role: role,
             company: company,

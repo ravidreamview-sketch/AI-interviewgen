@@ -34,13 +34,13 @@ def override_get_db():
         db.close()
 
 
-app.dependency_overrides[get_db] = override_get_db
 client = TestClient(app)
 
 
 class TestDynamicMenuManagement(unittest.TestCase):
 
     def setUp(self):
+        app.dependency_overrides[get_db] = override_get_db
         client.cookies.clear()
         FAILED_LOGIN_ATTEMPTS.clear()
         Base.metadata.drop_all(bind=engine)
@@ -70,6 +70,7 @@ class TestDynamicMenuManagement(unittest.TestCase):
     def tearDown(self):
         client.cookies.clear()
         Base.metadata.drop_all(bind=engine)
+        app.dependency_overrides.pop(get_db, None)
 
     def get_admin_token(self):
         res = client.post("/api/admin/login", json={

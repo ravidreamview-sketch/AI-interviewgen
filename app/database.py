@@ -52,7 +52,7 @@ def init_db():
     from app import db_models  # noqa: F401
     Base.metadata.create_all(bind=engine)
 
-    # Automatic schema migration: ensure created_at column exists in interview_history (SQLite fallback)
+    # Automatic schema migration: ensure created_at and adaptive columns exist in interview_history (SQLite fallback)
     if engine.dialect.name == "sqlite":
         with engine.connect() as conn:
             try:
@@ -60,13 +60,70 @@ def init_db():
                 columns = [row[1] for row in result.fetchall()]
                 if "created_at" not in columns:
                     conn.execute(text("ALTER TABLE interview_history ADD COLUMN created_at DATETIME"))
-                    conn.commit()
+                if "user_id" not in columns:
+                    conn.execute(text("ALTER TABLE interview_history ADD COLUMN user_id INTEGER"))
+                if "adaptive_session_id" not in columns:
+                    conn.execute(text("ALTER TABLE interview_history ADD COLUMN adaptive_session_id VARCHAR"))
+                if "question_engine_version" not in columns:
+                    conn.execute(text("ALTER TABLE interview_history ADD COLUMN question_engine_version VARCHAR DEFAULT 'qengine-v1.0.0'"))
+                conn.commit()
+
+                # Ensure adaptive indexes exist
+                conn.execute(text("CREATE INDEX IF NOT EXISTS idx_interview_history_user ON interview_history(user_id)"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS idx_interview_history_asess ON interview_history(adaptive_session_id)"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS idx_skill_analytics_user ON candidate_skill_analytics(user_id)"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS idx_skill_analytics_status ON candidate_skill_analytics(user_id, weakness_status)"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS idx_skill_analytics_prof ON candidate_skill_analytics(user_id, score)"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS idx_mistakes_user_status ON candidate_mistakes_ledger(user_id, mistake_status)"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS idx_mistakes_asess ON candidate_mistakes_ledger(adaptive_session_id)"))
+                conn.commit()
 
                 result_ua = conn.execute(text("PRAGMA table_info(user_accounts)"))
                 columns_ua = [row[1] for row in result_ua.fetchall()]
                 if "full_name" not in columns_ua:
                     conn.execute(text("ALTER TABLE user_accounts ADD COLUMN full_name VARCHAR"))
                     conn.commit()
+
+                # Resume Scans migration columns and indexes (Phase 5C)
+                result_rs = conn.execute(text("PRAGMA table_info(resume_scans)"))
+                columns_rs = [row[1] for row in result_rs.fetchall()]
+                if "scan_id" not in columns_rs:
+                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN scan_id VARCHAR"))
+                if "matching_engine_version" not in columns_rs:
+                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN matching_engine_version VARCHAR DEFAULT 'match-v1.0.0'"))
+                if "overall_match_score" not in columns_rs:
+                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN overall_match_score FLOAT"))
+                if "match_confidence" not in columns_rs:
+                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN match_confidence VARCHAR DEFAULT 'MEDIUM'"))
+                if "sub_scores" not in columns_rs:
+                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN sub_scores TEXT"))
+                if "skill_matrix" not in columns_rs:
+                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN skill_matrix TEXT"))
+                if "strengths" not in columns_rs:
+                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN strengths TEXT"))
+                if "skill_gaps" not in columns_rs:
+                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN skill_gaps TEXT"))
+                if "critical_gaps" not in columns_rs:
+                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN critical_gaps TEXT"))
+                if "recommendations" not in columns_rs:
+                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN recommendations TEXT"))
+                if "normalized_jd" not in columns_rs:
+                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN normalized_jd TEXT"))
+                if "normalized_resume" not in columns_rs:
+                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN normalized_resume TEXT"))
+                if "source_type" not in columns_rs:
+                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN source_type VARCHAR DEFAULT 'paste'"))
+                if "source_url" not in columns_rs:
+                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN source_url VARCHAR"))
+                if "fetched_at" not in columns_rs:
+                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN fetched_at VARCHAR"))
+                if "updated_at" not in columns_rs:
+                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN updated_at DATETIME"))
+                conn.commit()
+
+                conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS idx_resume_scans_scan_id ON resume_scans(scan_id)"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS idx_resume_scans_user_created ON resume_scans(user_id, created_at)"))
+                conn.commit()
             except Exception as e:
                 print(f"[DB] SQLite migration check notice: {e}")
 

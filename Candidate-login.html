@@ -267,36 +267,56 @@ async function handleCandidateLogin(event) {
   }
   if (submitBtn) {
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Opening Workspace...';
+    submitBtn.textContent = 'Signing In...';
   }
 
-  // Pre-seed candidate session for instant access
-  const candidateUser = {
-    email: email || 'candidate@example.com',
-    name: 'Ravi Chandran',
-    role: 'candidate',
-    plan: 'Pro Plan'
-  };
-  localStorage.setItem('candidate_user', JSON.stringify(candidateUser));
-  localStorage.removeItem('candidate_token');
-
-  // Background auth ping (non-blocking for ultra-smooth Vercel / offline experience)
   try {
-    fetch('/api/candidate/login', {
+    const res = await fetch('/api/candidate/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-Requested-With': 'XMLHttpRequest'
       },
+      credentials: 'include',
       body: JSON.stringify({ email, password })
-    }).catch(() => {});
-  } catch (e) {}
+    });
 
-  // Direct 1-click open
-  const targetUrl = window.location.protocol === 'file:' ? 'Interview-studio.html' : '/candidate/interview-studio';
-  setTimeout(() => {
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      const msg = errData.detail || errData.message || 'Invalid credentials. Please verify your email and password.';
+      if (errorBox) {
+        errorBox.textContent = msg;
+        errorBox.style.display = 'block';
+      }
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Sign In';
+      }
+      return;
+    }
+
+    const data = await res.json().catch(() => ({}));
+    if (data && data.user) {
+      localStorage.setItem('candidate_user', JSON.stringify({
+        email: data.user.email,
+        name: data.user.full_name || 'Candidate',
+        role: data.user.role || 'candidate',
+        plan: (data.user.plan_tier || 'PRO').toUpperCase() + ' Plan'
+      }));
+    }
+
+    const targetUrl = window.location.protocol === 'file:' ? 'Interview-studio.html' : '/candidate/interview-studio';
     window.location.href = targetUrl;
-  }, 200);
+  } catch (err) {
+    if (errorBox) {
+      errorBox.textContent = 'Network or server error during sign in. Please try again.';
+      errorBox.style.display = 'block';
+    }
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Sign In';
+    }
+  }
 }
 
 function showForgotNotice(e) {

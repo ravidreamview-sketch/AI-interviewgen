@@ -46,12 +46,51 @@ class InterviewHistory(Base):
     __tablename__ = "interview_history"
 
     id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("user_accounts.id", ondelete="SET NULL"), nullable=True, index=True)
+    adaptive_session_id = Column(String, nullable=True, index=True)
     role = Column(String, nullable=False)
     experience = Column(String, nullable=False)
     skills = Column(Text, nullable=False)
     difficulty = Column(String, nullable=False)
     questions = Column(Text, nullable=False)
+    question_engine_version = Column(String, nullable=True, default="qengine-v1.0.0")
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class CandidateSkillAnalytics(Base):
+    __tablename__ = "candidate_skill_analytics"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("user_accounts.id", ondelete="CASCADE"), nullable=False, index=True)
+    skill = Column(String, nullable=False, index=True)
+    score = Column(Float, nullable=False, default=70.0, index=True)
+    trend = Column(String, nullable=False, default="flat")           # improving | flat | declining
+    role_relevance = Column(Float, nullable=False, default=1.0)      # 0.3 to 1.0
+    evidence_count = Column(Integer, nullable=False, default=1)
+    confidence = Column(String, nullable=False, default="LOW")       # LOW | MEDIUM | HIGH
+    weakness_status = Column(String, nullable=False, default="identified", index=True) # identified | practicing | improving | resolved
+    adaptive_session_id = Column(String, nullable=True, index=True)
+    first_detected_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    last_updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False, index=True)
+
+
+class CandidateMistakesLedger(Base):
+    __tablename__ = "candidate_mistakes_ledger"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("user_accounts.id", ondelete="CASCADE"), nullable=False, index=True)
+    interview_id = Column(Integer, ForeignKey("interview_history.id", ondelete="SET NULL"), nullable=True, index=True)
+    adaptive_session_id = Column(String, nullable=False, index=True)
+    skill = Column(String, nullable=False, index=True)
+    mistake_category = Column(String, nullable=False, default="conceptual")
+    description = Column(Text, nullable=False)
+    evidence = Column(Text, nullable=True)
+    severity = Column(String, nullable=False, default="medium")       # low | medium | high | critical
+    recommendation = Column(Text, nullable=True)
+    mistake_status = Column(String, nullable=False, default="identified", index=True) # identified | practicing | resolved
+    evaluation_version = Column(String, nullable=False, default="eval-v1.2.0")
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    resolved_at = Column(DateTime, nullable=True)
 
 
 class PageViewEvent(Base):
@@ -136,6 +175,52 @@ class PromptVersion(Base):
     max_tokens = Column(Integer, nullable=False)
     status = Column(String, nullable=False)
     change_summary = Column(String, nullable=True)
-    changed_by = Column(Integer, ForeignKey("user_accounts.id", ondelete="SET NULL"), nullable=True)
-    changed_by_email = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class MockInterview(Base):
+    __tablename__ = "mock_interviews"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("user_accounts.id", ondelete="CASCADE"), nullable=True, index=True)
+    role = Column(String, nullable=False)
+    company_target = Column(String, default="FAANG Tier")
+    interviewer_persona = Column(String, default="Alex (Tech Lead)")
+    score = Column(Float, nullable=False, default=85.0)
+    technical_accuracy = Column(Float, default=85.0)
+    communication_clarity = Column(Float, default=85.0)
+    star_depth = Column(Float, default=85.0)
+    confidence_score = Column(Float, default=85.0)
+    duration_seconds = Column(Integer, default=300)
+    transcript = Column(Text, nullable=True)
+    status = Column(String, default="completed")
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
+class ResumeScan(Base):
+    __tablename__ = "resume_scans"
+
+    id = Column(Integer, primary_key=True, index=True)
+    scan_id = Column(String, unique=True, index=True, nullable=True)
+    user_id = Column(Integer, ForeignKey("user_accounts.id", ondelete="CASCADE"), nullable=True, index=True)
+    matching_engine_version = Column(String, default="match-v1.0.0")
+    candidate_name = Column(String, default="Candidate")
+    target_role = Column(String, nullable=False, default="General Tech")
+    match_score = Column(Float, default=80.0)
+    overall_match_score = Column(Float, default=80.0)
+    match_confidence = Column(String, default="MEDIUM")
+    sub_scores = Column(Text, nullable=True)
+    skill_matrix = Column(Text, nullable=True)
+    strengths = Column(Text, nullable=True)
+    skill_gaps = Column(Text, nullable=True)
+    critical_gaps = Column(Text, nullable=True)
+    recommendations = Column(Text, nullable=True)
+    normalized_jd = Column(Text, nullable=True)
+    normalized_resume = Column(Text, nullable=True)
+    matched_skills = Column(Text, default="")
+    missing_skills = Column(Text, default="")
+    source_type = Column(String, default="paste")
+    source_url = Column(String, nullable=True)
+    fetched_at = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
