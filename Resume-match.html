@@ -559,11 +559,16 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
       <div style="display:flex;align-items:flex-start;gap:14px">
         <div style="font-size:26px;line-height:1">⚠️</div>
         <div style="flex:1">
-          <div style="font-size:16px;font-weight:800;color:var(--danger);margin-bottom:4px" id="errorTitle">Unable to complete the match analysis. Please try again.</div>
+          <div style="font-size:16px;font-weight:800;color:var(--danger);margin-bottom:4px" id="errorTitle">Unable to complete the match analysis.</div>
           <div style="font-size:13.5px;color:var(--ink-soft);line-height:1.5" id="errorMessage">The server could not process the match request. Please verify your inputs or session status.</div>
-          <button onclick="runResumeJdMatch()" style="margin-top:14px;padding:9px 18px;border-radius:8px;background:var(--danger);color:#fff;font-weight:700;font-size:13px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px">
-            <span>🔄 Try Again</span>
-          </button>
+          <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+            <button onclick="runResumeJdMatch()" style="padding:9px 18px;border-radius:8px;background:var(--danger);color:#fff;font-weight:700;font-size:13px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+              <span>🔄 Try Again</span>
+            </button>
+            <a href="/candidate/login" id="errorLoginBtn" style="display:none;padding:9px 18px;border-radius:8px;background:var(--primary);color:#fff;font-weight:700;font-size:13px;text-decoration:none;align-items:center;gap:6px">
+              <span>🔑 Sign In</span>
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -804,6 +809,9 @@ function setMatchUIState(state, data = null, errorMsg = '') {
       errPanel.style.display = 'block';
       if (errorMsg) {
         document.getElementById('errorMessage').textContent = errorMsg;
+        const isAuthErr = /session|sign in|log in|authentication|unauthorized/i.test(errorMsg);
+        const loginBtn = document.getElementById('errorLoginBtn');
+        if (loginBtn) loginBtn.style.display = isAuthErr ? 'inline-flex' : 'none';
       }
     }
     if (practiceQContainer) practiceQContainer.style.display = 'none';
@@ -1130,18 +1138,32 @@ async function runResumeJdMatch() {
     });
 
     if (!resp.ok) {
-      let errMsg = 'Failed to analyze resume and JD match.';
-      if (resp.status === 401) {
-        errMsg = 'Your session has expired. Please sign in again.';
-      } else if (resp.status === 422) {
-        errMsg = 'Please provide a valid resume and job description.';
-      } else if (resp.status === 404) {
-        errMsg = 'Match service is unavailable.';
-      } else if (resp.status >= 500) {
-        errMsg = "We couldn't complete the match analysis. Please try again.";
-      } else {
-        const errData = await resp.json().catch(() => ({}));
-        errMsg = errData.detail || errMsg;
+      let errMsg = '';
+      const errData = await resp.json().catch(() => ({}));
+      if (typeof errData.detail === 'string') {
+        errMsg = errData.detail;
+      } else if (Array.isArray(errData.detail)) {
+        errMsg = errData.detail.map(d => (typeof d === 'string' ? d : (d.msg || JSON.stringify(d)))).join('; ');
+      } else if (typeof errData.message === 'string') {
+        errMsg = errData.message;
+      } else if (typeof errData.error === 'string') {
+        errMsg = errData.error;
+      }
+
+      if (!errMsg) {
+        if (resp.status === 401) {
+          errMsg = 'Your session has expired. Please sign in again.';
+        } else if (resp.status === 422) {
+          errMsg = 'Please provide a valid resume and job description.';
+        } else if (resp.status === 404) {
+          errMsg = 'Match service is unavailable.';
+        } else if (resp.status === 403) {
+          errMsg = 'Access forbidden. Please check your account permissions.';
+        } else if (resp.status >= 500) {
+          errMsg = "We couldn't complete the match analysis. Please try again.";
+        } else {
+          errMsg = 'Failed to analyze resume and JD match. Please verify your inputs and try again.';
+        }
       }
       showToast(errMsg, 'error');
       setMatchUIState('ERROR', null, errMsg);
