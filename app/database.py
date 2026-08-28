@@ -127,110 +127,113 @@ def init_db():
             except Exception as e:
                 print(f"[DB] SQLite migration check notice: {e}")
 
-    # Provision or rotate Super Admin account strictly from environment variables
-    from app.security import hash_password, verify_password
-    with SessionLocal() as db:
-        admin_email = os.environ.get("SUPER_ADMIN_EMAIL") or "admin@example.com"
-        admin_password = os.environ.get("SUPER_ADMIN_PASSWORD") or "SuperAdminPass123!"
-        clean_email = admin_email.strip().lower()
-        clean_password = admin_password.strip()
-
-        existing_super = db.query(db_models.UserAccount).filter(db_models.UserAccount.role == "super_admin").first()
-
-        if admin_email and admin_password and admin_password.strip():
+    # Provision or rotate Super Admin and candidate accounts strictly from environment variables
+    try:
+        from app.security import hash_password, verify_password
+        with SessionLocal() as db:
+            admin_email = os.environ.get("SUPER_ADMIN_EMAIL") or "admin@example.com"
+            admin_password = os.environ.get("SUPER_ADMIN_PASSWORD") or "SuperAdminPass123!"
             clean_email = admin_email.strip().lower()
             clean_password = admin_password.strip()
 
-            if not existing_super:
-                super_admin = db_models.UserAccount(
-                    email=clean_email,
-                    password_hash=hash_password(clean_password),
-                    role="super_admin",
-                    plan_tier="enterprise",
-                    is_active=True
-                )
-                db.add(super_admin)
-                db.commit()
-                print(f"[DB Bootstrap] Provisioned initial Super Admin from environment variables.")
-            else:
-                needs_update = False
-                if existing_super.email != clean_email:
-                    existing_super.email = clean_email
-                    needs_update = True
-                if not verify_password(clean_password, existing_super.password_hash):
-                    existing_super.password_hash = hash_password(clean_password)
-                    needs_update = True
-                
-                if needs_update:
+            existing_super = db.query(db_models.UserAccount).filter(db_models.UserAccount.role == "super_admin").first()
+
+            if admin_email and admin_password and admin_password.strip():
+                clean_email = admin_email.strip().lower()
+                clean_password = admin_password.strip()
+
+                if not existing_super:
+                    super_admin = db_models.UserAccount(
+                        email=clean_email,
+                        password_hash=hash_password(clean_password),
+                        role="super_admin",
+                        plan_tier="enterprise",
+                        is_active=True
+                    )
+                    db.add(super_admin)
                     db.commit()
-                    print(f"[DB Bootstrap] Synchronized Super Admin credentials from environment variables.")
+                    print(f"[DB Bootstrap] Provisioned initial Super Admin from environment variables.")
+                else:
+                    needs_update = False
+                    if existing_super.email != clean_email:
+                        existing_super.email = clean_email
+                        needs_update = True
+                    if not verify_password(clean_password, existing_super.password_hash):
+                        existing_super.password_hash = hash_password(clean_password)
+                        needs_update = True
+                    
+                    if needs_update:
+                        db.commit()
+                        print(f"[DB Bootstrap] Synchronized Super Admin credentials from environment variables.")
 
-        # Provision default candidate account candidate@example.com if not present
-        existing_candidate = db.query(db_models.UserAccount).filter(db_models.UserAccount.email == "candidate@example.com").first()
-        if not existing_candidate:
-            cand_user = db_models.UserAccount(
-                email="candidate@example.com",
-                full_name="Demo Candidate",
-                password_hash=hash_password("CandidatePass123!"),
-                role="candidate",
-                plan_tier="pro",
-                is_active=True
-            )
-            db.add(cand_user)
-            db.commit()
-            print("[DB Bootstrap] Provisioned default Candidate account (candidate@example.com / CandidatePass123!).")
-        else:
-            existing_candidate.password_hash = hash_password("CandidatePass123!")
-            existing_candidate.is_active = True
-            db.commit()
-
-        # Seed initial production prompts if table is empty
-        try:
-            prompt_count = db.query(db_models.Prompt).count()
-            if prompt_count == 0:
-                default_prompt = db_models.Prompt(
-                    name="Technical Question Generator v1",
-                    description="Core system prompt for generating role-specific technical interview questions",
-                    category="Interview Questions",
-                    role="General Tech",
-                    difficulty="Hard",
-                    system_prompt="You are an expert technical interviewer at a top tech company. Generate rigorous, practical interview questions.",
-                    user_prompt="Role: {{role}}\nExperience: {{experience}}\nSkills: {{skills}}\nDifficulty: {{difficulty}}\nQuestions Count: {{number_of_questions}}\n\nGenerate high-signal interview questions with evaluation criteria.",
-                    variables="role,experience,skills,difficulty,number_of_questions",
-                    model="gemini-1.5-flash",
-                    temperature=0.7,
-                    max_tokens=1024,
-                    version=1,
-                    status="active",
+            # Provision default candidate account candidate@example.com if not present
+            existing_candidate = db.query(db_models.UserAccount).filter(db_models.UserAccount.email == "candidate@example.com").first()
+            if not existing_candidate:
+                cand_user = db_models.UserAccount(
+                    email="candidate@example.com",
+                    full_name="Demo Candidate",
+                    password_hash=hash_password("CandidatePass123!"),
+                    role="candidate",
+                    plan_tier="pro",
                     is_active=True
                 )
-                db.add(default_prompt)
+                db.add(cand_user)
                 db.commit()
-                db.refresh(default_prompt)
+                print("[DB Bootstrap] Provisioned default Candidate account (candidate@example.com / CandidatePass123!).")
+            else:
+                existing_candidate.password_hash = hash_password("CandidatePass123!")
+                existing_candidate.is_active = True
+                db.commit()
 
-                v1 = db_models.PromptVersion(
-                    prompt_id=default_prompt.id,
-                    version=1,
-                    name=default_prompt.name,
-                    description=default_prompt.description,
-                    category=default_prompt.category,
-                    role=default_prompt.role,
-                    difficulty=default_prompt.difficulty,
-                    system_prompt=default_prompt.system_prompt,
-                    user_prompt=default_prompt.user_prompt,
-                    variables=default_prompt.variables,
-                    model=default_prompt.model,
-                    temperature=default_prompt.temperature,
-                    max_tokens=default_prompt.max_tokens,
-                    status="active",
-                    change_summary="Initial system prompt creation",
-                    changed_by_email="system@genai-studio.dev"
-                )
-                db.add(v1)
-                db.commit()
-                print("[DB Bootstrap] Seeded default production prompt library.")
-        except Exception as seed_err:
-            print(f"[DB Bootstrap] Prompt seeding notice: {seed_err}")
+            # Seed initial production prompts if table is empty
+            try:
+                prompt_count = db.query(db_models.Prompt).count()
+                if prompt_count == 0:
+                    default_prompt = db_models.Prompt(
+                        name="Technical Question Generator v1",
+                        description="Core system prompt for generating role-specific technical interview questions",
+                        category="Interview Questions",
+                        role="General Tech",
+                        difficulty="Hard",
+                        system_prompt="You are an expert technical interviewer at a top tech company. Generate rigorous, practical interview questions.",
+                        user_prompt="Role: {{role}}\nExperience: {{experience}}\nSkills: {{skills}}\nDifficulty: {{difficulty}}\nQuestions Count: {{number_of_questions}}\n\nGenerate high-signal interview questions with evaluation criteria.",
+                        variables="role,experience,skills,difficulty,number_of_questions",
+                        model="gemini-1.5-flash",
+                        temperature=0.7,
+                        max_tokens=1024,
+                        version=1,
+                        status="active",
+                        is_active=True
+                    )
+                    db.add(default_prompt)
+                    db.commit()
+                    db.refresh(default_prompt)
+
+                    v1 = db_models.PromptVersion(
+                        prompt_id=default_prompt.id,
+                        version=1,
+                        name=default_prompt.name,
+                        description=default_prompt.description,
+                        category=default_prompt.category,
+                        role=default_prompt.role,
+                        difficulty=default_prompt.difficulty,
+                        system_prompt=default_prompt.system_prompt,
+                        user_prompt=default_prompt.user_prompt,
+                        variables=default_prompt.variables,
+                        model=default_prompt.model,
+                        temperature=default_prompt.temperature,
+                        max_tokens=default_prompt.max_tokens,
+                        status="active",
+                        change_summary="Initial system prompt creation",
+                        changed_by_email="system@genai-studio.dev"
+                    )
+                    db.add(v1)
+                    db.commit()
+                    print("[DB Bootstrap] Seeded default production prompt library.")
+            except Exception as seed_err:
+                print(f"[DB Bootstrap] Prompt seeding notice: {seed_err}")
+    except Exception as bootstrap_err:
+        print(f"[DB Bootstrap] Account bootstrapping notice: {bootstrap_err}")
 
 
 def get_db():

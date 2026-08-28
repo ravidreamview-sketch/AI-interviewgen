@@ -64,7 +64,10 @@ from app.auth_deps import get_current_user
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Initialize database tables and migrations on startup
-    init_db()
+    try:
+        init_db()
+    except Exception as e:
+        print(f"[Lifespan Startup] init_db notice: {e}")
     yield
 
 # Configure trusted CORS origins for local dev and production
@@ -135,12 +138,10 @@ async def fix_vercel_path_middleware(request: Request, call_next):
         path = request.scope.get("path", "")
         if path.startswith("/api/index.py"):
             clean = path[len("/api/index.py"):]
-            if clean:
-                request.scope["path"] = clean
+            request.scope["path"] = clean if clean else "/"
         elif path.startswith("/index.py"):
             clean = path[len("/index.py"):]
-            if clean:
-                request.scope["path"] = clean
+            request.scope["path"] = clean if clean else "/"
 
     return await call_next(request)
 
@@ -188,6 +189,7 @@ from app.db_models import UserAccount
 @app.post("/api/candidate/logout", include_in_schema=False)
 @app.post("/candidate/logout", include_in_schema=False)
 @app.post("/logout", include_in_schema=False)
+@app.post("/api/logout", include_in_schema=False)
 def direct_candidate_logout(
     request: Request,
     response: Response
@@ -395,6 +397,7 @@ def generate_questions(
 
 
 @app.get("/history")
+@app.get("/api/history")
 def get_history(db: Session = Depends(get_db)):
     check_feature_enabled("Interview history.html", db)
     try:
@@ -410,6 +413,7 @@ def get_history(db: Session = Depends(get_db)):
 
 
 @app.get("/history/{interview_id}")
+@app.get("/api/history/{interview_id}")
 def get_interview_detail(interview_id: int, db: Session = Depends(get_db)):
     interview = db.query(InterviewHistory).filter(InterviewHistory.id == interview_id).first()
     if not interview:
@@ -418,6 +422,7 @@ def get_interview_detail(interview_id: int, db: Session = Depends(get_db)):
 
 
 @app.delete("/history/{interview_id}")
+@app.delete("/api/history/{interview_id}")
 def delete_interview(interview_id: int, db: Session = Depends(get_db)):
     interview = db.query(InterviewHistory).filter(InterviewHistory.id == interview_id).first()
     if not interview:
@@ -896,6 +901,8 @@ def get_resume_jd_history(
 # ---------- VISITOR & CLICK ANALYTICS API ----------
 
 @app.post("/api/analytics/track")
+@app.post("/api/track")
+@app.post("/track")
 def track_page_view(
     payload: PageViewPayload,
     request: Request,
@@ -933,6 +940,9 @@ def track_page_view(
 
 
 @app.post("/api/analytics/click")
+@app.post("/api/click")
+@app.post("/click")
+@app.post("/api/analytics/events")
 def track_click_event(
     payload: ClickEventPayload,
     request: Request,
