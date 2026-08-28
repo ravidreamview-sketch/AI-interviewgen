@@ -1,11 +1,14 @@
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import declarative_base, sessionmaker
-
 import os
 import tempfile
+import logging
+from sqlalchemy import create_engine, text, inspect
+from sqlalchemy.orm import declarative_base, sessionmaker
+
+logger = logging.getLogger("ravi.database")
 
 raw_db_url = os.environ.get("DATABASE_URL")
-is_production = os.environ.get("ENV") == "production" or bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+is_vercel = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+is_production = os.environ.get("ENV") == "production" or is_vercel
 
 if raw_db_url:
     # Normalize postgres:// to postgresql:// for SQLAlchemy 2.0+ compatibility
@@ -17,20 +20,22 @@ if raw_db_url:
     if DATABASE_URL.startswith("sqlite"):
         engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
     else:
-        # PostgreSQL with serverless-optimized connection pooling
+        # PostgreSQL / Supabase with serverless connection pooling & recycling
         engine = create_engine(
             DATABASE_URL,
             pool_pre_ping=True,
+            pool_recycle=300,
             pool_size=5,
             max_overflow=10
         )
+        logger.info("[DB Engine] Initialized production PostgreSQL engine with serverless pre-ping & recycle.")
 else:
-    if is_production:
-        # Fallback to ephemeral /tmp SQLite on Vercel if DATABASE_URL is not set yet, so process does not crash
+    if is_production or is_vercel:
+        # Serverless fallback when DATABASE_URL is not yet supplied in Vercel environment
         tmp_db_path = os.path.join(tempfile.gettempdir(), "interview.db")
         DATABASE_URL = f"sqlite:///{tmp_db_path}"
         engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-        print("[DB WARNING] Running in serverless without DATABASE_URL. Using /tmp/interview.db fallback. Set DATABASE_URL in Vercel for PostgreSQL persistence.")
+        logger.warning("[DB Engine] Running in serverless without DATABASE_URL. Ephemeral SQLite (/tmp/interview.db) active. Configure PostgreSQL DATABASE_URL in Vercel for persistence.")
     else:
         # Local development SQLite
         DATABASE_URL = "sqlite:///./interview.db"
@@ -52,80 +57,85 @@ def init_db():
     from app import db_models  # noqa: F401
     Base.metadata.create_all(bind=engine)
 
-    # Automatic schema migration: ensure created_at and adaptive columns exist in interview_history (SQLite fallback)
-    if engine.dialect.name == "sqlite":
+    # Dialect-agnostic schema migration for SQLite and PostgreSQL
+    dialect = engine.dialect.name
+    try:
         with engine.connect() as conn:
-            try:
-                result = conn.execute(text("PRAGMA table_info(interview_history)"))
-                columns = [row[1] for row in result.fetchall()]
-                if "created_at" not in columns:
-                    conn.execute(text("ALTER TABLE interview_history ADD COLUMN created_at DATETIME"))
-                if "user_id" not in columns:
+            insp = inspect(conn)
+            existing_tables = set(insp.get_table_names())
+
+            # 1. interview_history migrations
+            if "interview_history" in existing_tables:
+                ih_cols = {col["name"] for col in insp.get_columns("interview_history")}
+                if "created_at" not in ih_cols:
+                    col_type = "DATETIME" if dialect == "sqlite" else "TIMESTAMP"
+                    conn.execute(text(f"ALTER TABLE interview_history ADD COLUMN created_at {col_type}"))
+                if "user_id" not in ih_cols:
                     conn.execute(text("ALTER TABLE interview_history ADD COLUMN user_id INTEGER"))
-                if "adaptive_session_id" not in columns:
+                if "adaptive_session_id" not in ih_cols:
                     conn.execute(text("ALTER TABLE interview_history ADD COLUMN adaptive_session_id VARCHAR"))
-                if "question_engine_version" not in columns:
+                if "question_engine_version" not in ih_cols:
                     conn.execute(text("ALTER TABLE interview_history ADD COLUMN question_engine_version VARCHAR DEFAULT 'qengine-v1.0.0'"))
                 conn.commit()
 
-                # Ensure adaptive indexes exist
+                # Indexes
                 conn.execute(text("CREATE INDEX IF NOT EXISTS idx_interview_history_user ON interview_history(user_id)"))
                 conn.execute(text("CREATE INDEX IF NOT EXISTS idx_interview_history_asess ON interview_history(adaptive_session_id)"))
+                conn.commit()
+
+            # 2. candidate_skill_analytics & mistakes indexes
+            if "candidate_skill_analytics" in existing_tables:
                 conn.execute(text("CREATE INDEX IF NOT EXISTS idx_skill_analytics_user ON candidate_skill_analytics(user_id)"))
                 conn.execute(text("CREATE INDEX IF NOT EXISTS idx_skill_analytics_status ON candidate_skill_analytics(user_id, weakness_status)"))
                 conn.execute(text("CREATE INDEX IF NOT EXISTS idx_skill_analytics_prof ON candidate_skill_analytics(user_id, score)"))
+                conn.commit()
+
+            if "candidate_mistakes_ledger" in existing_tables:
                 conn.execute(text("CREATE INDEX IF NOT EXISTS idx_mistakes_user_status ON candidate_mistakes_ledger(user_id, mistake_status)"))
                 conn.execute(text("CREATE INDEX IF NOT EXISTS idx_mistakes_asess ON candidate_mistakes_ledger(adaptive_session_id)"))
                 conn.commit()
 
-                result_ua = conn.execute(text("PRAGMA table_info(user_accounts)"))
-                columns_ua = [row[1] for row in result_ua.fetchall()]
-                if "full_name" not in columns_ua:
+            # 3. user_accounts migrations
+            if "user_accounts" in existing_tables:
+                ua_cols = {col["name"] for col in insp.get_columns("user_accounts")}
+                if "full_name" not in ua_cols:
                     conn.execute(text("ALTER TABLE user_accounts ADD COLUMN full_name VARCHAR"))
                     conn.commit()
 
-                # Resume Scans migration columns and indexes (Phase 5C)
-                result_rs = conn.execute(text("PRAGMA table_info(resume_scans)"))
-                columns_rs = [row[1] for row in result_rs.fetchall()]
-                if "scan_id" not in columns_rs:
-                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN scan_id VARCHAR"))
-                if "matching_engine_version" not in columns_rs:
-                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN matching_engine_version VARCHAR DEFAULT 'match-v1.0.0'"))
-                if "overall_match_score" not in columns_rs:
-                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN overall_match_score FLOAT"))
-                if "match_confidence" not in columns_rs:
-                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN match_confidence VARCHAR DEFAULT 'MEDIUM'"))
-                if "sub_scores" not in columns_rs:
-                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN sub_scores TEXT"))
-                if "skill_matrix" not in columns_rs:
-                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN skill_matrix TEXT"))
-                if "strengths" not in columns_rs:
-                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN strengths TEXT"))
-                if "skill_gaps" not in columns_rs:
-                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN skill_gaps TEXT"))
-                if "critical_gaps" not in columns_rs:
-                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN critical_gaps TEXT"))
-                if "recommendations" not in columns_rs:
-                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN recommendations TEXT"))
-                if "normalized_jd" not in columns_rs:
-                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN normalized_jd TEXT"))
-                if "normalized_resume" not in columns_rs:
-                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN normalized_resume TEXT"))
-                if "source_type" not in columns_rs:
-                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN source_type VARCHAR DEFAULT 'paste'"))
-                if "source_url" not in columns_rs:
-                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN source_url VARCHAR"))
-                if "fetched_at" not in columns_rs:
-                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN fetched_at VARCHAR"))
-                if "updated_at" not in columns_rs:
-                    conn.execute(text("ALTER TABLE resume_scans ADD COLUMN updated_at DATETIME"))
+            # 4. resume_scans migrations (Phase 5C)
+            if "resume_scans" in existing_tables:
+                rs_cols = {col["name"] for col in insp.get_columns("resume_scans")}
+                dt_type = "DATETIME" if dialect == "sqlite" else "TIMESTAMP"
+                text_type = "TEXT"
+                
+                columns_to_add = [
+                    ("scan_id", "VARCHAR"),
+                    ("matching_engine_version", "VARCHAR DEFAULT 'match-v1.0.0'"),
+                    ("overall_match_score", "FLOAT"),
+                    ("match_confidence", "VARCHAR DEFAULT 'MEDIUM'"),
+                    ("sub_scores", text_type),
+                    ("skill_matrix", text_type),
+                    ("strengths", text_type),
+                    ("skill_gaps", text_type),
+                    ("critical_gaps", text_type),
+                    ("recommendations", text_type),
+                    ("normalized_jd", text_type),
+                    ("normalized_resume", text_type),
+                    ("source_type", "VARCHAR DEFAULT 'paste'"),
+                    ("source_url", "VARCHAR"),
+                    ("fetched_at", "VARCHAR"),
+                    ("updated_at", dt_type),
+                ]
+                for col_name, col_def in columns_to_add:
+                    if col_name not in rs_cols:
+                        conn.execute(text(f"ALTER TABLE resume_scans ADD COLUMN {col_name} {col_def}"))
                 conn.commit()
 
                 conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS idx_resume_scans_scan_id ON resume_scans(scan_id)"))
                 conn.execute(text("CREATE INDEX IF NOT EXISTS idx_resume_scans_user_created ON resume_scans(user_id, created_at)"))
                 conn.commit()
-            except Exception as e:
-                print(f"[DB] SQLite migration check notice: {e}")
+    except Exception as e:
+        logger.warning(f"[DB Migration Notice] Schema check: {e}")
 
     # Provision or rotate Super Admin and candidate accounts strictly from environment variables
     try:

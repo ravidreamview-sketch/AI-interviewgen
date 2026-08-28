@@ -1,6 +1,7 @@
 import os
 import uuid
 import json
+import logging
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -10,6 +11,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 from sqlalchemy import func, desc, text
 from sqlalchemy.orm import Session
+
+logger = logging.getLogger("ravi.main")
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -66,10 +69,13 @@ from app.auth_deps import get_current_user
 async def lifespan(app: FastAPI):
     # Initialize database tables and migrations on startup
     try:
+        logger.info("[Lifespan Startup] Application startup initiated; verifying database schema.")
         init_db()
+        logger.info("[Lifespan Startup] Database schema initialized and verified.")
     except Exception as e:
-        print(f"[Lifespan Startup] init_db notice: {e}")
+        logger.warning(f"[Lifespan Startup] init_db notice: {e}")
     yield
+    logger.info("[Lifespan Shutdown] Application shutdown.")
 
 # Configure trusted CORS origins for local dev and production
 DEFAULT_ALLOWED_ORIGINS = [
@@ -776,6 +782,7 @@ async def create_resume_jd_match(
     the exact result tied to the authenticated user account with a unique scan_id.
     """
     # 1. Validate inputs
+    logger.info("Resume/JD match evaluation initiated", extra={"user_id": current_user.id, "source_type": payload.source_type})
     if not payload.resume_text and not payload.normalized_resume:
         raise HTTPException(
             status_code=400,
@@ -806,6 +813,7 @@ async def create_resume_jd_match(
             final_url = payload.jd_url
 
         if not success:
+            logger.warning("Job URL fetch failed", extra={"user_id": current_user.id})
             raise HTTPException(
                 status_code=400,
                 detail=f"Unable to fetch JD from URL: {text_or_err}. Please paste the JD text directly."
@@ -821,13 +829,14 @@ async def create_resume_jd_match(
             source_type=payload.source_type or "paste",
             source_url=payload.source_url
         )
-
+    logger.info("Job description normalized successfully", extra={"user_id": current_user.id, "job_title": normalized_jd.job_title})
 
     # 3. Extract & Normalize Resume
     if payload.normalized_resume:
         normalized_resume = payload.normalized_resume
     else:
         normalized_resume = normalize_resume(payload.resume_text or "")
+    logger.info("Resume normalized successfully", extra={"user_id": current_user.id, "candidate_name": normalized_resume.candidate_name})
 
     # 4. Execute Multi-Dimensional Match Engine (Phase 5B)
     try:
@@ -835,7 +844,16 @@ async def create_resume_jd_match(
             jd_input=normalized_jd,
             resume_input=normalized_resume
         )
+        logger.info(
+            "Matching engine execution completed",
+            extra={
+                "user_id": current_user.id,
+                "overall_score": match_result.overall_match_score,
+                "confidence": match_result.match_confidence
+            }
+        )
     except Exception as match_err:
+        logger.exception("Resume/JD match calculation failed", extra={"user_id": current_user.id})
         raise HTTPException(
             status_code=500,
             detail=f"Matching calculation failed: {str(match_err)}"
@@ -899,8 +917,10 @@ async def create_resume_jd_match(
         db.add(scan_record)
         db.commit()
         db.refresh(scan_record)
+        logger.info("Resume/JD match record persisted", extra={"user_id": current_user.id, "scan_id": scan_id})
     except Exception as db_err:
         db.rollback()
+        logger.exception("Failed to persist match result to database", extra={"user_id": current_user.id, "scan_id": scan_id})
         raise HTTPException(
             status_code=500,
             detail=f"Failed to persist match result to database: {str(db_err)}"
