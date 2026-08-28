@@ -842,33 +842,41 @@ DEFAULT_NAVIGATION_MENUS = [
 
 
 def _get_stored_menus(db: Session) -> List[dict]:
-    config_entry = db.query(SystemConfig).filter(SystemConfig.config_key == "navigation_menus").first()
-    if not config_entry:
-        new_entry = SystemConfig(
-            config_key="navigation_menus",
-            config_value=json.dumps(DEFAULT_NAVIGATION_MENUS)
-        )
-        db.add(new_entry)
-        db.commit()
-        return json.loads(json.dumps(DEFAULT_NAVIGATION_MENUS))
     try:
-        return json.loads(config_entry.config_value)
-    except Exception:
+        config_entry = db.query(SystemConfig).filter(SystemConfig.config_key == "navigation_menus").first()
+        if not config_entry:
+            new_entry = SystemConfig(
+                config_key="navigation_menus",
+                config_value=json.dumps(DEFAULT_NAVIGATION_MENUS)
+            )
+            db.add(new_entry)
+            db.commit()
+            return json.loads(json.dumps(DEFAULT_NAVIGATION_MENUS))
+        try:
+            return json.loads(config_entry.config_value)
+        except Exception:
+            return json.loads(json.dumps(DEFAULT_NAVIGATION_MENUS))
+    except Exception as e:
+        print(f"[Menu Warning] _get_stored_menus fallback: {e}")
         return json.loads(json.dumps(DEFAULT_NAVIGATION_MENUS))
 
 
 def _save_stored_menus(db: Session, menus: List[dict]):
-    config_entry = db.query(SystemConfig).filter(SystemConfig.config_key == "navigation_menus").first()
-    if not config_entry:
-        config_entry = SystemConfig(
-            config_key="navigation_menus",
-            config_value=json.dumps(menus)
-        )
-        db.add(config_entry)
-    else:
-        config_entry.config_value = json.dumps(menus)
-        config_entry.updated_at = datetime.utcnow()
-    db.commit()
+    try:
+        config_entry = db.query(SystemConfig).filter(SystemConfig.config_key == "navigation_menus").first()
+        if not config_entry:
+            config_entry = SystemConfig(
+                config_key="navigation_menus",
+                config_value=json.dumps(menus)
+            )
+            db.add(config_entry)
+        else:
+            config_entry.config_value = json.dumps(menus)
+            config_entry.updated_at = datetime.utcnow()
+        db.commit()
+    except Exception as e:
+        print(f"[Menu Save Warning] {e}")
+
 
 
 def is_candidate_menu_enabled(identifier: str, db: Session) -> bool:

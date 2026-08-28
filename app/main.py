@@ -220,8 +220,9 @@ def direct_update_menu(
     return update_menu(menu_id, payload, request, db, current_user)
 
 def check_menu_access_or_block(menu_key: str, db: Session):
-    if not is_candidate_menu_enabled(menu_key, db):
-        content = f"""<!DOCTYPE html>
+    try:
+        if not is_candidate_menu_enabled(menu_key, db):
+            content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -244,9 +245,11 @@ def check_menu_access_or_block(menu_key: str, db: Session):
   </div>
 </body>
 </html>"""
-        res = HTMLResponse(content=content, status_code=403)
-        res.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
-        return res
+            res = HTMLResponse(content=content, status_code=403)
+            res.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+            return res
+    except Exception as e:
+        print(f"[Menu Check Warning] {e}")
     return None
 
 
@@ -1312,3 +1315,11 @@ def serve_analytics_tracker():
 def serve_logo():
     f = BASE_DIR / "logo.png"
     return FileResponse(f) if f.exists() else HTTPException(404, "logo.png not found")
+
+
+# Ensure database tables and migrations are ready on serverless cold-start
+try:
+    from app.database import ensure_db_initialized
+    ensure_db_initialized()
+except Exception as e:
+    print(f"[Main Startup Notice] ensure_db_initialized: {e}")

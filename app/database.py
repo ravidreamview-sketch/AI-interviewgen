@@ -224,8 +224,7 @@ def init_db():
                         temperature=default_prompt.temperature,
                         max_tokens=default_prompt.max_tokens,
                         status="active",
-                        change_summary="Initial system prompt creation",
-                        changed_by_email="system@genai-studio.dev"
+                        change_summary="Initial system prompt creation"
                     )
                     db.add(v1)
                     db.commit()
@@ -236,9 +235,24 @@ def init_db():
         print(f"[DB Bootstrap] Account bootstrapping notice: {bootstrap_err}")
 
 
+_db_initialized = False
+
+
+def ensure_db_initialized():
+    global _db_initialized
+    if not _db_initialized:
+        try:
+            init_db()
+            _db_initialized = True
+        except Exception as e:
+            print(f"[DB Ensure Notice] {e}")
+
+
 def get_db():
+    ensure_db_initialized()
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
