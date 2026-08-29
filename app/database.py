@@ -53,11 +53,15 @@ try:
         else:
             # PostgreSQL engine (Supabase / Neon / AWS RDS / Vercel Postgres)
             # In serverless environments, NullPool prevents stale connections and pool exhaustion
+            connect_args = {
+                "connect_timeout": 5,
+            }
             if is_vercel:
                 engine = create_engine(
                     DATABASE_URL,
                     poolclass=NullPool,
                     pool_pre_ping=True,
+                    connect_args=connect_args,
                 )
                 logger.info("PostgreSQL engine created with NullPool (optimized for serverless cold-starts)")
             else:
@@ -67,6 +71,7 @@ try:
                     pool_recycle=300,
                     pool_size=5,
                     max_overflow=10,
+                    connect_args=connect_args,
                 )
                 logger.info("PostgreSQL engine created with QueuePool (pool_pre_ping=True, pool_recycle=300)")
     else:
@@ -439,8 +444,20 @@ def ensure_db_initialized():
 
 def get_db():
     ensure_db_initialized()
-    db = SessionLocal()
+    try:
+        db = SessionLocal()
+    except Exception as session_err:
+        logger.warning(f"[DB Session Fallback] Failed creating session from primary engine: {session_err}")
+        fallback_url = f"sqlite:///{os.path.join(tempfile.gettempdir(), 'interview_fallback.db')}"
+        fallback_engine = create_engine(fallback_url, connect_args={"check_same_thread": False})
+        Base.metadata.create_all(bind=fallback_engine)
+        FallbackSession = sessionmaker(autocommit=False, autoflush=False, bind=fallback_engine)
+        db = FallbackSession()
+
     try:
         yield db
     finally:
-        db.close()
+        try:
+            db.close()
+        except Exception:
+            pass
