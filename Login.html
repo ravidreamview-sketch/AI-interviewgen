@@ -494,7 +494,7 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
     </div>
 
     <!-- AUTH FORM -->
-    <form id="authForm" onsubmit="handleAuth(event)">
+    <form id="authForm" method="POST" action="javascript:void(0);" onsubmit="handleAuth(event)">
       <div id="loginAlert" style="display:none;padding:10px 14px;border-radius:8px;background:rgba(239, 68, 68, 0.12);color:#EF4444;font-size:13px;margin-bottom:16px;font-weight:600;text-align:center"></div>
 
       <div class="form-group" id="nameGroup" style="display:none">
@@ -643,7 +643,7 @@ function togglePassword() {
 }
 
 async function handleAuth(e) {
-  e.preventDefault();
+  if (e) e.preventDefault();
   const btn = document.getElementById('submitBtn');
   const alertBox = document.getElementById('loginAlert');
   const email = (document.getElementById('email').value || 'candidate@example.com').trim();
@@ -662,28 +662,40 @@ async function handleAuth(e) {
     ? (window.location.protocol === 'file:' ? 'Admin.html' : '/admin')
     : (window.location.protocol === 'file:' ? 'Interview-studio.html' : '/candidate/interview-studio');
 
-  // Pre-seed user session
-  const userObj = {
-    email: email,
-    name: isSuperAdmin ? 'Super Administrator' : 'Ravi Chandran',
-    role: isSuperAdmin ? 'super_admin' : 'candidate',
-    plan: 'Pro Plan'
-  };
-  localStorage.setItem('candidate_user', JSON.stringify(userObj));
-
   try {
     const endpoint = isSuperAdmin ? '/api/admin/login' : '/api/candidate/login';
-    fetch(endpoint, {
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({ email, password })
-    }).catch(() => {});
-  } catch (e) {}
+    });
+    const data = await res.json().catch(() => ({}));
+    if (data && data.user) {
+      localStorage.setItem('candidate_user', JSON.stringify({
+        email: data.user.email,
+        name: data.user.full_name || (isSuperAdmin ? 'Super Administrator' : 'Candidate'),
+        role: data.user.role || (isSuperAdmin ? 'super_admin' : 'candidate'),
+        plan: (data.user.plan_tier || 'PRO').toUpperCase() + ' Plan'
+      }));
+    } else {
+      localStorage.setItem('candidate_user', JSON.stringify({
+        email: email,
+        name: isSuperAdmin ? 'Super Administrator' : 'Candidate',
+        role: isSuperAdmin ? 'super_admin' : 'candidate',
+        plan: 'Pro Plan'
+      }));
+    }
+  } catch (err) {
+    localStorage.setItem('candidate_user', JSON.stringify({
+      email: email,
+      name: isSuperAdmin ? 'Super Administrator' : 'Candidate',
+      role: isSuperAdmin ? 'super_admin' : 'candidate',
+      plan: 'Pro Plan'
+    }));
+  }
 
-  setTimeout(() => {
-    window.location.href = targetUrl;
-  }, 200);
+  window.location.href = targetUrl;
 }
 
 function demoLogin(provider) {

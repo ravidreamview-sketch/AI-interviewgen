@@ -111,8 +111,8 @@ def serialize_user(u: UserAccount) -> dict:
 # CANDIDATE AUTHENTICATION & PROFILE
 # ------------------------------------------------------------------------------
 
-@candidate_router.post("/candidate/login")
-@candidate_router.post("/login")
+@candidate_router.post("/candidate/login", tags=["Candidate Auth"])
+@candidate_router.post("/login", tags=["Candidate Auth"])
 def candidate_login(
     payload: CandidateLoginRequest,
     request: Request,
@@ -166,6 +166,15 @@ def candidate_login(
         max_age=60 * 60 * 8,
         path="/"
     )
+
+    record_audit_log(
+        db=db,
+        admin_user=user if user.role in ["admin", "super_admin"] else None,
+        action="CANDIDATE_LOGIN_SUCCESS",
+        resource=f"user:{user.id}",
+        new_value=f"Role: {user.role}",
+        ip_address=get_client_ip(request)
+    )
     
     return {
         "success": True,
@@ -176,8 +185,32 @@ def candidate_login(
     }
 
 
-@candidate_router.get("/candidate/me")
-@candidate_router.get("/me")
+@candidate_router.post("/candidate/logout", tags=["Candidate Auth"])
+@candidate_router.post("/logout", tags=["Candidate Auth"])
+def candidate_logout(
+    request: Request,
+    response: Response
+):
+    """
+    Clears the candidate_session cookie securely.
+    """
+    is_secure = is_request_https(request)
+    response.set_cookie(
+        key="candidate_session",
+        value="",
+        httponly=True,
+        secure=is_secure,
+        samesite="lax",
+        max_age=0,
+        expires=0,
+        path="/"
+    )
+    return {"success": True, "message": "Successfully logged out."}
+
+
+@candidate_router.get("/candidate/me", tags=["Candidate Auth"])
+@candidate_router.get("/candidate/profile", tags=["Candidate Auth"])
+@candidate_router.get("/me", tags=["Candidate Auth"])
 def get_candidate_profile(
     current_user: UserAccount = Depends(get_current_user)
 ):
@@ -1698,117 +1731,6 @@ def restore_prompt_version(
     return {"success": True, "prompt": serialize_prompt(prompt)}
 
 
-# ==============================================================================
-# CANDIDATE AUTHENTICATION & ACCESS ENDPOINTS
-# ==============================================================================
 
-@candidate_router.post("/candidate/login", tags=["Candidate Auth"])
-@candidate_router.post("/login", tags=["Candidate Auth"])
-def candidate_login(
-    payload: AdminLoginRequest,
-    request: Request,
-    response: Response,
-    db: Session = Depends(get_db)
-):
-    """
-    Authenticates a candidate user with email and password.
-    Enforces rate limiting.
-    Rejects with generic error "Invalid email address or password." if authentication fails.
-    Rejects with HTTP 403 "Your account is currently inactive. Please contact your administrator." if inactive.
-    Sets HttpOnly secure candidate_session cookie.
-    """
-    email_clean = payload.email.strip().lower()
-    check_login_rate_limit(request, email_clean)
-
-    user = db.query(UserAccount).filter(func.lower(UserAccount.email) == email_clean).first()
-
-    if not user or not verify_password(payload.password, user.password_hash):
-        record_failed_login_attempt(request, email_clean)
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email address or password."
-        )
-
-    if not user.is_active:
-        record_failed_login_attempt(request, email_clean)
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Your account is currently inactive. Please contact your administrator."
-        )
-
-    clear_failed_login_attempts(request, email_clean)
-    user.last_login = datetime.utcnow()
-    db.commit()
-
-    token_payload = {
-        "sub": user.id,
-        "email": user.email,
-        "role": user.role,
-        "plan_tier": user.plan_tier
-    }
-    token = create_access_token(token_payload)
-    is_secure = is_request_https(request)
-
-    response.set_cookie(
-        key="candidate_session",
-        value=token,
-        httponly=True,
-        secure=is_secure,
-        samesite="lax",
-        max_age=60 * 60 * 8,
-        path="/"
-    )
-
-    record_audit_log(
-        db=db,
-        admin_user=user if user.role in ["admin", "super_admin"] else None,
-        action="CANDIDATE_LOGIN_SUCCESS",
-        resource=f"user:{user.id}",
-        new_value=f"Role: {user.role}",
-        ip_address=get_client_ip(request)
-    )
-
-    return {
-        "success": True,
-        "access_token": token,
-        "token_type": "bearer",
-        "user": serialize_user(user)
-    }
-
-
-@candidate_router.post("/candidate/logout", tags=["Candidate Auth"])
-@candidate_router.post("/logout", tags=["Candidate Auth"])
-def candidate_logout(
-    request: Request,
-    response: Response
-):
-    """
-    Clears the candidate_session cookie securely.
-    """
-    is_secure = is_request_https(request)
-    response.set_cookie(
-        key="candidate_session",
-        value="",
-        httponly=True,
-        secure=is_secure,
-        samesite="lax",
-        max_age=0,
-        expires=0,
-        path="/"
-    )
-    return {"success": True, "message": "Successfully logged out."}
-
-
-@candidate_router.get("/candidate/me", tags=["Candidate Auth"])
-@candidate_router.get("/candidate/profile", tags=["Candidate Auth"])
-def get_candidate_profile(
-    current_user: UserAccount = Depends(get_current_user)
-):
-    """
-    Returns the authenticated user's profile information.
-    """
-    return {
-        "user": serialize_user(current_user)
-    }
 
 

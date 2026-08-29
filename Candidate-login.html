@@ -225,15 +225,15 @@ body{
 
   <div id="errorBox" class="alert-box alert-error"></div>
 
-  <form id="candidateLoginForm" onsubmit="handleCandidateLogin(event)">
+  <form id="candidateLoginForm" method="POST" action="javascript:void(0);" onsubmit="handleCandidateLogin(event)">
     <div class="form-group">
       <label class="form-label" for="candidateEmail">Email / Username</label>
-      <input type="email" id="candidateEmail" class="form-input" value="candidate@example.com" placeholder="candidate@example.com" autocomplete="email" />
+      <input type="email" id="candidateEmail" class="form-input" value="candidate@example.com" placeholder="candidate@example.com" autocomplete="email" required />
     </div>
 
     <div class="form-group">
       <label class="form-label" for="candidatePassword">Password</label>
-      <input type="password" id="candidatePassword" class="form-input" value="CandidatePass123!" placeholder="••••••••••••" autocomplete="current-password" />
+      <input type="password" id="candidatePassword" class="form-input" value="CandidatePass123!" placeholder="••••••••••••" autocomplete="current-password" required />
     </div>
 
     <button type="submit" id="submitBtn" class="btn-primary">Sign In</button>
@@ -271,14 +271,16 @@ async function handleCandidateLogin(event) {
   }
 
   try {
-    const res = await fetch('/api/candidate/login', {
-      method: 'POST',
+    const res = await fetch("/api/candidate/login", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
+        "Content-Type": "application/json"
       },
-      credentials: 'include',
-      body: JSON.stringify({ email, password })
+      credentials: "include",
+      body: JSON.stringify({
+        email: email,
+        password: password
+      })
     });
 
     if (!res.ok) {
