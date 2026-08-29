@@ -787,3 +787,57 @@ class InterviewCompleteResponse(BaseModel):
     total_turns: Optional[int] = 0
     role: Optional[str] = None
     status: str = "completed"
+
+
+class STAREvaluationBreakdown(BaseModel):
+    situation_score: float = Field(..., ge=0, le=25)
+    situation_feedback: str
+    task_score: float = Field(..., ge=0, le=25)
+    task_feedback: str
+    action_score: float = Field(..., ge=0, le=25)
+    action_feedback: str
+    result_score: float = Field(..., ge=0, le=25)
+    result_feedback: str
+
+
+class EvaluationDimensionScores(BaseModel):
+    technical_accuracy: float = Field(..., ge=0, le=100)
+    communication_clarity: float = Field(..., ge=0, le=100)
+    trade_off_analysis: float = Field(..., ge=0, le=100)
+    business_impact: float = Field(..., ge=0, le=100)
+
+
+class AnswerEvaluationRequest(BaseModel):
+    question: str = Field(..., min_length=5, description="The interview question being answered")
+    answer: str = Field(..., min_length=5, description="Candidate's submitted answer")
+    role: Optional[str] = Field("Backend & Distributed Systems", description="Target role")
+    seniority: Optional[str] = Field("Senior (5-8 yrs)", description="Target seniority")
+    company_tier: Optional[str] = Field("FAANG / Tier-1", description="Target company bar")
+    category: Optional[str] = Field(None, description="Category of question")
+    jd_context: Optional[str] = Field(None, description="Job context or requirements")
+
+
+class AnswerEvaluationResponse(BaseModel):
+    overall_score: float = Field(..., ge=0, le=100)
+    hiring_verdict: str = Field(..., description="Strong Hire | Hire | Leaning Hire | No Hire")
+    verdict_summary: str
+    star_breakdown: STAREvaluationBreakdown
+    dimensions: EvaluationDimensionScores
+    strengths: List[str] = Field(default_factory=list)
+    weaknesses: List[str] = Field(default_factory=list)
+    model_answer: str = Field(..., description="FAANG Staff Engineer level rewrite")
+    actionable_improvements: List[str] = Field(default_factory=list)
+    word_count: int
+    role: Optional[str] = None
+    seniority: Optional[str] = None
+    company_tier: Optional[str] = None
+    question: Optional[str] = None
+    saved_to_history: Optional[bool] = False
+
+
+class EvaluatorPresetsResponse(BaseModel):
+    categories: List[str]
+    presets: Dict[str, List[Dict[str, Any]]]
+    roles: List[str]
+    seniority_levels: List[str]
+    company_tiers: List[str]

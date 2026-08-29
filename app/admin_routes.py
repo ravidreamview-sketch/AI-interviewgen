@@ -794,7 +794,7 @@ DEFAULT_NAVIGATION_MENUS = [
         "type": "Practice Tools",
         "section": "WORKSPACE",
         "icon": "☑️",
-        "route": "Interview-studio.html",
+        "route": "Answer-evaluator.html",
         "parent": "None (Root)",
         "order": 4,
         "status": "active",

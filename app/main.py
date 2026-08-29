@@ -47,13 +47,17 @@ from app.models import (
     InterviewStartResponse,
     InterviewAnswerRequest,
     InterviewAnswerResponse,
-    InterviewCompleteResponse
+    InterviewCompleteResponse,
+    AnswerEvaluationRequest,
+    AnswerEvaluationResponse,
+    EvaluatorPresetsResponse
 )
 from app.interview_engine import (
     start_interview_session,
     evaluate_and_generate_next_question,
     complete_interview_session
 )
+from app.evaluator_service import evaluate_candidate_answer, get_curated_presets
 from app.speech_service import get_stt_provider
 from app.tts_service import get_tts_provider
 from app.avatar_service import get_avatar_provider
@@ -1217,6 +1221,73 @@ def get_interview_providers():
     }
 
 
+# ---------- AI ANSWER EVALUATOR API ----------
+
+@app.get("/api/evaluator/presets", response_model=EvaluatorPresetsResponse)
+def get_evaluator_presets():
+    """
+    Returns curated preset question library grouped by roles, categories, seniority, and target tiers.
+    """
+    return get_curated_presets()
+
+
+@app.post("/api/evaluator/evaluate", response_model=AnswerEvaluationResponse)
+def evaluate_single_answer(
+    req: AnswerEvaluationRequest,
+    current_user: Optional[UserAccount] = Depends(get_current_user_optional),
+    db: Session = Depends(get_db)
+):
+    """
+    Evaluates candidate interview answer against FAANG rubrics, STAR framework,
+    computes multi-dimensional scores, strengths/weaknesses, and generates gold standard rewrite.
+    """
+    check_feature_enabled("Answer Evaluator", db)
+    
+    result = evaluate_candidate_answer(
+        question=req.question,
+        answer=req.answer,
+        role=req.role or "Backend & Distributed Systems",
+        seniority=req.seniority or "Senior (5-8 yrs)",
+        company_tier=req.company_tier or "FAANG / Tier-1",
+        category=req.category,
+        jd_context=req.jd_context
+    )
+    
+    # Optionally persist in MockInterview/History if candidate is logged in
+    saved = False
+    if current_user:
+        try:
+            history_record = MockInterview(
+                user_id=current_user.id,
+                role=req.role or "Engineering",
+                company_target=req.company_tier or "FAANG Tier",
+                interviewer_persona="AI Answer Evaluator (Staff Bar Raiser)",
+                score=float(result.get("overall_score", 80)),
+                technical_accuracy=float(result.get("dimensions", {}).get("technical_accuracy", 80)),
+                communication_clarity=float(result.get("dimensions", {}).get("communication_clarity", 80)),
+                star_depth=float(result.get("star_breakdown", {}).get("action_score", 20)) * 4.0,
+                confidence_score=float(result.get("dimensions", {}).get("trade_off_analysis", 80)),
+                duration_seconds=120,
+                transcript=json.dumps([{
+                    "question": req.question,
+                    "answer": req.answer,
+                    "evaluation": result
+                }]),
+                status="completed",
+                interview_mode="answer_evaluator",
+                created_at=datetime.utcnow()
+            )
+            db.add(history_record)
+            db.commit()
+            saved = True
+        except Exception as e:
+            logger.warning(f"[Answer Evaluator] DB save warning: {e}")
+            db.rollback()
+            
+    result["saved_to_history"] = saved
+    return result
+
+
 
 # ---------- VISITOR & CLICK ANALYTICS API ----------
 
@@ -1542,6 +1613,18 @@ def serve_studio(db: Session = Depends(get_db)):
     block_res = check_menu_access_or_block("Interview Studio", db)
     if block_res: return block_res
     return get_html_response("Interview-studio.html", db)
+
+@app.get("/candidate/answer-evaluator", include_in_schema=False)
+@app.get("/api/candidate/answer-evaluator", include_in_schema=False)
+@app.get("/candidate/Answer-evaluator.html", include_in_schema=False)
+@app.get("/answer-evaluator", include_in_schema=False)
+@app.get("/Answer-evaluator", include_in_schema=False)
+@app.get("/Answer-evaluator.html", include_in_schema=False)
+@app.get("/evaluator", include_in_schema=False)
+def serve_answer_evaluator(db: Session = Depends(get_db)):
+    block_res = check_menu_access_or_block("Answer Evaluator", db)
+    if block_res: return block_res
+    return get_html_response("Answer-evaluator.html", db)
 
 @app.get("/candidate/mock-interview", include_in_schema=False)
 @app.get("/api/candidate/mock-interview", include_in_schema=False)
