@@ -4,14 +4,14 @@ import logging
 from sqlalchemy import create_engine, text, inspect
 from sqlalchemy.orm import declarative_base, sessionmaker
 
+import urllib.parse
+from sqlalchemy.pool import NullPool
+
 logger = logging.getLogger("ravi.database")
 
 # ---------------------------------------------------------------------------
 # Stage 1: Resolve database configuration and detect runtime environment
 # ---------------------------------------------------------------------------
-logger.info("Starting database module initialization")
-logger.info("Resolving database configuration")
-
 raw_db_url = os.environ.get("DATABASE_URL")
 if raw_db_url:
     raw_db_url = raw_db_url.strip().strip("'").strip('"')
@@ -19,36 +19,56 @@ if raw_db_url:
 is_vercel = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
 is_production = os.environ.get("ENV") == "production" or is_vercel
 
+# Safe diagnostic logging (never log secrets, passwords, or full credentials)
+if raw_db_url:
+    try:
+        parsed_url = urllib.parse.urlparse(raw_db_url)
+        db_scheme = parsed_url.scheme or "unknown"
+        db_host = parsed_url.hostname or "localhost"
+        logger.info(f"Database configuration detected: dialect={db_scheme}, host={db_host}, serverless={is_vercel}")
+    except Exception:
+        logger.info(f"Database configuration detected: present (parsing sanitized), serverless={is_vercel}")
+else:
+    logger.info(f"Database configuration detected: none (using ephemeral storage), serverless={is_vercel}")
+
 # ---------------------------------------------------------------------------
 # Stage 2: Create SQLAlchemy engine with environment-appropriate pooling
 # ---------------------------------------------------------------------------
-logger.info("Creating database engine")
-
 try:
     if raw_db_url:
-        # Normalize postgres:// to postgresql:// for SQLAlchemy 2.0+ compatibility
+        # Normalize postgres:// to postgresql+psycopg2:// or postgresql://
         if raw_db_url.startswith("postgres://"):
-            DATABASE_URL = raw_db_url.replace("postgres://", "postgresql://", 1)
+            DATABASE_URL = raw_db_url.replace("postgres://", "postgresql+psycopg2://", 1)
+        elif raw_db_url.startswith("postgresql://") and "+psycopg2" not in raw_db_url:
+            DATABASE_URL = raw_db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
         else:
             DATABASE_URL = raw_db_url
 
-        if DATABASE_URL.startswith("sqlite"):
+        if "sqlite" in DATABASE_URL:
             engine = create_engine(
                 DATABASE_URL,
                 connect_args={"check_same_thread": False},
             )
-            logger.info("SQLite engine created with check_same_thread=False")
+            logger.info("SQLite engine created successfully")
         else:
             # PostgreSQL engine (Supabase / Neon / AWS RDS / Vercel Postgres)
-            # Configured appropriately for serverless with pool pre-ping and recycle
-            engine = create_engine(
-                DATABASE_URL,
-                pool_pre_ping=True,
-                pool_recycle=300,
-                pool_size=5,
-                max_overflow=10,
-            )
-            logger.info("PostgreSQL engine created with pool_pre_ping=True and pool_recycle=300")
+            # In serverless environments, NullPool prevents stale connections and pool exhaustion
+            if is_vercel:
+                engine = create_engine(
+                    DATABASE_URL,
+                    poolclass=NullPool,
+                    pool_pre_ping=True,
+                )
+                logger.info("PostgreSQL engine created with NullPool (optimized for serverless cold-starts)")
+            else:
+                engine = create_engine(
+                    DATABASE_URL,
+                    pool_pre_ping=True,
+                    pool_recycle=300,
+                    pool_size=5,
+                    max_overflow=10,
+                )
+                logger.info("PostgreSQL engine created with QueuePool (pool_pre_ping=True, pool_recycle=300)")
     else:
         if is_production or is_vercel:
             # Serverless fallback when DATABASE_URL is not yet supplied in Vercel environment

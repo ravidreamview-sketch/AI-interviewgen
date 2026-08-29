@@ -130,11 +130,16 @@ def debug_status(request: Request, db: Session = Depends(get_db)):
 
 @app.middleware("http")
 async def fix_vercel_path_middleware(request: Request, call_next):
-    query_params = request.query_params
-    override_path = query_params.get("__path")
-    
+    matched_path = request.headers.get("x-matched-path")
+    forwarded_path = request.headers.get("x-forwarded-path")
+    override_path = request.query_params.get("__path")
+
     if override_path:
         request.scope["path"] = override_path
+    elif matched_path and not matched_path.startswith("/api/index.py") and not matched_path.startswith("/index.py"):
+        request.scope["path"] = matched_path
+    elif forwarded_path and not forwarded_path.startswith("/api/index.py") and not forwarded_path.startswith("/index.py"):
+        request.scope["path"] = forwarded_path
     else:
         path = request.scope.get("path", "")
         if path.startswith("/api/index.py"):
@@ -145,6 +150,22 @@ async def fix_vercel_path_middleware(request: Request, call_next):
             request.scope["path"] = clean if clean else "/"
 
     return await call_next(request)
+
+@app.exception_handler(Exception)
+async def global_production_exception_handler(request: Request, exc: Exception):
+    exc_type = exc.__class__.__name__
+    exc_msg = str(exc)
+    tb_str = "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+    
+    logger.error(
+        f"[Production Unhandled Exception] method={request.method} path={request.url.path} "
+        f"class={exc_type} message={exc_msg}\nTraceback:\n{tb_str}"
+    )
+    
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"}
+    )
 
 # Mount Super Admin & Candidate API routers with dual prefix support for Vercel serverless compatibility
 app.include_router(admin_router, prefix="/api/admin")
@@ -157,7 +178,7 @@ from fastapi import Response
 from app.admin_routes import candidate_login, admin_login
 from app.models import CandidateLoginRequest, AdminLoginRequest
 
-@app.post("/", include_in_schema=False)
+@app.post("/candidate/login/action", include_in_schema=False)
 @app.post("/api/candidate/login", include_in_schema=False)
 @app.post("/candidate/login", include_in_schema=False)
 @app.post("/api/login", include_in_schema=False)
