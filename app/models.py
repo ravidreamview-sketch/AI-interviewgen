@@ -729,3 +729,61 @@ class MockInterviewSubmissionResponse(BaseModel):
     status: str
     created_at: str
     message: str = "Mock interview session recorded successfully"
+
+
+class InterviewPersonaSummary(BaseModel):
+    name: str
+    role: str
+    accent_color: Optional[str] = "#38BDF8"
+    theme_gradient: Optional[str] = None
+
+
+class InterviewStartRequest(BaseModel):
+    role: str = Field(..., description="Target role (e.g. Product Designer, Software Engineer)")
+    skills: List[str] = Field(default_factory=list, description="Target skills to probe")
+    persona: str = Field("alex", description="alex | elena | marcus")
+    mode: str = Field("video_voice", description="voice_only | video_voice")
+
+
+class InterviewStartResponse(BaseModel):
+    interview_id: str
+    first_question: str
+    persona: InterviewPersonaSummary
+    tts_config: Optional[Dict[str, Any]] = None
+    initial_speech: Optional[Dict[str, Any]] = None
+    mode: str = "video_voice"
+
+
+class InterviewAnswerRequest(BaseModel):
+    answer_text: str = Field(..., description="Candidate speech transcription for current turn")
+
+
+class TurnEvaluationDetail(BaseModel):
+    score: int = Field(..., ge=0, le=100)
+    technical_score: Optional[int] = Field(None, ge=0, le=100)
+    communication_score: Optional[int] = Field(None, ge=0, le=100)
+    strengths: List[str] = Field(default_factory=list)
+    improvements: List[str] = Field(default_factory=list)
+    star_detected: Optional[bool] = False
+    feedback: Optional[str] = None
+
+
+class InterviewAnswerResponse(BaseModel):
+    evaluation: TurnEvaluationDetail
+    next_question: str
+    follow_up_required: bool = False
+    turn_index: Optional[int] = None
+    tts_speech: Optional[Dict[str, Any]] = None
+
+
+class InterviewCompleteResponse(BaseModel):
+    overall_score: float = Field(..., ge=0.0, le=100.0)
+    technical_score: float = Field(..., ge=0.0, le=100.0)
+    communication_score: float = Field(..., ge=0.0, le=100.0)
+    problem_solving_score: float = Field(..., ge=0.0, le=100.0)
+    strengths: List[str] = Field(default_factory=list)
+    improvements: List[str] = Field(default_factory=list)
+    recommendations: List[str] = Field(default_factory=list)
+    total_turns: Optional[int] = 0
+    role: Optional[str] = None
+    status: str = "completed"

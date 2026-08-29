@@ -42,8 +42,21 @@ from app.models import (
     AdaptiveFromMatchRequest,
     AdaptiveFromMatchResponse,
     MockInterviewSubmissionRequest,
-    MockInterviewSubmissionResponse
+    MockInterviewSubmissionResponse,
+    InterviewStartRequest,
+    InterviewStartResponse,
+    InterviewAnswerRequest,
+    InterviewAnswerResponse,
+    InterviewCompleteResponse
 )
+from app.interview_engine import (
+    start_interview_session,
+    evaluate_and_generate_next_question,
+    complete_interview_session
+)
+from app.speech_service import get_stt_provider
+from app.tts_service import get_tts_provider
+from app.avatar_service import get_avatar_provider
 from app.prompts import interview_prompt
 from app.services import generate_ai_questions, parse_raw_questions, get_fallback_questions
 from app.adaptive_service import (
@@ -1098,6 +1111,111 @@ def submit_candidate_mock_interview(
         created_at=mock_record.created_at.isoformat() if mock_record.created_at else datetime.utcnow().isoformat(),
         message="Mock interview session recorded successfully"
     )
+
+
+# ---------- REAL-TIME VIDEO + VOICE CONVERSATIONAL INTERVIEW API ----------
+
+@app.post("/api/interview/start", response_model=InterviewStartResponse)
+def start_realtime_interview(
+    payload: InterviewStartRequest,
+    current_user: Optional[UserAccount] = Depends(get_current_user_optional),
+    db: Session = Depends(get_db)
+):
+    """
+    Initializes a real-time conversational AI interview session.
+    Generates Question 1 tailored for the candidate's target role, skills, and selected persona.
+    """
+    user_id = current_user.id if current_user else None
+    session_data = start_interview_session(
+        role=payload.role,
+        skills=payload.skills,
+        persona=payload.persona,
+        mode=payload.mode,
+        user_id=user_id,
+        db=db
+    )
+    return session_data
+
+
+@app.post("/api/interview/{interview_id}/answer", response_model=InterviewAnswerResponse)
+def answer_realtime_interview_turn(
+    interview_id: str,
+    payload: InterviewAnswerRequest,
+    current_user: Optional[UserAccount] = Depends(get_current_user_optional),
+    db: Session = Depends(get_db)
+):
+    """
+    Processes candidate spoken answer, performs multi-factor rubric evaluation,
+    and synthesizes a contextual follow-up or next competency question.
+    """
+    # Tenant ownership check
+    if db and interview_id.startswith("mock_"):
+        try:
+            rec_id = int(interview_id.replace("mock_", ""))
+            record = db.query(MockInterview).filter(MockInterview.id == rec_id).first()
+            if record and record.user_id and current_user and record.user_id != current_user.id:
+                raise HTTPException(status_code=403, detail="Forbidden: You do not own this interview session")
+        except ValueError:
+            pass
+
+    user_id = current_user.id if current_user else None
+    result = evaluate_and_generate_next_question(
+        interview_id=interview_id,
+        answer_text=payload.answer_text,
+        db=db,
+        user_id=user_id
+    )
+    return result
+
+
+@app.post("/api/interview/{interview_id}/complete", response_model=InterviewCompleteResponse)
+def complete_realtime_interview(
+    interview_id: str,
+    current_user: Optional[UserAccount] = Depends(get_current_user_optional),
+    db: Session = Depends(get_db)
+):
+    """
+    Finalizes the real-time interview, generates the holistic multi-dimensional scorecard,
+    and persists the record for Candidate Dashboard sync.
+    """
+    if db and interview_id.startswith("mock_"):
+        try:
+            rec_id = int(interview_id.replace("mock_", ""))
+            record = db.query(MockInterview).filter(MockInterview.id == rec_id).first()
+            if record and record.user_id and current_user and record.user_id != current_user.id:
+                raise HTTPException(status_code=403, detail="Forbidden: You do not own this interview session")
+        except ValueError:
+            pass
+
+    user_id = current_user.id if current_user else None
+    result = complete_interview_session(
+        interview_id=interview_id,
+        db=db,
+        user_id=user_id
+    )
+    return result
+
+
+@app.get("/api/interview/providers")
+def get_interview_providers():
+    """
+    Returns active STT, TTS, and Avatar capabilities and configuration tokens for frontend initialization.
+    """
+    stt = get_stt_provider()
+    tts = get_tts_provider()
+    avatar = get_avatar_provider()
+    return {
+        "stt": stt.get_client_config(),
+        "tts": {
+            "provider": tts.get_provider_name(),
+            "client_synthesis": True
+        },
+        "avatar": {
+            "provider": avatar.get_provider_name(),
+            "supported_personas": ["alex", "elena", "marcus"]
+        }
+    }
+
 
 
 # ---------- VISITOR & CLICK ANALYTICS API ----------
