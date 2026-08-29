@@ -5792,146 +5792,259 @@
     };
 
     function exportQuestionsOnlyPDF() {
-      if (!currentQs.length) {
-        toast('Generate questions first');
+      let qs = getCleanQuestionsArray();
+      
+      // Fallback: extract questions directly from DOM if currentQs array was empty
+      if (!qs || !qs.length) {
+        const domNodes = document.querySelectorAll('#qList .q-text, #qList .q-title, #qList .q-body, .q-item .q-text');
+        if (domNodes && domNodes.length) {
+          qs = Array.from(domNodes).map(el => el.textContent.trim()).filter(Boolean);
+        }
+      }
+
+      if (!qs || !qs.length) {
+        toast('Please generate or compose questions first');
         return;
       }
 
-      const role = $("#role").value.trim() || $("#sheetTitle").textContent || "Interview Question Paper";
-      const qs = getCleanQuestionsArray();
+      const role = ($("#role") && $("#role").value.trim()) || ($("#sheetTitle") && $("#sheetTitle").textContent.trim()) || "Technical Interview";
+      const exp = ($("#exp") && $("#exp").value) || "5 Years";
+      const diff = ($("#diff") && $("#diff").value) || "Hard";
+      const stack = ($("#skills") && $("#skills").value.trim()) || "Core Tech Stack";
       const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-
-      // Open clean isolated print window with ONLY the generated questions
-      const printWindow = window.open('', '_blank', 'width=880,height=960');
-      if (!printWindow) {
-        toast('Opening print dialog…');
-        window.print();
-        return;
-      }
 
       const questionsHtml = qs.map((q, idx) => `
         <div class="q-row">
           <div class="q-num">Q${idx + 1}.</div>
-          <div class="q-text">${escapeHtml(q)}</div>
+          <div class="q-body">
+            <div class="q-text">${escapeHtml(q)}</div>
+            <div class="q-notes-box">Evaluation Notes / Candidate Rating: [ &nbsp; ] 1 &nbsp; [ &nbsp; ] 2 &nbsp; [ &nbsp; ] 3 &nbsp; [ &nbsp; ] 4 &nbsp; [ &nbsp; ] 5</div>
+          </div>
         </div>
       `).join('');
 
-      const docHtml = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <title>${escapeHtml(role)} - Question Paper</title>
-          <link rel="preconnect" href="https://fonts.googleapis.com">
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-          <style>
-            @page {
-              size: A4 portrait;
-              margin: 18mm 16mm 18mm 16mm;
-            }
-            * { box-sizing: border-box; margin: 0; padding: 0; }
-            body {
-              font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-              color: #0F172A;
-              background: #FFFFFF;
-              font-size: 14.5px;
-              line-height: 1.65;
-              padding: 24px;
-            }
-            .header {
-              border-bottom: 2.5px solid #0F172A;
-              padding-bottom: 14px;
-              margin-bottom: 26px;
-              display: flex;
-              justify-content: space-between;
-              align-items: flex-end;
-            }
-            .brand-title {
-              font-size: 20px;
-              font-weight: 800;
-              color: #0F172A;
-              letter-spacing: -0.02em;
-            }
-            .brand-title span {
-              color: #059669;
-            }
-            .role-title {
-              font-size: 16px;
-              font-weight: 700;
-              color: #334155;
-              margin-top: 4px;
-            }
-            .date-meta {
-              font-family: 'JetBrains Mono', monospace;
-              font-size: 11px;
-              color: #64748B;
-              font-weight: 600;
-              text-align: right;
-            }
-            .questions-container {
-              display: flex;
-              flex-direction: column;
-              gap: 20px;
-            }
-            .q-row {
-              display: flex;
-              align-items: flex-start;
-              gap: 12px;
-              page-break-inside: avoid;
-              padding-bottom: 18px;
-              border-bottom: 1px solid #E2E8F0;
-            }
-            .q-num {
-              font-family: 'JetBrains Mono', monospace;
-              font-size: 13px;
-              font-weight: 800;
-              color: #059669;
-              background: #ECFDF5;
-              padding: 3px 8px;
-              border-radius: 6px;
-              flex-shrink: 0;
-              border: 1px solid rgba(16, 185, 129, 0.25);
-            }
-            .q-text {
-              font-size: 15px;
-              font-weight: 600;
-              color: #0F172A;
-              line-height: 1.6;
-              flex: 1;
-            }
-            @media print {
-              body { padding: 0; }
-            }
-          <div class="candidate-fields" style="display: flex; gap: 32px; margin-bottom: 20px; font-size: 13px; color: #475569;">
-            <div class="c-field"><b>Candidate Name:</b> ___________________________</div>
-            <div class="c-field"><b>Interviewer:</b> ___________________________</div>
-          </div>
+      const docHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${escapeHtml(role)} - Question Paper</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 16mm 14mm 16mm 14mm;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #0F172A;
+      background: #FFFFFF;
+      font-size: 13.5px;
+      line-height: 1.6;
+      padding: 24px;
+    }
+    .header {
+      border-bottom: 2px solid #0F172A;
+      padding-bottom: 14px;
+      margin-bottom: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .brand-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #0F172A;
+      letter-spacing: -0.02em;
+    }
+    .brand-title span {
+      color: #059669;
+    }
+    .role-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #1E293B;
+      margin-top: 4px;
+    }
+    .date-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #64748B;
+      font-weight: 600;
+      text-align: right;
+    }
+    .meta-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .meta-badge {
+      background: #F1F5F9;
+      border: 1px solid #CBD5E1;
+      padding: 3px 8px;
+      border-radius: 4px;
+      color: #334155;
+      font-weight: 600;
+    }
+    .candidate-fields {
+      display: flex;
+      gap: 32px;
+      margin-bottom: 22px;
+      padding: 10px 14px;
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 6px;
+      font-size: 12.5px;
+      color: #334155;
+    }
+    .questions-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .q-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      page-break-inside: avoid;
+      padding-bottom: 14px;
+      border-bottom: 1px solid #E2E8F0;
+    }
+    .q-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px;
+      font-weight: 800;
+      color: #059669;
+      background: #ECFDF5;
+      padding: 3px 8px;
+      border-radius: 6px;
+      flex-shrink: 0;
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+    .q-body {
+      flex: 1;
+    }
+    .q-text {
+      font-size: 14.5px;
+      font-weight: 600;
+      color: #0F172A;
+      line-height: 1.55;
+      margin-bottom: 6px;
+    }
+    .q-notes-box {
+      font-size: 11px;
+      color: #64748B;
+      font-style: italic;
+    }
+    .footer {
+      margin-top: 30px;
+      padding-top: 12px;
+      border-top: 1px solid #CBD5E1;
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #94A3B8;
+      font-family: 'JetBrains Mono', monospace;
+      page-break-inside: avoid;
+    }
+    @media print {
+      body { padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="brand-title"><span>RaviGen</span> AI Interview Studio</div>
+      <div class="role-title">${escapeHtml(role)}</div>
+    </div>
+    <div class="date-meta">
+      <div>Generated: ${escapeHtml(dateStr)}</div>
+      <div>Questions: ${qs.length}</div>
+    </div>
+  </div>
 
-          <div class="questions-container">
-            ${questionsHtml}
-          </div>
+  <div class="meta-badges">
+    <span class="meta-badge">Level: ${escapeHtml(diff)}</span>
+    <span class="meta-badge">Experience: ${escapeHtml(exp)}</span>
+    <span class="meta-badge">Stack: ${escapeHtml(stack)}</span>
+    <span class="meta-badge">Total: ${qs.length} Questions</span>
+  </div>
 
-          <div class="footer" style="margin-top: 32px; padding-top: 14px; border-top: 1px solid #E2E8F0; display: flex; justify-content: space-between; font-size: 11px; color: #94A3B8; font-family: 'JetBrains Mono', monospace;">
-            <div>RaviGen AI — Interview Studio</div>
-            <div>Confidential Interview Assessment Material</div>
-          </div>
+  <div class="candidate-fields">
+    <div><b>Candidate Name:</b> ___________________________</div>
+    <div><b>Interviewer:</b> ___________________________</div>
+    <div><b>Date:</b> ______________</div>
+  </div>
 
-          <scr` + `ipt>
-            window.onload = function() {
-              setTimeout(function() {
-                window.print();
-              }, 300);
-            };
-          <\/scr` + `ipt>
-        </body>
-        </html>
-      `;
+  <div class="questions-container">
+    ${questionsHtml}
+  </div>
 
-      printWindow.document.open();
-      printWindow.document.write(docHtml);
-      printWindow.document.close();
-      toast('Generating Question-Only PDF… 📄');
+  <div class="footer">
+    <div>RaviGen AI — Interview Studio</div>
+    <div>Confidential Technical Assessment Material</div>
+  </div>
+</body>
+</html>`;
+
+      toast('Preparing Question Paper PDF… 📄');
+
+      try {
+        let iframe = document.getElementById('pdfPrintFrame');
+        if (!iframe) {
+          iframe = document.createElement('iframe');
+          iframe.id = 'pdfPrintFrame';
+          iframe.style.position = 'fixed';
+          iframe.style.right = '0';
+          iframe.style.bottom = '0';
+          iframe.style.width = '0';
+          iframe.style.height = '0';
+          iframe.style.border = '0';
+          iframe.style.visibility = 'hidden';
+          document.body.appendChild(iframe);
+        }
+
+        const iframeDoc = iframe.contentDocument || (iframe.contentWindow && iframe.contentWindow.document);
+        if (iframeDoc) {
+          iframeDoc.open();
+          iframeDoc.write(docHtml);
+          iframeDoc.close();
+
+          setTimeout(() => {
+            try {
+              iframe.contentWindow.focus();
+              iframe.contentWindow.print();
+            } catch (e) {
+              fallbackPrintWindow(docHtml);
+            }
+          }, 350);
+        } else {
+          fallbackPrintWindow(docHtml);
+        }
+      } catch (err) {
+        fallbackPrintWindow(docHtml);
+      }
+    }
+
+    function fallbackPrintWindow(docHtml) {
+      const printWindow = window.open('', '_blank', 'width=900,height=900');
+      if (printWindow) {
+        printWindow.document.open();
+        printWindow.document.write(docHtml);
+        printWindow.document.close();
+        setTimeout(() => {
+          printWindow.focus();
+          printWindow.print();
+        }, 400);
+      } else {
+        window.print();
+      }
     }
 
     function escapeHtml(str) {
