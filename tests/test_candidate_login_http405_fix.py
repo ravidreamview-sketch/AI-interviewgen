@@ -148,9 +148,10 @@ class TestCandidateLoginHTTP405Fix(unittest.TestCase):
             config = json.load(f)
 
         rewrites = config.get("rewrites", [])
-        api_rewrite = next((r for r in rewrites if r.get("source") == "/api/:path*"), None)
-        self.assertIsNotNone(api_rewrite, "Missing /api/:path* rewrite in vercel.json")
-        self.assertEqual(api_rewrite.get("destination"), "/api/index.py")
+        api_rewrite = next((r for r in rewrites if r.get("source") in ["/api/:match*", "/api/:path*"]), None)
+        self.assertIsNotNone(api_rewrite, "Missing /api/:match* rewrite in vercel.json")
+        self.assertTrue(api_rewrite.get("destination", "").startswith("/api/index.py"))
+        self.assertIn("__path=", api_rewrite.get("destination", ""))
 
 
 if __name__ == "__main__":
