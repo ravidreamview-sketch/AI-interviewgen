@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Dict, Any, List
 from fastapi import FastAPI, Depends, HTTPException, Request, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from sqlalchemy import func, desc, text
 from sqlalchemy.orm import Session
 

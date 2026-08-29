@@ -2,7 +2,7 @@
   "version": 2,
   "functions": {
     "api/index.py": {
-      "includeFiles": "app/**",
+      "includeFiles": "{app/**,*.html,*.js,*.png,*.css,*.ico}",
       "maxDuration": 30
     }
   },
