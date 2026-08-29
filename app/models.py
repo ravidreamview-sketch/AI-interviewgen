@@ -1,3 +1,4 @@
+from __future__ import annotations
 from enum import Enum
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
@@ -510,21 +511,6 @@ class JobUploadExtractResponse(BaseModel):
     normalized_jd: Optional[NormalizedJobDescription] = None
 
 
-class ResumeUploadExtractResponse(BaseModel):
-    success: bool
-    status: str = Field(..., description="extracted | fallback_required")
-    fallback_required: bool = Field(False, description="True if automated extraction failed and candidate should paste resume text")
-    message: Optional[str] = None
-    filename: Optional[str] = None
-    extracted_text: Optional[str] = None
-    normalized_resume: Optional[NormalizedResume] = None
-
-
-
-# ==============================================================================
-# PHASE 5B: RESUME ↔ JD MULTI-DIMENSIONAL MATCHING SCHEMAS
-# ==============================================================================
-
 class ResumeWorkExperience(BaseModel):
     title: Optional[str] = None
     company: Optional[str] = None
@@ -552,6 +538,22 @@ class NormalizedResume(BaseModel):
     education: List[str] = Field(default_factory=list)
     certifications: List[str] = Field(default_factory=list)
     raw_text: Optional[str] = None
+
+
+class ResumeUploadExtractResponse(BaseModel):
+    success: bool
+    status: str = Field(..., description="extracted | fallback_required")
+    fallback_required: bool = Field(False, description="True if automated extraction failed and candidate should paste resume text")
+    message: Optional[str] = None
+    filename: Optional[str] = None
+    extracted_text: Optional[str] = None
+    normalized_resume: Optional[NormalizedResume] = None
+
+
+
+# ==============================================================================
+# PHASE 5B: RESUME ↔ JD MULTI-DIMENSIONAL MATCHING SCHEMAS
+# ==============================================================================
 
 
 class SkillMatrixItem(BaseModel):
