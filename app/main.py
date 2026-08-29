@@ -65,18 +65,6 @@ from app.admin_routes import admin_router, candidate_router
 from app.auth_deps import get_current_user
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    logger.info("Starting application lifespan startup")
-    try:
-        logger.info("Initializing database schema from lifespan handler")
-        init_db()
-        logger.info("Database schema initialized and verified successfully")
-    except Exception as e:
-        logger.warning(f"[Lifespan Startup] Database initialization notice: {e}")
-    yield
-    logger.info("Application lifespan shutdown completed")
-
 # Configure trusted CORS origins for local dev and production
 DEFAULT_ALLOWED_ORIGINS = [
     "http://localhost:8000",
@@ -95,8 +83,7 @@ else:
 
 app = FastAPI(
     title="Ravi — AI Interview Question Generator API",
-    version="1.0.0",
-    lifespan=lifespan
+    version="1.0.0"
 )
 
 app.add_middleware(
