@@ -2,6 +2,7 @@ import os
 import uuid
 import json
 import logging
+import traceback
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from pathlib import Path

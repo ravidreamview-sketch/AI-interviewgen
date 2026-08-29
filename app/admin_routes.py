@@ -22,8 +22,10 @@ from app.models import (
     PromptUpdateRequest,
     PromptTestRequest,
     PromptResponse,
-    PromptVersionResponse
+    PromptVersionResponse,
+    CandidateDashboardResponse
 )
+from app.dashboard_service import compute_candidate_dashboard
 from app.security import (
     hash_password,
     verify_password,
@@ -219,6 +221,19 @@ def get_candidate_profile(
         "user": serialize_user(current_user),
         "permissions": perms
     }
+
+
+@candidate_router.get("/candidate/dashboard", response_model=CandidateDashboardResponse, tags=["Candidate Dashboard"])
+@candidate_router.get("/dashboard/metrics", response_model=CandidateDashboardResponse, tags=["Candidate Dashboard"])
+def get_candidate_dashboard_endpoint(
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Returns dynamic, real-time metrics, preparation readiness, streak tracking,
+    competencies, and timeline strictly for the authenticated candidate.
+    """
+    return compute_candidate_dashboard(user=current_user, db=db)
 
 
 # ------------------------------------------------------------------------------

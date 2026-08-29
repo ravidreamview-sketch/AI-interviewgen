@@ -1615,8 +1615,8 @@
 
       <!-- Welcome Hero Heading -->
       <section class="dashboard-header">
-        <h1 class="dashboard-title">Welcome back, Ravi.</h1>
-        <p class="dashboard-subtitle">Your interview preparation is on track. Here's what you should focus on next.</p>
+        <h1 class="dashboard-title" id="dashWelcomeTitle">Welcome back.</h1>
+        <p class="dashboard-subtitle" id="dashWelcomeSubtitle">Your interview preparation is on track. Here's what you should focus on next.</p>
       </section>
 
       <!-- =============================================================
@@ -1630,8 +1630,8 @@
 
         <div class="na-header-row">
           <div class="na-content-main">
-            <h2 class="na-title">Continue your interview preparation</h2>
-            <p class="na-desc">You have completed 68% of your current preparation plan.</p>
+            <h2 class="na-title" id="naTitle">Continue your interview preparation</h2>
+            <p class="na-desc" id="naDesc">You have completed 0% of your current preparation plan.</p>
           </div>
           <div class="na-cta-box">
             <a href="Mock-interview.html" class="primary-btn">
@@ -1645,10 +1645,10 @@
         <div class="na-progress-container">
           <div class="na-progress-header">
             <span>Overall Plan Readiness</span>
-            <span class="na-progress-val">68%</span>
+            <span class="na-progress-val" id="naProgressVal">0%</span>
           </div>
           <div class="na-progress-bar-bg">
-            <div class="na-progress-bar-fill" style="width: 68%;"></div>
+            <div class="na-progress-bar-fill" id="naProgressBarFill" style="width: 0%;"></div>
           </div>
         </div>
 
@@ -1656,15 +1656,15 @@
         <div class="na-meta-row">
           <div class="meta-badge">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
-            <span>Lead Product Designer</span>
+            <span id="naTargetRoleBadge">Target: General Tech</span>
           </div>
           <div class="meta-badge">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-            <span>Technical &amp; Architecture</span>
+            <span id="naTrackBadge">Technical &amp; Architecture</span>
           </div>
           <div class="meta-badge">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <span>5 Years Experience</span>
+            <span id="naStreakBadge">Active Preparation</span>
           </div>
         </div>
       </section>
@@ -1683,15 +1683,15 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
               </div>
             </div>
-            <div class="stat-val-num" id="statQuestions">595</div>
-            <div class="stat-subtext positive">
+            <div class="stat-val-num" id="statQuestions">0</div>
+            <div class="stat-subtext positive" id="statQuestionsSub">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
-              <span>+18 this week</span>
+              <span>Target 30+ Questions</span>
             </div>
-            <!-- Sparkline Chart (Blue) -->
+            <!-- Sparkline Chart (Green) -->
             <svg class="stat-sparkline" viewBox="0 0 100 24" fill="none" preserveAspectRatio="none">
-              <path d="M0 16 Q 15 18, 25 14 T 50 12 T 75 16 T 100 8" stroke="#4F46E5" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-              <circle cx="100" cy="8" r="2.5" fill="#4F46E5"/>
+              <path d="M0 16 Q 15 18, 25 14 T 50 12 T 75 16 T 100 8" stroke="#10B981" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+              <circle cx="100" cy="8" r="2.5" fill="#10B981"/>
             </svg>
           </div>
 
@@ -1703,8 +1703,8 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
               </div>
             </div>
-            <div class="stat-val-num" id="statMocks">12</div>
-            <div class="stat-subtext">3 completed this week</div>
+            <div class="stat-val-num" id="statMocks">0</div>
+            <div class="stat-subtext" id="statMocksSub">Target 3 Completed Rounds</div>
             <!-- Sparkline Chart (Cyan) -->
             <svg class="stat-sparkline" viewBox="0 0 100 24" fill="none" preserveAspectRatio="none">
               <path d="M0 18 Q 20 16, 35 12 T 65 14 T 85 8 T 100 10" stroke="#06B6D4" stroke-width="2.2" stroke-linecap="round" fill="none"/>
@@ -1720,15 +1720,15 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
               </div>
             </div>
-            <div class="stat-val-num" id="statReadiness">84%</div>
-            <div class="stat-subtext positive">
+            <div class="stat-val-num" id="statReadiness">--</div>
+            <div class="stat-subtext positive" id="statReadinessSub">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
-              <span>+6% improvement</span>
+              <span>Evaluation performance</span>
             </div>
             <!-- Sparkline Chart (Purple) -->
             <svg class="stat-sparkline" viewBox="0 0 100 24" fill="none" preserveAspectRatio="none">
-              <path d="M0 16 Q 25 18, 45 12 T 75 14 T 100 12" stroke="#7C3AED" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-              <circle cx="100" cy="12" r="2.5" fill="#7C3AED"/>
+              <path d="M0 16 Q 25 18, 45 12 T 75 14 T 100 12" stroke="#8B5CF6" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+              <circle cx="100" cy="12" r="2.5" fill="#8B5CF6"/>
             </svg>
           </div>
 
@@ -1740,8 +1740,8 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 3.5z"/></svg>
               </div>
             </div>
-            <div class="stat-val-num" id="statStreak">7 days</div>
-            <div class="stat-subtext">Personal best</div>
+            <div class="stat-val-num" id="statStreak">0 days</div>
+            <div class="stat-subtext" id="statStreakSub">Daily consistency</div>
             <!-- Sparkline Chart (Amber) -->
             <svg class="stat-sparkline" viewBox="0 0 100 24" fill="none" preserveAspectRatio="none">
               <path d="M0 18 Q 20 14, 40 18 T 70 10 T 100 6" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round" fill="none"/>
@@ -1772,15 +1772,15 @@
               <h2 class="section-title">Core Competency Breakdown</h2>
             </div>
 
-            <div class="progress-list">
+            <div class="progress-list" id="competencyList">
               <!-- Technical Skills -->
               <div class="progress-item">
                 <div class="progress-item-head">
                   <span>Technical Skills</span>
-                  <span class="progress-item-pct">82%</span>
+                  <span class="progress-item-pct" id="pctTech">--</span>
                 </div>
                 <div class="progress-item-bar-bg">
-                  <div class="progress-item-bar-fill" style="width: 82%;"></div>
+                  <div class="progress-item-bar-fill" id="barTech" style="width: 0%;"></div>
                 </div>
               </div>
 
@@ -1788,10 +1788,10 @@
               <div class="progress-item">
                 <div class="progress-item-head">
                   <span>System / Architecture</span>
-                  <span class="progress-item-pct">64%</span>
+                  <span class="progress-item-pct" id="pctArch">--</span>
                 </div>
                 <div class="progress-item-bar-bg">
-                  <div class="progress-item-bar-fill" style="width: 64%;"></div>
+                  <div class="progress-item-bar-fill" id="barArch" style="width: 0%;"></div>
                 </div>
               </div>
 
@@ -1799,10 +1799,10 @@
               <div class="progress-item">
                 <div class="progress-item-head">
                   <span>Product Thinking</span>
-                  <span class="progress-item-pct">76%</span>
+                  <span class="progress-item-pct" id="pctProd">--</span>
                 </div>
                 <div class="progress-item-bar-bg">
-                  <div class="progress-item-bar-fill" style="width: 76%;"></div>
+                  <div class="progress-item-bar-fill" id="barProd" style="width: 0%;"></div>
                 </div>
               </div>
 
@@ -1810,10 +1810,10 @@
               <div class="progress-item">
                 <div class="progress-item-head">
                   <span>Behavioral</span>
-                  <span class="progress-item-pct">58%</span>
+                  <span class="progress-item-pct" id="pctBehav">--</span>
                 </div>
                 <div class="progress-item-bar-bg">
-                  <div class="progress-item-bar-fill" style="width: 58%;"></div>
+                  <div class="progress-item-bar-fill" id="barBehav" style="width: 0%;"></div>
                 </div>
               </div>
             </div>
@@ -1827,94 +1827,13 @@
             </div>
             <div class="section-heading-row">
               <h2 class="section-title">Timeline &amp; Assessment History</h2>
-              <a href="Interview history.html" style="font-size: 13px; font-weight: 700; color: var(--pen);">View All →</a>
+              <a href="Interview history.html" style="font-size: 13px; font-weight: 700; color: #10B981;">View All →</a>
             </div>
 
             <div class="activity-list" id="activityListContainer">
-
-              <!-- Item 1: AI Mock Interview -->
-              <a href="Mock-interview.html" class="activity-row">
-                <div class="activity-left">
-                  <div class="activity-icon-wrap" style="background: rgba(124, 58, 237, 0.12); color: #7C3AED;">
-                    🎙️
-                  </div>
-                  <div class="activity-info">
-                    <div class="activity-title">AI Mock Interview</div>
-                    <div class="activity-meta">
-                      <span>Lead Product Designer — Technical Round</span>
-                      <span>·</span>
-                      <span>Today</span>
-                      <span class="activity-score-badge">Score 86%</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="activity-chev">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                </div>
-              </a>
-
-              <!-- Item 2: Question Practice -->
-              <a href="Interview-studio.html?role=Product+Designer&skills=Design+Systems,Figma" class="activity-row">
-                <div class="activity-left">
-                  <div class="activity-icon-wrap" style="background: #EEF2FF; color: #4F46E5;">
-                    ⚡
-                  </div>
-                  <div class="activity-info">
-                    <div class="activity-title">Question Practice</div>
-                    <div class="activity-meta">
-                      <span>Design Systems &amp; Figma</span>
-                      <span>·</span>
-                      <span>Yesterday · 18 questions</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="activity-chev">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                </div>
-              </a>
-
-              <!-- Item 3: Answer Evaluation -->
-              <a href="Interview-studio.html" class="activity-row">
-                <div class="activity-left">
-                  <div class="activity-icon-wrap" style="background: rgba(16, 185, 129, 0.12); color: #10B981;">
-                    📝
-                  </div>
-                  <div class="activity-info">
-                    <div class="activity-title">Answer Evaluation</div>
-                    <div class="activity-meta">
-                      <span>Product Strategy</span>
-                      <span>·</span>
-                      <span>Yesterday</span>
-                      <span class="activity-score-badge">Score 81%</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="activity-chev">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                </div>
-              </a>
-
-              <!-- Item 4: Resume Match -->
-              <a href="Resume-match.html" class="activity-row">
-                <div class="activity-left">
-                  <div class="activity-icon-wrap" style="background: rgba(59, 130, 246, 0.12); color: #3B82F6;">
-                    📄
-                  </div>
-                  <div class="activity-info">
-                    <div class="activity-title">Resume Match</div>
-                    <div class="activity-meta">
-                      <span>Senior Product Designer — FinTech</span>
-                      <span>·</span>
-                      <span>2 days ago</span>
-                      <span class="activity-score-badge">92% match</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="activity-chev">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                </div>
-              </a>
-
+              <div style="padding: 24px; text-align: center; color: var(--ink-soft); font-size: 13px;">
+                Loading assessment timeline…
+              </div>
             </div>
           </section>
 
@@ -1930,21 +1849,21 @@
             <div class="upcoming-top">
               <div class="section-label" style="margin-bottom: 0;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                <span>UPCOMING INTERVIEW</span>
+                <span>TARGET INTERVIEW SIMULATION</span>
               </div>
-              <span class="upcoming-badge">In 2 Days</span>
+              <span class="upcoming-badge" id="upcomingBadge">Ready Now</span>
             </div>
 
-            <div class="upcoming-role">Lead Product Designer</div>
-            <div class="upcoming-topic">Technical &amp; Architecture Round</div>
+            <div class="upcoming-role" id="upcomingRoleText">General Technical Interview</div>
+            <div class="upcoming-topic" id="upcomingTopicText">Technical &amp; Architecture Assessment</div>
 
             <div class="upcoming-time-box">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              <span>Friday · 10:30 AM EST</span>
+              <span id="upcomingScheduleText">Self-paced AI Voice &amp; Text Simulation</span>
             </div>
 
-            <a href="Mock-interview.html" class="secondary-cta-btn">
-              <span>Prepare Now</span>
+            <a href="Mock-interview.html" class="secondary-cta-btn" id="upcomingCtaBtn">
+              <span>Start Simulation</span>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
             </a>
           </section>
@@ -1956,8 +1875,8 @@
               <div class="section-label" style="margin-bottom: 0;">AI INSIGHT</div>
             </div>
 
-            <h3 class="ai-insight-title">Your strongest area is Design Systems.</h3>
-            <p class="ai-insight-text">Your recent answers show strong knowledge of component architecture and Figma workflows. Focus next on system-level trade-offs and scalability.</p>
+            <h3 class="ai-insight-title" id="aiInsightTitle">Preparing personalized AI insights…</h3>
+            <p class="ai-insight-text" id="aiInsightText">Complete interview simulations and question practice to generate targeted skill analytics.</p>
 
             <a href="Interview history.html" class="ai-insight-link">
               <span>View Full Analysis</span>
@@ -1972,53 +1891,13 @@
               <span>RECOMMENDED PRACTICE</span>
             </div>
             <div style="font-size: 13px; color: var(--ink-soft); margin-top: -6px; margin-bottom: 14px;">
-              Based on your recent performance
+              Targeted focus areas based on your performance &amp; skill gaps
             </div>
 
-            <div class="recommendations-box">
-
-              <!-- Recommendation 1: Design Systems -->
-              <div class="rec-card">
-                <div class="rec-card-top">
-                  <div class="rec-card-icon">📐</div>
-                  <div>
-                    <h4 class="rec-card-title">Design Systems</h4>
-                    <p class="rec-card-desc">Strengthen your system-design interview answers</p>
-                  </div>
-                </div>
-                <a href="Interview-studio.html?role=Product+Designer&skills=Design+Systems,Figma,Variables" class="rec-card-btn">
-                  <span>Practice 12 Questions →</span>
-                </a>
+            <div class="recommendations-box" id="recommendationsContainer">
+              <div style="padding: 18px; text-align: center; color: var(--ink-soft); font-size: 12.5px;">
+                Analyzing skill profiles for personalized focus…
               </div>
-
-              <!-- Recommendation 2: System Architecture -->
-              <div class="rec-card">
-                <div class="rec-card-top">
-                  <div class="rec-card-icon" style="background: rgba(99, 102, 241, 0.15); color: #6366F1;">⚙️</div>
-                  <div>
-                    <h4 class="rec-card-title">System Architecture</h4>
-                    <p class="rec-card-desc">Improve architecture trade-off reasoning</p>
-                  </div>
-                </div>
-                <a href="Interview-studio.html?role=Technical+Architect&skills=Architecture,Distributed+Systems,Scalability" class="rec-card-btn">
-                  <span>Start Practice →</span>
-                </a>
-              </div>
-
-              <!-- Recommendation 3: Behavioral Interview -->
-              <div class="rec-card">
-                <div class="rec-card-top">
-                  <div class="rec-card-icon" style="background: rgba(16, 185, 129, 0.15); color: #10B981;">💬</div>
-                  <div>
-                    <h4 class="rec-card-title">Behavioral Interview</h4>
-                    <p class="rec-card-desc">Build stronger STAR responses</p>
-                  </div>
-                </div>
-                <a href="Mock-interview.html?mode=behavioral" class="rec-card-btn">
-                  <span>Practice Behavioral →</span>
-                </a>
-              </div>
-
             </div>
           </section>
 
@@ -2195,25 +2074,237 @@
     };
 
     let liveDashboardState = {
-      questionsCount: 595,
-      mocksCount: 12,
-      avgReadiness: 84,
-      streakDays: 7
+      questionsCount: 0,
+      mocksCount: 0,
+      avgReadiness: 0,
+      streakDays: 0
     };
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
 
     async function loadDashboardDynamicData() {
       try {
-        const res = await fetch(`${API_BASE}/history`);
+        const res = await fetch('/api/candidate/dashboard', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+
         if (res.ok) {
-          const papers = await res.json();
-          if (papers && papers.length > 0) {
-            const totalQs = papers.reduce((sum, p) => sum + (p.count || (p.questions ? p.questions.length : 5)), 0);
-            liveDashboardState.questionsCount = Math.max(595, totalQs);
-            document.getElementById('statQuestions').textContent = liveDashboardState.questionsCount;
-          }
+          const d = await res.json();
+          renderDashboardData(d);
+        } else if (res.status === 401) {
+          console.warn("Candidate session not active - redirecting to login");
+          window.location.replace('/Login.html');
         }
-      } catch (e) {
-        console.log('Using baseline dashboard KPI values');
+      } catch (err) {
+        console.error('Failed to load candidate dashboard data:', err);
+      }
+    }
+
+    function renderDashboardData(d) {
+      if (!d) return;
+
+      // 1. User Header & Profile
+      if (d.user) {
+        const name = d.user.name || (d.user.email ? d.user.email.split('@')[0] : 'Candidate');
+        const welcomeTitle = document.getElementById('dashWelcomeTitle');
+        if (welcomeTitle) welcomeTitle.textContent = `Welcome back, ${name}.`;
+
+        const userEmailEls = document.querySelectorAll('.candidate-user-email');
+        userEmailEls.forEach(el => el.textContent = name);
+
+        const planEls = document.querySelectorAll('.candidate-plan-tier');
+        planEls.forEach(el => el.textContent = (d.user.plan_tier || 'FREE').toUpperCase() + ' TIER');
+      }
+
+      // 2. Next Best Action & Readiness
+      const readiness = d.preparation_readiness || 0;
+      const naDesc = document.getElementById('naDesc');
+      if (naDesc) naDesc.textContent = `You have completed ${readiness}% of your overall interview preparation plan.`;
+      const naProgressVal = document.getElementById('naProgressVal');
+      if (naProgressVal) naProgressVal.textContent = `${readiness}%`;
+      const naProgressBarFill = document.getElementById('naProgressBarFill');
+      if (naProgressBarFill) naProgressBarFill.style.width = `${readiness}%`;
+
+      const targetRole = (d.resume_match && d.resume_match.target_role) || (d.user && d.user.target_role) || "General Tech";
+      const naTargetRoleBadge = document.getElementById('naTargetRoleBadge');
+      if (naTargetRoleBadge) naTargetRoleBadge.textContent = `Target: ${targetRole}`;
+
+      const upcomingRoleText = document.getElementById('upcomingRoleText');
+      if (upcomingRoleText) upcomingRoleText.textContent = targetRole;
+
+      const streakDays = d.preparation_streak || 0;
+      const naStreakBadge = document.getElementById('naStreakBadge');
+      if (naStreakBadge) naStreakBadge.textContent = streakDays > 0 ? `${streakDays} Day Streak 🔥` : 'Active Preparation';
+
+      // 3. Four KPI Stat Cards
+      const statQuestions = document.getElementById('statQuestions');
+      if (statQuestions) statQuestions.textContent = d.questions_practiced || 0;
+      const statQuestionsSub = document.getElementById('statQuestionsSub');
+      if (statQuestionsSub) {
+        const qCount = d.questions_practiced || 0;
+        statQuestionsSub.innerHTML = `<span>${qCount >= 30 ? 'Target achieved! ✓' : `${Math.max(0, 30 - qCount)} more to 30 target`}</span>`;
+      }
+
+      const statMocks = document.getElementById('statMocks');
+      if (statMocks) statMocks.textContent = d.mock_interviews || 0;
+      const statMocksSub = document.getElementById('statMocksSub');
+      if (statMocksSub) {
+        const mCount = d.mock_interviews || 0;
+        statMocksSub.textContent = mCount >= 3 ? 'Target achieved! ✓' : `${Math.max(0, 3 - mCount)} more to 3 target`;
+      }
+
+      const statReadiness = document.getElementById('statReadiness');
+      if (statReadiness) {
+        const avg = d.average_score || 0;
+        statReadiness.textContent = avg > 0 ? `${avg}%` : '--';
+      }
+
+      const statStreak = document.getElementById('statStreak');
+      if (statStreak) statStreak.textContent = `${streakDays} day${streakDays === 1 ? '' : 's'}`;
+      const statStreakSub = document.getElementById('statStreakSub');
+      if (statStreakSub) statStreakSub.textContent = streakDays > 0 ? `${streakDays} consecutive day${streakDays === 1 ? '' : 's'}` : 'Start your streak today';
+
+      // 4. Core Competencies
+      const comp = d.competency_scores || {};
+      const updateComp = (pctId, barId, val) => {
+        const pctEl = document.getElementById(pctId);
+        const barEl = document.getElementById(barId);
+        if (val !== null && val !== undefined && val > 0) {
+          if (pctEl) pctEl.textContent = `${Math.round(val)}%`;
+          if (barEl) barEl.style.width = `${Math.min(100, Math.round(val))}%`;
+        } else {
+          if (pctEl) pctEl.textContent = '--';
+          if (barEl) barEl.style.width = '0%';
+        }
+      };
+      updateComp('pctTech', 'barTech', comp.technical_skills);
+      updateComp('pctArch', 'barArch', comp.system_architecture);
+      updateComp('pctProd', 'barProd', comp.product_thinking);
+      updateComp('pctBehav', 'barBehav', comp.behavioral);
+
+      // 5. Recent Activity Timeline
+      const actContainer = document.getElementById('activityListContainer');
+      if (actContainer) {
+        const activities = d.recent_activity || [];
+        if (!activities.length) {
+          actContainer.innerHTML = `
+            <div style="padding: 28px; text-align: center; color: var(--ink-soft); font-size: 13px;">
+              <div style="font-size: 24px; margin-bottom: 6px;">🚀</div>
+              <div style="font-weight: 700; color: var(--ink); margin-bottom: 4px;">No assessment activity yet</div>
+              <div>Generate custom interview questions or take an AI mock session to begin.</div>
+            </div>
+          `;
+        } else {
+          const iconMap = {
+            'mock_interview': '🎙️',
+            'question_practice': '⚡',
+            'resume_match': '📄',
+            'evaluation': '📝'
+          };
+          const linkMap = {
+            'mock_interview': 'Mock-interview.html',
+            'question_practice': 'Interview history.html',
+            'resume_match': 'Resume-match.html',
+            'evaluation': 'Interview-studio.html'
+          };
+
+          actContainer.innerHTML = activities.map(item => {
+            const icon = iconMap[item.type] || '⚡';
+            const link = linkMap[item.type] || 'Interview history.html';
+            const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Recent';
+            const scoreBadge = item.score ? `<span class="activity-score-badge">Score ${Math.round(item.score)}%</span>` : '';
+
+            return `
+              <a href="${link}" class="activity-row">
+                <div class="activity-left">
+                  <div class="activity-icon-wrap">
+                    ${icon}
+                  </div>
+                  <div class="activity-info">
+                    <div class="activity-title">${escapeHtml(item.title)}</div>
+                    <div class="activity-meta">
+                      <span>${escapeHtml(item.detail || '')}</span>
+                      <span>·</span>
+                      <span>${dateStr}</span>
+                      ${scoreBadge}
+                    </div>
+                  </div>
+                </div>
+                <div class="activity-chev">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                </div>
+              </a>
+            `;
+          }).join('');
+        }
+      }
+
+      // 6. Recommended Practice
+      const recContainer = document.getElementById('recommendationsContainer');
+      if (recContainer) {
+        const focusItems = d.recommended_focus || [];
+        if (!focusItems.length) {
+          recContainer.innerHTML = `
+            <div class="rec-card">
+              <div class="rec-card-top">
+                <div class="rec-card-icon">⚡</div>
+                <div>
+                  <h4 class="rec-card-title">General Practice</h4>
+                  <p class="rec-card-desc">Generate tailored questions across core technical competencies</p>
+                </div>
+              </div>
+              <a href="Interview-studio.html" class="rec-card-btn">
+                <span>Start Practice →</span>
+              </a>
+            </div>
+          `;
+        } else {
+          recContainer.innerHTML = focusItems.map(item => {
+            const priorityBadge = item.priority === 'HIGH' ? '<span style="font-size:10px;font-weight:800;color:#EF4444;background:#FEF2F2;border:1px solid rgba(239,68,68,0.3);padding:2px 6px;border-radius:4px;margin-left:6px;">PRIORITY</span>' : '';
+            return `
+              <div class="rec-card">
+                <div class="rec-card-top">
+                  <div class="rec-card-icon">🎯</div>
+                  <div style="flex:1;">
+                    <h4 class="rec-card-title">${escapeHtml(item.skill)} ${priorityBadge}</h4>
+                    <p class="rec-card-desc">${escapeHtml(item.reason)}</p>
+                  </div>
+                </div>
+                <a href="Interview-studio.html?skills=${encodeURIComponent(item.skill)}" class="rec-card-btn">
+                  <span>Practice Questions →</span>
+                </a>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+
+      // 7. AI Insight Card
+      const insightTitle = document.getElementById('aiInsightTitle');
+      const insightText = document.getElementById('aiInsightText');
+      if (insightTitle && insightText) {
+        if (d.resume_match && d.resume_match.overall_match_score) {
+          insightTitle.textContent = `Resume Match: ${Math.round(d.resume_match.overall_match_score)}% for ${d.resume_match.target_role}`;
+          if (d.resume_match.critical_gaps && d.resume_match.critical_gaps.length) {
+            insightText.textContent = `Key area for immediate preparation: ${d.resume_match.critical_gaps.slice(0, 2).join(', ')}. Practice targeted questions to close the gap.`;
+          } else {
+            insightText.textContent = `Strong alignment with target role. Continue mock interviews to refine communication trade-offs.`;
+          }
+        } else if (comp.technical_skills && comp.technical_skills > 0) {
+          insightTitle.textContent = `Core Technical Proficiency: ${Math.round(comp.technical_skills)}%`;
+          insightText.textContent = `Focus next on system architecture and behavioral STAR responses to achieve comprehensive readiness.`;
+        } else {
+          insightTitle.textContent = `Welcome to AI Interview Studio`;
+          insightText.textContent = `Start by matching your resume against a target JD or generating custom practice questions to build your competency roadmap.`;
+        }
       }
     }
 

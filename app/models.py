@@ -647,3 +647,59 @@ class AdaptiveFromMatchResponse(BaseModel):
     profile_status: str = Field(..., description="profile_status from candidate profile")
     recommended_focus: Optional[ProfileRecommendedFocus] = Field(None, description="Recommended focus area")
     questions: List[AdaptiveQuestionItem] = Field(default_factory=list, description="Targeted adaptive questions")
+
+
+# ==============================================================================
+# PHASE 6A: CANDIDATE DASHBOARD REAL-TIME DATA SCHEMAS
+# ==============================================================================
+
+class CandidateUserSummary(BaseModel):
+    id: int
+    email: str
+    name: Optional[str] = None
+    role: str = "candidate"
+    plan_tier: str = "free"
+    target_role: Optional[str] = None
+
+
+class CandidateCompetencyScores(BaseModel):
+    technical_skills: Optional[float] = None
+    system_architecture: Optional[float] = None
+    product_thinking: Optional[float] = None
+    behavioral: Optional[float] = None
+
+
+class CandidateDashboardResumeSummary(BaseModel):
+    latest_scan_id: Optional[str] = None
+    target_role: Optional[str] = None
+    overall_match_score: Optional[float] = None
+    match_confidence: Optional[str] = None
+    top_skill_gaps: List[str] = Field(default_factory=list)
+    critical_gaps: List[str] = Field(default_factory=list)
+
+
+class CandidateRecommendedFocusItem(BaseModel):
+    skill: str
+    priority: str = "HIGH"  # HIGH | MEDIUM | LOW
+    reason: str
+
+
+class CandidateRecentActivityItem(BaseModel):
+    type: str  # resume_match | mock_interview | question_practice | evaluation
+    title: str
+    detail: Optional[str] = None
+    score: Optional[float] = None
+    created_at: str
+
+
+class CandidateDashboardResponse(BaseModel):
+    user: CandidateUserSummary
+    preparation_readiness: int = Field(..., ge=0, le=100, description="Overall readiness score 0-100")
+    questions_practiced: int = Field(..., ge=0, description="Total questions practiced")
+    mock_interviews: int = Field(..., ge=0, description="Total mock interviews completed")
+    average_score: float = Field(..., ge=0.0, le=100.0, description="Average evaluation / mock score")
+    preparation_streak: int = Field(..., ge=0, description="Consecutive active UTC days streak")
+    competency_scores: CandidateCompetencyScores
+    resume_match: Optional[CandidateDashboardResumeSummary] = None
+    recommended_focus: List[CandidateRecommendedFocusItem] = Field(default_factory=list)
+    recent_activity: List[CandidateRecentActivityItem] = Field(default_factory=list)
