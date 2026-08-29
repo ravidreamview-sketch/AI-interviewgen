@@ -97,6 +97,8 @@ app.add_middleware(
 
 @app.get("/api/health")
 @app.get("/health")
+@app.get("/api/index.py/api/health", include_in_schema=False)
+@app.get("/api/index.py/health", include_in_schema=False)
 def health_check():
     """Lightweight health probe — does not touch the database."""
     return {"status": "ok", "service": "RaviGen AI Interview Studio"}
