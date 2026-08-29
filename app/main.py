@@ -40,7 +40,9 @@ from app.models import (
     ResumeJDMatchResponse,
     ResumeJDMatchSummaryItem,
     AdaptiveFromMatchRequest,
-    AdaptiveFromMatchResponse
+    AdaptiveFromMatchResponse,
+    MockInterviewSubmissionRequest,
+    MockInterviewSubmissionResponse
 )
 from app.prompts import interview_prompt
 from app.services import generate_ai_questions, parse_raw_questions, get_fallback_questions
@@ -61,9 +63,9 @@ from app.matching_service import (
     normalize_resume
 )
 from app.database import get_db, init_db
-from app.db_models import UserAccount, InterviewHistory, PageViewEvent, ClickEvent, ResumeScan
+from app.db_models import UserAccount, InterviewHistory, PageViewEvent, ClickEvent, ResumeScan, MockInterview
 from app.admin_routes import admin_router, candidate_router
-from app.auth_deps import get_current_user
+from app.auth_deps import get_current_user, get_current_user_optional
 
 
 # Configure trusted CORS origins for local dev and production
@@ -1046,6 +1048,56 @@ def get_resume_jd_history(
             created_at=s.created_at.isoformat() if s.created_at else ""
         ))
     return history
+
+
+@app.post("/api/candidate/mock-interview", response_model=MockInterviewSubmissionResponse)
+@app.post("/candidate/mock-interview", response_model=MockInterviewSubmissionResponse)
+def submit_candidate_mock_interview(
+    payload: MockInterviewSubmissionRequest,
+    current_user: Optional[UserAccount] = Depends(get_current_user_optional),
+    db: Session = Depends(get_db)
+):
+    """
+    Records a completed mock interview session (voice or video) and binds it to the candidate account.
+    """
+    mode = (payload.interview_mode or "voice").lower().strip()
+    if mode not in ["voice", "video"]:
+        mode = "voice"
+
+    user_id = current_user.id if current_user else None
+
+    mock_record = MockInterview(
+        user_id=user_id,
+        role=payload.role,
+        company_target=payload.company_target or "FAANG Tier",
+        interviewer_persona=payload.interviewer_persona or "Alex (Tech Lead)",
+        score=payload.score if payload.score is not None else 85.0,
+        technical_accuracy=payload.technical_accuracy if payload.technical_accuracy is not None else 85.0,
+        communication_clarity=payload.communication_clarity if payload.communication_clarity is not None else 85.0,
+        star_depth=payload.star_depth if payload.star_depth is not None else 85.0,
+        confidence_score=payload.confidence_score if payload.confidence_score is not None else 85.0,
+        duration_seconds=payload.duration_seconds or 300,
+        transcript=payload.transcript,
+        status=payload.status or "completed",
+        interview_mode=mode,
+        created_at=datetime.utcnow()
+    )
+    db.add(mock_record)
+    db.commit()
+    db.refresh(mock_record)
+
+    logger.info("Mock interview recorded", extra={"mock_id": mock_record.id, "user_id": user_id, "mode": mode})
+
+    return MockInterviewSubmissionResponse(
+        id=mock_record.id,
+        user_id=user_id,
+        role=mock_record.role,
+        score=mock_record.score,
+        interview_mode=mode,
+        status=mock_record.status or "completed",
+        created_at=mock_record.created_at.isoformat() if mock_record.created_at else datetime.utcnow().isoformat(),
+        message="Mock interview session recorded successfully"
+    )
 
 
 # ---------- VISITOR & CLICK ANALYTICS API ----------

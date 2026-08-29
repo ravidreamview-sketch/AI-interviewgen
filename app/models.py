@@ -703,3 +703,29 @@ class CandidateDashboardResponse(BaseModel):
     resume_match: Optional[CandidateDashboardResumeSummary] = None
     recommended_focus: List[CandidateRecommendedFocusItem] = Field(default_factory=list)
     recent_activity: List[CandidateRecentActivityItem] = Field(default_factory=list)
+
+
+class MockInterviewSubmissionRequest(BaseModel):
+    role: str = Field(..., description="Target role evaluated in mock interview")
+    company_target: Optional[str] = Field("FAANG Tier", description="Target company or tier")
+    interviewer_persona: Optional[str] = Field("Alex (Tech Lead)", description="Interviewer persona name")
+    score: Optional[float] = Field(85.0, ge=0.0, le=100.0, description="Overall performance score")
+    technical_accuracy: Optional[float] = Field(85.0, ge=0.0, le=100.0)
+    communication_clarity: Optional[float] = Field(85.0, ge=0.0, le=100.0)
+    star_depth: Optional[float] = Field(85.0, ge=0.0, le=100.0)
+    confidence_score: Optional[float] = Field(85.0, ge=0.0, le=100.0)
+    duration_seconds: Optional[int] = Field(300, ge=0)
+    transcript: Optional[str] = None
+    status: Optional[str] = Field("completed")
+    interview_mode: Optional[str] = Field("voice", description="voice or video mode")
+
+
+class MockInterviewSubmissionResponse(BaseModel):
+    id: int
+    user_id: Optional[int] = None
+    role: str
+    score: float
+    interview_mode: str
+    status: str
+    created_at: str
+    message: str = "Mock interview session recorded successfully"

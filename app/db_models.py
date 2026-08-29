@@ -194,6 +194,7 @@ class MockInterview(Base):
     duration_seconds = Column(Integer, default=300)
     transcript = Column(Text, nullable=True)
     status = Column(String, default="completed")
+    interview_mode = Column(String, default="voice", nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
 

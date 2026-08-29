@@ -1388,6 +1388,206 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
 .q-tag:hover { border-color: var(--pen); color: var(--pen); }
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
 
+/* INTERVIEW MODE SELECTOR */
+.mode-selector-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 10px;
+}
+.mode-card {
+  background: var(--sheet);
+  border: 1.5px solid var(--rule);
+  border-radius: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all .2s ease;
+  position: relative;
+}
+.mode-card:hover {
+  border-color: var(--pen);
+  transform: translateY(-1px);
+}
+.mode-card.selected {
+  border-color: var(--pen);
+  background: rgba(99, 102, 241, 0.08);
+  box-shadow: 0 0 0 1px var(--pen);
+}
+.mode-icon-wrap {
+  font-size: 22px;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: var(--paper-2);
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.mode-info { flex: 1; min-width: 0; }
+.mode-title { font-weight: 700; font-size: 14px; color: var(--ink); display: flex; align-items: center; gap: 6px; }
+.mode-badge-new {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, #10B981, #059669);
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+}
+.mode-desc { font-size: 12px; color: var(--ink-soft); margin-top: 2px; line-height: 1.35; }
+.mode-check {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid var(--rule);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: transparent;
+  flex: none;
+}
+.mode-card.selected .mode-check {
+  background: var(--pen);
+  border-color: var(--pen);
+  color: #fff;
+}
+
+/* PRE-FLIGHT CAMERA PREVIEW */
+.camera-preview-container {
+  width: 100%;
+  height: 160px;
+  background: #0B0F19;
+  border-radius: 10px;
+  border: 1px solid var(--rule);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+}
+.calib-camera-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+.camera-preview-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(11, 15, 25, 0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #94A3B8;
+  font-size: 12px;
+  font-family: var(--f-mono);
+  transition: opacity .2s ease;
+}
+.camera-preview-overlay.hidden { display: none; }
+
+/* CANDIDATE PICTURE-IN-PICTURE PREVIEW (STAGE 2) */
+.candidate-pip-wrap {
+  width: 100%;
+  max-width: 380px;
+  margin: 0 auto 16px;
+  animation: fadeIn .3s ease;
+}
+.candidate-pip-card {
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+.pip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 0 4px;
+}
+.pip-title {
+  font-size: 11.5px;
+  font-family: var(--f-mono);
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--ink-soft);
+  letter-spacing: .06em;
+}
+.pip-badges {
+  display: flex;
+  gap: 6px;
+}
+.pip-status-tag {
+  font-size: 10.5px;
+  font-weight: 700;
+  font-family: var(--f-mono);
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #10B981;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+.pip-status-tag.off {
+  background: rgba(239, 68, 68, 0.12);
+  color: #EF4444;
+  border-color: rgba(239, 68, 68, 0.25);
+}
+.pip-video-box {
+  width: 100%;
+  height: 180px;
+  background: #0B0F19;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.pip-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+.pip-off-placeholder {
+  position: absolute;
+  inset: 0;
+  background: #0B0F19;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94A3B8;
+  font-size: 12px;
+  font-family: var(--f-mono);
+}
+.pip-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+.pip-toggle-btn {
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+  font-size: 11.5px;
+  font-family: var(--f-mono);
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 6px;
+  transition: all .15s;
+}
+.pip-toggle-btn:hover {
+  color: var(--pen);
+  border-color: var(--pen);
+}
+
 /* responsive */
 @media (max-width: 960px) {
   .mob-btn { display: grid; }
@@ -1395,7 +1595,7 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
   .sidebar.open { transform: none; }
   .scrim.show { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 45; }
   .main { padding: 0 20px 30px; }
-  .setup-grid, .score-hero, .persona-grid, .star-bars-grid, .compare-grid { grid-template-columns: 1fr; }
+  .setup-grid, .score-hero, .persona-grid, .star-bars-grid, .compare-grid, .mode-selector-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 540px) {
   .metric-grid { grid-template-columns: 1fr; }
@@ -1510,6 +1710,39 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
       <div class="setup-grid">
         <!-- LEFT COLUMN: CONFIG & INTELLIGENCE (65%) -->
         <div style="display:flex;flex-direction:column;gap:20px">
+
+          <!-- SECTION 0: SELECT INTERVIEW MODE -->
+          <div class="card" id="sectionInterviewMode">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              Interview Mode
+            </div>
+            <p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 12px;line-height:1.45">
+              Choose how you want to conduct this interview simulation.
+            </p>
+            <div class="mode-selector-grid">
+              <div class="mode-card selected" id="modeVoiceOnly" onclick="setInterviewMode('voice')" role="radio" aria-checked="true" tabindex="0">
+                <div class="mode-icon-wrap">🎙️</div>
+                <div class="mode-info">
+                  <div class="mode-title">Voice Only</div>
+                  <div class="mode-desc">Audio-only realistic conversational simulation</div>
+                </div>
+                <div class="mode-check">✓</div>
+              </div>
+              <div class="mode-card" id="modeVideoVoice" onclick="setInterviewMode('video')" role="radio" aria-checked="false" tabindex="0">
+                <div class="mode-icon-wrap">📹</div>
+                <div class="mode-info">
+                  <div class="mode-title">
+                    Video + Voice
+                    <span class="mode-badge-new">NEW</span>
+                  </div>
+                  <div class="mode-desc">Real-time camera preview &amp; voice interaction</div>
+                </div>
+                <div class="mode-check">✓</div>
+              </div>
+            </div>
+          </div>
+
           <!-- SECTION 1: SELECT PERSONA -->
           <div class="card">
             <div class="card-title">
@@ -1860,7 +2093,7 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
               Pre-Flight Hardware Calibration
             </div>
             <p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 16px;line-height:1.45">
-              Verify your audio input, speaker output, and room acoustics before live voice begins.
+              Verify your audio input, speaker output, and camera before live interview begins.
             </p>
 
             <div class="calib-step-list">
@@ -1902,25 +2135,63 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
                 </div>
                 <div style="font-size:12px;color:var(--ink-soft)">Ambient acoustic scan: Studio Grade. Minimal background interference detected.</div>
               </div>
+
+              <!-- Step 4: Camera Check (Video + Voice Mode Only) -->
+              <div class="calib-step-item" id="calibCameraStep" style="display:none">
+                <div class="cs-head">
+                  <span>4. Camera Check</span>
+                  <span class="cs-tag cs-pending" id="cameraStatusTag">Pending</span>
+                </div>
+                
+                <div class="camera-preview-container" id="cameraPreviewContainer">
+                  <video id="calibCameraVideo" autoplay playsinline muted class="calib-camera-video"></video>
+                  <div class="camera-preview-overlay" id="cameraPreviewOverlay">
+                    <span id="cameraOverlayText">Camera Preview Inactive</span>
+                  </div>
+                </div>
+
+                <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
+                  <div style="display:flex;gap:8px;align-items:center">
+                    <select class="f-select" id="cameraDeviceSelect" style="font-size:12px;padding:6px 10px;height:34px;flex:1" onchange="switchCameraDevice(this.value)">
+                      <option value="">Default Camera</option>
+                    </select>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+                    <button type="button" class="calib-btn-sm" id="testCameraBtn" onclick="testCameraDevice()">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                      <span>📹 Test Camera</span>
+                    </button>
+                    <button type="button" class="calib-btn-sm secondary" id="toggleCameraPreflightBtn" onclick="toggleCameraPreflight()">
+                      <span>Camera ON</span>
+                    </button>
+                  </div>
+                  <div style="font-size:11.5px;color:var(--ink-soft);line-height:1.4;margin-top:2px">
+                    🔒 <span style="font-weight:600">Privacy Notice:</span> Your camera is used only for the live interview preview.
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- PRIMARY START CTA -->
             <button class="start-btn" id="startInterviewBtn" onclick="startInterviewSession()" style="margin-top:20px">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              Start Live AI Interview
+              <span id="startBtnLabel">Start Live Voice Interview</span>
             </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ================== STAGE 2: LIVE VOICE ROOM ================== -->
+    <!-- ================== STAGE 2: LIVE VOICE / VIDEO ROOM ================== -->
     <div class="stage" id="stageLive">
       <div class="live-container">
         <div class="live-header">
           <div class="live-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Time: <span id="liveTimer">00:00</span></div>
           <div class="live-stat" id="liveQCount">Question 1 of 10</div>
           <div class="live-stat" style="color:#10B981" id="liveInterviewerPill">● Alex (Tech Lead) Active</div>
+          <button type="button" class="calib-btn-sm" id="endEarlyBtn" onclick="finishInterview()" style="background:rgba(239,68,68,0.12);color:#EF4444;border-color:rgba(239,68,68,0.3);margin-left:auto">
+            <span>⏹ End Interview</span>
+          </button>
         </div>
 
         <div class="ai-orb-wrap">
@@ -1929,6 +2200,30 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
         </div>
         <canvas class="wave-canvas" id="waveCanvas"></canvas>
         <div style="font-family:var(--f-mono);font-size:13px;color:var(--ink-soft);font-weight:700;margin-top:6px" id="aiStatus">Alex is speaking...</div>
+
+        <!-- CANDIDATE PICTURE-IN-PICTURE PREVIEW (VIDEO MODE) -->
+        <div class="candidate-pip-wrap" id="candidatePipWrap" style="display:none">
+          <div class="candidate-pip-card">
+            <div class="pip-header">
+              <span class="pip-title">Your Camera Preview</span>
+              <div class="pip-badges">
+                <span class="pip-status-tag" id="pipMicBadge">🎤 Microphone ON</span>
+                <span class="pip-status-tag" id="pipCamBadge">📹 Camera ON</span>
+              </div>
+            </div>
+            <div class="pip-video-box">
+              <video id="liveCandidateVideo" autoplay playsinline muted class="pip-video"></video>
+              <div class="pip-off-placeholder" id="pipOffPlaceholder" style="display:none">
+                <span>📹 Camera Paused</span>
+              </div>
+            </div>
+            <div class="pip-actions">
+              <button type="button" class="pip-toggle-btn" id="pipCamToggleBtn" onclick="toggleLiveCameraTrack()">
+                <span>Turn Camera OFF</span>
+              </button>
+            </div>
+          </div>
+        </div>
 
         <!-- FILLER AUDIO TURN-TAKING LATENCY INDICATOR -->
         <div class="filler-pill" id="fillerPill">
@@ -1946,7 +2241,7 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
 
         <div class="live-q-card">
           <div class="live-q-badge" id="liveBadge">Question #1 · Initializing...</div>
-          <div class="live-q-text" id="liveQuestion">"Connecting to live voice room..."</div>
+          <div class="live-q-text" id="liveQuestion">"Connecting to live interview room..."</div>
 
           <!-- REAL-TIME TRANSCRIPT STRIP WITH INSTANT CLARIFY -->
           <div class="transcript-box">
@@ -2125,6 +2420,11 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
 
   // Global State
   let currentPersona = { name: "Alex", role: "Tech Lead (Direct & Technical)", avatar: "👨‍💻" };
+  let currentInterviewMode = "voice"; // "voice" | "video"
+  let activeCameraStream = null;
+  let isCameraActive = false;
+  let isLiveCameraOn = true;
+  let selectedCameraDeviceId = "";
   let micActive = false;
   let audioCtx = null;
   let analyser = null;
@@ -2451,6 +2751,206 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
     } catch (e) {
       tag.className = 'cs-tag cs-passed';
       tag.textContent = 'Passed';
+    }
+  }
+
+  // ==========================================================================
+  // INTERVIEW MODE & HARDWARE CAMERA CALIBRATION CONTROLLER
+  // ==========================================================================
+  function setInterviewMode(mode) {
+    currentInterviewMode = mode === 'video' ? 'video' : 'voice';
+
+    const voiceCard = $('#modeVoiceOnly');
+    const videoCard = $('#modeVideoVoice');
+    const calibStep = $('#calibCameraStep');
+    const startBtnLabel = $('#startBtnLabel');
+
+    if (currentInterviewMode === 'video') {
+      voiceCard?.classList.remove('selected');
+      voiceCard?.setAttribute('aria-checked', 'false');
+      videoCard?.classList.add('selected');
+      videoCard?.setAttribute('aria-checked', 'true');
+
+      if (calibStep) calibStep.style.display = 'block';
+      if (startBtnLabel) startBtnLabel.textContent = 'Start Live Video Interview';
+
+      enumerateCameraDevices();
+      initCameraPreflight(true);
+    } else {
+      voiceCard?.classList.add('selected');
+      voiceCard?.setAttribute('aria-checked', 'true');
+      videoCard?.classList.remove('selected');
+      videoCard?.setAttribute('aria-checked', 'false');
+
+      if (calibStep) calibStep.style.display = 'none';
+      if (startBtnLabel) startBtnLabel.textContent = 'Start Live Voice Interview';
+
+      stopCameraStream();
+    }
+  }
+
+  // Camera Devices Enumeration
+  async function enumerateCameraDevices() {
+    const select = $('#cameraDeviceSelect');
+    if (!select || !navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter(d => d.kind === 'videoinput');
+      if (videoDevices.length) {
+        select.innerHTML = videoDevices.map((d, i) => `
+          <option value="${d.deviceId}" ${d.deviceId === selectedCameraDeviceId ? 'selected' : ''}>
+            ${d.label || `Camera ${i + 1}`}
+          </option>
+        `).join('');
+        if (!selectedCameraDeviceId && videoDevices[0]) {
+          selectedCameraDeviceId = videoDevices[0].deviceId;
+        }
+      }
+    } catch (err) {
+      console.warn("Device enumeration notice:", err);
+    }
+  }
+
+  // Pre-Flight Camera Initialization
+  async function initCameraPreflight(autoStart = true) {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      handleCameraFailure("Camera API not supported on this browser.");
+      return;
+    }
+
+    const videoEl = $('#calibCameraVideo');
+    const overlay = $('#cameraPreviewOverlay');
+    const tag = $('#cameraStatusTag');
+    const btn = $('#testCameraBtn');
+    const toggleBtn = $('#toggleCameraPreflightBtn');
+
+    try {
+      tag.className = 'cs-tag cs-ready';
+      tag.textContent = 'Testing';
+      if (btn) btn.innerHTML = '<span>⏳ Connecting Camera...</span>';
+
+      // If active stream already exists, reuse it
+      if (!activeCameraStream) {
+        const constraints = {
+          video: selectedCameraDeviceId ? { deviceId: { exact: selectedCameraDeviceId } } : true,
+          audio: false
+        };
+        activeCameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+      }
+
+      if (videoEl) {
+        videoEl.srcObject = activeCameraStream;
+        await videoEl.play().catch(() => {});
+      }
+
+      isCameraActive = true;
+      if (overlay) overlay.classList.add('hidden');
+      tag.className = 'cs-tag cs-passed';
+      tag.textContent = 'Optimal';
+      if (btn) btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> Retest Camera';
+      if (toggleBtn) toggleBtn.innerHTML = '<span>Camera ON</span>';
+
+      enumerateCameraDevices();
+    } catch (err) {
+      console.warn("Camera access notice:", err);
+      handleCameraFailure(err.name === 'NotAllowedError' ? 'Camera permission was denied. You can continue in Voice Only mode.' : 'Camera unavailable or disconnected.');
+    }
+  }
+
+  function handleCameraFailure(msg) {
+    const overlay = $('#cameraPreviewOverlay');
+    const overlayText = $('#cameraOverlayText');
+    const tag = $('#cameraStatusTag');
+    const btn = $('#testCameraBtn');
+    const toggleBtn = $('#toggleCameraPreflightBtn');
+
+    if (overlay) overlay.classList.remove('hidden');
+    if (overlayText) overlayText.textContent = msg || 'Camera Unavailable (Voice Only Ready)';
+    if (tag) {
+      tag.className = 'cs-tag cs-pending';
+      tag.textContent = 'Unavailable';
+    }
+    if (btn) btn.innerHTML = '<span>📹 Retry Camera</span>';
+    if (toggleBtn) toggleBtn.innerHTML = '<span>Camera OFF</span>';
+    isCameraActive = false;
+  }
+
+  function testCameraDevice() {
+    stopCameraStream();
+    initCameraPreflight(true);
+  }
+
+  function toggleCameraPreflight() {
+    const toggleBtn = $('#toggleCameraPreflightBtn');
+    if (isCameraActive) {
+      stopCameraStream();
+      if (toggleBtn) toggleBtn.innerHTML = '<span>Camera OFF</span>';
+    } else {
+      initCameraPreflight(true);
+    }
+  }
+
+  async function switchCameraDevice(deviceId) {
+    selectedCameraDeviceId = deviceId;
+    stopCameraStream();
+    initCameraPreflight(true);
+  }
+
+  function stopCameraStream() {
+    if (activeCameraStream) {
+      activeCameraStream.getVideoTracks().forEach(t => t.stop());
+      activeCameraStream = null;
+    }
+    const calibVideo = $('#calibCameraVideo');
+    if (calibVideo) calibVideo.srcObject = null;
+
+    const liveVideo = $('#liveCandidateVideo');
+    if (liveVideo) liveVideo.srcObject = null;
+
+    const overlay = $('#cameraPreviewOverlay');
+    if (overlay) overlay.classList.remove('hidden');
+
+    isCameraActive = false;
+  }
+
+  function toggleLiveCameraTrack() {
+    if (!activeCameraStream) return;
+    const videoTracks = activeCameraStream.getVideoTracks();
+    if (!videoTracks.length) return;
+
+    isLiveCameraOn = !isLiveCameraOn;
+    videoTracks.forEach(t => t.enabled = isLiveCameraOn);
+
+    const badge = $('#pipCamBadge');
+    const btn = $('#pipCamToggleBtn');
+    const placeholder = $('#pipOffPlaceholder');
+
+    if (isLiveCameraOn) {
+      if (badge) {
+        badge.className = 'pip-status-tag';
+        badge.textContent = '📹 Camera ON';
+      }
+      if (btn) btn.textContent = 'Turn Camera OFF';
+      if (placeholder) placeholder.style.display = 'none';
+    } else {
+      if (badge) {
+        badge.className = 'pip-status-tag off';
+        badge.textContent = '📹 Camera OFF';
+      }
+      if (btn) btn.textContent = 'Turn Camera ON';
+      if (placeholder) placeholder.style.display = 'flex';
+    }
+  }
+
+  function stopAllMediaStreams() {
+    stopCameraStream();
+    if (micStream) {
+      micStream.getTracks().forEach(t => t.stop());
+      micStream = null;
+    }
+    if (recognition) {
+      try { recognition.stop(); } catch (e) {}
     }
   }
 
@@ -3130,9 +3630,39 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
 
     const startBtn = $('#startInterviewBtn');
     startBtn.disabled = true;
-    startBtn.innerHTML = '<span>⚡ Initializing Voice Room...</span>';
+    startBtn.innerHTML = '<span>⚡ Initializing Interview Room...</span>';
 
-    // If questions were not staged or user changed settings, fetch fresh
+    // 1. If Video + Voice mode is active, ensure camera stream is bound to live candidate PIP
+    if (currentInterviewMode === 'video') {
+      try {
+        if (!activeCameraStream) {
+          const constraints = {
+            video: selectedCameraDeviceId ? { deviceId: { exact: selectedCameraDeviceId } } : true,
+            audio: false
+          };
+          activeCameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+        }
+        const liveVideo = $('#liveCandidateVideo');
+        if (liveVideo && activeCameraStream) {
+          liveVideo.srcObject = activeCameraStream;
+          await liveVideo.play().catch(() => {});
+        }
+        const pipWrap = $('#candidatePipWrap');
+        if (pipWrap) pipWrap.style.display = 'block';
+      } catch (camErr) {
+        console.warn("Camera initialization notice - falling back to voice:", camErr);
+        currentInterviewMode = 'voice';
+        const pipWrap = $('#candidatePipWrap');
+        if (pipWrap) pipWrap.style.display = 'none';
+        alert("Camera permission denied or unavailable. Continuing smoothly in Voice Only mode.");
+      }
+    } else {
+      const pipWrap = $('#candidatePipWrap');
+      if (pipWrap) pipWrap.style.display = 'none';
+      stopCameraStream();
+    }
+
+    // 2. If questions were not staged or user changed settings, fetch fresh
     if (!interviewQuestions.length) {
       interviewQuestions = await fetchInterviewQuestions(role, exp, type, company, count, customTopic);
     }
@@ -3159,7 +3689,7 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
     initWaveformCanvas();
     loadQuestion(0);
     startBtn.disabled = false;
-    startBtn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Start Live AI Interview';
+    startBtn.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> <span id="startBtnLabel">${currentInterviewMode === 'video' ? 'Start Live Video Interview' : 'Start Live Voice Interview'}</span>`;
   }
 
   function loadQuestion(idx) {
@@ -3223,6 +3753,12 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
     micActive = true;
     micBtn.classList.add('recording');
 
+    const pipMicBadge = $('#pipMicBadge');
+    if (pipMicBadge) {
+      pipMicBadge.className = 'pip-status-tag';
+      pipMicBadge.textContent = '🎤 Microphone ON';
+    }
+
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
       try {
@@ -3248,6 +3784,13 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
     const micBtn = $('#micBtn');
     micActive = false;
     micBtn.classList.remove('recording');
+
+    const pipMicBadge = $('#pipMicBadge');
+    if (pipMicBadge) {
+      pipMicBadge.className = 'pip-status-tag off';
+      pipMicBadge.textContent = '🎤 Microphone OFF';
+    }
+
     if (recognition) {
       try { recognition.stop(); } catch (e) {}
     }
@@ -3297,8 +3840,10 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
   }
 
   // Finish Interview & Display Scorecard
-  function finishInterview() {
+  async function finishInterview() {
     clearInterval(timerInterval);
+    stopAllMediaStreams();
+
     $('#stageLive').classList.remove('active');
     $('#stageScorecard').classList.add('active');
 
@@ -3306,6 +3851,37 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
     const exp = $('#mockExp').value || 'Mid Level';
     $('#scorecardSubtitle').textContent = `Verified AI Assessment for ${role} (${exp})`;
 
+    const elapsedSeconds = sessionStartTime ? Math.floor((Date.now() - sessionStartTime) / 1000) : 300;
+
+    const scorecardPayload = {
+      role: role,
+      company_target: $('#mockCompany')?.value || 'FAANG Tier',
+      interviewer_persona: `${currentPersona.name} (${currentPersona.role})`,
+      score: 88.0,
+      technical_accuracy: 90.0,
+      communication_clarity: 86.0,
+      star_depth: 88.0,
+      confidence_score: 88.0,
+      duration_seconds: elapsedSeconds,
+      status: "completed",
+      interview_mode: currentInterviewMode,
+      transcript: userAnswers.map(a => `Q: ${a.question}\nA: ${a.answer}`).join("\n\n")
+    };
+
+    // 1. Post to FastAPI backend
+    try {
+      await fetch('/api/candidate/mock-interview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(scorecardPayload)
+      });
+      console.log(`✓ [FastAPI] Recorded ${currentInterviewMode} mock interview in database`);
+    } catch (e) {
+      console.warn('Backend mock record notice:', e);
+    }
+
+    // 2. Also broadcast to Supabase if configured
     pushMockScorecardToSupabase({
       role: role,
       experience: exp,
@@ -3314,14 +3890,20 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
       commScore: 86,
       probScore: 88,
       starAvgScore: 88,
+      interview_mode: currentInterviewMode,
       created_at: new Date().toISOString()
     });
   }
 
   function retryInterview() {
+    stopAllMediaStreams();
     $('#stageScorecard').classList.remove('active');
     $('#stageSetup').classList.add('active');
   }
+
+  // Lifecycle listeners to prevent resource leaks
+  window.addEventListener('beforeunload', () => stopAllMediaStreams());
+  window.addEventListener('pagehide', () => stopAllMediaStreams());
 
   // Supabase Real-Time Broadcast
   const SUPABASE_CONFIG = {

@@ -254,3 +254,17 @@ def record_audit_log(
         db.rollback()
         print(f"[AuditLog] Failed to record audit log: {e}")
         return None
+
+
+def get_current_user_optional(
+    request: Request,
+    db: Session = Depends(get_db)
+) -> Optional[UserAccount]:
+    """
+    Extracts authenticated user if session/token is present, otherwise returns None safely.
+    """
+    try:
+        return get_current_user(request, db)
+    except HTTPException:
+        return None
+
