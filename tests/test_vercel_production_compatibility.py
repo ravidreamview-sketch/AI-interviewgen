@@ -217,6 +217,47 @@ class TestVercelProductionCompatibility(unittest.TestCase):
         result = _safe_execute_ddl("INVALID SQL SYNTAX STATEMENT HERE")
         self.assertFalse(result)
 
+    def test_15_production_import_smoke_test_all_models(self):
+        """Smoke Test: Verifies all Pydantic models in app.models can be imported and have valid schemas."""
+        import inspect
+        from pydantic import BaseModel
+        import app.models as models
+
+        self.assertTrue(hasattr(models, "NormalizedResume"))
+        self.assertTrue(hasattr(models, "ResumeUploadExtractResponse"))
+        self.assertTrue(hasattr(models, "JobUploadExtractResponse"))
+        self.assertTrue(hasattr(models, "ResumeJDMatchRequest"))
+        self.assertTrue(hasattr(models, "ResumeJDMatchResponse"))
+
+        model_classes = [
+            obj for name, obj in inspect.getmembers(models, inspect.isclass)
+            if issubclass(obj, BaseModel) and obj is not BaseModel
+        ]
+        self.assertGreaterEqual(len(model_classes), 50)
+        for cls in model_classes:
+            cls.model_rebuild()
+            schema = cls.model_json_schema()
+            self.assertIsInstance(schema, dict)
+            self.assertIn("properties", schema)
+
+    def test_16_fastapi_app_object_and_routes_smoke_test(self):
+        """Smoke Test: Verifies app.main and api.index export valid FastAPI instances with expected routes."""
+        import app.main as main_mod
+        import api.index as index_mod
+        from fastapi import FastAPI
+
+        self.assertIsInstance(main_mod.app, FastAPI)
+        self.assertIsNotNone(index_mod.app)
+        self.assertIsNotNone(index_mod.handler)
+
+        routes = [getattr(r, "path", str(r)) for r in main_mod.app.routes]
+        self.assertIn("/api/health", routes)
+        self.assertIn("/health", routes)
+        self.assertIn("/api/candidate/resume-jd/match", routes)
+        self.assertIn("/api/adaptive/generate", routes)
+
+
 
 if __name__ == "__main__":
     unittest.main()
+
