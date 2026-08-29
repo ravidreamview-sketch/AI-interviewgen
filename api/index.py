@@ -33,16 +33,18 @@ logger.info("Configured sys.path for serverless runtime. Importing FastAPI app..
 try:
     from app.main import app
     handler = app
-    logger.info("Successfully imported FastAPI app from app.main")
+    print("✓ [Vercel Serverless] Successfully imported FastAPI app from app.main", file=sys.stderr, flush=True)
 except Exception as e1:
-    logger.exception(f"Primary import failed for app.main: {e1}")
+    tb1 = traceback.format_exc()
+    print(f"❌ [Vercel Serverless] Primary import failed for app.main:\n{tb1}", file=sys.stderr, flush=True)
     try:
         from api.app.main import app
         handler = app
-        logger.info("Successfully imported FastAPI app from api.app.main fallback")
+        print("✓ [Vercel Serverless] Successfully imported FastAPI app from api.app.main fallback", file=sys.stderr, flush=True)
     except Exception as e2:
-        logger.exception(f"Fallback import failed for api.app.main: {e2}")
-        _import_error = traceback.format_exc()
+        tb2 = traceback.format_exc()
+        print(f"❌ [Vercel Serverless] Fallback import failed for api.app.main:\n{tb2}", file=sys.stderr, flush=True)
+        _import_error = tb2
 
         async def fallback_app(scope, receive, send):
             if scope["type"] == "lifespan":
