@@ -1,13 +1,14 @@
 import sys
 import os
+import json
 import logging
+import traceback
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
 # Vercel Serverless Entry Point
-# Exposes the FastAPI ASGI app for Vercel's Python runtime.
-# IMPORTANT: This module is import-safe — no database queries,
-# no network calls, no unhandled exceptions during module load.
+# Exposes FastAPI ASGI app for Vercel's Python runtime.
+# Crash-proof fallback: delegates to FastAPI app or returns diagnostic JSON.
 # ---------------------------------------------------------------------------
 
 # Configure logging early
@@ -33,12 +34,47 @@ try:
     from app.main import app
     handler = app
     logger.info("Successfully imported FastAPI app from app.main")
-except Exception as e:
-    logger.exception(f"Primary import failed for app.main: {e}")
+except Exception as e1:
+    logger.exception(f"Primary import failed for app.main: {e1}")
     try:
         from api.app.main import app
         handler = app
         logger.info("Successfully imported FastAPI app from api.app.main fallback")
-    except Exception as fallback_err:
-        logger.exception(f"Fallback import failed for api.app.main: {fallback_err}")
-        raise fallback_err
+    except Exception as e2:
+        logger.exception(f"Fallback import failed for api.app.main: {e2}")
+        _import_error = traceback.format_exc()
+
+        async def fallback_app(scope, receive, send):
+            if scope["type"] == "lifespan":
+                while True:
+                    msg = await receive()
+                    if msg["type"] == "lifespan.startup":
+                        await send({"type": "lifespan.startup.complete"})
+                    elif msg["type"] == "lifespan.shutdown":
+                        await send({"type": "lifespan.shutdown.complete"})
+                        return
+
+            if scope["type"] == "http":
+                error_payload = {
+                    "status": "serverless_import_error",
+                    "service": "RaviGen AI Interview Studio",
+                    "message": "The application could not be loaded during serverless import.",
+                    "sys_path": sys.path,
+                    "traceback": _import_error.splitlines() if _import_error else "No traceback available"
+                }
+                body_bytes = json.dumps(error_payload, indent=2).encode("utf-8")
+                await send({
+                    "type": "http.response.start",
+                    "status": 500,
+                    "headers": [
+                        (b"content-type", b"application/json"),
+                        (b"content-length", str(len(body_bytes)).encode("utf-8")),
+                    ]
+                })
+                await send({
+                    "type": "http.response.body",
+                    "body": body_bytes,
+                })
+
+        app = fallback_app
+        handler = fallback_app
