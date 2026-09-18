@@ -1518,6 +1518,11 @@ def serve_tracker_script():
     f = BASE_DIR / "analytics-tracker.js"
     return FileResponse(f, media_type="application/javascript") if f.exists() else HTTPException(404, "analytics-tracker.js not found")
 
+@app.get("/typography.css", include_in_schema=False)
+def serve_typography_stylesheet():
+    f = BASE_DIR / "typography.css"
+    return FileResponse(f, media_type="text/css") if f.exists() else HTTPException(404, "typography.css not found")
+
 def get_html_response(filename: str, db: Session = None):
     """
     Robustly serves HTML files in Vercel Serverless environment.
@@ -1575,13 +1580,18 @@ def serve_login():
 @app.get("/candidate/Dashboard.html", include_in_schema=False)
 @app.get("/candidate/Candidate-dashboard.html", include_in_schema=False)
 @app.get("/Candidate-dashboard.html", include_in_schema=False)
-@app.get("/dashboard", include_in_schema=False)
-@app.get("/Dashboard", include_in_schema=False)
-@app.get("/Dashboard.html", include_in_schema=False)
 def serve_candidate_dashboard(db: Session = Depends(get_db)):
     block_res = check_menu_access_or_block("Dashboard", db)
     if block_res: return block_res
     return get_html_response("Candidate-dashboard.html", db)
+
+@app.get("/dashboard", include_in_schema=False)
+@app.get("/Dashboard", include_in_schema=False)
+@app.get("/Dashboard.html", include_in_schema=False)
+def serve_dashboard(db: Session = Depends(get_db)):
+    block_res = check_menu_access_or_block("Dashboard", db)
+    if block_res: return block_res
+    return get_html_response("Dashboard.html", db)
 
 @app.get("/candidate/evaluator", include_in_schema=False)
 @app.get("/api/candidate/evaluator", include_in_schema=False)
@@ -1723,4 +1733,4 @@ def serve_logo():
 # 1. The FastAPI lifespan handler (on app startup)
 # 2. The get_db() dependency (on first request)
 # Module-level DB init was REMOVED to prevent FUNCTION_INVOCATION_FAILED on Vercel.
-# See: https://vercel.com/docs/functions/runtimes/python — import must be side-effect free.
+# See: https://vercel.com/docs/functions/runtimes/python — import must be side-effect free.

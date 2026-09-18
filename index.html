@@ -340,13 +340,64 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
   margin-top: 3px;
 }
 
-@media(max-width:880px){
-  .auth-wrapper{grid-template-columns:1fr;max-width:100%;width:100vw}
-  .auth-showcase{display:none}
-  .auth-form-wrap{padding:48px 24px}
+@media (max-width: 1100px){
+  .auth-showcase{padding:42px 40px}
+  .auth-form-wrap{padding:42px 32px}
+}
+
+@media (max-width: 900px){
+  .auth-wrapper{
+    grid-template-columns:1fr;
+    max-width:100%;
+    width:100vw;
+  }
+  .auth-showcase{
+    display:none;
+  }
+  .auth-form-wrap{
+    padding:36px 22px 40px;
+    width:min(100%, 520px);
+  }
   .demo-creds-grid{grid-template-columns:1fr}
 }
+
+@media (max-width: 540px){
+  body{font-size:14px}
+  .theme-btn-float{
+    top:14px;right:14px;width:38px;height:38px;border-radius:10px;
+  }
+  .auth-form-wrap{padding:28px 16px 30px}
+  .form-head h1{font-size:24px}
+  .auth-tabs{gap:14px}
+  .auth-tab{font-size:13.5px}
+  .form-options{
+    flex-direction:column;align-items:flex-start;gap:10px;
+    margin:10px 0 18px;
+  }
+  .submit-btn{
+    padding:14px 16px;font-size:14px;
+  }
+  .submit-btn svg{width:16px;height:16px}
+  .divider{margin:18px 0}
+  .oauth-btn-primary{
+    padding:11px 12px;font-size:13px;gap:10px;
+  }
+  .oauth-btn-primary .oauth-tag{display:none}
+  .demo-creds-header{
+    flex-direction:column;align-items:flex-start;gap:4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 </style>
+<link rel="stylesheet" href="/typography.css">
 </head>
 <body>
 
@@ -660,7 +711,7 @@ async function handleAuth(e) {
   const isSuperAdmin = email.toLowerCase().includes('admin');
   const targetUrl = isSuperAdmin 
     ? (window.location.protocol === 'file:' ? 'Admin.html' : '/admin')
-    : (window.location.protocol === 'file:' ? 'Interview-studio.html' : '/candidate/interview-studio');
+    : (window.location.protocol === 'file:' ? 'Dashboard.html' : '/Dashboard.html');
 
   try {
     const endpoint = isSuperAdmin ? '/api/admin/login' : '/api/candidate/login';
@@ -702,7 +753,7 @@ function demoLogin(provider) {
   const btn = document.getElementById('submitBtn');
   btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><circle cx="12" cy="12" r="10"/></svg> Connecting ${provider}...`;
   setTimeout(() => {
-    window.location.href = window.location.protocol === 'file:' ? 'Interview-studio.html' : '/candidate/interview-studio';
+    window.location.href = window.location.protocol === 'file:' ? 'Dashboard.html' : '/Dashboard.html';
   }, 600);
 }
 

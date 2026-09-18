@@ -757,16 +757,17 @@
       to { transform: rotate(360deg); }
     }
   </style>
+<link rel="stylesheet" href="/typography.css">
 </head>
-<body>
+<body class="evaluator-page">
 
   <!-- ================= SIDEBAR ================= -->
   <aside class="sidebar">
     <div class="brand-box">
-      <div class="brand-logo">AI</div>
+      <img class="brand-logo brand-image" src="/logo.png" alt="RaviGen AI Logo">
       <div>
-        <div class="brand-title">Interview Studio</div>
-        <div class="brand-sub">ENTERPRISE SUITE</div>
+        <div class="brand-title"><span>RaviGen</span> <strong>AI</strong></div>
+        <div class="brand-sub">INTERVIEW STUDIO</div>
       </div>
     </div>
 
@@ -778,7 +779,7 @@
       </a>
       <a href="Interview-studio.html" class="nav-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-        <span>Interview Studio</span>
+        <span>Generate Questions</span>
       </a>
       <a href="Mock-interview.html" class="nav-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
@@ -808,9 +809,22 @@
       </a>
       <a href="scorecard.html" class="nav-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/></svg>
-        <span>Scorecards</span>
+        <span>Public Scorecards</span>
       </a>
     </nav>
+
+    <div class="nav-label">PREFERENCES</div>
+    <nav class="nav-list">
+      <a href="javascript:void(0)" class="nav-item" onclick="alert('Model: Gemini 2.5 Flash\nStatus: Operational\nAPI Base: Ready')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        <span>Model &amp; Settings</span>
+      </a>
+    </nav>
+
+    <div class="evaluator-upgrade" onclick="location.href='Upgrade-pro.html'" role="button" tabindex="0">
+      <div class="evaluator-upgrade-title"><span>👑</span><strong>Go Pro Plan</strong><span>›</span></div>
+      <p>Unlock unlimited Gemini 2.5 Flash generations &amp; live voice mock tests.</p>
+    </div>
   </aside>
 
   <!-- ================= MAIN WRAPPER ================= -->

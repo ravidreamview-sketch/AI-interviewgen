@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request, Query
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, func
 from datetime import datetime, timedelta
@@ -226,6 +226,7 @@ def get_candidate_profile(
 @candidate_router.get("/candidate/dashboard", response_model=CandidateDashboardResponse, tags=["Candidate Dashboard"])
 @candidate_router.get("/dashboard/metrics", response_model=CandidateDashboardResponse, tags=["Candidate Dashboard"])
 def get_candidate_dashboard_endpoint(
+    request: Request,
     current_user: UserAccount = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -233,6 +234,9 @@ def get_candidate_dashboard_endpoint(
     Returns dynamic, real-time metrics, preparation readiness, streak tracking,
     competencies, and timeline strictly for the authenticated candidate.
     """
+    if "text/html" in request.headers.get("accept", ""):
+        return RedirectResponse(url="/Dashboard.html", status_code=307)
+
     return compute_candidate_dashboard(user=current_user, db=db)
 
 
@@ -783,20 +787,6 @@ DEFAULT_NAVIGATION_MENUS = [
         "badge": "VOICE",
         "parent": "None (Root)",
         "order": 3,
-        "status": "active",
-        "visibility": "Public Candidate",
-        "allowed_roles": "candidate,admin,super_admin"
-    },
-    {
-        "id": "menu-4",
-        "name": "Answer Evaluator",
-        "label": "Answer Evaluator",
-        "type": "Practice Tools",
-        "section": "WORKSPACE",
-        "icon": "☑️",
-        "route": "Answer-evaluator.html",
-        "parent": "None (Root)",
-        "order": 4,
         "status": "active",
         "visibility": "Public Candidate",
         "allowed_roles": "candidate,admin,super_admin"

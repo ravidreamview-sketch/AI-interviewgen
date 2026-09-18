@@ -141,6 +141,7 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
 .nav { display: flex; flex-direction: column; gap: 3px; }
 .nav-link {
   display: flex; align-items: center; gap: 10px;
+  min-height: 44px;
   padding: 9.5px 12px; border-radius: 12px;
   color: #94A3B8; font-weight: 500; font-size: 13.5px;
   position: relative; transition: all .2s ease;
@@ -247,7 +248,7 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
   transition: all .18s; box-shadow: var(--shadow);
 }
 .icon-btn:hover { border-color: var(--pen); color: var(--pen); transform: translateY(-1px); }
-.mob-btn { display: none; width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--rule); place-items: center; }
+.mob-btn { display: none; width: 38px; height: 38px; min-width: 44px; min-height: 44px; border-radius: 10px; border: 1px solid var(--rule); place-items: center; }
 
 /* stages */
 .stage { display: none; }
@@ -1756,6 +1757,7 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
   .live-controls { gap: 10px; }
 }
 </style>
+<link rel="stylesheet" href="/typography.css">
 </head>
 <body>
 <div class="scrim" id="scrim"></div>
@@ -1784,10 +1786,6 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
         <span>AI Mock Interview</span>
         <span class="nav-badge new">VIDEO + VOICE</span>
-      </a>
-      <a class="nav-link" href="Answer-evaluator.html">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-        <span>Answer Evaluator</span>
       </a>
       <a class="nav-link" href="Resume-match.html">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
@@ -2940,7 +2938,7 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
   // ==========================================================================
   // INTERVIEW MODE & HARDWARE CAMERA CALIBRATION CONTROLLER
   // ==========================================================================
-  function setInterviewMode(mode) {
+  async function setInterviewMode(mode) {
     currentInterviewMode = mode === 'video' ? 'video' : 'voice';
 
     const voiceCard = $('#modeVoiceOnly');
@@ -2957,7 +2955,7 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
       if (calibStep) calibStep.style.display = 'block';
       if (startBtnLabel) startBtnLabel.textContent = 'Start Live Video Interview';
 
-      enumerateCameraDevices();
+      await enumerateCameraDevices();
       initCameraPreflight(true);
     } else {
       voiceCard?.classList.add('selected');
@@ -3016,7 +3014,7 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
       // If active stream already exists, reuse it
       if (!activeCameraStream) {
         const constraints = {
-          video: selectedCameraDeviceId ? { deviceId: { exact: selectedCameraDeviceId } } : true,
+          video: selectedCameraDeviceId ? { deviceId: { ideal: selectedCameraDeviceId } } : true,
           audio: false
         };
         activeCameraStream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -3841,7 +3839,7 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
       try {
         if (!activeCameraStream) {
           const constraints = {
-            video: selectedCameraDeviceId ? { deviceId: { exact: selectedCameraDeviceId } } : true,
+            video: selectedCameraDeviceId ? { deviceId: { ideal: selectedCameraDeviceId } } : true,
             audio: false
           };
           activeCameraStream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -3975,48 +3973,82 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
       aiLiveStateBadge.className = 'tile-badge';
     }
 
-    // Speak question using Web Speech API
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(qObj.question);
-      utterance.rate = 1.0;
-      utterance.onend = () => {
-        $('#aiStatus').textContent = 'Listening for candidate answer...';
-        if (aiStatusVideo) aiStatusVideo.textContent = 'Listening for candidate answer...';
-        if (avatarOrbTile) avatarOrbTile.className = 'avatar-pulsing-orb';
-        if (aiLiveStateBadge) aiLiveStateBadge.textContent = '🔵 Attentive Listening';
-        startMicrophone();
-      };
+    speakQuestionNaturally(qObj.question, currentPersona.name, () => {
+      $('#aiStatus').textContent = 'Listening for candidate answer...';
+      if (aiStatusVideo) aiStatusVideo.textContent = 'Listening for candidate answer...';
+      if (avatarOrbTile) avatarOrbTile.className = 'avatar-pulsing-orb';
+      if (aiLiveStateBadge) aiLiveStateBadge.textContent = '🔵 Attentive Listening';
+      startMicrophone();
+    });
+  }
+
+  function chooseNaturalVoice(personaName) {
+    if (!('speechSynthesis' in window)) return null;
+
+    const voices = window.speechSynthesis.getVoices();
+    if (!voices.length) return null;
+
+    const persona = (personaName || 'Alex').toLowerCase();
+    const language = persona === 'elena' ? 'en-GB' : 'en-US';
+    const preferredNames = persona === 'marcus'
+      ? ['Microsoft Guy', 'Google US English', 'Alex', 'Daniel', 'Samantha']
+      : persona === 'elena'
+        ? ['Microsoft Sonia', 'Google UK English Female', 'Google UK English', 'Karen']
+        : ['Microsoft Ryan', 'Microsoft Aria', 'Google US English', 'Alex', 'Samantha'];
+
+    const natural = voices.filter(voice => voice.lang === language || voice.lang.startsWith(language.split('-')[0]));
+    return preferredNames.reduce((match, preferred) => match || natural.find(voice => voice.name.includes(preferred)), null)
+      || natural.find(voice => /natural|neural|google|microsoft/i.test(voice.name))
+      || natural[0]
+      || voices[0];
+  }
+
+  function speakQuestionNaturally(text, personaName, onEnd) {
+    if (!('speechSynthesis' in window)) {
+      setTimeout(onEnd, 1200);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    let hasSpoken = false;
+    const speak = () => {
+      if (hasSpoken) return;
+      hasSpoken = true;
+      const utterance = new SpeechSynthesisUtterance(text);
+      const voice = chooseNaturalVoice(personaName);
+      if (voice) {
+        utterance.voice = voice;
+        utterance.lang = voice.lang;
+      } else {
+        utterance.lang = personaName === 'Elena' ? 'en-GB' : 'en-US';
+      }
+      utterance.rate = personaName === 'Marcus' ? 0.96 : 0.98;
+      utterance.pitch = personaName === 'Elena' ? 1.04 : personaName === 'Marcus' ? 0.92 : 0.98;
+      utterance.onend = onEnd;
       window.speechSynthesis.speak(utterance);
+    };
+
+    if (window.speechSynthesis.getVoices().length) {
+      speak();
     } else {
-      setTimeout(() => {
-        $('#aiStatus').textContent = 'Listening for candidate answer...';
-        if (aiStatusVideo) aiStatusVideo.textContent = 'Listening for candidate answer...';
-        if (avatarOrbTile) avatarOrbTile.className = 'avatar-pulsing-orb';
-        if (aiLiveStateBadge) aiLiveStateBadge.textContent = '🔵 Attentive Listening';
-        startMicrophone();
-      }, 1200);
+      window.speechSynthesis.addEventListener('voiceschanged', speak, { once: true });
+      setTimeout(speak, 300);
     }
   }
 
   function replayCurrentQuestion() {
     const qObj = interviewQuestions[currentQIndex];
     if (!qObj) return;
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(qObj.question);
-      $('#aiStatus').textContent = `${currentPersona.name} is repeating question...`;
-      const aiStatusVideo = $('#aiStatusVideo');
-      if (aiStatusVideo) aiStatusVideo.textContent = `${currentPersona.name} is repeating question...`;
-      const avatarOrbTile = $('#avatarOrbTile');
-      if (avatarOrbTile) avatarOrbTile.className = 'avatar-pulsing-orb speaking';
-      utterance.onend = () => {
-        $('#aiStatus').textContent = 'Listening for candidate answer...';
-        if (aiStatusVideo) aiStatusVideo.textContent = 'Listening for candidate answer...';
-        if (avatarOrbTile) avatarOrbTile.className = 'avatar-pulsing-orb';
-      };
-      window.speechSynthesis.speak(utterance);
-    }
+    $('#aiStatus').textContent = `${currentPersona.name} is repeating question...`;
+    const aiStatusVideo = $('#aiStatusVideo');
+    if (aiStatusVideo) aiStatusVideo.textContent = `${currentPersona.name} is repeating question...`;
+    const avatarOrbTile = $('#avatarOrbTile');
+    if (avatarOrbTile) avatarOrbTile.className = 'avatar-pulsing-orb speaking';
+    speakQuestionNaturally(qObj.question, currentPersona.name, () => {
+      $('#aiStatus').textContent = 'Listening for candidate answer...';
+      if (aiStatusVideo) aiStatusVideo.textContent = 'Listening for candidate answer...';
+      if (avatarOrbTile) avatarOrbTile.className = 'avatar-pulsing-orb';
+    });
   }
 
   // Microphone and Speech Recognition

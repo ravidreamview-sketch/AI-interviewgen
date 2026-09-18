@@ -1,0 +1,399 @@
+:root {
+  --font-family-ui: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-family-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  --font-size-display: clamp(28px, 3vw, 40px);
+  --font-size-page-title: clamp(24px, 2.5vw, 32px);
+  --font-size-section-title: clamp(18px, 2vw, 24px);
+  --font-size-card-title: 18px;
+  --font-size-body: 15px;
+  --font-size-small: 13px;
+  --font-size-label: 12px;
+  --font-size-caption: 11px;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --line-height-display: 1.15;
+  --line-height-heading: 1.25;
+  --line-height-body: 1.55;
+  --line-height-caption: 1.4;
+  --tracking-heading: -0.01em;
+  --tracking-label: 0.08em;
+}
+
+html,
+body {
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-family-ui);
+  color: var(--ink);
+  letter-spacing: var(--tracking-heading);
+}
+
+h1 {
+  font-size: var(--font-size-page-title);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-heading);
+}
+
+.page-head h1 {
+  font-family: var(--f-disp, var(--font-family-ui));
+  font-size: clamp(38px, 4.8vw, 56px);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+}
+
+.page-head .lede {
+  max-width: 52ch;
+  font-size: clamp(15px, 1.3vw, 16px);
+  line-height: 1.55;
+}
+
+h2 {
+  font-size: var(--font-size-section-title);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-heading);
+}
+
+h3,
+h4 {
+  font-size: var(--font-size-card-title);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-heading);
+}
+
+p {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-body);
+}
+
+button,
+h1,
+.page-title,
+.page-head h1,
+.form-head h1 {
+select,
+textarea {
+  font-family: inherit;
+}
+
+  font-size: var(--font-size-body);
+.section-title,
+.section-heading {
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.3;
+}
+
+label {
+h3,
+h4,
+.card-title,
+.card-head .ct,
+.paper-toolbar .ct,
+.modal-title,
+.drawer-title {
+  line-height: var(--line-height-caption);
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.label,
+.form-label,
+.f-label,
+.field-label,
+.section-num-title,
+.role-header-title,
+.section-header .section-title {
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+nav a,
+.nav-link {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.4;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.nav-link {
+  min-width: 0;
+  gap: 10px;
+}
+
+.nav-link > span:first-of-type {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-link .nav-badge {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  margin-left: auto;
+  font-size: 9px;
+  line-height: 1.2;
+}
+
+.overline,
+.eyebrow,
+.side-label,
+.nav-section-title,
+.breadcrumbs,
+.kpi-label,
+.status-label {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+
+.caption,
+.helper-text,
+.field-sub-desc,
+.ct-sub {
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-caption);
+}
+
+.description,
+.helper,
+.empty-state p,
+.empty-description,
+.error-message,
+.field-sub-desc,
+.action-hint {
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-body);
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+/* Keep Answer Evaluator visually aligned with the Question Generator shell. */
+.evaluator-page {
+  --bg-base: var(--paper, #F4F7F6);
+  --bg-surface: var(--board, #0A1926);
+  --bg-card: var(--paper-2, #FFFFFF);
+  --bg-card-hover: #FFFFFF;
+  --border-color: var(--rule, #E2E8F0);
+  --border-focus: rgba(16, 185, 129, 0.45);
+  --accent-primary: var(--primary, #10B981);
+  --accent-indigo: var(--primary-dark, #059669);
+  --accent-violet: #15803D;
+  --text-main: var(--ink, #0F172A);
+  --text-soft: var(--ink-soft, #475569);
+  --text-muted: var(--ink-faint, #94A3B8);
+  --f-sans: var(--font-family-ui);
+  background: var(--paper, #F4F7F6);
+  background-image: none;
+}
+
+.evaluator-page .topbar {
+  background: var(--paper-2, #FFFFFF);
+  border-bottom-color: var(--rule, #E2E8F0);
+}
+
+.evaluator-page .page-title-box h1 {
+  color: var(--ink, #0F172A);
+}
+
+.evaluator-page .brand-sub {
+  color: var(--primary, #10B981);
+}
+
+.evaluator-page .brand-box .brand-image {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 50%;
+  background: #0B0F19;
+  border: 1.5px solid rgba(56, 189, 248, 0.6);
+  box-shadow: 0 0 18px rgba(56, 189, 248, 0.45), 0 0 10px rgba(129, 140, 248, 0.4);
+}
+
+.evaluator-page .brand-title span {
+  color: #38BDF8;
+}
+
+.evaluator-page .brand-title strong {
+  color: #C084FC;
+}
+
+.evaluator-page .nav-item.active {
+  background: linear-gradient(135deg, #059669 0%, #10B981 60%, #34D399 100%);
+  border-color: rgba(52, 211, 153, 0.4);
+  color: #FFFFFF;
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.35);
+}
+
+.evaluator-page .nav-badge {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--primary-dark, #059669);
+}
+
+.evaluator-page .evaluator-upgrade {
+  margin-top: auto;
+  padding: 14px 16px;
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.12), #0A1926 60%, #0D2A3D);
+  color: #F8FAFC;
+  cursor: pointer;
+}
+
+.evaluator-page .evaluator-upgrade-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.evaluator-page .evaluator-upgrade-title span:last-child {
+  margin-left: auto;
+  color: #34D399;
+  font-size: 22px;
+}
+
+.evaluator-page .evaluator-upgrade p {
+  margin: 8px 0 0;
+  color: #94A3B8;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.company-playbooks-page {
+  --primary: #10B981;
+  --primary-dark: #059669;
+  --primary-blue: #0D9488;
+  --primary-grad: linear-gradient(135deg, #047857 0%, #059669 50%, #10B981 100%);
+  --emerald-grad: linear-gradient(135deg, #059669 0%, #10B981 50%, #34D399 100%);
+  --pen: #059669;
+  --pen-soft: #34D399;
+  --pen-wash: #ECFDF5;
+  --label-color: #059669;
+}
+
+.company-playbooks-page .nav-link.active {
+  background: linear-gradient(135deg, #047857 0%, #059669 55%, #10B981 100%);
+  border-color: rgba(52, 211, 153, 0.4);
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.35);
+}
+
+.company-playbooks-page .nav-badge.new,
+.company-playbooks-page .nav-badge.pro {
+  background: #10B981;
+  color: #FFFFFF;
+}
+
+.company-playbooks-page .pro-btn,
+.company-playbooks-page .start-p-btn {
+  background: linear-gradient(135deg, #047857 0%, #059669 50%, #10B981 100%);
+  box-shadow: 0 6px 18px -2px rgba(16, 185, 129, 0.35);
+}
+
+.company-playbooks-page .filter-chip.active {
+  background: #059669;
+  border-color: #059669;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+
+.company-playbooks-page .p-card:hover {
+  border-color: #34D399;
+  box-shadow: 0 12px 28px -6px rgba(16, 185, 129, 0.14);
+}
+
+.company-playbooks-page .p-badge {
+  background: #ECFDF5 !important;
+  color: #047857 !important;
+}
+
+.evaluator-page .evaluator-hero {
+  background: var(--paper-2, #FFFFFF);
+  border-color: var(--rule, #E2E8F0);
+  box-shadow: var(--shadow, 0 4px 20px -2px rgba(10, 25, 38, 0.05));
+}
+
+.evaluator-page .evaluator-hero::before {
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.12), transparent 70%);
+}
+
+.evaluator-page .hero-info h2 {
+  background: none;
+  color: var(--ink, #0F172A);
+  -webkit-text-fill-color: initial;
+}
+
+.evaluator-page .panel-card {
+  background: var(--paper-2, #FFFFFF);
+  border-color: var(--rule, #E2E8F0);
+  box-shadow: var(--shadow, 0 4px 20px -2px rgba(10, 25, 38, 0.05));
+}
+
+.evaluator-page .panel-header {
+  border-bottom-color: var(--rule-soft, #EDF2F0);
+}
+
+.evaluator-page .panel-title {
+  color: var(--ink, #0F172A);
+}
+
+.evaluator-page label {
+  color: var(--ink-soft, #475569);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.evaluator-page select,
+.evaluator-page input[type="text"],
+.evaluator-page textarea {
+  background: var(--paper, #F4F7F6);
+  border-color: var(--rule, #E2E8F0);
+  color: var(--ink, #0F172A);
+}
+
+.evaluator-page .submit-eval-btn {
+  background: var(--emerald-grad, linear-gradient(135deg, #059669, #10B981));
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.28);
+}
+
+.evaluator-page .submit-eval-btn:hover {
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.36);
+}
+
+@media (max-width: 600px) {
+  h1,
+  .page-head h1 {
+    font-size: clamp(24px, 7vw, 28px);
+  }
+
+  h2 {
+    font-size: clamp(18px, 5vw, 22px);
+  }
+
+  h3,
+  h4 {
+    font-size: 16px;
+  }
+}
