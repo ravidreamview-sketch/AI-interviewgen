@@ -49,6 +49,6 @@
     { "source": "/admin", "destination": "/Admin.html" },
     { "source": "/analytics", "destination": "/Analytics.html" },
     { "source": "/candidate/:path*", "destination": "/Interview-studio.html" },
-    { "source": "/", "destination": "/Candidate-login.html" }
+    { "source": "/", "destination": "/Public-home.html" }
   ]
 }

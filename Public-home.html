@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Prepare for your next interview with role-focused practice, mock interviews, and AI coaching.">
+  <title>RaviGen AI Interview Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root { color-scheme: light; --ink:#10221e; --muted:#60736d; --green:#0c765b; --lime:#c6f36b; --paper:#f5f8f2; --line:#dfe8df; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:"DM Sans",sans-serif; }
+    a { color:inherit; text-decoration:none; }
+    .shell { max-width:1160px; margin:auto; padding:0 28px; }
+    header { height:82px; display:flex; align-items:center; justify-content:space-between; }
+    .brand { display:flex; align-items:center; gap:11px; font:800 18px Manrope,sans-serif; letter-spacing:-.04em; }
+    .brand img { width:38px; height:38px; object-fit:contain; }
+    .brand span { color:var(--green); }
+    .nav { display:flex; align-items:center; gap:27px; color:#455a53; font-size:14px; font-weight:600; }
+    .button { display:inline-flex; align-items:center; justify-content:center; min-height:46px; padding:0 20px; border-radius:9px; background:var(--green); color:white; font-weight:700; box-shadow:0 7px 18px #0c765b20; }
+    .button:hover { background:#095d49; }
+    .hero { display:grid; grid-template-columns:1.12fr .88fr; gap:54px; align-items:center; padding:76px 0 86px; }
+    .eyebrow { display:inline-flex; gap:8px; align-items:center; border:1px solid #d8e8cb; border-radius:99px; padding:8px 12px; background:#eef7e8; color:#326a45; font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
+    .dot { width:7px; height:7px; background:#54a86b; border-radius:50%; }
+    h1 { max-width:650px; margin:22px 0 18px; font:800 clamp(42px,6vw,68px)/1.05 Manrope,sans-serif; letter-spacing:-.065em; }
+    h1 em { color:var(--green); font-style:normal; }
+    .intro { max-width:570px; color:var(--muted); font-size:18px; line-height:1.7; }
+    .actions { display:flex; align-items:center; gap:18px; margin-top:30px; }
+    .text-link { font-size:14px; font-weight:700; color:#3e5b50; }
+    .proof { margin-top:36px; display:flex; gap:12px; align-items:center; color:#687c74; font-size:13px; }
+    .avatars { display:flex; }
+    .avatars i { display:grid; place-items:center; width:29px; height:29px; margin-right:-7px; border:2px solid var(--paper); border-radius:50%; background:#d4ead0; color:#23513f; font:700 10px Manrope; font-style:normal; }
+    .visual { position:relative; min-height:390px; display:grid; place-items:center; }
+    .orb { position:absolute; width:335px; height:335px; border-radius:50%; background:radial-gradient(circle at 38% 33%,#eaffc7,#d5f1a1 48%,#b4df8a); }
+    .card { position:relative; width:min(100%,390px); padding:24px; border:1px solid #ffffffd9; border-radius:20px; background:#ffffffeb; box-shadow:0 24px 70px #1e49301c; transform:rotate(-2deg); }
+    .card-top { display:flex; justify-content:space-between; align-items:center; color:#64756e; font-size:12px; font-weight:700; }
+    .live { display:flex; align-items:center; gap:7px; padding:6px 9px; border-radius:99px; background:#e7f5e8; color:#34734b; }
+    .live:before { content:""; width:6px; height:6px; border-radius:50%; background:#4eaf68; }
+    .question { margin:27px 0 19px; font:700 21px/1.4 Manrope,sans-serif; letter-spacing:-.03em; }
+    .answer { padding:15px; border-radius:12px; background:#f4f7f1; color:#576b62; font-size:13px; line-height:1.65; }
+    .feedback { display:flex; gap:11px; align-items:center; margin-top:16px; padding-top:16px; border-top:1px solid var(--line); }
+    .score { display:grid; place-items:center; flex:0 0 43px; height:43px; border-radius:50%; background:var(--lime); font:800 14px Manrope; }
+    .feedback b { display:block; font-size:13px; }
+    .feedback small { color:var(--muted); }
+    .float { position:absolute; right:-4px; bottom:24px; padding:13px 16px; border:1px solid #e3eadf; border-radius:12px; background:white; box-shadow:0 12px 32px #1e49301a; font-size:12px; font-weight:700; }
+    .features { padding:38px 0 74px; border-top:1px solid var(--line); }
+    .section-head { display:flex; justify-content:space-between; align-items:end; gap:24px; margin-bottom:25px; }
+    h2 { margin:0; font:750 27px Manrope,sans-serif; letter-spacing:-.04em; }
+    .section-head p { max-width:430px; margin:0; color:var(--muted); line-height:1.6; }
+    .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; }
+    .feature { min-height:165px; padding:22px; border:1px solid var(--line); border-radius:14px; background:#fff; }
+    .icon { display:grid; place-items:center; width:37px; height:37px; margin-bottom:18px; border-radius:10px; background:#eaf5e5; color:var(--green); font-size:17px; }
+    .feature h3 { margin:0 0 8px; font:700 16px Manrope,sans-serif; }
+    .feature p { margin:0; color:var(--muted); font-size:13px; line-height:1.6; }
+    footer { padding:22px 0 30px; border-top:1px solid var(--line); color:#74847d; font-size:12px; }
+    @media(max-width:760px) { .nav a:not(.button) { display:none; } .hero { grid-template-columns:1fr; gap:10px; padding:52px 0 58px; } .visual { min-height:340px; } .orb { width:285px; height:285px; } .float { right:0; bottom:6px; } .section-head { display:block; } .section-head p { margin-top:10px; } .grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <a class="brand" href="/" aria-label="RaviGen AI Interview Studio home">
+        <img src="/logo.png" alt="">
+        <div>RaviGen <span>AI</span><br><small style="font:700 9px 'DM Sans';letter-spacing:.16em;color:#71847b">INTERVIEW STUDIO</small></div>
+      </a>
+      <nav class="nav" aria-label="Main navigation">
+        <a href="#features">What you can do</a>
+        <a href="/user-guide">User guide</a>
+        <a class="button" href="/candidate/login">Sign in</a>
+      </nav>
+    </header>
+    <main>
+      <section class="hero">
+        <div>
+          <div class="eyebrow"><span class="dot"></span> Your next interview starts here</div>
+          <h1>Practice with purpose.<br><em>Interview with confidence.</em></h1>
+          <p class="intro">Build stronger answers with role-focused practice, realistic mock interviews, and coaching that helps you see what to work on next.</p>
+          <div class="actions">
+            <a class="button" href="/candidate/login">Sign in to your studio&nbsp; &rarr;</a>
+            <a class="text-link" href="#features">Explore the tools</a>
+          </div>
+          <div class="proof"><span class="avatars"><i>AI</i><i>Q</i><i>CV</i></span> Practice, feedback, and preparation in one place</div>
+        </div>
+        <div class="visual" aria-label="Example interview answer feedback">
+          <div class="orb"></div>
+          <article class="card">
+            <div class="card-top"><span>ANSWER REVIEW</span><span class="live">Practice session</span></div>
+            <p class="question">Tell me about a challenging project you led.</p>
+            <div class="answer">“I clarified the delivery risks with the team, split the work into smaller milestones, and kept stakeholders updated as we adjusted the launch plan...”</div>
+            <div class="feedback"><div class="score">84</div><div><b>Clear, specific example</b><small>Strengthen the result with a measurable outcome.</small></div></div>
+          </article>
+          <div class="float">+ Actionable feedback after each practice</div>
+        </div>
+      </section>
+      <section class="features" id="features">
+        <div class="section-head">
+          <h2>Tools for every step of preparation</h2>
+          <p>Choose a practice format, get useful feedback, and focus your next session on the skills that matter.</p>
+        </div>
+        <div class="grid">
+          <article class="feature"><div class="icon" aria-hidden="true">Q</div><h3>Question practice</h3><p>Generate role-focused questions and rehearse clear, structured answers.</p></article>
+          <article class="feature"><div class="icon" aria-hidden="true">&#9679;</div><h3>Mock interviews</h3><p>Practice with an interactive interviewer and review your recorded feedback.</p></article>
+          <article class="feature"><div class="icon" aria-hidden="true">&#10024;</div><h3>Interview Coach</h3><p>Get preparation guidance informed by your saved practice and progress.</p></article>
+        </div>
+      </section>
+    </main>
+    <footer>RaviGen AI Interview Studio <span style="float:right"><a href="/candidate/login">Candidate sign in</a></span></footer>
+  </div>
+</body>
+</html>

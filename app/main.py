@@ -1638,6 +1638,10 @@ def get_html_response(filename: str, db: Session = None):
 
 
 @app.get("/", include_in_schema=False)
+def serve_public_home():
+    return get_html_response("Public-home.html")
+
+
 @app.get("/Candidate-login.html", include_in_schema=False)
 @app.get("/candidate/login", include_in_schema=False)
 @app.get("/api/candidate/login", include_in_schema=False)
