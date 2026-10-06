@@ -712,32 +712,6 @@ class CandidateDashboardResponse(BaseModel):
     recent_activity: List[CandidateRecentActivityItem] = Field(default_factory=list)
 
 
-class MockInterviewSubmissionRequest(BaseModel):
-    role: str = Field(..., description="Target role evaluated in mock interview")
-    company_target: Optional[str] = Field("FAANG Tier", description="Target company or tier")
-    interviewer_persona: Optional[str] = Field("Alex (Tech Lead)", description="Interviewer persona name")
-    score: Optional[float] = Field(85.0, ge=0.0, le=100.0, description="Overall performance score")
-    technical_accuracy: Optional[float] = Field(85.0, ge=0.0, le=100.0)
-    communication_clarity: Optional[float] = Field(85.0, ge=0.0, le=100.0)
-    star_depth: Optional[float] = Field(85.0, ge=0.0, le=100.0)
-    confidence_score: Optional[float] = Field(85.0, ge=0.0, le=100.0)
-    duration_seconds: Optional[int] = Field(300, ge=0)
-    transcript: Optional[str] = None
-    status: Optional[str] = Field("completed")
-    interview_mode: Optional[str] = Field("voice", description="voice or video mode")
-
-
-class MockInterviewSubmissionResponse(BaseModel):
-    id: int
-    user_id: Optional[int] = None
-    role: str
-    score: float
-    interview_mode: str
-    status: str
-    created_at: str
-    message: str = "Mock interview session recorded successfully"
-
-
 class InterviewPersonaSummary(BaseModel):
     name: str
     role: str
@@ -748,6 +722,12 @@ class InterviewPersonaSummary(BaseModel):
 class InterviewStartRequest(BaseModel):
     role: str = Field(..., description="Target role (e.g. Product Designer, Software Engineer)")
     skills: List[str] = Field(default_factory=list, description="Target skills to probe")
+    experience: Optional[str] = Field(None, max_length=120)
+    interview_type: Optional[str] = Field(None, max_length=120)
+    company: Optional[str] = Field(None, max_length=120)
+    custom_question: Optional[str] = Field(None, max_length=500)
+    questions: List[str] = Field(default_factory=list, max_length=20)
+    question_count: int = Field(5, ge=1, le=20)
     persona: str = Field("alex", description="alex | elena | marcus")
     mode: str = Field("video_voice", description="voice_only | video_voice")
 
@@ -755,6 +735,8 @@ class InterviewStartRequest(BaseModel):
 class InterviewStartResponse(BaseModel):
     interview_id: str
     first_question: str
+    question_count: int = 1
+    questions: List[str] = Field(default_factory=list)
     persona: InterviewPersonaSummary
     tts_config: Optional[Dict[str, Any]] = None
     initial_speech: Optional[Dict[str, Any]] = None
@@ -763,6 +745,8 @@ class InterviewStartResponse(BaseModel):
 
 class InterviewAnswerRequest(BaseModel):
     answer_text: str = Field(..., description="Candidate speech transcription for current turn")
+    turn_index: Optional[int] = Field(None, ge=1)
+    is_final: bool = False
 
 
 class TurnEvaluationDetail(BaseModel):
@@ -777,9 +761,10 @@ class TurnEvaluationDetail(BaseModel):
 
 class InterviewAnswerResponse(BaseModel):
     evaluation: TurnEvaluationDetail
-    next_question: str
+    next_question: Optional[str] = None
     follow_up_required: bool = False
     turn_index: Optional[int] = None
+    is_complete: bool = False
     tts_speech: Optional[Dict[str, Any]] = None
 
 

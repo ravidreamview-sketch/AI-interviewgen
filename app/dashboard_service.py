@@ -288,7 +288,10 @@ def get_recent_activity(user_id: int, db: Session, limit: int = 10) -> List[Cand
     # 2. Mock Interviews
     mocks = (
         db.query(MockInterview)
-        .filter(MockInterview.user_id == user_id)
+        .filter(
+            MockInterview.user_id == user_id,
+            MockInterview.status == "completed",
+        )
         .order_by(desc(MockInterview.created_at))
         .limit(limit)
         .all()
@@ -374,7 +377,14 @@ def compute_candidate_dashboard(user: UserAccount, db: Session) -> CandidateDash
     total_questions = sum(parse_questions_count(h.questions) for h in user_history)
 
     # 2. Mock Interviews
-    user_mocks = db.query(MockInterview).filter(MockInterview.user_id == user_id).all()
+    user_mocks = (
+        db.query(MockInterview)
+        .filter(
+            MockInterview.user_id == user_id,
+            MockInterview.status == "completed",
+        )
+        .all()
+    )
     total_mocks = len(user_mocks)
 
     # 3. Average Score Calculation

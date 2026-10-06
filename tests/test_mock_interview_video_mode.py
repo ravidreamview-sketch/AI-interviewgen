@@ -77,12 +77,13 @@ class TestMockInterviewVideoMode(unittest.TestCase):
         self.db.refresh(self.user)
 
         self.token = create_access_token(data={"sub": str(self.user.id), "email": self.user.email, "role": self.user.role})
+        self.auth_client = TestClient(app, cookies={"candidate_session": self.token})
 
     def tearDown(self):
         self.db.close()
 
-    def test_1_voice_mode_submission_defaults(self):
-        """1. Voice-only mock interview submission defaults interview_mode to 'voice'."""
+    def test_1_legacy_client_scorecard_submission_is_rejected(self):
+        """Legacy clients cannot add unverified scores or duplicate completed sessions."""
         payload = {
             "role": "Python Backend Engineer",
             "company_target": "Google",
@@ -96,25 +97,16 @@ class TestMockInterviewVideoMode(unittest.TestCase):
             "status": "completed",
             "interview_mode": "voice"
         }
-        res = self.client.post(
+        res = self.auth_client.post(
             "/api/candidate/mock-interview",
             headers={"Authorization": f"Bearer {self.token}"},
             json=payload
         )
-        self.assertEqual(res.status_code, 200)
-        data = res.json()
-        self.assertEqual(data["interview_mode"], "voice")
-        self.assertEqual(data["user_id"], self.user.id)
-        self.assertEqual(data["role"], "Python Backend Engineer")
-        self.assertEqual(data["score"], 88.0)
-
-        # Verify DB record
-        record = self.db.query(MockInterview).filter(MockInterview.id == data["id"]).first()
-        self.assertIsNotNone(record)
-        self.assertEqual(record.interview_mode, "voice")
+        self.assertEqual(res.status_code, 410)
+        self.assertEqual(self.db.query(MockInterview).count(), 0)
 
     def test_2_video_mode_submission(self):
-        """2. Video+Voice mock interview submission persists interview_mode='video'."""
+        """Directly submitted scorecards are not accepted for either interview mode."""
         payload = {
             "role": "Lead Product Designer",
             "company_target": "Meta",
@@ -129,55 +121,50 @@ class TestMockInterviewVideoMode(unittest.TestCase):
             "interview_mode": "video",
             "transcript": "Q: Tell me about Design Systems.\nA: I built Figma tokens."
         }
-        res = self.client.post(
+        res = self.auth_client.post(
             "/api/candidate/mock-interview",
             headers={"Authorization": f"Bearer {self.token}"},
             json=payload
         )
-        self.assertEqual(res.status_code, 200)
-        data = res.json()
-        self.assertEqual(data["interview_mode"], "video")
-        self.assertEqual(data["role"], "Lead Product Designer")
-
-        # Verify DB record
-        record = self.db.query(MockInterview).filter(MockInterview.id == data["id"]).first()
-        self.assertIsNotNone(record)
-        self.assertEqual(record.interview_mode, "video")
-        self.assertIn("Design Systems", record.transcript)
+        self.assertEqual(res.status_code, 410)
+        self.assertEqual(self.db.query(MockInterview).count(), 0)
 
     def test_3_unauthenticated_mock_interview_recording(self):
-        """3. Unauthenticated user can record mock interview without user_id."""
+        """3. Unauthenticated clients cannot create interview records."""
         payload = {
             "role": "Frontend Developer",
             "score": 80.0,
             "interview_mode": "video"
         }
         res = self.client.post("/api/candidate/mock-interview", json=payload)
-        self.assertEqual(res.status_code, 200)
-        data = res.json()
-        self.assertIsNone(data["user_id"])
-        self.assertEqual(data["interview_mode"], "video")
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(self.db.query(MockInterview).count(), 0)
 
     def test_4_invalid_mode_coerced_to_voice(self):
-        """4. Invalid interview_mode string safely coerces to 'voice'."""
+        """4. Authenticated legacy submissions are retired regardless of mode value."""
         payload = {
             "role": "DevOps Architect",
             "interview_mode": "telepathy"
         }
-        res = self.client.post("/api/candidate/mock-interview", json=payload)
-        self.assertEqual(res.status_code, 200)
-        data = res.json()
-        self.assertEqual(data["interview_mode"], "voice")
+        res = self.auth_client.post(
+            "/api/candidate/mock-interview",
+            headers={"Authorization": f"******"},
+            json=payload
+        )
+        self.assertEqual(res.status_code, 410)
 
     def test_5_route_alias_support(self):
-        """5. Endpoint accessible via /candidate/mock-interview and /api/candidate/mock-interview."""
+        """5. Both legacy POST aliases explain that session-backed completion is required."""
         payload = {
             "role": "Data Engineer",
             "interview_mode": "video"
         }
-        res = self.client.post("/candidate/mock-interview", json=payload)
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.json()["interview_mode"], "video")
+        res = self.auth_client.post(
+            "/candidate/mock-interview",
+            headers={"Authorization": f"******"},
+            json=payload
+        )
+        self.assertEqual(res.status_code, 410)
 
     def test_6_dashboard_service_integration(self):
         """6. Candidate dashboard accurately integrates video mock interviews into metrics and timeline."""
@@ -198,7 +185,14 @@ class TestMockInterviewVideoMode(unittest.TestCase):
             status="completed",
             interview_mode="video"
         )
-        self.db.add_all([m1, m2])
+        in_progress = MockInterview(
+            user_id=self.user.id,
+            role="Unfinished Interview",
+            score=0,
+            status="in_progress",
+            interview_mode="voice",
+        )
+        self.db.add_all([m1, m2, in_progress])
         self.db.commit()
 
         # Query Candidate Dashboard

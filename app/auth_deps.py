@@ -4,10 +4,39 @@ from typing import Optional, List, Dict
 import time
 import os
 import uuid
+import secrets
 
 from app.database import get_db
 from app.db_models import UserAccount, AuditLog
-from app.security import decode_access_token
+from app.security import decode_access_token, hash_password
+
+
+def is_development_auth_bypass_enabled() -> bool:
+    return (
+        os.environ.get("ENV", "").strip().lower() in {"dev", "development", "local"}
+        and os.environ.get("DEV_AUTH_BYPASS", "").strip().lower() in {"1", "true", "yes"}
+        and not os.environ.get("VERCEL")
+    )
+
+
+def _get_development_candidate(db: Session) -> UserAccount:
+    email = "local-dev-candidate@localhost"
+    user = db.query(UserAccount).filter(UserAccount.email == email).first()
+    if user:
+        return user
+
+    user = UserAccount(
+        email=email,
+        full_name="Local Development Candidate",
+        password_hash=hash_password(secrets.token_urlsafe(32)),
+        role="candidate",
+        plan_tier="pro",
+        is_active=True,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
 
 
 def get_client_ip(request: Request) -> str:
@@ -125,6 +154,11 @@ def get_current_user(
     1. Authorization: Bearer <token> header
     2. admin_session HttpOnly cookie
     """
+    development_bypass = is_development_auth_bypass_enabled()
+
+    def development_candidate_or_none() -> Optional[UserAccount]:
+        return _get_development_candidate(db) if development_bypass else None
+
     token = None
     auth_header = request.headers.get("Authorization")
     if auth_header and auth_header.startswith("Bearer "):
@@ -136,6 +170,9 @@ def get_current_user(
         token = request.cookies.get("candidate_session")
     
     if not token:
+        development_user = development_candidate_or_none()
+        if development_user:
+            return development_user
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication required. Please log in.",
@@ -144,6 +181,9 @@ def get_current_user(
     
     payload = decode_access_token(token)
     if not payload:
+        development_user = development_candidate_or_none()
+        if development_user:
+            return development_user
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Session has expired or token is invalid. Please log in again.",
@@ -152,6 +192,9 @@ def get_current_user(
     
     user_id = payload.get("sub")
     if not user_id:
+        development_user = development_candidate_or_none()
+        if development_user:
+            return development_user
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token payload."
@@ -159,6 +202,9 @@ def get_current_user(
     
     user = db.query(UserAccount).filter(UserAccount.id == user_id).first()
     if not user:
+        development_user = development_candidate_or_none()
+        if development_user:
+            return development_user
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User account no longer exists."
@@ -267,4 +313,3 @@ def get_current_user_optional(
         return get_current_user(request, db)
     except HTTPException:
         return None
-

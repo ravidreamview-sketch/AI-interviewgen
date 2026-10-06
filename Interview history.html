@@ -1288,6 +1288,11 @@
           <span>AI Mock Interview</span>
           <span class="nav-badge new">VIDEO + VOICE</span>
         </a>
+        <a class="nav-link" href="/interview-coach">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 11.5a8.38 8.38 0 0 1-9 8.5 9.2 9.2 0 0 1-4-.9L3 21l1.9-4.2A8.5 8.5 0 1 1 21 11.5Z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>
+          <span>Interview Coach</span>
+          <span class="nav-badge">AI</span>
+        </a>
         <a class="nav-link" href="Resume-match.html">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
@@ -1529,12 +1534,9 @@
       const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
       const shortMons = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-      let d;
-      if (isoStr) {
-        d = new Date(isoStr);
-      } else {
-        // Fallback: staggered synthetic date based on ID
-        d = new Date(2026, 6, 25 - ((id % 20) || 0), 10 + (id % 8), 15);
+      const d = isoStr ? new Date(isoStr) : null;
+      if (!d || Number.isNaN(d.getTime())) {
+        return { month: "Date unavailable", mon: "—", day: "—", time: "", sort: 0 };
       }
 
       const monthStr = `${months[d.getMonth()]} ${d.getFullYear()}`;
@@ -1546,7 +1548,7 @@
       hours = hours % 12 || 12;
       const timeStr = `${String(hours).padStart(2, '0')}:${mins} ${ampm}`;
 
-      return { month: monthStr, mon: monStr, day: dayNum, time: timeStr, sort: isoStr ? new Date(isoStr).getTime() : id };
+      return { month: monthStr, mon: monStr, day: dayNum, time: timeStr, sort: d.getTime() };
     }
 
     function updateStats() {
@@ -1572,11 +1574,15 @@
 
     async function loadHistory() {
       try {
-        const res = await fetch(`${API_BASE}/history`);
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        const data = await res.json();
+        const [paperRes, mockRes] = await Promise.all([
+          fetch(`${API_BASE}/history`, { credentials: 'include' }),
+          fetch(`${API_BASE}/api/mock-interview/history`, { credentials: 'include' })
+        ]);
+        if (!paperRes.ok) throw new Error(`Question history failed (HTTP ${paperRes.status}).`);
+        if (!mockRes.ok) throw new Error(`Mock interview history failed (HTTP ${mockRes.status}).`);
+        const [papers, mocks] = await Promise.all([paperRes.json(), mockRes.json()]);
 
-        RECORDS = data.map(item => {
+        const paperRecords = papers.map(item => {
           const dt = formatItemDate(item.created_at, item.id);
           return {
             id: item.id,
@@ -1594,32 +1600,40 @@
             sort: dt.sort
           };
         });
-
+        const mockRecords = mocks.map(item => {
+          const dt = formatItemDate(item.created_at, item.id);
+          return {
+            id: `mock_${item.id}`,
+            backendId: `mock_${item.id}`,
+            role: item.role || 'Mock interview',
+            experience: item.experience || 'Not provided',
+            interview_type: item.interview_type || '',
+            type: 'mock',
+            diff: item.status === 'completed' ? 'Completed' : 'In progress',
+            score: item.score,
+            count: item.count || 0,
+            question_count: item.question_count || 5,
+            skills: item.skills || [],
+            q: (item.questions || []).map(turn =>
+              `Q: ${turn.question || ''}\nA: ${turn.answer || ''}\nFeedback: ${turn.evaluation?.feedback || ''}`
+            ),
+            month: dt.month,
+            mon: dt.mon,
+            day: dt.day,
+            time: dt.time,
+            sort: dt.sort
+          };
+        });
+        RECORDS = [...paperRecords, ...mockRecords];
         updateStats();
         render();
       } catch (err) {
-        console.warn("Backend API offline, loading demo ledger:", err.message);
-        loadDemoFallback();
+        console.error("Could not load interview history:", err);
+        RECORDS = [];
+        updateStats();
+        render();
+        toast(err.message || 'Could not load interview history.');
       }
-    }
-
-    function loadDemoFallback() {
-      RECORDS = [
-        {
-          id: 1, role: "Python Developer", experience: "3 Years", type: "paper", diff: "Medium", count: 10, skills: ["Python", "FastAPI"], month: "August 2026", mon: "Aug", day: 20, time: "01:27 PM", sort: 100,
-          q: ["What is the difference between static and dynamic typing in Python?", "How does FastAPI handle CORS requests?", "Explain dependency injection in FastAPI.", "Write a Python function to reverse a string using recursion."]
-        },
-        {
-          id: 2, role: "Backend Developer", experience: "5 Years", type: "paper", diff: "Hard", count: 15, skills: ["Node.js", "Postgres", "Redis"], month: "August 2026", mon: "Aug", day: 19, time: "11:15 AM", sort: 99,
-          q: ["How would you design an idempotent payment endpoint?", "When does an index hurt write performance in Postgres?", "Explain cache stampede and how to prevent it with Redis.", "Walk through debugging a memory leak in a Node service."]
-        },
-        {
-          id: 3, role: "Frontend Engineer", experience: "2 Years", type: "paper", diff: "Medium", count: 12, skills: ["React", "TypeScript"], month: "August 2026", mon: "Aug", day: 18, time: "02:10 PM", sort: 96,
-          q: ["When would you reach for useMemo versus useCallback?", "Explain how the virtual DOM diffing process works.", "What problems do React keys solve in list rendering?", "How do you type a generic reusable component in TypeScript?"]
-        }
-      ];
-      updateStats();
-      render();
     }
 
     function filtered() {
@@ -1641,16 +1655,16 @@
     function entryHTML(x) {
       const isMock = x.type === "mock";
       const dc = x.diff === "Hard" ? "hard" : x.diff === "Brutal" ? "brutal" : "";
-      const mini = (x.q || []).map((t, i) => `<div class="mini-q"><span class="mn">Q${String(i + 1).padStart(2, '0')}</span><span class="mt">${t}</span></div>`).join("");
+      const mini = (x.q || []).map((t, i) => `<div class="mini-q"><span class="mn">Q${String(i + 1).padStart(2, '0')}</span><span class="mt">${escapeHtml(t)}</span></div>`).join("");
       return `<div class="entry ${isMock ? 'mock' : ''} ${openIds.has(x.id) ? 'open' : ''}" data-id="${x.id}">
     <div class="e-date"><div class="e-day">${x.day}</div><div class="e-mon">${x.mon}</div></div>
     <div class="e-main">
-      <div class="e-role">${x.role}<span class="type-dot ${isMock ? 'mock' : ''}">${isMock ? 'Mock' : 'Paper'}</span></div>
-      <div class="e-tags">${(x.skills || []).map(s => `<span>${s}</span>`).join("")}</div>
+      <div class="e-role">${escapeHtml(x.role)}<span class="type-dot ${isMock ? 'mock' : ''}">${isMock ? 'Mock' : 'Paper'}</span></div>
+      <div class="e-tags">${(x.skills || []).map(s => `<span>${escapeHtml(s)}</span>`).join("")}</div>
       <div class="e-badges">
-        <span class="badge diff ${dc}">${x.diff}</span>
+        <span class="badge diff ${dc}">${escapeHtml(x.diff)}</span>
         <span class="badge count">${x.count} Q</span>
-        ${isMock ? `<span class="badge score">Score ${x.score}%</span>` : ''}
+        ${isMock && x.score !== null && x.score !== undefined ? `<span class="badge score">Score ${x.score}%</span>` : ''}
       </div>
     </div>
     <div class="e-side">
@@ -1710,22 +1724,35 @@
     /* ---------- interactions & API deletion ---------- */
     async function deleteSitting(id, role) {
       try {
-        const res = await fetch(`${API_BASE}/history/${id}`, { method: "DELETE" });
-        if (res.ok) {
-          toast(`Removed "${role}" from record`);
-        } else {
-          toast(`Removed from local view`);
-        }
-      } catch (e) {
-        toast(`Removed from local view`);
+        const record = RECORDS.find(item => String(item.id) === String(id));
+        const endpoint = record?.type === 'mock'
+          ? `/api/mock-interview/${encodeURIComponent(record.backendId)}`
+          : `/history/${encodeURIComponent(id)}`;
+        const res = await fetch(`${API_BASE}${endpoint}`, { method: "DELETE", credentials: 'include' });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.detail || `Delete failed (HTTP ${res.status}).`);
+        toast(`Removed "${role}" from record`);
+      } catch (error) {
+        toast(error.message || 'Could not delete this interview.');
+        return;
       }
-      RECORDS = RECORDS.filter(r => r.id !== id);
+      RECORDS = RECORDS.filter(r => String(r.id) !== String(id));
       openIds.delete(id);
       updateStats();
       render();
     }
 
     function rerunSitting(rec) {
+      if (rec.type === 'mock') {
+        const params = new URLSearchParams({
+          role: rec.role || '',
+          exp: rec.experience || '',
+          type: rec.interview_type || '',
+          count: rec.question_count || 5
+        });
+        window.location.href = `Mock-interview.html?${params.toString()}`;
+        return;
+      }
       const params = new URLSearchParams({
         role: rec.role || '',
         exp: rec.experience || '3 Years',
@@ -1739,9 +1766,9 @@
     $('#ledger').addEventListener('click', e => {
       const entry = e.target.closest('.entry');
       if (!entry) return;
-      const id = +entry.dataset.id;
+      const id = entry.dataset.id;
       const actBtn = e.target.closest('[data-act]');
-      const rec = RECORDS.find(r => r.id === id);
+      const rec = RECORDS.find(r => String(r.id) === id);
 
       if (actBtn) {
         e.stopPropagation();
@@ -1752,6 +1779,10 @@
           return;
         }
         if (a === "view") {
+          if (rec?.type === 'mock') {
+            window.location.href = `/scorecard.html?id=${encodeURIComponent(rec.backendId)}`;
+            return;
+          }
           openIds.has(id) ? openIds.delete(id) : openIds.add(id);
           render();
           return;

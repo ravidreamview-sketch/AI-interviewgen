@@ -11,7 +11,9 @@ Tests:
 
 import unittest
 import json
+import os
 from datetime import datetime
+from unittest.mock import patch
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -86,9 +88,34 @@ class TestVideoVoiceInterviewEngine(unittest.TestCase):
         token2 = create_access_token({"sub": self.candidate2.id, "role": "candidate"})
         self.client1 = TestClient(app, cookies={"candidate_session": token1})
         self.client2 = TestClient(app, cookies={"candidate_session": token2})
+        self.ai_patch = patch(
+            "app.interview_engine.generate_ai_questions",
+            side_effect=self.fake_ai_response,
+        )
+        self.ai_mock = self.ai_patch.start()
 
     def tearDown(self):
+        self.ai_patch.stop()
         self.db.close()
+
+    @staticmethod
+    def fake_ai_response(prompt):
+        if "STRICT JSON OUTPUT FORMAT:" not in prompt:
+            return "1. Tell me about a challenging problem relevant to this role."
+        final_answer = "This is the final answer." in prompt
+        return json.dumps({
+            "evaluation": {
+                "score": 82,
+                "technical_score": 80,
+                "communication_score": 84,
+                "strengths": ["Clear explanation"],
+                "improvements": ["Add measurable outcomes"],
+                "star_detected": True,
+                "feedback": "The answer was relevant and organized.",
+            },
+            "next_question": None if final_answer else "How would you measure the reliability of that design?",
+            "follow_up_required": not final_answer,
+        })
 
     def test_providers_endpoint(self):
         """Verify GET /api/interview/providers returns active provider capabilities."""
@@ -121,6 +148,15 @@ class TestVideoVoiceInterviewEngine(unittest.TestCase):
         payload = {
             "role": "Python Backend Engineer",
             "skills": ["FastAPI", "PostgreSQL", "System Architecture"],
+            "experience": "Senior",
+            "interview_type": "Technical",
+            "company": "Example Co",
+            "questions": [
+                "Describe a service you designed.",
+                "How did you measure its reliability?",
+            ],
+            "question_count": 2,
+            "custom_question": "Focus on API reliability",
             "persona": "alex",
             "mode": "video_voice"
         }
@@ -131,6 +167,91 @@ class TestVideoVoiceInterviewEngine(unittest.TestCase):
         self.assertTrue(len(data["first_question"]) > 10)
         self.assertEqual(data["persona"]["name"], "Alex")
         self.assertEqual(data["mode"], "video_voice")
+        self.assertEqual(len(data["questions"]), 2)
+        record_id = int(data["interview_id"].removeprefix("mock_"))
+        self.db.expire_all()
+        transcript = json.loads(
+            self.db.query(MockInterview).filter(MockInterview.id == record_id).one().transcript
+        )
+        context = transcript[0]["session_context"]
+        self.assertEqual(context["experience"], "Senior")
+        self.assertEqual(context["interview_type"], "Technical")
+        self.assertEqual(context["question_count"], 2)
+        self.assertIsNone(context["candidate_evidence"]["target_role"])
+
+    def test_session_start_handles_completed_interview_without_star_score(self):
+        self.db.add(MockInterview(
+            user_id=self.candidate1.id,
+            role="Backend Engineer",
+            score=80,
+            technical_accuracy=82,
+            communication_clarity=78,
+            star_depth=None,
+            confidence_score=81,
+            status="completed",
+        ))
+        self.db.commit()
+
+        response = self.client1.post("/api/interview/start", json={
+            "role": "Backend Engineer",
+            "questions": ["Describe a reliable API design."],
+        })
+
+        self.assertEqual(response.status_code, 200, response.text)
+
+    def test_interview_start_requires_candidate_authentication(self):
+        response = self.client.post("/api/interview/start", json={"role": "Backend Engineer"})
+        self.assertEqual(response.status_code, 401)
+
+    def test_development_auth_bypass_creates_candidate_and_opens_dashboard(self):
+        with patch.dict(os.environ, {"ENV": "development", "DEV_AUTH_BYPASS": "true"}):
+            response = self.client.post("/api/interview/start", json={
+                "role": "Backend Engineer",
+                "questions": ["Describe a reliable API design."],
+            })
+            login_page = self.client.get("/login", follow_redirects=False)
+
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(login_page.status_code, 307)
+        self.assertEqual(login_page.headers["location"], "/candidate/dashboard")
+        dev_candidate = (
+            self.db.query(UserAccount)
+            .filter(UserAccount.email == "local-dev-candidate@localhost")
+            .one()
+        )
+        self.assertEqual(dev_candidate.role, "candidate")
+        self.assertEqual(dev_candidate.id, self.db.query(MockInterview).one().user_id)
+
+    def test_development_auth_bypass_ignores_expired_browser_cookie(self):
+        stale_session = TestClient(
+            app,
+            cookies={"candidate_session": "expired-or-invalid-token"},
+        )
+        with patch.dict(os.environ, {"ENV": "development", "DEV_AUTH_BYPASS": "true"}):
+            response = stale_session.get("/api/candidate/me")
+
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(response.json()["user"]["email"], "local-dev-candidate@localhost")
+
+    def test_development_auth_bypass_is_disabled_in_production(self):
+        stale_session = TestClient(
+            app,
+            cookies={"candidate_session": "expired-or-invalid-token"},
+        )
+        with patch.dict(os.environ, {"ENV": "production", "DEV_AUTH_BYPASS": "true"}):
+            response = stale_session.get("/api/candidate/me")
+
+        self.assertEqual(response.status_code, 401)
+
+    def test_missing_ai_provider_returns_clear_configuration_error(self):
+        self.ai_mock.side_effect = RuntimeError(
+            "AI provider is not configured. Set GEMINI_API_KEY or GROQ_API_KEY in the server environment."
+        )
+        response = self.client1.post("/api/interview/start", json={"role": "Backend Engineer"})
+        self.assertEqual(response.status_code, 503)
+        self.assertIn("Set GEMINI_API_KEY or GROQ_API_KEY", response.json()["detail"])
+        self.assertNotIn("AIza", response.text)
+        self.assertEqual(self.db.query(MockInterview).count(), 0)
 
     def test_interview_turn_answer_and_followup(self):
         """Verify POST /api/interview/{id}/answer evaluates speech and returns follow-up."""
@@ -156,6 +277,29 @@ class TestVideoVoiceInterviewEngine(unittest.TestCase):
         self.assertGreaterEqual(ans_data["evaluation"]["score"], 40)
         self.assertIn("next_question", ans_data)
         self.assertTrue(len(ans_data["next_question"]) > 10)
+
+    def test_question_limit_completes_session_without_client_final_flag(self):
+        start = self.client1.post("/api/interview/start", json={
+            "role": "Backend Engineer",
+            "questions": [
+                "Describe a reliable API design.",
+                "How would you measure its reliability?",
+            ],
+            "question_count": 2,
+        })
+        interview_id = start.json()["interview_id"]
+        first = self.client1.post(
+            f"/api/interview/{interview_id}/answer",
+            json={"answer_text": "I use timeouts and monitoring.", "turn_index": 1},
+        )
+        self.assertEqual(first.status_code, 200)
+        self.assertFalse(first.json()["is_complete"])
+        final = self.client1.post(
+            f"/api/interview/{interview_id}/answer",
+            json={"answer_text": "I track error rates and latency.", "turn_index": 2},
+        )
+        self.assertEqual(final.status_code, 200)
+        self.assertTrue(final.json()["is_complete"])
 
     def test_interview_completion_scorecard(self):
         """Verify POST /api/interview/{id}/complete computes final scorecard and persists."""
@@ -208,11 +352,77 @@ class TestVideoVoiceInterviewEngine(unittest.TestCase):
             "answer_text": "I will try to tamper with candidate 1 session."
         })
         self.assertEqual(tamper_res.status_code, 403)
-        self.assertIn("Forbidden", tamper_res.json()["detail"])
+        self.assertIn("own", tamper_res.json()["detail"])
 
         # Candidate 2 attempts to complete Candidate 1's interview
         tamper_comp = self.client2.post(f"/api/interview/{interview_id}/complete")
         self.assertEqual(tamper_comp.status_code, 403)
+
+    def test_answer_is_persisted_before_provider_retry(self):
+        start_response = self.client1.post("/api/interview/start", json={
+            "role": "Backend Engineer",
+            "questions": ["Describe how you design a reliable API."],
+            "question_count": 1,
+        })
+        interview_id = start_response.json()["interview_id"]
+        answer = "I define clear service boundaries, apply timeouts, and monitor error rates."
+
+        self.ai_mock.side_effect = RuntimeError("provider temporarily unavailable")
+        failed = self.client1.post(
+            f"/api/interview/{interview_id}/answer",
+            json={"answer_text": answer, "is_final": True},
+        )
+        self.assertEqual(failed.status_code, 503)
+        record_id = int(interview_id.removeprefix("mock_"))
+        record = self.db.query(MockInterview).filter(MockInterview.id == record_id).one()
+        self.assertEqual(json.loads(record.transcript)[0]["answer"], answer)
+
+        self.ai_mock.side_effect = self.fake_ai_response
+        retried = self.client1.post(
+            f"/api/interview/{interview_id}/answer",
+            json={"answer_text": answer, "is_final": True},
+        )
+        self.assertEqual(retried.status_code, 200)
+        self.assertTrue(retried.json()["is_complete"])
+        self.assertEqual(retried.json()["evaluation"]["score"], 82)
+        self.db.expire_all()
+        record = self.db.query(MockInterview).filter(MockInterview.id == record_id).one()
+        self.assertIsNotNone(json.loads(record.transcript)[0]["evaluation"])
+        duplicate = self.client1.post(
+            f"/api/interview/{interview_id}/answer",
+            json={"answer_text": answer, "turn_index": 1, "is_final": True},
+        )
+        self.assertEqual(duplicate.status_code, 200)
+        self.db.expire_all()
+        self.assertEqual(len(json.loads(record.transcript)), 1)
+
+    def test_completed_interview_appears_in_candidate_history(self):
+        start_response = self.client1.post("/api/interview/start", json={
+            "role": "Backend Engineer",
+            "questions": ["Describe how you design a reliable API."],
+            "question_count": 1,
+        })
+        interview_id = start_response.json()["interview_id"]
+        answer_response = self.client1.post(
+            f"/api/interview/{interview_id}/answer",
+            json={"answer_text": "I use timeouts, retries, and monitoring.", "is_final": True},
+        )
+        self.assertEqual(answer_response.status_code, 200)
+        complete_response = self.client1.post(f"/api/interview/{interview_id}/complete")
+        self.assertEqual(complete_response.status_code, 200)
+
+        history_response = self.client1.get("/api/mock-interview/history")
+        self.assertEqual(history_response.status_code, 200)
+        history = history_response.json()
+        self.assertEqual(len(history), 1)
+        self.assertEqual(history[0]["status"], "completed")
+        self.assertEqual(history[0]["count"], 1)
+        self.assertIn("evaluation", history[0]["questions"][0])
+        detail = self.client1.get(f"/api/mock-interview/{interview_id}")
+        self.assertEqual(detail.status_code, 200)
+        self.assertEqual(detail.json()["role"], "Backend Engineer")
+        self.assertEqual(self.client2.get(f"/api/mock-interview/{interview_id}").status_code, 403)
+        self.assertEqual(self.client2.get("/api/mock-interview/history").json(), [])
 
 
 if __name__ == "__main__":

@@ -8,8 +8,9 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple, Union, Set
 from fastapi import FastAPI, Depends, HTTPException, Request, UploadFile, File
+from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from sqlalchemy import func, desc, text
 from sqlalchemy.orm import Session
 
@@ -41,8 +42,6 @@ from app.models import (
     ResumeJDMatchSummaryItem,
     AdaptiveFromMatchRequest,
     AdaptiveFromMatchResponse,
-    MockInterviewSubmissionRequest,
-    MockInterviewSubmissionResponse,
     InterviewStartRequest,
     InterviewStartResponse,
     InterviewAnswerRequest,
@@ -63,8 +62,13 @@ from app.speech_service import get_stt_provider
 from app.tts_service import get_tts_provider
 from app.avatar_service import get_avatar_provider
 from app.prompts import interview_prompt
+from app.services import (
+    generate_ai_questions,
+    get_ai_provider_status,
+    parse_raw_questions,
+    get_fallback_questions,
+)
 from app.coach_service import build_candidate_context, generate_coach_reply
-from app.services import generate_ai_questions, parse_raw_questions, get_fallback_questions
 from app.adaptive_service import (
     get_candidate_adaptive_profile,
     generate_adaptive_question_package,
@@ -82,9 +86,28 @@ from app.matching_service import (
     normalize_resume
 )
 from app.database import get_db, init_db
-from app.db_models import UserAccount, InterviewHistory, PageViewEvent, ClickEvent, ResumeScan, MockInterview, CoachSession, CoachMessage
+from app.db_models import (
+    UserAccount,
+    InterviewHistory,
+    PageViewEvent,
+    ClickEvent,
+    ResumeScan,
+    MockInterview,
+    CoachSession,
+    CoachMessage,
+)
 from app.admin_routes import admin_router, candidate_router
-from app.auth_deps import get_current_user, get_current_user_optional
+from app.auth_deps import (
+    get_current_user,
+    get_current_user_optional,
+    is_development_auth_bypass_enabled,
+)
+
+_ai_provider, _ai_provider_configured = get_ai_provider_status()
+if _ai_provider_configured:
+    logger.info("AI provider: %s; API key configured: YES", _ai_provider)
+else:
+    logger.warning("AI provider: %s; API key configured: NO", _ai_provider)
 
 
 # Configure trusted CORS origins for local dev and production
@@ -447,10 +470,19 @@ def generate_questions(
 
 @app.get("/history")
 @app.get("/api/history")
-def get_history(db: Session = Depends(get_db)):
+def get_history(
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    _require_candidate_account(current_user)
     check_feature_enabled("Interview history.html", db)
     try:
-        interviews = db.query(InterviewHistory).order_by(InterviewHistory.id.desc()).all()
+        interviews = (
+            db.query(InterviewHistory)
+            .filter(InterviewHistory.user_id == current_user.id)
+            .order_by(InterviewHistory.id.desc())
+            .all()
+        )
         return [format_interview_response(item) for item in interviews]
     except HTTPException:
         raise
@@ -463,8 +495,20 @@ def get_history(db: Session = Depends(get_db)):
 
 @app.get("/history/{interview_id}")
 @app.get("/api/history/{interview_id}")
-def get_interview_detail(interview_id: int, db: Session = Depends(get_db)):
-    interview = db.query(InterviewHistory).filter(InterviewHistory.id == interview_id).first()
+def get_interview_detail(
+    interview_id: int,
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    _require_candidate_account(current_user)
+    interview = (
+        db.query(InterviewHistory)
+        .filter(
+            InterviewHistory.id == interview_id,
+            InterviewHistory.user_id == current_user.id,
+        )
+        .first()
+    )
     if not interview:
         raise HTTPException(status_code=404, detail="Interview sitting not found")
     return format_interview_response(interview)
@@ -472,8 +516,20 @@ def get_interview_detail(interview_id: int, db: Session = Depends(get_db)):
 
 @app.delete("/history/{interview_id}")
 @app.delete("/api/history/{interview_id}")
-def delete_interview(interview_id: int, db: Session = Depends(get_db)):
-    interview = db.query(InterviewHistory).filter(InterviewHistory.id == interview_id).first()
+def delete_interview(
+    interview_id: int,
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    _require_candidate_account(current_user)
+    interview = (
+        db.query(InterviewHistory)
+        .filter(
+            InterviewHistory.id == interview_id,
+            InterviewHistory.user_id == current_user.id,
+        )
+        .first()
+    )
     if not interview:
         raise HTTPException(status_code=404, detail="Interview sitting not found")
 
@@ -1069,137 +1125,155 @@ def get_resume_jd_history(
     return history
 
 
-@app.post("/api/candidate/mock-interview", response_model=MockInterviewSubmissionResponse)
-@app.post("/candidate/mock-interview", response_model=MockInterviewSubmissionResponse)
-def submit_candidate_mock_interview(
-    payload: MockInterviewSubmissionRequest,
-    current_user: Optional[UserAccount] = Depends(get_current_user_optional),
-    db: Session = Depends(get_db)
-):
-    """
-    Records a completed mock interview session (voice or video) and binds it to the candidate account.
-    """
-    mode = (payload.interview_mode or "voice").lower().strip()
-    if mode not in ["voice", "video"]:
-        mode = "voice"
-
-    user_id = current_user.id if current_user else None
-
-    mock_record = MockInterview(
-        user_id=user_id,
-        role=payload.role,
-        company_target=payload.company_target or "FAANG Tier",
-        interviewer_persona=payload.interviewer_persona or "Alex (Tech Lead)",
-        score=payload.score if payload.score is not None else 85.0,
-        technical_accuracy=payload.technical_accuracy if payload.technical_accuracy is not None else 85.0,
-        communication_clarity=payload.communication_clarity if payload.communication_clarity is not None else 85.0,
-        star_depth=payload.star_depth if payload.star_depth is not None else 85.0,
-        confidence_score=payload.confidence_score if payload.confidence_score is not None else 85.0,
-        duration_seconds=payload.duration_seconds or 300,
-        transcript=payload.transcript,
-        status=payload.status or "completed",
-        interview_mode=mode,
-        created_at=datetime.utcnow()
-    )
-    db.add(mock_record)
-    db.commit()
-    db.refresh(mock_record)
-
-    logger.info("Mock interview recorded", extra={"mock_id": mock_record.id, "user_id": user_id, "mode": mode})
-
-    return MockInterviewSubmissionResponse(
-        id=mock_record.id,
-        user_id=user_id,
-        role=mock_record.role,
-        score=mock_record.score,
-        interview_mode=mode,
-        status=mock_record.status or "completed",
-        created_at=mock_record.created_at.isoformat() if mock_record.created_at else datetime.utcnow().isoformat(),
-        message="Mock interview session recorded successfully"
-    )
-
-
 # ---------- REAL-TIME VIDEO + VOICE CONVERSATIONAL INTERVIEW API ----------
 
 @app.post("/api/interview/start", response_model=InterviewStartResponse)
 def start_realtime_interview(
     payload: InterviewStartRequest,
-    current_user: Optional[UserAccount] = Depends(get_current_user_optional),
+    current_user: UserAccount = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Initializes a real-time conversational AI interview session.
     Generates Question 1 tailored for the candidate's target role, skills, and selected persona.
     """
-    user_id = current_user.id if current_user else None
-    session_data = start_interview_session(
-        role=payload.role,
-        skills=payload.skills,
-        persona=payload.persona,
-        mode=payload.mode,
-        user_id=user_id,
-        db=db
-    )
-    return session_data
+    _require_candidate_account(current_user)
+    context = build_candidate_context(db, current_user)
+    evidence = {
+        "target_role": context["candidate"]["target_role"],
+        "experience": context["candidate"]["experience"],
+        "skills": context["candidate"]["skills"][:20],
+        "interview_stats": context["interview_stats"],
+        "skill_scores": context["skill_scores"][:8],
+        "mistakes": context["mistakes"][:5],
+        "resume_match": context["resume_match"],
+    }
+    try:
+        return start_interview_session(
+            role=payload.role,
+            skills=payload.skills,
+            persona=payload.persona,
+            mode=payload.mode,
+            user_id=current_user.id,
+            db=db,
+            experience=payload.experience,
+            interview_type=payload.interview_type,
+            company=payload.company,
+            custom_question=payload.custom_question,
+            questions=payload.questions,
+            question_count=payload.question_count,
+            candidate_context=evidence,
+        )
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 @app.post("/api/interview/{interview_id}/answer", response_model=InterviewAnswerResponse)
 def answer_realtime_interview_turn(
     interview_id: str,
     payload: InterviewAnswerRequest,
-    current_user: Optional[UserAccount] = Depends(get_current_user_optional),
+    current_user: UserAccount = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Processes candidate spoken answer, performs multi-factor rubric evaluation,
     and synthesizes a contextual follow-up or next competency question.
     """
-    # Tenant ownership check
-    if db and interview_id.startswith("mock_"):
-        try:
-            rec_id = int(interview_id.replace("mock_", ""))
-            record = db.query(MockInterview).filter(MockInterview.id == rec_id).first()
-            if record and record.user_id and current_user and record.user_id != current_user.id:
-                raise HTTPException(status_code=403, detail="Forbidden: You do not own this interview session")
-        except ValueError:
-            pass
-
-    user_id = current_user.id if current_user else None
-    result = evaluate_and_generate_next_question(
-        interview_id=interview_id,
-        answer_text=payload.answer_text,
-        db=db,
-        user_id=user_id
-    )
-    return result
+    _require_candidate_account(current_user)
+    _get_owned_mock_interview(interview_id, current_user, db)
+    try:
+        return evaluate_and_generate_next_question(
+            interview_id=interview_id,
+            answer_text=payload.answer_text,
+            db=db,
+            user_id=current_user.id,
+            is_final=payload.is_final,
+            turn_index=payload.turn_index,
+        )
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail="Interview session not found.") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 @app.post("/api/interview/{interview_id}/complete", response_model=InterviewCompleteResponse)
 def complete_realtime_interview(
     interview_id: str,
-    current_user: Optional[UserAccount] = Depends(get_current_user_optional),
+    current_user: UserAccount = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Finalizes the real-time interview, generates the holistic multi-dimensional scorecard,
     and persists the record for Candidate Dashboard sync.
     """
-    if db and interview_id.startswith("mock_"):
-        try:
-            rec_id = int(interview_id.replace("mock_", ""))
-            record = db.query(MockInterview).filter(MockInterview.id == rec_id).first()
-            if record and record.user_id and current_user and record.user_id != current_user.id:
-                raise HTTPException(status_code=403, detail="Forbidden: You do not own this interview session")
-        except ValueError:
-            pass
+    _require_candidate_account(current_user)
+    _get_owned_mock_interview(interview_id, current_user, db)
+    try:
+        return complete_interview_session(
+            interview_id=interview_id,
+            db=db,
+            user_id=current_user.id,
+        )
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail="Interview session not found.") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
-    user_id = current_user.id if current_user else None
-    result = complete_interview_session(
-        interview_id=interview_id,
-        db=db,
-        user_id=user_id
+
+@app.get("/api/mock-interview/history")
+def get_candidate_mock_interview_history(
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    _require_candidate_account(current_user)
+    records = (
+        db.query(MockInterview)
+        .filter(MockInterview.user_id == current_user.id)
+        .order_by(MockInterview.created_at.desc())
+        .limit(100)
+        .all()
     )
-    return result
+    return [_mock_interview_history_item(record) for record in records]
+
+
+@app.get("/api/mock-interview/{interview_id}")
+def get_candidate_mock_interview(
+    interview_id: str,
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    _require_candidate_account(current_user)
+    record = _get_owned_mock_interview(interview_id, current_user, db)
+    return _mock_interview_history_item(record)
+
+
+@app.delete("/api/mock-interview/{interview_id}")
+def delete_candidate_mock_interview(
+    interview_id: str,
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    _require_candidate_account(current_user)
+    record = _get_owned_mock_interview(interview_id, current_user, db)
+    db.delete(record)
+    db.commit()
+    return {"message": "Mock interview deleted.", "id": record.id}
+
+
+@app.post("/api/candidate/mock-interview", include_in_schema=False)
+@app.post("/candidate/mock-interview", include_in_schema=False)
+def reject_legacy_mock_interview_submission(
+    current_user: UserAccount = Depends(get_current_user),
+):
+    _require_candidate_account(current_user)
+    raise HTTPException(
+        status_code=410,
+        detail="Client-submitted scorecards are no longer accepted. Complete the saved interview session instead.",
+    )
 
 
 @app.get("/api/interview/providers")
@@ -1573,6 +1647,8 @@ def get_html_response(filename: str, db: Session = None):
 @app.get("/Login.html", include_in_schema=False)
 @app.get("/index.html", include_in_schema=False)
 def serve_login():
+    if is_development_auth_bypass_enabled():
+        return RedirectResponse(url="/candidate/dashboard", status_code=307)
     return get_html_response("Candidate-login.html")
 
 @app.get("/candidate", include_in_schema=False)
@@ -1730,9 +1806,74 @@ def serve_logo():
     f = BASE_DIR / "logo.png"
     return FileResponse(f) if f.exists() else HTTPException(404, "logo.png not found")
 
-
 COACH_RATE_LIMIT = 12
 COACH_RATE_WINDOW = timedelta(minutes=1)
+
+
+def _require_candidate_account(current_user: UserAccount) -> None:
+    if current_user.role != "candidate":
+        raise HTTPException(status_code=403, detail="Candidate access is required.")
+
+
+def _get_owned_mock_interview(
+    interview_id: str,
+    current_user: UserAccount,
+    db: Session,
+) -> MockInterview:
+    if not interview_id.startswith("mock_"):
+        raise HTTPException(status_code=404, detail="Interview session not found.")
+    try:
+        record_id = int(interview_id.removeprefix("mock_"))
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail="Interview session not found.") from exc
+    record = db.query(MockInterview).filter(MockInterview.id == record_id).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="Interview session not found.")
+    if record.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="You do not own this interview session.")
+    return record
+
+
+def _mock_interview_history_item(record: MockInterview) -> dict:
+    try:
+        turns = json.loads(record.transcript or "[]")
+    except (TypeError, ValueError):
+        turns = []
+    if not isinstance(turns, list):
+        turns = []
+    context = turns[0].get("session_context", {}) if turns and isinstance(turns[0], dict) else {}
+    if not isinstance(context, dict):
+        context = {}
+    evaluated = [
+        turn for turn in turns
+        if isinstance(turn, dict) and turn.get("evaluation")
+    ]
+    return {
+        "id": record.id,
+        "role": record.role,
+        "experience": context.get("experience"),
+        "interview_type": context.get("interview_type"),
+        "skills": context.get("skills", []),
+        "company": record.company_target,
+        "interviewer_persona": record.interviewer_persona,
+        "interview_mode": record.interview_mode,
+        "status": record.status,
+        "score": record.score if record.status == "completed" else None,
+        "technical_score": record.technical_accuracy if record.status == "completed" else None,
+        "communication_score": record.communication_clarity if record.status == "completed" else None,
+        "problem_solving_score": record.confidence_score if record.status == "completed" else None,
+        "count": len(evaluated),
+        "question_count": context.get("question_count", len(context.get("planned_questions", []))),
+        "questions": [
+            {
+                "question": turn.get("question", ""),
+                "answer": turn.get("answer", ""),
+                "evaluation": turn.get("evaluation"),
+            }
+            for turn in evaluated
+        ],
+        "created_at": record.created_at.isoformat() if record.created_at else None,
+    }
 
 
 def _require_coach_candidate(current_user: UserAccount) -> None:
@@ -2010,6 +2151,9 @@ def chat_with_coach(
         )
 
     return {"message": reply, "conversation_id": conversation.id}
+
+
+
 
 
 # NOTE: Database initialization is handled by:

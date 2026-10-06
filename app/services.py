@@ -1,18 +1,31 @@
 import os
 import re
+import logging
+from pathlib import Path
 from typing import List, Optional
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env")
 
 
 import json
 import urllib.request
-import urllib.error
+
+logger = logging.getLogger("ravi.ai_provider")
+
+
+def get_ai_provider_status() -> tuple[str, bool]:
+    """Return the preferred configured provider without exposing its key."""
+    if os.getenv("GEMINI_API_KEY", "").strip():
+        return "Gemini", True
+    if os.getenv("GROQ_API_KEY", "").strip():
+        return "Groq", True
+    return "Not configured", False
+
 
 def generate_ai_questions(prompt: str) -> str:
-    # 1. Try Gemini API if GEMINI_API_KEY is available
-    gemini_key = os.getenv("GEMINI_API_KEY")
+    # Gemini is preferred; Groq remains the configured fallback.
+    gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
     if gemini_key:
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}"
@@ -30,19 +43,21 @@ def generate_ai_questions(prompt: str) -> str:
                 text = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
                 if text:
                     return text
+            logger.warning("Gemini provider returned an empty response; trying Groq if configured")
         except Exception as gemini_err:
-            print(f"[AI Service] Gemini request error: {gemini_err}. Attempting Groq...")
+            logger.warning(
+                "Gemini provider request failed (%s); trying Groq if configured",
+                type(gemini_err).__name__,
+            )
 
-    # 2. Try Groq API if GROQ_API_KEY is available
-    groq_key = os.getenv("GROQ_API_KEY")
+    groq_key = os.getenv("GROQ_API_KEY", "").strip()
     if groq_key:
         try:
             from groq import Groq
             client = Groq(api_key=groq_key)
             models_to_try = [
-                "llama-3.3-70b-versatile",
-                "llama-3.1-8b-instant",
-                "mixtral-8x7b-32768"
+                "openai/gpt-oss-120b",
+                "qwen/qwen3.8-27b",
             ]
             for model_name in models_to_try:
                 try:
@@ -52,13 +67,32 @@ def generate_ai_questions(prompt: str) -> str:
                         temperature=0.6,
                         max_tokens=3000,
                     )
-                    return response.choices[0].message.content
-                except Exception:
-                    continue
+                    text = response.choices[0].message.content
+                    if text and text.strip():
+                        return text
+                    logger.warning("Groq model %s returned an empty response", model_name)
+                except Exception as groq_err:
+                    logger.warning(
+                        "Groq model %s request failed (%s)",
+                        model_name,
+                        type(groq_err).__name__,
+                    )
         except Exception as groq_err:
-            print(f"[AI Service] Groq request error: {groq_err}")
+            logger.warning("Groq provider is unavailable (%s)", type(groq_err).__name__)
 
-    raise RuntimeError("No LLM API keys configured (set GEMINI_API_KEY or GROQ_API_KEY in .env)")
+    if not gemini_key and not groq_key:
+        logger.error(
+            "AI provider is not configured. "
+            "Set GEMINI_API_KEY or GROQ_API_KEY in the server environment."
+        )
+        raise RuntimeError(
+            "AI provider is not configured. "
+            "Set GEMINI_API_KEY or GROQ_API_KEY in the server environment."
+        )
+    raise RuntimeError(
+        "Configured AI provider request failed. "
+        "Check the server-side provider configuration and try again."
+    )
 
 
 # Rich fallback questions bank (25+ questions per discipline)

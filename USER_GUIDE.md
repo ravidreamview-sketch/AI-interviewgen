@@ -31,6 +31,7 @@ The **AI Interview Generator** is an enterprise-grade recruitment and candidate 
 - **URL Rehydration & Live QR Codes**: Share interactive papers with self-contained Base64 URL state and scannable mobile QR codes.
 - **Role Evaluation Lenses**: Every generated question includes interviewer evaluation criteria and assessment rubrics.
 - **Mock Interview Engine**: Interactive voice/text rehearsal simulator with real-time scoring and feedback.
+- **AI Interview Coach**: Authenticated coaching chat with candidate-specific profile, generated-question, mock-interview, scorecard, skill, feedback, and resume-match context. Conversations persist with support for multiple chats. Readiness, strengths, improvement areas, and next-step recommendations come from recorded data; readiness remains unavailable until there is performance or resume-match evidence. Configure `GEMINI_API_KEY` or `GROQ_API_KEY` in the server-side `.env`; chat does not fabricate responses when no provider is configured.
 
 ---
 
@@ -52,9 +53,10 @@ The **AI Interview Generator** is an enterprise-grade recruitment and candidate 
    ```bash
    copy .env.example .env
    ```
-   Add your Gemini API Key:
+   Add either a Gemini or Groq API key (Gemini is preferred when both are configured):
    ```env
    GEMINI_API_KEY=your_google_gemini_api_key_here
+   # Or configure GROQ_API_KEY instead.
    ```
 3. **Launch the Application**:
    Double click `run_app.bat` or run:
@@ -156,13 +158,14 @@ You can share questions across multiple platforms without requiring third-party 
 
 ## 7. Mock Interview Simulation & Voice Mode
 
-Practice or conduct live candidate evaluations with the **Mock Interview Engine** ([Mock-interview.html](file:///e:/Gen%20AI/Project/AI-Interview-Generator/Mock-interview.html)).
+Practice with the authenticated **Mock Interview Engine** ([Mock-interview.html](./Mock-interview.html)).
 
 ### Features:
-- **Interactive Question Progression**: Step through questions one by one with live timer countdowns.
-- **Voice Response Mode**: Speak candidate answers using browser Speech-to-Text (`webkitSpeechRecognition`).
-- **Real-Time Rubric Scoring**: AI evaluates answers on **Clarity (25%)**, **Technical Depth (35%)**, **Practical Execution (25%)**, and **Communication (15%)**.
-- **Final Performance Scorecard**: Provides a composite score (out of 100) with key strengths and improvement areas.
+- **Authenticated sessions**: Starting, answering, completing, and viewing a mock interview requires the signed-in candidate account; records are owner-scoped.
+- **AI-generated adaptive questions**: The selected role, experience, interview type, company, requested question count, and available candidate evidence are sent to the configured server-side AI provider.
+- **Voice and manual answers**: Browser speech recognition preserves final and interim transcript segments. When speech recognition is unavailable, use **Edit / Clarify Jargon** to enter or correct the answer manually.
+- **Evidence-based evaluation**: Each submitted answer is saved before evaluation so a provider failure can be retried without losing it. Scores and feedback are shown only when returned and validated by the AI evaluator; there are no synthetic fallback scores.
+- **Persistent history and scorecards**: Completed interviews use the existing mock-interview table and transcript. They appear in Interview History, the candidate dashboard, and the saved scorecard view.
 
 ---
 
@@ -233,18 +236,25 @@ The backend exposes a lightweight REST API built with FastAPI.
 
 #### 2. Get Interview History
 `GET /history`
-Returns a list of previously generated interview papers stored in the local SQLite database (`interview.db`).
+Requires an authenticated candidate and returns only that candidate's generated question papers.
 
 #### 3. Get Single Interview Paper
 `GET /history/{id}`
-Returns details and questions for a specific interview paper by ID.
+Returns details and questions for a specific paper owned by the authenticated candidate.
+
+#### 4. Mock Interview Session
+- `POST /api/interview/start` creates an authenticated, candidate-owned session and asks the configured AI provider for role- and context-aware questions.
+- `POST /api/interview/{id}/answer` saves the answer before evaluation; send `turn_index` when retrying so a repeated request is idempotent.
+- `POST /api/interview/{id}/complete` finalizes scores from evaluated answers only.
+- `GET /api/mock-interview/history` and `GET /api/mock-interview/{id}` return only the authenticated candidate's saved mock interviews.
+- `POST /api/candidate/mock-interview` is retired; clients must use the session endpoints rather than submitting scores.
 
 ---
 
 ## 11. Troubleshooting & FAQs
 
 ### Q: Why do I see offline questions instead of Gemini AI generation?
-**A**: Ensure your `.env` file contains a valid `GEMINI_API_KEY` and the FastAPI server is running (`http://127.0.0.1:8000`). If no API key is provided, the platform automatically utilizes its high-yield role banks to ensure uninterrupted operation.
+**A**: Ensure the server-side `.env` contains a valid `GEMINI_API_KEY` or `GROQ_API_KEY`, then restart FastAPI. Question-paper generation may use its role banks when configured to do so; live Mock Interview sessions require a configured AI provider and return an explicit error rather than inventing an evaluation or score.
 
 ### Q: Why does changing the role on the Dashboard regenerate questions?
 **A**: The front-page synthesizer is designed for instant exploration. Switching roles (e.g. from `UX Designer` to `Backend Developer`) automatically triggers real-time streaming for the newly selected role.

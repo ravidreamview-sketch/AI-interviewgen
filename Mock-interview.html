@@ -1787,6 +1787,11 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
         <span>AI Mock Interview</span>
         <span class="nav-badge new">VIDEO + VOICE</span>
       </a>
+      <a class="nav-link" href="/interview-coach">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 11.5a8.38 8.38 0 0 1-9 8.5 9.2 9.2 0 0 1-4-.9L3 21l1.9-4.2A8.5 8.5 0 1 1 21 11.5Z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>
+        <span>Interview Coach</span>
+        <span class="nav-badge">AI</span>
+      </a>
       <a class="nav-link" href="Resume-match.html">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
         <span>Resume &amp; JD Match</span>
@@ -1855,7 +1860,7 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
     <div class="stage active" id="stageSetup">
       <header style="margin:20px 0 26px">
         <h1 style="font-size:32px;font-weight:800;margin:0 0 6px">AI Voice Mock Interview Room</h1>
-        <p style="color:var(--ink-soft);margin:0;font-size:15.5px">Real-time voice simulation with live speech calibration, turn-taking fillers, and verified STAR scorecards.</p>
+        <p style="color:var(--ink-soft);margin:0;font-size:15.5px">Real-time voice simulation with speech transcription, adaptive interviewer turns, and evidence-based answer feedback.</p>
       </header>
 
       <div class="setup-grid">
@@ -2405,9 +2410,9 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
 
         <!-- REAL-TIME LIVE SPEECH METRICS -->
         <div class="live-metrics-bar">
-          <span class="metric-tag">⚡ Pace: <b id="wpmMetric">138 WPM</b></span>
+          <span class="metric-tag">⚡ Pace: <b id="wpmMetric">— WPM</b></span>
           <span class="metric-tag">🔍 Fillers: <b id="fillerMetric">0 Detected</b></span>
-          <span class="metric-tag">🎯 Tone: <b>Confident &amp; Direct</b></span>
+          <span class="metric-tag">🎯 Tone: <b>Not assessed</b></span>
           <span class="metric-tag" id="liveProvBadge"><span class="prov-tag verified">🟢 Verified Question</span></span>
         </div>
 
@@ -2461,7 +2466,7 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
         <header style="display:flex;justify-content:space-between;align-items:center;margin:20px 0;flex-wrap:wrap;gap:12px">
           <div>
             <h1 style="font-size:28px;font-weight:800;margin:0 0 4px">Interview Evaluation &amp; Scorecard</h1>
-            <p style="color:var(--ink-soft);margin:0" id="scorecardSubtitle">Verified AI Assessment for Python Backend Engineer (Mid Level)</p>
+            <p style="color:var(--ink-soft);margin:0" id="scorecardSubtitle">Interview evaluation</p>
           </div>
           <div style="display:flex;gap:10px;flex-wrap:wrap">
             <button class="action-pill-btn" onclick="retryInterview()">
@@ -2482,27 +2487,27 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
         <div class="score-hero">
           <div class="score-circle-card">
             <div style="font-family:var(--f-mono);font-size:12px;color:var(--label-color);font-weight:700;text-transform:uppercase">OVERALL SCORE</div>
-            <div class="score-big" id="overallScore">88</div>
-            <div style="font-weight:700;color:#10B981;font-size:15px">Strong Hire Recommendation</div>
-            <div style="font-size:12px;color:var(--ink-soft);margin-top:6px" id="scDuration">Duration: 12 mins · 10 Qs</div>
+            <div class="score-big" id="overallScore">—</div>
+            <div style="font-weight:700;color:var(--ink-soft);font-size:15px">Based on evaluated answers</div>
+            <div style="font-size:12px;color:var(--ink-soft);margin-top:6px" id="scDuration">Not completed</div>
           </div>
 
           <div class="metric-grid">
             <div class="metric-card">
-              <div class="metric-header"><span>Technical Accuracy</span><b id="techScore">90/100</b></div>
-              <div class="progress-bar"><div class="progress-fill" style="width: 90%"></div></div>
+              <div class="metric-header"><span>Technical Accuracy</span><b id="techScore">—</b></div>
+              <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div>
             </div>
             <div class="metric-card">
-              <div class="metric-header"><span>Communication &amp; Conciseness</span><b id="commScore">86/100</b></div>
-              <div class="progress-bar"><div class="progress-fill" style="width: 86%"></div></div>
+              <div class="metric-header"><span>Communication &amp; Conciseness</span><b id="commScore">—</b></div>
+              <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div>
             </div>
             <div class="metric-card">
-              <div class="metric-header"><span>Problem Solving &amp; Trade-offs</span><b id="probScore">88/100</b></div>
-              <div class="progress-bar"><div class="progress-fill" style="width: 88%"></div></div>
+              <div class="metric-header"><span>Problem Solving &amp; Trade-offs</span><b id="probScore">—</b></div>
+              <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div>
             </div>
             <div class="metric-card">
-              <div class="metric-header"><span>STAR Structure &amp; Ownership</span><b id="starAvgScore">88/100</b></div>
-              <div class="progress-bar"><div class="progress-fill" style="width: 88%"></div></div>
+              <div class="metric-header"><span>STAR Structure &amp; Ownership</span><b id="starAvgScore">Not scored</b></div>
+              <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div>
             </div>
           </div>
         </div>
@@ -2616,6 +2621,12 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
   let currentQIndex = 0;
   let interviewQuestions = [];
   let userAnswers = [];
+  let interviewQuestionCount = 5;
+  let finalTranscript = '';
+  let interimTranscript = '';
+  let isSubmittingAnswer = false;
+  let speechRunId = 0;
+  let silenceTimer = null;
   let roleInputDebounce = null;
 
   // Role Preset Definitions
@@ -3129,12 +3140,12 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
 
   function stopAllMediaStreams() {
     stopCameraStream();
+    speechRunId++;
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    stopMicrophone();
     if (micStream) {
       micStream.getTracks().forEach(t => t.stop());
       micStream = null;
-    }
-    if (recognition) {
-      try { recognition.stop(); } catch (e) {}
     }
   }
 
@@ -3642,7 +3653,6 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
     const type = $('#mockType').value;
     const company = $('#mockCompany').value;
     const count = Number($('#mockCount').value) || 10;
-    const customTopic = $('#mockCustomTopic')?.value.trim() || '';
 
     const btn = $('#btnGenRoleQuestions');
     const btnText = $('#genBtnText');
@@ -3877,7 +3887,6 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
     const selectedFocusSkills = Array.from(document.querySelectorAll('#mockFocusCardsGrid .focus-card.selected')).map(el => el.getAttribute('data-focus')).filter(Boolean);
 
     currentBackendSessionId = null;
-    let openingQuestion = null;
 
     try {
       const startRes = await fetch('/api/interview/start', {
@@ -3887,27 +3896,39 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
         body: JSON.stringify({
           role: role,
           skills: selectedFocusSkills.length ? selectedFocusSkills : ['Core Architecture', 'Clean Code'],
+          experience: exp,
+          interview_type: type,
+          company: company,
+          custom_question: customTopic || null,
+          question_count: count,
+          questions: interviewQuestions
+            .map(item => typeof item === 'string' ? item : item.question)
+            .filter(question => typeof question === 'string' && question.trim())
+            .slice(0, count),
           persona: currentPersona.id || 'alex',
           mode: currentInterviewMode === 'video' ? 'video_voice' : 'voice_only'
         })
       });
-      if (startRes.ok) {
-        const data = await startRes.json();
-        currentBackendSessionId = data.interview_id;
-        openingQuestion = data.first_question;
+      const data = await startRes.json();
+      if (!startRes.ok) {
+        throw new Error(data.detail || `Interview setup failed (HTTP ${startRes.status}).`);
       }
-    } catch (e) {
-      console.warn("Backend conversational session notice:", e);
-    }
-
-    if (openingQuestion) {
-      interviewQuestions = [{
-        question: openingQuestion,
-        category: 'Opening Assessment',
-        source_type: 'verified'
-      }];
-    } else if (!interviewQuestions.length) {
-      interviewQuestions = await fetchInterviewQuestions(role, exp, type, company, count, customTopic);
+      currentBackendSessionId = data.interview_id;
+      interviewQuestionCount = count;
+      const stagedQuestions = interviewQuestions;
+      interviewQuestions = (data.questions?.length ? data.questions : [data.first_question])
+        .map((question, index) => ({
+          question,
+          category: type,
+          source_type: stagedQuestions[index] ? 'provided' : 'aigen'
+        }));
+    } catch (error) {
+      stopAllMediaStreams();
+      currentBackendSessionId = null;
+      startBtn.disabled = false;
+      startBtn.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> <span id="startBtnLabel">${currentInterviewMode === 'video' ? 'Start Live Video Interview' : 'Start Live Voice Interview'}</span>`;
+      alert(error.message || 'Could not start the interview. Please try again.');
+      return;
     }
 
     currentQIndex = 0;
@@ -3939,12 +3960,16 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
   }
 
   function loadQuestion(idx) {
-    if (idx >= interviewQuestions.length && !currentBackendSessionId) {
+    if (idx >= interviewQuestions.length) {
+      return;
+    }
+    if (idx >= interviewQuestionCount) {
       finishInterview();
       return;
     }
-    const qObj = interviewQuestions[idx] || interviewQuestions[interviewQuestions.length - 1];
-    $('#liveQCount').textContent = `Question ${idx + 1} of ${Math.max(interviewQuestions.length, 5)}`;
+    stopMicrophone();
+    const qObj = interviewQuestions[idx];
+    $('#liveQCount').textContent = `Question ${idx + 1} of ${interviewQuestionCount}`;
     $('#liveBadge').textContent = `Question #${idx + 1} · ${qObj.category || 'Technical Assessment'}`;
     $('#liveQuestion').textContent = `"${qObj.question}"`;
 
@@ -3953,11 +3978,15 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
       provBadge.innerHTML = '<span class="prov-tag verified">🟢 Verified Question</span>';
     } else if (qObj.source_type === 'derived') {
       provBadge.innerHTML = '<span class="prov-tag derived">🔵 Contextual Follow-up</span>';
+    } else if (qObj.source_type === 'provided') {
+      provBadge.innerHTML = '<span class="prov-tag derived">Selected Setup Question</span>';
     } else {
-      provBadge.innerHTML = '<span class="prov-tag aigen">🟣 AI Conversational Turn</span>';
+      provBadge.innerHTML = '<span class="prov-tag aigen">🟣 AI-Generated Interview Question</span>';
     }
 
-    $('#liveTranscript').textContent = 'Listening for your response... Click the mic button to begin speaking.';
+    finalTranscript = '';
+    interimTranscript = '';
+    $('#liveTranscript').textContent = '';
     $('#fillerPill').classList.remove('active');
     $('#aiStatus').textContent = `${currentPersona.name} is speaking...`;
     const aiStatusVideo = $('#aiStatusVideo');
@@ -4004,18 +4033,27 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
   }
 
   function speakQuestionNaturally(text, personaName, onEnd) {
+    const runId = ++speechRunId;
     if (!('speechSynthesis' in window)) {
       setTimeout(onEnd, 1200);
       return;
     }
 
     window.speechSynthesis.cancel();
-    let hasSpoken = false;
-    const speak = () => {
-      if (hasSpoken) return;
-      hasSpoken = true;
-      const utterance = new SpeechSynthesisUtterance(text);
-      const voice = chooseNaturalVoice(personaName);
+    const chunks = (text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text])
+      .map(part => part.trim())
+      .filter(Boolean);
+    let voice = null;
+    let chunkIndex = 0;
+    const speakNext = () => {
+      if (runId !== speechRunId) return;
+      if (chunkIndex >= chunks.length) {
+        onEnd();
+        return;
+      }
+      const chunk = chunks[chunkIndex++];
+      const utterance = new SpeechSynthesisUtterance(chunk);
+      voice = voice || chooseNaturalVoice(personaName);
       if (voice) {
         utterance.voice = voice;
         utterance.lang = voice.lang;
@@ -4024,21 +4062,34 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
       }
       utterance.rate = personaName === 'Marcus' ? 0.96 : 0.98;
       utterance.pitch = personaName === 'Elena' ? 1.04 : personaName === 'Marcus' ? 0.92 : 0.98;
-      utterance.onend = onEnd;
+      utterance.onend = () => {
+        if (runId !== speechRunId) return;
+        setTimeout(speakNext, /[,;:]$/.test(chunk) ? 260 : 420);
+      };
+      utterance.onerror = () => {
+        if (runId === speechRunId) speakNext();
+      };
       window.speechSynthesis.speak(utterance);
     };
 
-    if (window.speechSynthesis.getVoices().length) {
-      speak();
-    } else {
-      window.speechSynthesis.addEventListener('voiceschanged', speak, { once: true });
-      setTimeout(speak, 300);
+    if (!window.speechSynthesis.getVoices().length) {
+      let started = false;
+      const startSpeaking = () => {
+        if (started || runId !== speechRunId) return;
+        started = true;
+        speakNext();
+      };
+      window.speechSynthesis.addEventListener('voiceschanged', startSpeaking, { once: true });
+      setTimeout(startSpeaking, 300);
+      return;
     }
+    speakNext();
   }
 
   function replayCurrentQuestion() {
     const qObj = interviewQuestions[currentQIndex];
     if (!qObj) return;
+    stopMicrophone();
     $('#aiStatus').textContent = `${currentPersona.name} is repeating question...`;
     const aiStatusVideo = $('#aiStatusVideo');
     if (aiStatusVideo) aiStatusVideo.textContent = `${currentPersona.name} is repeating question...`;
@@ -4048,12 +4099,14 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
       $('#aiStatus').textContent = 'Listening for candidate answer...';
       if (aiStatusVideo) aiStatusVideo.textContent = 'Listening for candidate answer...';
       if (avatarOrbTile) avatarOrbTile.className = 'avatar-pulsing-orb';
+      startMicrophone();
     });
   }
 
   // Microphone and Speech Recognition
   function startMicrophone() {
     const micBtn = $('#micBtn');
+    if (micActive) return;
     micActive = true;
     micBtn.classList.add('recording');
 
@@ -4069,18 +4122,63 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
         recognition = new SpeechRec();
         recognition.continuous = true;
         recognition.interimResults = true;
+        recognition.onstart = () => {
+          if (silenceTimer) clearTimeout(silenceTimer);
+          silenceTimer = setTimeout(() => {
+            if (micActive) {
+              $('#aiStatus').textContent = 'No speech detected recently. Continue speaking or submit your answer.';
+            }
+          }, 20000);
+        };
         recognition.onresult = (e) => {
-          let str = '';
-          for (let i = 0; i < e.results.length; i++) {
-            str += e.results[i][0].transcript + ' ';
+          interimTranscript = '';
+          for (let i = e.resultIndex; i < e.results.length; i++) {
+            const segment = e.results[i][0].transcript.trim();
+            if (e.results[i].isFinal) {
+              finalTranscript = `${finalTranscript} ${segment}`.trim();
+            } else {
+              interimTranscript = `${interimTranscript} ${segment}`.trim();
+            }
           }
-          $('#liveTranscript').textContent = str.trim() || 'Listening for your response...';
-          updateLiveMetrics(str);
+          const transcript = `${finalTranscript} ${interimTranscript}`.trim();
+          $('#liveTranscript').textContent = transcript;
+          updateLiveMetrics(transcript);
+          if (silenceTimer) clearTimeout(silenceTimer);
+          silenceTimer = setTimeout(() => {
+            if (micActive) {
+              $('#aiStatus').textContent = 'No speech detected recently. Continue speaking or submit your answer.';
+            }
+          }, 20000);
+        };
+        recognition.onerror = (event) => {
+          if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+            stopMicrophone();
+            $('#aiStatus').textContent = 'Microphone access is unavailable. Edit your transcript to type an answer.';
+          }
+        };
+        recognition.onend = () => {
+          if (micActive && !isSubmittingAnswer) {
+            setTimeout(() => {
+              if (micActive && !isSubmittingAnswer) {
+                try {
+                  recognition.start();
+                } catch (error) {
+                  if (error.name !== 'InvalidStateError') {
+                    $('#aiStatus').textContent = 'Speech recognition stopped unexpectedly. You can still edit and submit your answer.';
+                  }
+                }
+              }
+            }, 250);
+          }
         };
         recognition.start();
       } catch (err) {
-        console.warn("Speech recognition notice:", err);
+        micActive = false;
+        micBtn.classList.remove('recording');
+        $('#aiStatus').textContent = 'Speech recognition is unavailable. Edit your transcript to type an answer.';
       }
+    } else {
+      $('#aiStatus').textContent = 'Speech recognition is unavailable. Edit your transcript to type an answer.';
     }
   }
 
@@ -4096,7 +4194,22 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
     }
 
     if (recognition) {
-      try { recognition.stop(); } catch (e) {}
+      try {
+        recognition.stop();
+      } catch (error) {
+        if (error.name !== 'InvalidStateError') {
+          $('#aiStatus').textContent = 'Could not stop speech recognition cleanly. Please reload before starting another interview.';
+        }
+      }
+    }
+    const visibleTranscript = $('#liveTranscript')?.textContent.trim();
+    if (visibleTranscript) {
+      finalTranscript = visibleTranscript;
+      interimTranscript = '';
+    }
+    if (silenceTimer) {
+      clearTimeout(silenceTimer);
+      silenceTimer = null;
     }
   }
 
@@ -4117,15 +4230,21 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
 
   // Turn-Taking Latency & Next Question (Conversational AI Engine Integration)
   async function submitAnswerAndNext() {
+    if (isSubmittingAnswer) return;
+    if (!currentBackendSessionId) {
+      alert('There is no active saved interview session. Restart the interview.');
+      return;
+    }
+    const transcriptText = $('#liveTranscript').textContent.trim();
+    if (!transcriptText) {
+      alert('Please speak an answer or use “Edit / Clarify Jargon” to type one before submitting.');
+      return;
+    }
     stopMicrophone();
-    const transcriptText = $('#liveTranscript').textContent;
     const currentQ = interviewQuestions[currentQIndex]?.question || "Technical Scenario";
-
-    userAnswers.push({
-      qIndex: currentQIndex,
-      question: currentQ,
-      answer: transcriptText
-    });
+    const submitButton = $('#submitAnswerBtn');
+    isSubmittingAnswer = true;
+    submitButton.disabled = true;
 
     const fillerPill = $('#fillerPill');
     const fillerText = $('#fillerText');
@@ -4149,134 +4268,147 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
       aiLiveStateBadge.className = 'tile-badge muted';
     }
 
-    // Call conversational answer evaluation if session exists
-    let nextQText = null;
-    let isFollowUp = false;
-
-    if (currentBackendSessionId) {
-      try {
-        const ansRes = await fetch(`/api/interview/${currentBackendSessionId}/answer`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ answer_text: transcriptText })
-        });
-        if (ansRes.ok) {
-          const ansData = await ansRes.json();
-          nextQText = ansData.next_question;
-          isFollowUp = ansData.follow_up_required;
-          if (ansData.evaluation) {
-            $('#liveProvBadge').innerHTML = `<span class="prov-tag verified">⭐ Score: ${ansData.evaluation.score}/100</span>`;
-          }
-        }
-      } catch (e) {
-        console.warn("Turn evaluation notice:", e);
+    try {
+      const ansRes = await fetch(`/api/interview/${currentBackendSessionId}/answer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          answer_text: transcriptText,
+          turn_index: currentQIndex + 1,
+          is_final: currentQIndex + 1 >= interviewQuestionCount
+        })
+      });
+      const ansData = await ansRes.json();
+      if (!ansRes.ok) {
+        throw new Error(ansData.detail || `Answer evaluation failed (HTTP ${ansRes.status}).`);
       }
-    }
-
-    setTimeout(() => {
+      userAnswers.push({ qIndex: currentQIndex, question: currentQ, answer: transcriptText, evaluation: ansData.evaluation });
+      $('#liveTranscript').textContent = '';
+      finalTranscript = '';
+      interimTranscript = '';
+      if (ansData.evaluation) {
+        $('#liveProvBadge').textContent = `⭐ Evaluated: ${ansData.evaluation.score}/100`;
+      }
+      if (ansData.is_complete) {
+        isSubmittingAnswer = false;
+        submitButton.disabled = false;
+        await finishInterview();
+        return;
+      }
+      const nextQText = ansData.next_question;
+      if (!nextQText) {
+        throw new Error('The interviewer did not provide the next question. Your answer is saved; please submit again to retry.');
+      }
       if (nextQText) {
         interviewQuestions.push({
           question: nextQText,
-          category: isFollowUp ? 'Deep-Dive Follow-Up' : 'Core Competency',
-          source_type: isFollowUp ? 'derived' : 'verified'
+          category: ansData.follow_up_required ? 'Deep-Dive Follow-Up' : 'Core Competency',
+          source_type: ansData.follow_up_required ? 'derived' : 'aigen'
         });
       }
       currentQIndex++;
-      if (currentQIndex >= 5 && !nextQText) {
-        finishInterview();
-      } else {
-        loadQuestion(currentQIndex);
-      }
-    }, 1200);
+      isSubmittingAnswer = false;
+      submitButton.disabled = false;
+      loadQuestion(currentQIndex);
+    } catch (error) {
+      isSubmittingAnswer = false;
+      submitButton.disabled = false;
+      $('#fillerPill').classList.remove('active');
+      $('#aiStatus').textContent = 'Evaluation failed. Your saved answer remains available for retry.';
+      alert(error.message || 'Answer evaluation failed. Please try again.');
+      return;
+    }
   }
 
   // Finish Interview & Display Scorecard
   async function finishInterview() {
-    clearInterval(timerInterval);
-    stopAllMediaStreams();
-
-    $('#stageLive').classList.remove('active');
-    $('#stageScorecard').classList.add('active');
-
-    const role = $('#mockRole').value || 'Python Backend Engineer';
-    const exp = $('#mockExp').value || 'Mid Level';
-    $('#scorecardSubtitle').textContent = `Verified AI Assessment for ${role} (${exp})`;
-
-    const elapsedSeconds = sessionStartTime ? Math.floor((Date.now() - sessionStartTime) / 1000) : 300;
-
-    // Call completion endpoint if session active
-    let completeData = null;
-    if (currentBackendSessionId) {
-      try {
-        const compRes = await fetch(`/api/interview/${currentBackendSessionId}/complete`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include'
-        });
-        if (compRes.ok) {
-          completeData = await compRes.json();
-        }
-      } catch (e) {
-        console.warn("Session completion notice:", e);
-      }
+    if (!currentBackendSessionId || !userAnswers.length) {
+      alert('Complete and submit at least one answer before viewing an interview scorecard.');
+      return;
     }
-
-    const finalOverallScore = completeData ? Math.round(completeData.overall_score) : 88;
-    const finalTechScore = completeData ? Math.round(completeData.technical_score) : 90;
-    const finalCommScore = completeData ? Math.round(completeData.communication_score) : 86;
-    const finalProbScore = completeData ? Math.round(completeData.problem_solving_score) : 88;
-
-    $('#overallScore').textContent = finalOverallScore;
-    $('#techScore').textContent = `${finalTechScore}/100`;
-    $('#commScore').textContent = `${finalCommScore}/100`;
-    $('#probScore').textContent = `${finalProbScore}/100`;
-    $('#starAvgScore').textContent = `${finalCommScore}/100`;
-
-    const scorecardPayload = {
-      role: role,
-      company_target: $('#mockCompany')?.value || 'FAANG Tier',
-      interviewer_persona: `${currentPersona.name} (${currentPersona.role})`,
-      score: finalOverallScore,
-      technical_accuracy: finalTechScore,
-      communication_clarity: finalCommScore,
-      star_depth: finalCommScore,
-      confidence_score: finalProbScore,
-      duration_seconds: elapsedSeconds,
-      status: "completed",
-      interview_mode: currentInterviewMode,
-      transcript: userAnswers.map(a => `Q: ${a.question}\nA: ${a.answer}`).join("\n\n")
-    };
-
-    // 1. Post to FastAPI backend
+    if ($('#liveTranscript').textContent.trim() && !isSubmittingAnswer &&
+        !confirm('End the interview without submitting the current answer? That draft will not be evaluated.')) {
+      return;
+    }
+    stopMicrophone();
+    const finishButtons = document.querySelectorAll('#endEarlyBtn, .bottom-floating-bar .btn-danger');
+    finishButtons.forEach(button => button.disabled = true);
     try {
-      await fetch('/api/candidate/mock-interview', {
+      const compRes = await fetch(`/api/interview/${currentBackendSessionId}/complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(scorecardPayload)
+        credentials: 'include'
       });
-      console.log(`✓ [FastAPI] Recorded ${currentInterviewMode} mock interview in database`);
-    } catch (e) {
-      console.warn('Backend mock record notice:', e);
+      const completeData = await compRes.json();
+      if (!compRes.ok) {
+        throw new Error(completeData.detail || `Could not complete interview (HTTP ${compRes.status}).`);
+      }
+      clearInterval(timerInterval);
+      stopAllMediaStreams();
+      $('#stageLive').classList.remove('active');
+      $('#stageScorecard').classList.add('active');
+      const role = $('#mockRole').value || 'Interview';
+      const exp = $('#mockExp').value || 'Experience not specified';
+      $('#scorecardSubtitle').textContent = `${role} · ${exp} · ${completeData.total_turns} evaluated answers`;
+      $('#overallScore').textContent = Math.round(completeData.overall_score);
+      $('#techScore').textContent = `${Math.round(completeData.technical_score)}/100`;
+      $('#commScore').textContent = `${Math.round(completeData.communication_score)}/100`;
+      $('#probScore').textContent = `${Math.round(completeData.problem_solving_score)}/100`;
+      $('#starAvgScore').textContent = 'Not scored';
+      document.querySelectorAll('#stageScorecard .metric-card').forEach((card, index) => {
+        const values = [
+          completeData.technical_score,
+          completeData.communication_score,
+          completeData.problem_solving_score,
+          null,
+        ];
+        const fill = card.querySelector('.progress-fill');
+        if (fill) fill.style.width = `${values[index] ?? 0}%`;
+      });
+      $('#scDuration').textContent = `Completed in ${Math.max(1, Math.round((Date.now() - sessionStartTime) / 60000))} min · ${completeData.total_turns} evaluated answers`;
+      const oldSections = document.querySelectorAll('#stageScorecard .card-section, #stageScorecard .compare-grid');
+      oldSections.forEach(section => section.remove());
+      const details = document.createElement('section');
+      details.className = 'card-section';
+      details.innerHTML = '<h2 class="section-title">Evidence-based answer feedback</h2><div id="turnFeedback"></div>';
+      document.querySelector('#stageScorecard .scorecard-wrap').appendChild(details);
+      const feedback = $('#turnFeedback');
+      feedback.replaceChildren();
+      userAnswers.forEach((answer, index) => {
+        const item = document.createElement('article');
+        item.className = 'compare-pane';
+        const question = document.createElement('h3');
+        question.textContent = `Question ${index + 1}: ${answer.question}`;
+        const answerText = document.createElement('p');
+        answerText.textContent = `Your answer: ${answer.answer}`;
+        const evaluation = answer.evaluation || {};
+        const note = document.createElement('p');
+        note.textContent = `Score ${evaluation.score}/100 · ${evaluation.feedback || 'No written feedback returned.'}`;
+        const strengths = document.createElement('p');
+        strengths.textContent = `Strengths: ${(evaluation.strengths || []).join('; ') || 'None recorded.'}`;
+        const improvements = document.createElement('p');
+        improvements.textContent = `Next improvements: ${(evaluation.improvements || []).join('; ') || 'None recorded.'}`;
+        item.append(question, answerText, note, strengths, improvements);
+        feedback.appendChild(item);
+      });
+      const savedLink = document.createElement('a');
+      savedLink.className = 'action-pill-btn';
+      savedLink.href = `/scorecard.html?id=${encodeURIComponent(currentBackendSessionId)}`;
+      savedLink.textContent = 'Open saved scorecard';
+      document.querySelector('#stageScorecard header > div:last-child').prepend(savedLink);
+    } catch (error) {
+      alert(error.message || 'Could not complete the interview.');
+      finishButtons.forEach(button => button.disabled = false);
+      return;
     }
-
-    // 2. Also broadcast to Supabase if configured
-    pushMockScorecardToSupabase({
-      role: role,
-      experience: exp,
-      score: finalOverallScore,
-      techScore: finalTechScore,
-      commScore: finalCommScore,
-      probScore: finalProbScore,
-      starAvgScore: finalCommScore,
-      interview_mode: currentInterviewMode,
-      created_at: new Date().toISOString()
-    });
   }
 
   function retryInterview() {
     stopAllMediaStreams();
+    currentBackendSessionId = null;
+    interviewQuestions = [];
+    userAnswers = [];
     $('#stageScorecard').classList.remove('active');
     $('#stageSetup').classList.add('active');
   }
@@ -4284,32 +4416,6 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
   // Lifecycle listeners to prevent resource leaks
   window.addEventListener('beforeunload', () => stopAllMediaStreams());
   window.addEventListener('pagehide', () => stopAllMediaStreams());
-
-  // Supabase Real-Time Broadcast
-  const SUPABASE_CONFIG = {
-    url: window.ENV_SUPABASE_URL || localStorage.getItem('SUPABASE_URL') || 'https://xyzcompany.supabase.co',
-    anonKey: window.ENV_SUPABASE_ANON_KEY || localStorage.getItem('SUPABASE_ANON_KEY') || 'dummyKey'
-  };
-
-  async function pushMockScorecardToSupabase(scorecard) {
-    if (typeof supabase !== 'undefined' && SUPABASE_CONFIG.url && !SUPABASE_CONFIG.url.includes('xyzcompany')) {
-      try {
-        const sb = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
-        await sb.from('mock_interviews').insert([{
-          role: scorecard.role,
-          experience: scorecard.experience,
-          overall_score: scorecard.score,
-          technical_score: scorecard.techScore,
-          communication_score: scorecard.commScore,
-          problem_solving_score: scorecard.probScore,
-          star_score: scorecard.starAvgScore
-        }]);
-        console.log('⚡ [Supabase] Synced voice mock scorecard');
-      } catch (e) {
-        console.warn('Supabase notice:', e.message);
-      }
-    }
-  }
 
   // Waveform Canvas Animation
   function initWaveformCanvas() {
@@ -4342,6 +4448,7 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
 
   // Clarify Jargon Modal
   function openClarifyModal() {
+    stopMicrophone();
     $('#modalTextarea').value = $('#liveTranscript').textContent;
     $('#clarifyModal').classList.add('open');
   }
@@ -4349,7 +4456,9 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
     $('#clarifyModal').classList.remove('open');
   }
   function saveClarifyModal() {
-    $('#liveTranscript').textContent = $('#modalTextarea').value;
+    finalTranscript = $('#modalTextarea').value.trim();
+    interimTranscript = '';
+    $('#liveTranscript').textContent = finalTranscript;
     closeClarifyModal();
   }
   function insertTag(tag) {

@@ -244,7 +244,7 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
   </div>
 </header>
 
-<main class="scorecard-container">
+<main class="scorecard-container" style="visibility:hidden">
 
   <!-- VERIFIED BANNER -->
   <section class="verified-banner">
@@ -441,28 +441,71 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 </main>
 
 <script>
-function copyScorecardUrl() {
-  const url = window.location.href;
-  navigator.clipboard.writeText(url).then(() => {
-    alert("✅ Verified Scorecard Link copied to clipboard!\nShare it on LinkedIn, with recruiters, or mentors.");
-  }).catch(() => {
-    prompt("Copy this verified link:", url);
-  });
+const scorecardMain = document.querySelector('.scorecard-container');
+const htmlEscape = value => String(value ?? '').replace(/[&<>"']/g, char => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+}[char]));
+const scoreId = new URLSearchParams(location.search).get('id');
+const showScorecardMessage = message => {
+  scorecardMain.innerHTML = `<section class="card-section"><h1>${htmlEscape(message)}</h1></section>`;
+  scorecardMain.style.visibility = 'visible';
+};
+
+async function loadSavedScorecard() {
+  if (!scoreId || !/^mock_\d+$/.test(scoreId)) {
+    showScorecardMessage('Select a saved mock interview from Interview History to view its scorecard.');
+    return;
+  }
+  try {
+    const response = await fetch(`/api/mock-interview/${encodeURIComponent(scoreId)}`, {
+      credentials: 'include'
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.detail || `Could not load scorecard (HTTP ${response.status}).`);
+    }
+    const completed = data.status === 'completed';
+    const evaluated = data.questions || [];
+    const metrics = completed ? [
+      ['Overall score', data.score],
+      ['Technical accuracy', data.technical_score],
+      ['Communication', data.communication_score],
+      ['Problem solving', data.problem_solving_score],
+    ] : [];
+    const sections = evaluated.map((turn, index) => `
+      <article class="card-section">
+        <h2 class="section-title">Question ${index + 1}</h2>
+        <p><strong>${htmlEscape(turn.question)}</strong></p>
+        <p><b>Your answer</b><br>${htmlEscape(turn.answer)}</p>
+        <p><b>Score:</b> ${htmlEscape(turn.evaluation?.score ?? 'Not evaluated')}</p>
+        <p>${htmlEscape(turn.evaluation?.feedback || 'No written feedback recorded.')}</p>
+        <p><b>Strengths:</b> ${htmlEscape((turn.evaluation?.strengths || []).join('; ') || 'None recorded.')}</p>
+        <p><b>Improvements:</b> ${htmlEscape((turn.evaluation?.improvements || []).join('; ') || 'None recorded.')}</p>
+      </article>`).join('');
+    scorecardMain.innerHTML = `
+      <section class="verified-banner">
+        <div class="v-top"><div>
+          <h1>${htmlEscape(data.role || 'Mock interview')}</h1>
+          <p>${htmlEscape(data.experience || 'Experience not specified')} · ${htmlEscape(data.interview_type || 'Interview')} · ${htmlEscape(data.interview_mode || 'voice')}</p>
+          <p>Status: ${completed ? 'Completed' : 'In progress'} · ${htmlEscape(data.created_at || '')}</p>
+        </div></div>
+      </section>
+      ${completed ? `<section class="overview-grid">${metrics.map(([label, value]) => `
+        <div class="score-hero-card"><div class="score-decision">${htmlEscape(label)}</div>
+        <div class="score-number">${htmlEscape(value ?? '—')}</div></div>`).join('')}</section>` : ''}
+      <h2 class="section-title">Recorded answers and feedback</h2>
+      ${sections || '<p>No evaluated answers are available.</p>'}`;
+    scorecardMain.style.visibility = 'visible';
+  } catch (error) {
+    showScorecardMessage(error.message || 'Could not load this saved scorecard.');
+  }
 }
 
-function shareLinkedIn() {
-  const url = encodeURIComponent(window.location.href);
-  const title = encodeURIComponent("Passed AI Technical Mock Interview (Strong Hire · 89%) | RaviGenAI Studio");
-  const summary = encodeURIComponent("I just completed a comprehensive AI voice mock interview evaluating Backend Architecture and STAR Leadership Principles on RaviGenAI Studio.");
-  window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank', 'width=600,height=600');
-}
-
-// Theme Switcher
-document.getElementById('themeBtn').addEventListener('click', () => {
+document.getElementById('themeBtn')?.addEventListener('click', () => {
   const root = document.documentElement;
-  const currentTheme = root.getAttribute('data-theme');
-  root.setAttribute('data-theme', currentTheme === 'dark' ? 'light' : 'dark');
+  root.setAttribute('data-theme', root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
 });
+loadSavedScorecard();
 </script>
 </body>
 </html>
