@@ -1,0 +1,3188 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>RaviGen AI — AI Interview Coach</title>
+  <meta
+    name="description"
+    content="AI-powered interview preparation and coaching workspace."
+  />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+    /* ============================================================
+       DESIGN TOKENS — SAME VISUAL LANGUAGE AS RAVIGEN AI
+    ============================================================ */
+
+    :root {
+      --paper: #F4F7F6;
+      --paper-2: #FFFFFF;
+      --sheet: #FFFFFF;
+
+      --ink: #0F172A;
+      --ink-soft: #475569;
+      --ink-faint: #94A3B8;
+
+      --board: #0A1926;
+      --board-2: #0D2130;
+      --board-ink: #F8FAFC;
+
+      --primary: #10B981;
+      --primary-dark: #059669;
+      --primary-forest: #166534;
+      --primary-blue: #3B82F6;
+
+      --primary-grad:
+        linear-gradient(
+          135deg,
+          #166534 0%,
+          #15803D 50%,
+          #16A34A 100%
+        );
+
+      --emerald-grad:
+        linear-gradient(
+          135deg,
+          #059669 0%,
+          #10B981 50%,
+          #34D399 100%
+        );
+
+      --pen: #10B981;
+      --pen-soft: #34D399;
+      --pen-wash: #ECFDF5;
+
+      --label-color: #10B981;
+
+      --rule: #E2E8F0;
+      --rule-soft: #EDF2F0;
+
+      --gold: #F59E0B;
+
+      --shadow-sm:
+        0 1px 2px rgba(0, 0, 0, 0.04);
+
+      --shadow:
+        0 4px 20px -2px rgba(10, 25, 38, 0.05),
+        0 1px 3px rgba(0, 0, 0, 0.02);
+
+      --shadow-lg:
+        0 12px 28px -6px rgba(16, 185, 129, 0.18),
+        0 8px 10px -6px rgba(0, 0, 0, 0.04);
+
+      --radius-sm: 8px;
+      --radius: 16px;
+      --radius-lg: 20px;
+
+      --f-ui:
+        "Inter",
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      --f-mono:
+        "JetBrains Mono",
+        ui-monospace,
+        SFMono-Regular,
+        Menlo,
+        Monaco,
+        Consolas,
+        monospace;
+    }
+
+    /* ============================================================
+       DARK MODE
+    ============================================================ */
+
+    [data-theme="dark"] {
+      --paper: #08141E;
+      --paper-2: #0D2130;
+      --sheet: #112B3E;
+
+      --ink: #F8FAFC;
+      --ink-soft: #94A3B8;
+      --ink-faint: #64748B;
+
+      --board: #050D14;
+      --board-2: #0A1926;
+      --board-ink: #F8FAFC;
+
+      --primary: #34D399;
+      --primary-dark: #10B981;
+      --primary-forest: #15803D;
+      --primary-blue: #60A5FA;
+
+      --pen: #34D399;
+      --pen-soft: #6EE7B7;
+      --pen-wash: rgba(16, 185, 129, 0.15);
+
+      --label-color: #34D399;
+
+      --rule: #1A364E;
+      --rule-soft: #132738;
+
+      --shadow-sm:
+        0 1px 2px rgba(0, 0, 0, 0.4);
+
+      --shadow:
+        0 10px 30px -10px rgba(0, 0, 0, 0.5);
+
+      --shadow-lg:
+        0 20px 35px -10px rgba(0, 0, 0, 0.7);
+    }
+
+    /* ============================================================
+       RESET
+    ============================================================ */
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      min-height: 100vh;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--f-ui);
+      font-size: 15px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      overflow-x: hidden;
+    }
+
+    button,
+    textarea,
+    input {
+      font-family: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    /* ============================================================
+       APP
+    ============================================================ */
+
+    .app {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ============================================================
+       SIDEBAR
+    ============================================================ */
+
+    .sidebar {
+      width: 280px;
+      flex: 0 0 280px;
+
+      min-height: 100vh;
+
+      background: var(--board);
+      color: var(--board-ink);
+
+      display: flex;
+      flex-direction: column;
+
+      padding: 24px 16px;
+      gap: 16px;
+
+      position: sticky;
+      top: 0;
+
+      overflow-y: auto;
+
+      border-right:
+        1px solid rgba(255, 255, 255, 0.08);
+
+      z-index: 100;
+
+      transition:
+        transform 0.3s ease;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      padding:
+        4px 8px 12px;
+    }
+
+    .brand-logo {
+      width: 44px;
+      height: 44px;
+
+      border-radius: 50%;
+
+      background:
+        linear-gradient(
+          135deg,
+          #38BDF8,
+          #818CF8,
+          #C084FC
+        );
+
+      display: grid;
+      place-items: center;
+
+      color: #FFFFFF;
+
+      font-weight: 800;
+      font-size: 17px;
+
+      flex-shrink: 0;
+
+      box-shadow:
+        0 0 18px rgba(56, 189, 248, 0.35);
+    }
+
+    .brand-title {
+      color: #FFFFFF;
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-name {
+      color: #38BDF8;
+    }
+
+    .brand-ai {
+      color: #C084FC;
+    }
+
+    .brand-sub {
+      margin-top: 4px;
+
+      color: #94A3B8;
+
+      font-family: var(--f-mono);
+
+      font-size: 10px;
+      font-weight: 700;
+
+      letter-spacing: 0.14em;
+
+      text-transform: uppercase;
+    }
+
+    .side-label {
+      padding: 8px 10px 2px;
+
+      color: #64748B;
+
+      font-family: var(--f-mono);
+
+      font-size: 10px;
+      font-weight: 700;
+
+      letter-spacing: 0.15em;
+
+      text-transform: uppercase;
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .nav-link {
+      min-height: 44px;
+
+      display: flex;
+      align-items: center;
+
+      gap: 12px;
+
+      padding: 10px 14px;
+
+      border-radius: 12px;
+
+      color: #94A3B8;
+
+      font-size: 14px;
+      font-weight: 500;
+
+      transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .nav-link svg {
+      width: 18px;
+      height: 18px;
+
+      flex-shrink: 0;
+    }
+
+    .nav-link:hover {
+      color: #FFFFFF;
+      background: rgba(255, 255, 255, 0.07);
+      transform: translateX(2px);
+    }
+
+    .nav-link.active {
+      color: #FFFFFF;
+
+      background:
+        linear-gradient(
+          135deg,
+          #059669,
+          #10B981 60%,
+          #34D399
+        );
+
+      font-weight: 700;
+
+      box-shadow:
+        0 4px 18px rgba(16, 185, 129, 0.35);
+    }
+
+    .nav-badge {
+      margin-left: auto;
+
+      padding: 3px 7px;
+
+      border-radius: 6px;
+
+      color: #FFFFFF;
+
+      background: rgba(255, 255, 255, 0.15);
+
+      font-family: var(--f-mono);
+
+      font-size: 9px;
+      font-weight: 800;
+
+      letter-spacing: 0.06em;
+    }
+
+    .nav-badge.new {
+      background: #10B981;
+    }
+
+    .nav-badge.pro {
+      background:
+        linear-gradient(
+          135deg,
+          #059669,
+          #10B981
+        );
+    }
+
+    /* ============================================================
+       SIDEBAR FOOTER
+    ============================================================ */
+
+    .side-foot {
+      margin-top: auto;
+
+      display: flex;
+      flex-direction: column;
+
+      gap: 12px;
+    }
+
+    .upgrade-card {
+      padding: 15px;
+
+      border-radius: 14px;
+
+      border:
+        1px solid rgba(52, 211, 153, 0.3);
+
+      background:
+        linear-gradient(
+          145deg,
+          rgba(16, 185, 129, 0.12),
+          #0A1926 65%,
+          #0D2A3D
+        );
+    }
+
+    .upgrade-top {
+      display: flex;
+      align-items: center;
+
+      gap: 8px;
+
+      color: #FFFFFF;
+
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .upgrade-top span:last-child {
+      margin-left: auto;
+      color: #34D399;
+    }
+
+    .upgrade-desc {
+      margin-top: 6px;
+
+      color: #94A3B8;
+
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+
+      gap: 10px;
+
+      padding: 9px;
+
+      border-radius: 12px;
+
+      background:
+        rgba(255, 255, 255, 0.04);
+
+      border:
+        1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .user-avatar {
+      width: 38px;
+      height: 38px;
+
+      display: grid;
+      place-items: center;
+
+      border-radius: 10px;
+
+      background:
+        linear-gradient(
+          135deg,
+          #10B981,
+          #3B82F6
+        );
+
+      color: #FFFFFF;
+
+      font-size: 14px;
+      font-weight: 800;
+
+      flex-shrink: 0;
+    }
+
+    .user-info {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .user-name {
+      color: #FFFFFF;
+
+      font-size: 13px;
+      font-weight: 700;
+
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-role {
+      margin-top: 2px;
+
+      color: #64748B;
+
+      font-family: var(--f-mono);
+
+      font-size: 9px;
+
+      letter-spacing: 0.06em;
+
+      text-transform: uppercase;
+    }
+
+    .logout-btn {
+      width: 32px;
+      height: 32px;
+
+      display: grid;
+      place-items: center;
+
+      border-radius: 8px;
+
+      color: #94A3B8;
+
+      background:
+        rgba(255, 255, 255, 0.06);
+
+      border:
+        1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .logout-btn:hover {
+      color: #F87171;
+
+      background:
+        rgba(239, 68, 68, 0.15);
+    }
+
+    /* ============================================================
+       MOBILE MENU
+    ============================================================ */
+
+    .scrim {
+      display: none;
+
+      position: fixed;
+      inset: 0;
+
+      background:
+        rgba(0, 0, 0, 0.6);
+
+      backdrop-filter: blur(3px);
+
+      z-index: 90;
+    }
+
+    /* ============================================================
+       MAIN CANVAS
+    ============================================================ */
+
+    .main-canvas {
+      flex: 1;
+      min-width: 0;
+
+      max-width: 1440px;
+
+      margin: 0 auto;
+
+      padding:
+        0 40px 60px;
+    }
+
+    /* ============================================================
+       TOPBAR
+    ============================================================ */
+
+    .topbar {
+      min-height: 76px;
+
+      display: flex;
+      align-items: center;
+
+      gap: 16px;
+
+      position: sticky;
+      top: 0;
+
+      z-index: 40;
+
+      background: var(--paper);
+
+      border-bottom:
+        1px solid var(--rule);
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+
+      gap: 7px;
+
+      color: var(--ink-faint);
+
+      font-family: var(--f-mono);
+
+      font-size: 10px;
+      font-weight: 700;
+
+      letter-spacing: 0.13em;
+
+      text-transform: uppercase;
+    }
+
+    .breadcrumb-active {
+      color: var(--primary);
+    }
+
+    .topbar-actions {
+      margin-left: auto;
+
+      display: flex;
+      align-items: center;
+
+      gap: 10px;
+    }
+
+    .icon-btn,
+    .mob-menu-btn {
+      width: 44px;
+      height: 44px;
+
+      display: grid;
+      place-items: center;
+
+      border-radius: 10px;
+
+      color: var(--ink-soft);
+
+      background: var(--paper-2);
+
+      border:
+        1px solid var(--rule);
+
+      box-shadow: var(--shadow-sm);
+
+      transition: 0.2s ease;
+    }
+
+    .icon-btn:hover,
+    .mob-menu-btn:hover {
+      color: var(--ink);
+      border-color: var(--primary);
+    }
+
+    .mob-menu-btn {
+      display: none;
+    }
+
+    /* ============================================================
+       HERO
+    ============================================================ */
+
+    .dashboard-header {
+      padding-top: 34px;
+      margin-bottom: 28px;
+    }
+
+    .section-label {
+      display: flex;
+      align-items: center;
+
+      gap: 8px;
+
+      margin-bottom: 9px;
+
+      color: var(--label-color);
+
+      font-family: var(--f-mono);
+
+      font-size: 10.5px;
+      font-weight: 700;
+
+      letter-spacing: 0.13em;
+
+      text-transform: uppercase;
+    }
+
+    .dashboard-title {
+      color: var(--ink);
+
+      font-size:
+        clamp(32px, 4vw, 48px);
+
+      font-weight: 800;
+
+      letter-spacing: -0.035em;
+
+      line-height: 1.1;
+
+      margin-bottom: 9px;
+    }
+
+    .dashboard-subtitle {
+      max-width: 720px;
+
+      color: var(--ink-soft);
+
+      font-size: 16px;
+
+      line-height: 1.55;
+    }
+
+    /* ============================================================
+       STANDARD CARD
+    ============================================================ */
+
+    .dash-card {
+      background: var(--paper-2);
+
+      border:
+        1px solid var(--rule);
+
+      border-radius: var(--radius);
+
+      padding: 24px;
+
+      box-shadow: var(--shadow);
+    }
+
+    /* ============================================================
+       COACH OVERVIEW
+    ============================================================ */
+
+    .coach-overview-grid {
+      display: grid;
+
+      grid-template-columns:
+        minmax(280px, 0.85fr)
+        minmax(360px, 1.5fr);
+
+      gap: 20px;
+
+      margin-bottom: 32px;
+    }
+
+    .coach-readiness-card {
+      position: relative;
+      overflow: hidden;
+
+      border-top:
+        3px solid var(--primary);
+    }
+
+    .coach-readiness-card::after {
+      content: "";
+
+      position: absolute;
+
+      width: 180px;
+      height: 180px;
+
+      right: -80px;
+      bottom: -100px;
+
+      border-radius: 50%;
+
+      background:
+        radial-gradient(
+          circle,
+          rgba(16, 185, 129, 0.15),
+          transparent 70%
+        );
+    }
+
+    .coach-readiness-row {
+      display: flex;
+      align-items: center;
+
+      justify-content: space-between;
+
+      gap: 20px;
+
+      margin-top: 4px;
+      margin-bottom: 20px;
+    }
+
+    .coach-readiness-value {
+      color: var(--ink);
+
+      font-size: 48px;
+      font-weight: 800;
+
+      letter-spacing: -0.04em;
+
+      line-height: 1;
+    }
+
+    .coach-readiness-value.is-unavailable {
+      max-width: 220px;
+      font-size: 22px;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
+
+    .coach-readiness-description {
+      margin-top: 8px;
+
+      color: var(--ink-soft);
+
+      font-size: 13px;
+    }
+
+    .coach-readiness-ring {
+      width: 86px;
+      height: 86px;
+
+      display: grid;
+      place-items: center;
+
+      border-radius: 50%;
+
+      background:
+        conic-gradient(
+        var(--primary) 0 var(--readiness-progress, 0%),
+        var(--rule) var(--readiness-progress, 0%) 100%
+        );
+
+      position: relative;
+
+      flex-shrink: 0;
+    }
+
+    .coach-readiness-ring::before {
+      content: "";
+
+      position: absolute;
+
+      inset: 7px;
+
+      border-radius: 50%;
+
+      background: var(--paper-2);
+    }
+
+    .coach-readiness-ring span {
+      position: relative;
+
+      z-index: 1;
+
+      color: var(--ink);
+
+      font-family: var(--f-mono);
+
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .progress-item-bar-bg {
+      width: 100%;
+      height: 9px;
+
+      overflow: hidden;
+
+      border-radius: 99px;
+
+      background: var(--rule-soft);
+
+      border:
+        1px solid var(--rule);
+    }
+
+    .progress-item-bar-fill {
+      height: 100%;
+
+      border-radius: inherit;
+
+      background:
+        linear-gradient(
+          90deg,
+          #15803D,
+          #16A34A,
+          #4ADE80
+        );
+
+      transition: width 0.6s ease;
+    }
+
+    .coach-note {
+      margin-top: 12px;
+
+      color: var(--ink-faint);
+
+      font-size: 11px;
+    }
+
+    .coach-readiness-insights {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--rule-soft);
+      color: var(--ink-soft);
+      font-size: 12px;
+    }
+
+    .coach-readiness-insights strong {
+      color: var(--ink);
+    }
+
+    .coach-conversation-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .coach-conversation-select {
+      min-height: 42px;
+      max-width: 280px;
+      padding: 0 12px;
+      color: var(--ink);
+      background: var(--paper-2);
+      border: 1px solid var(--rule);
+      border-radius: var(--radius-sm);
+      font: inherit;
+    }
+
+    .coach-new-conversation {
+      min-height: 42px;
+      padding: 0 14px;
+      color: #fff;
+      background: var(--primary-dark);
+      border-radius: var(--radius-sm);
+      font: 600 13px var(--f-ui);
+      white-space: nowrap;
+    }
+
+    .coach-new-conversation:disabled {
+      cursor: wait;
+      opacity: .65;
+    }
+
+    @media (max-width: 580px) {
+      .coach-conversation-controls {
+        width: 100%;
+      }
+
+      .coach-conversation-select {
+        flex: 1 1 100%;
+        max-width: none;
+      }
+
+      .coach-new-conversation {
+        width: 100%;
+      }
+    }
+
+    /* ============================================================
+       WELCOME CARD
+    ============================================================ */
+
+    .coach-welcome-card {
+      display: flex;
+      align-items: flex-start;
+
+      gap: 18px;
+
+      background:
+        linear-gradient(
+          145deg,
+          var(--paper-2),
+          var(--paper)
+        );
+    }
+
+    .coach-avatar {
+      width: 52px;
+      height: 52px;
+
+      display: grid;
+      place-items: center;
+
+      border-radius: 14px;
+
+      color: #FFFFFF;
+
+      background:
+        linear-gradient(
+          135deg,
+          #059669,
+          #10B981,
+          #34D399
+        );
+
+      box-shadow:
+        0 8px 22px rgba(16, 185, 129, 0.25);
+
+      flex-shrink: 0;
+    }
+
+    .coach-avatar svg {
+      width: 25px;
+      height: 25px;
+
+      stroke-width: 1.8;
+    }
+
+    .coach-welcome-card .section-label {
+      margin-bottom: 6px;
+    }
+
+    .section-title {
+      color: var(--ink);
+
+      font-size: 19px;
+      font-weight: 700;
+
+      letter-spacing: -0.015em;
+    }
+
+    .coach-welcome-copy {
+      margin-top: 9px;
+
+      max-width: 700px;
+
+      color: var(--ink-soft);
+
+      font-size: 14px;
+
+      line-height: 1.6;
+    }
+
+    /* ============================================================
+       SECTION
+    ============================================================ */
+
+    .coach-section {
+      margin-bottom: 34px;
+    }
+
+    .section-heading-row {
+      display: flex;
+      align-items: center;
+
+      justify-content: space-between;
+
+      margin-bottom: 15px;
+    }
+
+    /* ============================================================
+       QUICK ACTIONS
+    ============================================================ */
+
+    .coach-actions-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(5, minmax(0, 1fr));
+
+      gap: 12px;
+    }
+
+    .coach-action {
+      min-height: 150px;
+
+      display: flex;
+      flex-direction: column;
+
+      align-items: flex-start;
+
+      text-align: left;
+
+      padding: 18px;
+
+      border-radius: 14px;
+
+      background: var(--paper-2);
+
+      border:
+        1px solid var(--rule);
+
+      box-shadow: var(--shadow);
+
+      color: var(--ink);
+
+      transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    .coach-action:hover {
+      transform: translateY(-3px);
+
+      border-color:
+        rgba(16, 185, 129, 0.45);
+
+      box-shadow: var(--shadow-lg);
+    }
+
+    .coach-action-icon {
+      width: 40px;
+      height: 40px;
+
+      display: grid;
+      place-items: center;
+
+      margin-bottom: 16px;
+
+      border-radius: 10px;
+
+      color: var(--primary);
+
+      background: var(--pen-wash);
+    }
+
+    .coach-action-icon svg {
+      width: 19px;
+      height: 19px;
+    }
+
+    .coach-action strong {
+      display: block;
+
+      color: var(--ink);
+
+      font-size: 13.5px;
+      font-weight: 700;
+    }
+
+    .coach-action small {
+      display: block;
+
+      margin-top: 5px;
+
+      color: var(--ink-soft);
+
+      font-size: 11.5px;
+
+      line-height: 1.45;
+    }
+
+    .coach-action b {
+      margin-top: auto;
+
+      color: var(--primary);
+
+      font-size: 18px;
+    }
+
+    /* ============================================================
+       CHAT
+    ============================================================ */
+
+    .coach-chat-card {
+      display: flex;
+      flex-direction: column;
+
+      min-height: 570px;
+
+      overflow: hidden;
+
+      border:
+        1px solid var(--rule);
+
+      border-radius: var(--radius);
+
+      background: var(--paper-2);
+
+      box-shadow: var(--shadow);
+    }
+
+    .coach-empty-state {
+      flex: 1;
+
+      min-height: 410px;
+
+      display: flex;
+      flex-direction: column;
+
+      align-items: center;
+      justify-content: center;
+
+      padding: 40px;
+
+      text-align: center;
+    }
+
+    .coach-empty-icon {
+      width: 64px;
+      height: 64px;
+
+      display: grid;
+      place-items: center;
+
+      margin-bottom: 18px;
+
+      border-radius: 18px;
+
+      color: var(--primary);
+
+      background: var(--pen-wash);
+
+      border:
+        1px solid rgba(16, 185, 129, 0.15);
+    }
+
+    .coach-empty-icon svg {
+      width: 29px;
+      height: 29px;
+    }
+
+    .coach-empty-state h3 {
+      color: var(--ink);
+
+      font-size: 17px;
+      font-weight: 700;
+
+      margin-bottom: 7px;
+    }
+
+    .coach-empty-state p {
+      max-width: 460px;
+
+      color: var(--ink-soft);
+
+      font-size: 13px;
+
+      line-height: 1.55;
+    }
+
+    .coach-message-list {
+      flex: 1;
+
+      display: flex;
+      flex-direction: column;
+
+      gap: 14px;
+
+      max-height: 470px;
+
+      overflow-y: auto;
+
+      padding: 24px;
+    }
+
+    .coach-message {
+      display: flex;
+
+      width: 100%;
+    }
+
+    .coach-message.user {
+      justify-content: flex-end;
+    }
+
+    .coach-message.assistant {
+      justify-content: flex-start;
+    }
+
+    .coach-message-bubble {
+      max-width: min(78%, 720px);
+
+      padding: 12px 15px;
+
+      border-radius: 14px;
+
+      font-size: 13.5px;
+
+      line-height: 1.6;
+
+      white-space: pre-wrap;
+    }
+
+    .coach-message.user .coach-message-bubble {
+      color: #FFFFFF;
+
+      background:
+        linear-gradient(
+          135deg,
+          #059669,
+          #10B981
+        );
+
+      border-bottom-right-radius: 5px;
+    }
+
+    .coach-message.assistant .coach-message-bubble {
+      color: var(--ink);
+
+      background: var(--paper);
+
+      border:
+        1px solid var(--rule);
+
+      border-bottom-left-radius: 5px;
+    }
+
+    /* ============================================================
+       INPUT
+    ============================================================ */
+
+    .coach-input-area {
+      padding: 16px;
+
+      border-top:
+        1px solid var(--rule);
+
+      background: var(--paper);
+    }
+
+    .coach-input {
+      width: 100%;
+
+      min-height: 62px;
+      max-height: 180px;
+
+      resize: vertical;
+
+      padding: 14px 16px;
+
+      color: var(--ink);
+
+      background: var(--paper-2);
+
+      border:
+        1px solid var(--rule);
+
+      border-radius: 12px;
+
+      outline: none;
+
+      font-size: 14px;
+
+      line-height: 1.5;
+
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    .coach-input::placeholder {
+      color: var(--ink-faint);
+    }
+
+    .coach-input:focus {
+      border-color: var(--primary);
+
+      box-shadow:
+        0 0 0 3px
+        rgba(16, 185, 129, 0.1);
+    }
+
+    .coach-input:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    .coach-input-footer {
+      display: flex;
+
+      align-items: center;
+
+      justify-content: space-between;
+
+      gap: 14px;
+
+      margin-top: 10px;
+    }
+
+    .coach-input-hint {
+      color: var(--ink-faint);
+
+      font-family: var(--f-mono);
+
+      font-size: 9.5px;
+    }
+
+    .primary-btn {
+      min-height: 44px;
+
+      display: inline-flex;
+
+      align-items: center;
+      justify-content: center;
+
+      gap: 9px;
+
+      padding: 11px 20px;
+
+      border-radius: 11px;
+
+      color: #FFFFFF;
+
+      background:
+        linear-gradient(
+          135deg,
+          #166534,
+          #15803D 50%,
+          #16A34A
+        );
+
+      border:
+        1px solid rgba(52, 211, 153, 0.3);
+
+      box-shadow:
+        0 4px 16px
+        rgba(22, 163, 74, 0.25);
+
+      font-size: 13.5px;
+      font-weight: 700;
+
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        opacity 0.2s ease;
+    }
+
+    .primary-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+
+      box-shadow:
+        0 7px 20px
+        rgba(22, 163, 74, 0.35);
+    }
+
+    .primary-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .coach-send-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+
+    @media (max-width: 1180px) {
+      .coach-actions-grid {
+        grid-template-columns:
+          repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 960px) {
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+
+        transform: translateX(-105%);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .scrim.show {
+        display: block;
+      }
+
+      .mob-menu-btn {
+        display: grid;
+      }
+
+      .main-canvas {
+        padding-left: 24px;
+        padding-right: 24px;
+      }
+
+      .coach-overview-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .main-canvas {
+        padding:
+          0 16px 40px;
+      }
+
+      .topbar {
+        min-height: 68px;
+      }
+
+      .dashboard-header {
+        padding-top: 26px;
+      }
+
+      .dashboard-title {
+        font-size: 34px;
+      }
+
+      .coach-actions-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .coach-action {
+        min-height: 112px;
+      }
+
+      .coach-action-icon {
+        margin-bottom: 10px;
+      }
+
+      .coach-readiness-row {
+        align-items: flex-start;
+      }
+
+      .coach-chat-card {
+        min-height: 500px;
+      }
+
+      .coach-empty-state {
+        min-height: 330px;
+        padding: 28px 20px;
+      }
+
+      .coach-message-bubble {
+        max-width: 88%;
+      }
+
+      .coach-input-footer {
+        align-items: flex-end;
+      }
+
+      .coach-input-hint {
+        max-width: 55%;
+        line-height: 1.4;
+      }
+
+      .breadcrumb {
+        font-size: 9px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .topbar-actions {
+        gap: 6px;
+      }
+
+      .icon-btn,
+      .mob-menu-btn {
+        width: 40px;
+        height: 40px;
+      }
+
+      .dashboard-title {
+        font-size: 30px;
+      }
+
+      .coach-welcome-card {
+        flex-direction: column;
+      }
+
+      .coach-readiness-value {
+        font-size: 42px;
+      }
+
+      .coach-readiness-ring {
+        width: 72px;
+        height: 72px;
+      }
+
+      .coach-input-footer {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .coach-input-hint {
+        max-width: none;
+      }
+
+      .coach-send-btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ============================================================
+       APP SHELL
+  ============================================================ -->
+
+  <div class="app">
+
+    <!-- ==========================================================
+         SIDEBAR
+    =========================================================== -->
+
+    <aside class="sidebar" id="sidebar">
+
+      <div class="brand">
+
+        <div class="brand-logo">
+          AI
+        </div>
+
+        <div>
+          <div class="brand-title">
+            <span class="brand-name">RaviGen</span>
+            <span class="brand-ai">AI</span>
+          </div>
+
+          <div class="brand-sub">
+            Interview Studio
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Workspace -->
+
+      <div class="side-label">
+        Workspace
+      </div>
+
+      <nav class="nav">
+
+        <a
+          href="Dashboard.html"
+          class="nav-link"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+          >
+            <rect x="3" y="3" width="7" height="7" rx="1"/>
+            <rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/>
+            <rect x="14" y="14" width="7" height="7" rx="1"/>
+          </svg>
+
+          <span>Dashboard</span>
+        </a>
+
+        <a
+          href="Interview-studio.html"
+          class="nav-link"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+          >
+            <path d="M4 5h16"/>
+            <path d="M4 12h16"/>
+            <path d="M4 19h10"/>
+            <circle cx="18" cy="19" r="2"/>
+          </svg>
+
+          <span>Generate Questions</span>
+        </a>
+
+        <a
+          href="Mock-interview.html"
+          class="nav-link"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+          >
+            <rect x="3" y="5" width="18" height="14" rx="2"/>
+            <path d="m10 9 5 3-5 3V9Z"/>
+          </svg>
+
+          <span>AI Mock Interview</span>
+
+          <span class="nav-badge">
+            VIDEO + VOICE
+          </span>
+        </a>
+
+        <a
+          href="Resume-match.html"
+          class="nav-link"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+          >
+            <path d="M6 3h9l3 3v15H6z"/>
+            <path d="M14 3v4h4"/>
+            <path d="m9 14 2 2 4-4"/>
+          </svg>
+
+          <span>Resume & JD Match</span>
+
+          <span class="nav-badge pro">
+            PRO
+          </span>
+        </a>
+
+        <!-- AI INTERVIEW COACH -->
+
+        <a
+          href="/interview-coach"
+          class="nav-link active"
+          aria-current="page"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+          >
+            <path d="M21 11.5a8.38 8.38 0 0 1-9 8.5 9.2 9.2 0 0 1-4-.9L3 21l1.9-4.2A8.5 8.5 0 1 1 21 11.5Z"/>
+            <path d="M8 12h.01"/>
+            <path d="M12 12h.01"/>
+            <path d="M16 12h.01"/>
+          </svg>
+
+          <span>Interview Coach</span>
+
+          <span class="nav-badge">
+            AI
+          </span>
+        </a>
+
+      </nav>
+
+      <!-- Library -->
+
+      <div class="side-label">
+        Library
+      </div>
+
+      <nav class="nav">
+
+        <a
+          href="Interview history.html"
+          class="nav-link"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+          >
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M12 7v5l3 2"/>
+          </svg>
+
+          <span>Interview History</span>
+        </a>
+
+        <a
+          href="scorecard.html"
+          class="nav-link"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+          >
+            <path d="M4 4h16v16H4z"/>
+            <path d="M8 9h8"/>
+            <path d="M8 13h5"/>
+            <path d="M8 17h3"/>
+          </svg>
+
+          <span>Public Scorecards</span>
+        </a>
+
+        <a
+          href="Company-playbooks.html"
+          class="nav-link"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+          >
+            <path d="M4 5a2 2 0 0 1 2-2h13v17H6a2 2 0 0 0-2 2V5Z"/>
+            <path d="M6 20h13"/>
+          </svg>
+
+          <span>Company Playbooks</span>
+        </a>
+
+      </nav>
+
+      <!-- Sidebar Footer -->
+
+      <div class="side-foot">
+
+        <div class="upgrade-card">
+
+          <div class="upgrade-top">
+            <span>✦</span>
+            <span>Unlock Pro</span>
+            <span>→</span>
+          </div>
+
+          <div class="upgrade-desc">
+            Unlock advanced interview preparation and AI-powered practice.
+          </div>
+
+        </div>
+
+        <div class="user-profile">
+
+          <div class="user-avatar">
+            <span>R</span>
+          </div>
+
+          <div class="user-info">
+
+            <div
+              class="user-name candidate-user-email"
+            >
+              Candidate
+            </div>
+
+            <div
+              class="user-role candidate-plan-tier"
+            >
+              PRO TIER
+            </div>
+
+          </div>
+
+          <button
+            class="logout-btn"
+            type="button"
+            onclick="handleLogout(event)"
+            aria-label="Logout"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+            >
+              <path d="M10 17l5-5-5-5"/>
+              <path d="M15 12H3"/>
+              <path d="M21 3v18"/>
+            </svg>
+          </button>
+
+        </div>
+
+      </div>
+
+    </aside>
+
+    <div
+      class="scrim"
+      id="scrim"
+    ></div>
+
+    <!-- ==========================================================
+         MAIN
+    =========================================================== -->
+
+    <main class="main-canvas">
+
+      <!-- TOPBAR -->
+
+      <header class="topbar">
+
+        <button
+          class="mob-menu-btn"
+          id="menuBtn"
+          type="button"
+          aria-label="Open navigation"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            width="19"
+            height="19"
+          >
+            <path d="M4 6h16"/>
+            <path d="M4 12h16"/>
+            <path d="M4 18h16"/>
+          </svg>
+        </button>
+
+        <div class="breadcrumb">
+
+          <span>Workspace</span>
+
+          <span>/</span>
+
+          <span class="breadcrumb-active">
+            Interview Coach
+          </span>
+
+        </div>
+
+        <div class="topbar-actions">
+
+          <button
+            class="icon-btn"
+            id="themeBtn"
+            type="button"
+            aria-label="Toggle theme"
+          >
+            <svg
+              id="themeIcon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+            >
+              <circle cx="12" cy="12" r="4"/>
+              <path d="M12 2v2"/>
+              <path d="M12 20v2"/>
+              <path d="m4.93 4.93 1.41 1.41"/>
+              <path d="m17.66 17.66 1.41 1.41"/>
+              <path d="M2 12h2"/>
+              <path d="M20 12h2"/>
+              <path d="m6.34 17.66-1.41 1.41"/>
+              <path d="m19.07 4.93-1.41 1.41"/>
+            </svg>
+          </button>
+
+        </div>
+
+      </header>
+
+      <!-- ========================================================
+           PAGE HEADER
+      ========================================================= -->
+
+      <section class="dashboard-header">
+
+        <div class="section-label">
+          AI INTERVIEW COACH
+        </div>
+
+        <h1 class="dashboard-title">
+          AI Interview Coach
+        </h1>
+
+        <p class="dashboard-subtitle">
+          Your personal AI coach for interview preparation.
+        </p>
+
+      </section>
+
+      <!-- ========================================================
+           COACH OVERVIEW
+      ========================================================= -->
+
+      <section class="coach-overview-grid">
+
+        <!-- READINESS -->
+
+        <article class="dash-card coach-readiness-card">
+
+          <div class="section-label">
+            CURRENT READINESS
+          </div>
+
+          <div class="coach-readiness-row">
+
+            <div>
+
+              <div
+                class="coach-readiness-value"
+                id="coachReadinessValue"
+              >
+                Not enough data yet
+              </div>
+
+              <p class="coach-readiness-description">
+                Your current interview preparation readiness
+              </p>
+
+            </div>
+
+            <div
+              class="coach-readiness-ring"
+              id="coachReadinessRing"
+              aria-label="Current readiness is not available yet"
+            >
+              <span id="coachReadinessRingValue">
+                —
+              </span>
+            </div>
+
+          </div>
+
+          <div class="progress-item-bar-bg">
+
+            <div
+              class="progress-item-bar-fill"
+              id="coachReadinessBar"
+              style="width:0%"
+            ></div>
+
+          </div>
+
+          <p class="coach-note">
+            Readiness appears after your interview performance or resume match has been recorded.
+          </p>
+
+          <div class="coach-readiness-insights" id="coachReadinessInsights" aria-live="polite">
+            <div><strong>Strengths:</strong> Not enough data yet.</div>
+            <div><strong>Improvement areas:</strong> Not enough data yet.</div>
+            <div><strong>Recommended next action:</strong> Complete a mock interview to get a performance-based readiness score.</div>
+          </div>
+
+        </article>
+
+        <!-- WELCOME -->
+
+        <article class="dash-card coach-welcome-card">
+
+          <div class="coach-avatar">
+
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+            >
+              <path d="M12 3a7 7 0 0 0-7 7v4a3 3 0 0 0 3 3h1v-5H7"/>
+              <path d="M12 3a7 7 0 0 1 7 7v4a3 3 0 0 1-3 3h-1v-5h2"/>
+              <path d="M9 20h6"/>
+            </svg>
+
+          </div>
+
+          <div>
+
+            <div class="section-label">
+              YOUR AI COACH
+            </div>
+
+            <h2 class="section-title" id="coachWelcomeTitle">
+              Hi! I'm your AI Interview Coach.
+            </h2>
+
+            <p class="coach-welcome-copy" id="coachWelcomeCopy">
+              I can help you prepare for interviews, review your previous
+              practice, identify improvement areas, and decide what to
+              practice next.
+            </p>
+
+          </div>
+
+        </article>
+
+      </section>
+
+      <!-- ========================================================
+           QUICK ACTIONS
+      ========================================================= -->
+
+      <section class="coach-section">
+
+        <div class="section-heading-row">
+
+          <div>
+
+            <div class="section-label">
+              QUICK ACTIONS
+            </div>
+
+            <h2 class="section-title">
+              What would you like to do?
+            </h2>
+
+          </div>
+
+        </div>
+
+        <div class="coach-actions-grid">
+
+          <!-- ACTION 1 -->
+
+          <button
+            class="coach-action"
+            type="button"
+            data-message="Check my current interview readiness using my saved practice results, then tell me the three most useful improvements to focus on."
+          >
+
+            <span class="coach-action-icon">
+
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <circle cx="12" cy="12" r="9"/>
+                <path d="M12 8v4l2.5 2"/>
+              </svg>
+
+            </span>
+
+            <span>
+              <strong>
+                Check My Readiness
+              </strong>
+
+              <small>
+                Understand where you currently stand.
+              </small>
+            </span>
+
+            <b>→</b>
+
+          </button>
+
+          <!-- ACTION 2 -->
+
+          <button
+            class="coach-action"
+            type="button"
+            data-message="Create a focused interview preparation plan for me based on my target role and saved practice data."
+          >
+
+            <span class="coach-action-icon">
+
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <path d="M12 3v18"/>
+                <path d="M3 12h18"/>
+              </svg>
+
+            </span>
+
+            <span>
+              <strong>
+                Prepare Me
+              </strong>
+
+              <small>
+                Build a focused preparation plan.
+              </small>
+            </span>
+
+            <b>→</b>
+
+          </button>
+
+          <!-- ACTION 3 -->
+
+          <button
+            class="coach-action"
+            type="button"
+            data-message="Use my saved skill scores to identify my weakest interview areas and help me practice them with one question at a time."
+          >
+
+            <span class="coach-action-icon">
+
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <path d="M4 19V5h13l-2 4 2 4H4"/>
+              </svg>
+
+            </span>
+
+            <span>
+              <strong>
+                Practice Weak Areas
+              </strong>
+
+              <small>
+                Focus on areas that need more practice.
+              </small>
+            </span>
+
+            <b>→</b>
+
+          </button>
+
+          <!-- ACTION 4 -->
+
+          <button
+            class="coach-action"
+            type="button"
+            data-message="Review my saved interview mistakes and feedback, and explain what I should improve next."
+          >
+
+            <span class="coach-action-icon">
+
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <path d="M4 4h16v16H4z"/>
+                <path d="M8 9h8"/>
+                <path d="M8 13h5"/>
+              </svg>
+
+            </span>
+
+            <span>
+              <strong>
+                Review My Mistakes
+              </strong>
+
+              <small>
+                Learn from previous interview practice.
+              </small>
+            </span>
+
+            <b>→</b>
+
+          </button>
+
+          <!-- ACTION 5 -->
+
+          <button
+            class="coach-action"
+            type="button"
+            data-action="mock-interview"
+          >
+
+            <span class="coach-action-icon">
+
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <circle cx="12" cy="12" r="9"/>
+                <path d="m10 8 6 4-6 4z"/>
+              </svg>
+
+            </span>
+
+            <span>
+              <strong>
+                Start Mock Interview
+              </strong>
+
+              <small>
+                Practice in a realistic interview environment.
+              </small>
+            </span>
+
+            <b>→</b>
+
+          </button>
+
+        </div>
+
+      </section>
+
+      <!-- ========================================================
+           CHAT
+      ========================================================= -->
+
+      <section class="coach-section">
+
+        <div class="section-heading-row">
+
+          <div>
+
+            <div class="section-label">
+              COACH CONVERSATION
+            </div>
+
+            <h2 class="section-title">
+              Talk to your AI Interview Coach
+            </h2>
+
+          </div>
+
+          <div class="coach-conversation-controls">
+            <select id="coachConversationSelect" class="coach-conversation-select" aria-label="Saved conversations">
+              <option value="">New conversation</option>
+            </select>
+            <button id="coachNewConversation" class="coach-new-conversation" type="button">
+              New Conversation
+            </button>
+          </div>
+
+        </div>
+
+        <div class="coach-chat-card">
+
+          <!-- EMPTY STATE -->
+
+          <div
+            class="coach-empty-state"
+            id="coachEmptyState"
+          >
+
+            <div class="coach-empty-icon">
+
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <path d="M21 11.5a8.38 8.38 0 0 1-9 8.5 9.2 9.2 0 0 1-4-.9L3 21l1.9-4.2A8.5 8.5 0 1 1 21 11.5Z"/>
+                <path d="M8 12h.01"/>
+                <path d="M12 12h.01"/>
+                <path d="M16 12h.01"/>
+              </svg>
+
+            </div>
+
+            <h3>
+              Ask me anything about your interview preparation.
+            </h3>
+
+            <p>
+              Start with a question, choose a quick action,
+              or tell me what you want to improve.
+            </p>
+
+          </div>
+
+          <!-- MESSAGE LIST -->
+
+          <div
+            class="coach-message-list"
+            id="coachMessageList"
+            aria-live="polite"
+          ></div>
+
+          <!-- INPUT -->
+
+          <div class="coach-input-area">
+
+            <textarea
+              id="coachInput"
+              class="coach-input"
+              rows="2"
+              maxlength="2000"
+              placeholder="Ask your AI Interview Coach..."
+              aria-label="Message your AI Interview Coach"
+            ></textarea>
+
+            <div class="coach-input-footer">
+
+              <span class="coach-input-hint">
+                Enter to send · Shift + Enter for a new line
+              </span>
+
+              <button
+                id="coachSendBtn"
+                class="primary-btn coach-send-btn"
+                type="button"
+              >
+
+                <span id="coachSendText">
+                  Send
+                </span>
+
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                >
+                  <path d="M22 2 11 13"/>
+                  <path d="m22 2-7 20-4-9-9-4Z"/>
+                </svg>
+
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- ============================================================
+       JAVASCRIPT
+  ============================================================ -->
+
+  <script>
+
+    /* ==========================================================
+       API BASE
+    =========================================================== */
+
+    const API_BASE =
+      window.location.origin.includes("localhost") ||
+      window.location.origin.includes("127.0.0.1") ||
+      window.location.protocol === "file:"
+        ? "http://127.0.0.1:8000"
+        : "";
+
+    /* ==========================================================
+       MOBILE SIDEBAR
+    =========================================================== */
+
+    const menuBtn =
+      document.getElementById("menuBtn");
+
+    const sidebar =
+      document.getElementById("sidebar");
+
+    const scrim =
+      document.getElementById("scrim");
+
+    function closeSidebar() {
+
+      sidebar?.classList.remove("open");
+
+      scrim?.classList.remove("show");
+
+      document.body.style.overflow = "";
+
+    }
+
+    menuBtn?.addEventListener(
+      "click",
+      () => {
+
+        sidebar?.classList.add("open");
+
+        scrim?.classList.add("show");
+
+        document.body.style.overflow = "hidden";
+
+      }
+    );
+
+    scrim?.addEventListener(
+      "click",
+      closeSidebar
+    );
+
+    document.addEventListener(
+      "keydown",
+      (event) => {
+
+        if (event.key === "Escape") {
+          closeSidebar();
+        }
+
+      }
+    );
+
+    sidebar
+      ?.querySelectorAll(".nav-link")
+      .forEach(
+        (link) => {
+
+          link.addEventListener(
+            "click",
+            () => {
+
+              if (window.innerWidth <= 960) {
+                closeSidebar();
+              }
+
+            }
+          );
+
+        }
+      );
+
+    /* ==========================================================
+       THEME
+    =========================================================== */
+
+    const themeBtn =
+      document.getElementById("themeBtn");
+
+    const savedTheme =
+      localStorage.getItem("theme");
+
+    if (savedTheme) {
+
+      document.documentElement.setAttribute(
+        "data-theme",
+        savedTheme
+      );
+
+    }
+
+    themeBtn?.addEventListener(
+      "click",
+      () => {
+
+        const current =
+          document.documentElement.getAttribute(
+            "data-theme"
+          );
+
+        const next =
+          current === "dark"
+            ? "light"
+            : "dark";
+
+        document.documentElement.setAttribute(
+          "data-theme",
+          next
+        );
+
+        localStorage.setItem(
+          "theme",
+          next
+        );
+
+      }
+    );
+
+    /* ==========================================================
+       CANDIDATE AUTH
+    =========================================================== */
+
+    let CURRENT_CANDIDATE = null;
+    let CURRENT_CONVERSATION_ID = null;
+    let COACH_CONTEXT = null;
+    const coachConversationSelect =
+      document.getElementById("coachConversationSelect");
+    const coachNewConversation =
+      document.getElementById("coachNewConversation");
+
+    async function initCandidateAuth() {
+
+      try {
+
+        const response =
+          await fetch(
+            "/api/candidate/me",
+            {
+              method: "GET",
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
+              credentials: "include"
+            }
+          );
+
+        if (response.status === 401 || response.status === 403) {
+          window.location.replace("/Login.html");
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error("Candidate session could not be verified.");
+        }
+
+        const data =
+          await response.json();
+
+        CURRENT_CANDIDATE =
+          data.user;
+
+        const displayName =
+          CURRENT_CANDIDATE.full_name ||
+          CURRENT_CANDIDATE.email
+            ?.split("@")[0] ||
+          "Candidate";
+
+        document
+          .querySelectorAll(
+            ".candidate-user-email"
+          )
+          .forEach(
+            (element) => {
+              element.textContent =
+                displayName;
+            }
+          );
+
+        document
+          .querySelectorAll(
+            ".candidate-plan-tier"
+          )
+          .forEach(
+            (element) => {
+
+              element.textContent =
+                (
+                  CURRENT_CANDIDATE.plan_tier ||
+                  "PRO"
+                ).toUpperCase() +
+                " TIER";
+
+            }
+          );
+
+        await loadCoachWorkspace();
+
+      } catch (error) {
+
+        console.warn(
+          "Candidate authentication check:",
+          error
+        );
+
+        addMessage(
+          "assistant",
+          "I'm having trouble connecting to the AI Coach right now. Please try again in a moment."
+        );
+
+      }
+
+    }
+
+    /* ==========================================================
+       LOGOUT
+    =========================================================== */
+
+    async function handleLogout(event) {
+
+      if (event) {
+        event.stopPropagation();
+      }
+
+      const confirmed =
+        window.confirm(
+          "Are you sure you want to log out from RaviGen AI?"
+        );
+
+      if (!confirmed) {
+        return;
+      }
+
+      try {
+
+        await fetch(
+          "/candidate/logout",
+          {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "X-Requested-With":
+                "XMLHttpRequest"
+            }
+          }
+        );
+
+      } catch (error) {
+
+        console.warn(
+          "Logout request failed:",
+          error
+        );
+
+      }
+
+      localStorage.removeItem(
+        "candidate_token"
+      );
+
+      localStorage.removeItem(
+        "candidate_user"
+      );
+
+      window.location.replace(
+        "/Login.html"
+      );
+
+    }
+
+    /* ==========================================================
+       COACH CHAT ELEMENTS
+    =========================================================== */
+
+    const coachInput =
+      document.getElementById(
+        "coachInput"
+      );
+
+    const coachSendBtn =
+      document.getElementById(
+        "coachSendBtn"
+      );
+
+    const coachSendText =
+      document.getElementById(
+        "coachSendText"
+      );
+
+    const coachMessageList =
+      document.getElementById(
+        "coachMessageList"
+      );
+
+    const coachEmptyState =
+      document.getElementById(
+        "coachEmptyState"
+      );
+
+    /* ==========================================================
+       ADD MESSAGE
+    =========================================================== */
+
+    function addMessage(
+      role,
+      content
+    ) {
+
+      if (!content) {
+        return;
+      }
+
+      if (coachEmptyState) {
+        coachEmptyState.style.display =
+          "none";
+      }
+
+      const row =
+        document.createElement(
+          "div"
+        );
+
+      row.className =
+        "coach-message " +
+        role;
+
+      const bubble =
+        document.createElement(
+          "div"
+        );
+
+      bubble.className =
+        "coach-message-bubble";
+
+      bubble.textContent =
+        content;
+
+      row.appendChild(
+        bubble
+      );
+
+      coachMessageList.appendChild(
+        row
+      );
+
+      coachMessageList.scrollTop =
+        coachMessageList.scrollHeight;
+
+    }
+
+    async function restoreConversation() {
+      const response = await fetch(
+        `${API_BASE}/api/coach/conversations`,
+        {
+          method: "GET",
+          credentials: "include"
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Saved Coach conversation could not be loaded.");
+      }
+
+      const data = await response.json();
+      coachConversationSelect.replaceChildren(
+        new Option("New conversation", "")
+      );
+      (data.conversations || []).forEach((conversation) => {
+        coachConversationSelect.add(
+          new Option(conversation.title, String(conversation.conversation_id))
+        );
+      });
+
+      const latest = data.conversations?.[0];
+      if (latest) {
+        coachConversationSelect.value = String(latest.conversation_id);
+        await loadConversation(latest.conversation_id);
+      } else {
+        CURRENT_CONVERSATION_ID = null;
+      }
+    }
+
+    function clearConversationMessages() {
+      coachMessageList.replaceChildren();
+      if (coachEmptyState) {
+        coachEmptyState.style.display = "";
+      }
+    }
+
+    function updateConversationOption(conversationId, title) {
+      let option = Array.from(coachConversationSelect.options).find(
+        (item) => item.value === String(conversationId)
+      );
+      if (!option) {
+        option = new Option(title, String(conversationId));
+      } else if (option.textContent === "New conversation") {
+        option.textContent = title;
+      }
+      coachConversationSelect.insertBefore(
+        option,
+        coachConversationSelect.options[1] || null
+      );
+      coachConversationSelect.value = String(conversationId);
+    }
+
+    async function loadConversation(conversationId) {
+      const response = await fetch(
+        `${API_BASE}/api/coach/conversations/${conversationId}`,
+        {
+          method: "GET",
+          credentials: "include"
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Saved Coach conversation could not be loaded.");
+      }
+      const data = await response.json();
+      CURRENT_CONVERSATION_ID = data.conversation_id;
+      clearConversationMessages();
+      (data.messages || []).forEach((message) => {
+        addMessage(message.role, message.message);
+      });
+    }
+
+    function updateReadiness(context) {
+      const score = context?.readiness?.score;
+      const value = document.getElementById("coachReadinessValue");
+      const ringValue = document.getElementById("coachReadinessRingValue");
+      const ring = document.getElementById("coachReadinessRing");
+      const bar = document.getElementById("coachReadinessBar");
+      const note = document.querySelector(".coach-readiness-card .coach-note");
+      const ready = Number.isFinite(score);
+      const displayValue = ready ? `${score}%` : "Not enough data yet";
+      value.classList.toggle("is-unavailable", !ready);
+      value.textContent = displayValue;
+      ringValue.textContent = ready ? `${score}%` : "—";
+      ring.setAttribute(
+        "aria-label",
+        ready ? `Current readiness ${score} percent` : "Current readiness is not available yet"
+      );
+      ring.style.setProperty("--readiness-progress", `${ready ? score : 0}%`);
+      bar.style.width = `${ready ? score : 0}%`;
+      note.textContent = ready
+        ? "Calculated from your recorded practice, completed interview scores, and latest resume match."
+        : "Not enough data yet. Complete a mock interview or add a resume match to see a readiness score.";
+
+      const insights = document.getElementById("coachReadinessInsights");
+      const strengthAreas = (context?.strengths || []).map((item) => item.area);
+      const improvementAreas = (context?.improvement_areas || []).map((item) => item.area);
+      const recommendedAction = improvementAreas.length
+        ? `Practice ${improvementAreas[0]}.`
+        : context?.interview_stats?.questions_generated
+          ? "Complete a mock interview so the Coach can assess your answers."
+          : "Start a mock interview or generate role-specific questions.";
+      insights.replaceChildren(
+        createReadinessInsight("Strengths", strengthAreas),
+        createReadinessInsight("Improvement areas", improvementAreas),
+        createReadinessInsight("Recommended next action", [recommendedAction])
+      );
+    }
+
+    function createReadinessInsight(label, values) {
+      const row = document.createElement("div");
+      const heading = document.createElement("strong");
+      heading.textContent = `${label}: `;
+      row.appendChild(heading);
+      row.appendChild(document.createTextNode(
+        values.length ? values.join(", ") : "Not enough data yet."
+      ));
+      return row;
+    }
+
+    async function loadCoachWorkspace() {
+      const contextResponse = await fetch(
+        `${API_BASE}/api/coach/context`,
+        { method: "GET", credentials: "include" }
+      );
+      if (!contextResponse.ok) {
+        throw new Error("Candidate coaching data could not be loaded.");
+      }
+      COACH_CONTEXT = await contextResponse.json();
+      CURRENT_CANDIDATE = COACH_CONTEXT.candidate;
+      updateReadiness(COACH_CONTEXT);
+
+      if (COACH_CONTEXT.candidate.name) {
+        document.getElementById("coachWelcomeTitle").textContent =
+          `Hi, ${COACH_CONTEXT.candidate.name}! I'm your AI Interview Coach.`;
+      }
+      if (COACH_CONTEXT.candidate.target_role) {
+        document.getElementById("coachWelcomeCopy").textContent =
+          `I'm ready to help you prepare for ${COACH_CONTEXT.candidate.target_role} interviews, review your recorded practice, and focus on areas supported by your results.`;
+      }
+      await restoreConversation();
+    }
+
+    async function startNewConversation() {
+      coachNewConversation.disabled = true;
+      try {
+        const response = await fetch(
+          `${API_BASE}/api/coach/conversations`,
+          {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" }
+          }
+        );
+        if (!response.ok) {
+          throw new Error("A new Coach conversation could not be created.");
+        }
+        const data = await response.json();
+        CURRENT_CONVERSATION_ID = data.conversation_id;
+        updateConversationOption(CURRENT_CONVERSATION_ID, "New conversation");
+        clearConversationMessages();
+        coachInput.focus();
+      } catch (error) {
+        console.error("Coach conversation error:", error);
+        addMessage(
+          "assistant",
+          "I'm having trouble starting a new conversation right now. Please try again."
+        );
+      } finally {
+        coachNewConversation.disabled = false;
+      }
+    }
+
+    /* ==========================================================
+       LOADING
+    =========================================================== */
+
+    function setLoading(
+      loading
+    ) {
+
+      coachSendBtn.disabled =
+        loading;
+
+      coachInput.disabled =
+        loading;
+
+      coachConversationSelect.disabled =
+        loading;
+
+      coachNewConversation.disabled =
+        loading;
+
+      document
+        .querySelectorAll(".coach-action")
+        .forEach((button) => {
+          button.disabled = loading;
+        });
+
+      coachSendText.textContent =
+        loading
+          ? "Thinking..."
+          : "Send";
+
+    }
+
+    /* ==========================================================
+       SEND MESSAGE
+    =========================================================== */
+
+    async function sendMessage() {
+
+      const message =
+        coachInput.value.trim();
+
+      if (
+        !message ||
+        coachSendBtn.disabled
+      ) {
+        return;
+      }
+
+      addMessage(
+        "user",
+        message
+      );
+
+      coachInput.value = "";
+
+      setLoading(true);
+
+      try {
+
+        const response =
+          await fetch(
+            `${API_BASE}/api/coach/chat`,
+            {
+              method: "POST",
+
+              credentials: "include",
+
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
+
+              body: JSON.stringify({
+                message: message,
+                conversation_id: CURRENT_CONVERSATION_ID
+              })
+            }
+          );
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          if (errorData.conversation_id) {
+            CURRENT_CONVERSATION_ID = errorData.conversation_id;
+            updateConversationOption(
+              CURRENT_CONVERSATION_ID,
+              message.length > 60 ? `${message.slice(0, 60)}…` : message
+            );
+          }
+
+          throw new Error(
+            typeof errorData.detail === "string"
+              ? errorData.detail
+              : `HTTP ${response.status}`
+          );
+
+        }
+
+        const data =
+          await response.json();
+
+        CURRENT_CONVERSATION_ID =
+          data.conversation_id;
+        updateConversationOption(
+          CURRENT_CONVERSATION_ID,
+          message.length > 60 ? `${message.slice(0, 60)}…` : message
+        );
+
+        addMessage(
+          "assistant",
+          data.message
+        );
+
+      } catch (error) {
+
+        console.error(
+          "Coach chat error:",
+          error
+        );
+
+        addMessage(
+          "assistant",
+          error instanceof Error && error.message !== "Failed to fetch"
+            ? error.message
+            : "I'm having trouble connecting to the AI Coach right now. Please try again in a moment."
+        );
+
+      } finally {
+
+        setLoading(false);
+
+        coachInput.focus();
+
+      }
+
+    }
+
+    /* ==========================================================
+       SEND BUTTON
+    =========================================================== */
+
+    coachSendBtn?.addEventListener(
+      "click",
+      sendMessage
+    );
+
+    coachNewConversation?.addEventListener(
+      "click",
+      startNewConversation
+    );
+
+    coachConversationSelect?.addEventListener(
+      "change",
+      async () => {
+        const conversationId = coachConversationSelect.value;
+        if (!conversationId) {
+          await startNewConversation();
+          return;
+        }
+        try {
+          await loadConversation(Number(conversationId));
+        } catch (error) {
+          console.error("Coach conversation load error:", error);
+          addMessage(
+            "assistant",
+            "I'm having trouble loading that conversation right now. Please try again."
+          );
+        }
+      }
+    );
+
+    /* ==========================================================
+       ENTER TO SEND
+    =========================================================== */
+
+    coachInput?.addEventListener(
+      "keydown",
+      (event) => {
+
+        if (
+          event.key === "Enter" &&
+          !event.shiftKey
+        ) {
+
+          event.preventDefault();
+
+          sendMessage();
+
+        }
+
+      }
+    );
+
+    /* ==========================================================
+       QUICK ACTIONS
+    =========================================================== */
+
+    document
+      .querySelectorAll(
+        ".coach-action"
+      )
+      .forEach(
+        (button) => {
+
+          button.addEventListener(
+            "click",
+            () => {
+
+              if (button.dataset.action === "mock-interview") {
+                window.location.href = "/mock-interview";
+                return;
+              }
+
+              const message =
+                button.dataset.message ||
+                "";
+
+              coachInput.value =
+                message;
+
+              coachInput.focus();
+
+              sendMessage();
+
+            }
+          );
+
+        }
+      );
+
+    /* ==========================================================
+       INITIALIZE
+    =========================================================== */
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      () => {
+
+        initCandidateAuth();
+
+      }
+    );
+
+  </script>
+
+</body>
+</html>

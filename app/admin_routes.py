@@ -792,6 +792,21 @@ DEFAULT_NAVIGATION_MENUS = [
         "allowed_roles": "candidate,admin,super_admin"
     },
     {
+        "id": "menu-coach",
+        "name": "Interview Coach",
+        "label": "Interview Coach",
+        "type": "Practice Tools",
+        "section": "WORKSPACE",
+        "icon": "💬",
+        "route": "interview-coach",
+        "badge": "AI",
+        "parent": "None (Root)",
+        "order": 4,
+        "status": "active",
+        "visibility": "Public Candidate",
+        "allowed_roles": "candidate,admin,super_admin"
+    },
+    {
         "id": "menu-5",
         "name": "Resume & JD Match",
         "label": "Resume & JD Match",
@@ -891,9 +906,21 @@ def _get_stored_menus(db: Session) -> List[dict]:
             db.commit()
             return json.loads(json.dumps(DEFAULT_NAVIGATION_MENUS))
         try:
-            return json.loads(config_entry.config_value)
+            stored_menus = json.loads(config_entry.config_value)
         except Exception:
             return json.loads(json.dumps(DEFAULT_NAVIGATION_MENUS))
+        if not any(
+            (menu.get("name") or "").strip().lower() == "interview coach"
+            or (menu.get("route") or "").strip().lower().rstrip("/") == "interview-coach"
+            for menu in stored_menus
+        ):
+            stored_menus.append(next(
+                menu for menu in DEFAULT_NAVIGATION_MENUS
+                if menu["id"] == "menu-coach"
+            ))
+            config_entry.config_value = json.dumps(stored_menus)
+            db.commit()
+        return stored_menus
     except Exception as e:
         print(f"[Menu Warning] _get_stored_menus fallback: {e}")
         return json.loads(json.dumps(DEFAULT_NAVIGATION_MENUS))
@@ -1734,7 +1761,6 @@ def restore_prompt_version(
     )
 
     return {"success": True, "prompt": serialize_prompt(prompt)}
-
 
 
 

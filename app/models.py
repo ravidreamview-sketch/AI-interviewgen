@@ -1,6 +1,6 @@
 from __future__ import annotations
 from enum import Enum
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import List, Optional, Dict, Any
 
 # ==============================================================================
@@ -69,6 +69,13 @@ class InterviewRequest(BaseModel):
     resume_text: Optional[str] = Field(None, description="Optional raw resume text or summary")
     jd_text: Optional[str] = Field(None, description="Optional target job description")
     practice_goal: Optional[str] = Field("balanced", description="balanced | weakness_remediation | ats_gap_closer | faang_stress_drill")
+
+
+class CoachChatRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    message: str = Field(..., min_length=1, max_length=2000)
+    conversation_id: Optional[int] = Field(None, gt=0)
 
 
 # ==============================================================================

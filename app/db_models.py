@@ -225,3 +225,51 @@ class ResumeScan(Base):
     fetched_at = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class CoachSession(Base):
+    __tablename__ = "coach_sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    user_id = Column(
+        Integer,
+        ForeignKey("user_accounts.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+    )
+
+    updated_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False,
+    )
+
+
+class CoachMessage(Base):
+    __tablename__ = "coach_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    session_id = Column(
+        Integer,
+        ForeignKey("coach_sessions.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    role = Column(String(20), nullable=False)
+
+    content = Column(Text, nullable=False)
+
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+    )

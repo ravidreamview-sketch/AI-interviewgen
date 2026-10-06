@@ -50,7 +50,8 @@ from app.models import (
     InterviewCompleteResponse,
     AnswerEvaluationRequest,
     AnswerEvaluationResponse,
-    EvaluatorPresetsResponse
+    EvaluatorPresetsResponse,
+    CoachChatRequest,
 )
 from app.interview_engine import (
     start_interview_session,
@@ -62,6 +63,7 @@ from app.speech_service import get_stt_provider
 from app.tts_service import get_tts_provider
 from app.avatar_service import get_avatar_provider
 from app.prompts import interview_prompt
+from app.coach_service import build_candidate_context, generate_coach_reply
 from app.services import generate_ai_questions, parse_raw_questions, get_fallback_questions
 from app.adaptive_service import (
     get_candidate_adaptive_profile,
@@ -80,7 +82,7 @@ from app.matching_service import (
     normalize_resume
 )
 from app.database import get_db, init_db
-from app.db_models import UserAccount, InterviewHistory, PageViewEvent, ClickEvent, ResumeScan, MockInterview
+from app.db_models import UserAccount, InterviewHistory, PageViewEvent, ClickEvent, ResumeScan, MockInterview, CoachSession, CoachMessage
 from app.admin_routes import admin_router, candidate_router
 from app.auth_deps import get_current_user, get_current_user_optional
 
@@ -1727,6 +1729,287 @@ def serve_analytics_tracker():
 def serve_logo():
     f = BASE_DIR / "logo.png"
     return FileResponse(f) if f.exists() else HTTPException(404, "logo.png not found")
+
+
+COACH_RATE_LIMIT = 12
+COACH_RATE_WINDOW = timedelta(minutes=1)
+
+
+def _require_coach_candidate(current_user: UserAccount) -> None:
+    if current_user.role != "candidate":
+        raise HTTPException(status_code=403, detail="Interview Coach is available to candidate accounts.")
+
+
+@app.get("/Interview-coach.html", include_in_schema=False)
+@app.get("/interview-coach.html", include_in_schema=False)
+@app.get("/candidate/Interview-coach.html", include_in_schema=False)
+@app.get("/candidate/interview-coach", include_in_schema=False)
+@app.get("/interview-coach", include_in_schema=False)
+def serve_interview_coach(db: Session = Depends(get_db)):
+    block_res = check_menu_access_or_block("Interview Coach", db)
+    if block_res:
+        return block_res
+    return get_html_response("Interview-coach.html", db)
+
+
+@app.get("/api/coach/conversation", include_in_schema=False)
+def get_coach_conversation(
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    _require_coach_candidate(current_user)
+    if not is_candidate_menu_enabled("Interview Coach", db):
+        raise HTTPException(status_code=403, detail="Interview Coach is currently unavailable.")
+
+    conversation = (
+        db.query(CoachSession)
+        .filter(CoachSession.user_id == current_user.id)
+        .order_by(CoachSession.updated_at.desc(), CoachSession.id.desc())
+        .first()
+    )
+    if not conversation:
+        return {"conversation_id": None, "messages": []}
+
+    messages = (
+        db.query(CoachMessage)
+        .filter(CoachMessage.session_id == conversation.id)
+        .order_by(CoachMessage.id.desc())
+        .limit(100)
+        .all()
+    )
+    messages.reverse()
+    return {
+        "conversation_id": conversation.id,
+        "messages": [
+            {
+                "role": item.role,
+                "message": item.content,
+                "created_at": item.created_at.isoformat() if item.created_at else None,
+            }
+            for item in messages
+        ],
+    }
+
+
+@app.get("/api/coach/context", include_in_schema=False)
+def get_coach_context(
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    _require_coach_candidate(current_user)
+    if not is_candidate_menu_enabled("Interview Coach", db):
+        raise HTTPException(status_code=403, detail="Interview Coach is currently unavailable.")
+    return build_candidate_context(db, current_user)
+
+
+@app.get("/api/coach/conversations", include_in_schema=False)
+def list_coach_conversations(
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    _require_coach_candidate(current_user)
+    if not is_candidate_menu_enabled("Interview Coach", db):
+        raise HTTPException(status_code=403, detail="Interview Coach is currently unavailable.")
+
+    conversations = (
+        db.query(CoachSession)
+        .filter(CoachSession.user_id == current_user.id)
+        .order_by(CoachSession.updated_at.desc(), CoachSession.id.desc())
+        .limit(50)
+        .all()
+    )
+    result = []
+    for conversation in conversations:
+        first_message = (
+            db.query(CoachMessage)
+            .filter(
+                CoachMessage.session_id == conversation.id,
+                CoachMessage.role == "user",
+            )
+            .order_by(CoachMessage.id.asc())
+            .first()
+        )
+        result.append({
+            "conversation_id": conversation.id,
+            "title": (
+                (first_message.content[:60] + "…")
+                if first_message and len(first_message.content) > 60
+                else first_message.content if first_message else "New conversation"
+            ),
+            "updated_at": conversation.updated_at.isoformat() if conversation.updated_at else None,
+        })
+    return {"conversations": result}
+
+
+@app.post("/api/coach/conversations", include_in_schema=False)
+def create_coach_conversation(
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    _require_coach_candidate(current_user)
+    if not is_candidate_menu_enabled("Interview Coach", db):
+        raise HTTPException(status_code=403, detail="Interview Coach is currently unavailable.")
+    conversation = CoachSession(user_id=current_user.id)
+    db.add(conversation)
+    db.commit()
+    db.refresh(conversation)
+    return {"conversation_id": conversation.id, "messages": []}
+
+
+@app.get("/api/coach/conversations/{conversation_id}", include_in_schema=False)
+def get_coach_conversation_by_id(
+    conversation_id: int,
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    _require_coach_candidate(current_user)
+    if not is_candidate_menu_enabled("Interview Coach", db):
+        raise HTTPException(status_code=403, detail="Interview Coach is currently unavailable.")
+    conversation = (
+        db.query(CoachSession)
+        .filter(
+            CoachSession.id == conversation_id,
+            CoachSession.user_id == current_user.id,
+        )
+        .first()
+    )
+    if not conversation:
+        raise HTTPException(status_code=404, detail="Coach conversation not found.")
+    messages = (
+        db.query(CoachMessage)
+        .filter(CoachMessage.session_id == conversation.id)
+        .order_by(CoachMessage.id.desc())
+        .limit(100)
+        .all()
+    )
+    messages.reverse()
+    return {
+        "conversation_id": conversation.id,
+        "messages": [
+            {
+                "role": item.role,
+                "message": item.content,
+                "created_at": item.created_at.isoformat() if item.created_at else None,
+            }
+            for item in messages
+        ],
+    }
+
+
+@app.post("/api/coach/chat", include_in_schema=False)
+def chat_with_coach(
+    payload: CoachChatRequest,
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    _require_coach_candidate(current_user)
+    message = payload.message.strip()
+    if not message:
+        raise HTTPException(status_code=422, detail="Message cannot be empty.")
+    if not is_candidate_menu_enabled("Interview Coach", db):
+        raise HTTPException(status_code=403, detail="Interview Coach is currently unavailable.")
+
+    now = datetime.utcnow()
+    recent_message_count = (
+        db.query(func.count(CoachMessage.id))
+        .join(CoachSession, CoachMessage.session_id == CoachSession.id)
+        .filter(
+            CoachSession.user_id == current_user.id,
+            CoachMessage.role == "user",
+            CoachMessage.created_at >= now - COACH_RATE_WINDOW,
+        )
+        .scalar()
+        or 0
+    )
+    if recent_message_count >= COACH_RATE_LIMIT:
+        raise HTTPException(
+            status_code=429,
+            detail="The Coach is receiving messages too quickly. Please try again shortly.",
+        )
+
+    if payload.conversation_id is not None:
+        conversation = (
+            db.query(CoachSession)
+            .filter(
+                CoachSession.id == payload.conversation_id,
+                CoachSession.user_id == current_user.id,
+            )
+            .first()
+        )
+        if not conversation:
+            raise HTTPException(status_code=404, detail="Coach conversation not found.")
+    else:
+        conversation = CoachSession(user_id=current_user.id)
+        db.add(conversation)
+        db.commit()
+        db.refresh(conversation)
+
+    prior_messages = (
+        db.query(CoachMessage)
+        .filter(CoachMessage.session_id == conversation.id)
+        .order_by(CoachMessage.id.desc())
+        .limit(10)
+        .all()
+    )
+    prior_messages.reverse()
+
+    try:
+        conversation.updated_at = datetime.utcnow()
+        db.add(CoachMessage(
+            session_id=conversation.id,
+            role="user",
+            content=message,
+        ))
+        db.commit()
+    except Exception as exc:
+        db.rollback()
+        logger.exception("Could not persist Interview Coach message for user_id=%s", current_user.id)
+        raise HTTPException(
+            status_code=503,
+            detail="The AI Coach could not save this conversation. Please try again.",
+        ) from exc
+
+    try:
+        reply = generate_coach_reply(
+            db,
+            current_user,
+            [(item.role, item.content) for item in prior_messages],
+            message,
+        )
+    except Exception:
+        db.rollback()
+        logger.exception(
+            "Interview Coach reply generation failed for user_id=%s",
+            current_user.id,
+        )
+        return JSONResponse(
+            status_code=503,
+            content={
+                "detail": "The AI Coach is temporarily unavailable. Please try again in a moment.",
+                "conversation_id": conversation.id,
+            },
+        )
+
+    try:
+        conversation.updated_at = datetime.utcnow()
+        db.add(CoachMessage(
+            session_id=conversation.id,
+            role="assistant",
+            content=reply,
+        ))
+        db.commit()
+    except Exception:
+        db.rollback()
+        logger.exception("Could not persist Interview Coach conversation for user_id=%s", current_user.id)
+        return JSONResponse(
+            status_code=503,
+            content={
+                "detail": "The AI Coach could not save this conversation. Please try again.",
+                "conversation_id": conversation.id,
+            },
+        )
+
+    return {"message": reply, "conversation_id": conversation.id}
 
 
 # NOTE: Database initialization is handled by:
