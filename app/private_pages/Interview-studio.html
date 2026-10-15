@@ -4975,7 +4975,7 @@
       qlist.innerHTML = `<div class="q-empty"><div class="qe-mark">?</div><p>Fill in the brief above and compose a paper — your questions appear here, ready to rehearse.</p></div>`;
     }
 
-    const API_BASE = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') || window.location.protocol === 'file:' ? 'http://127.0.0.1:8000' : '';
+    const API_BASE = window.location.protocol === 'file:' ? 'http://127.0.0.1:8000' : '';
 
     /* ==========================================================================
        01 · ROLE PRESETS COMPONENT DATA & RENDER CONTROLLER

@@ -1570,7 +1570,7 @@
       $('#statDiff').textContent = topDiff;
     }
 
-    const API_BASE = (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') || window.location.protocol === 'file:') ? 'http://127.0.0.1:8000' : '';
+    const API_BASE = window.location.protocol === 'file:' ? 'http://127.0.0.1:8000' : '';
 
     async function loadHistory() {
       try {
@@ -1588,6 +1588,9 @@
             id: item.id,
             role: item.role || "Question Paper",
             experience: item.experience || "3 Years",
+            interview_type: item.interview_type || '',
+            company: item.company || '',
+            requested_question_count: item.requested_question_count || item.count || 0,
             type: "paper",
             diff: item.difficulty || "Medium",
             count: item.count || (item.questions ? item.questions.length : 0),
@@ -1627,6 +1630,12 @@
         RECORDS = [...paperRecords, ...mockRecords];
         updateStats();
         render();
+        const requestedOpenId = new URLSearchParams(window.location.search).get('open');
+        if (requestedOpenId && RECORDS.some(record => record.type === 'paper' && String(record.id) === requestedOpenId)) {
+          openIds.add(requestedOpenId);
+          render();
+          document.querySelector(`.entry[data-id="${CSS.escape(requestedOpenId)}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
       } catch (err) {
         console.error("Could not load interview history:", err);
         RECORDS = [];
@@ -1663,6 +1672,8 @@
       <div class="e-tags">${(x.skills || []).map(s => `<span>${escapeHtml(s)}</span>`).join("")}</div>
       <div class="e-badges">
         <span class="badge diff ${dc}">${escapeHtml(x.diff)}</span>
+        ${x.interview_type ? `<span class="badge">${escapeHtml(x.interview_type)}</span>` : ''}
+        ${x.company ? `<span class="badge">${escapeHtml(x.company)}</span>` : ''}
         <span class="badge count">${x.count} Q</span>
         ${isMock && x.score !== null && x.score !== undefined ? `<span class="badge score">Score ${x.score}%</span>` : ''}
       </div>

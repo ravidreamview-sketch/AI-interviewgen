@@ -1,7 +1,7 @@
 from __future__ import annotations
 from enum import Enum
 from pydantic import BaseModel, ConfigDict, Field
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Literal
 
 # ==============================================================================
 # ADAPTIVE INTERVIEW ENGINE ENUMS & VERSION CONSTANTS
@@ -298,28 +298,28 @@ class AdaptiveNextQuestionResponse(BaseModel):
 
 
 class PageViewPayload(BaseModel):
-    session_id: str
-    page_url: str
-    page_title: Optional[str] = None
-    referrer: Optional[str] = None
-    browser: Optional[str] = None
-    os: Optional[str] = None
-    device_type: Optional[str] = None
-    screen_resolution: Optional[str] = None
+    session_id: str = Field(..., min_length=1, max_length=128)
+    page_url: str = Field(..., min_length=1, max_length=500)
+    page_title: Optional[str] = Field(None, max_length=200)
+    referrer: Optional[str] = Field(None, max_length=500)
+    browser: Optional[str] = Field(None, max_length=100)
+    os: Optional[str] = Field(None, max_length=100)
+    device_type: Optional[str] = Field(None, max_length=50)
+    screen_resolution: Optional[str] = Field(None, max_length=50)
 
 
 class ClickEventPayload(BaseModel):
-    session_id: str
-    page_url: str
-    element_tag: Optional[str] = None
-    element_id: Optional[str] = None
-    element_text: Optional[str] = None
-    element_class: Optional[str] = None
-    target_role: Optional[str] = None
-    action_type: Optional[str] = None
-    browser: Optional[str] = None
-    os: Optional[str] = None
-    device_type: Optional[str] = None
+    session_id: str = Field(..., min_length=1, max_length=128)
+    page_url: str = Field(..., min_length=1, max_length=500)
+    element_tag: Optional[str] = Field(None, max_length=50)
+    element_id: Optional[str] = Field(None, max_length=128)
+    element_text: Optional[str] = Field(None, max_length=300)
+    element_class: Optional[str] = Field(None, max_length=300)
+    target_role: Optional[str] = Field(None, max_length=100)
+    action_type: Optional[str] = Field(None, max_length=100)
+    browser: Optional[str] = Field(None, max_length=100)
+    os: Optional[str] = Field(None, max_length=100)
+    device_type: Optional[str] = Field(None, max_length=50)
 
 
 # ==============================================================================
@@ -327,13 +327,13 @@ class ClickEventPayload(BaseModel):
 # ==============================================================================
 
 class AdminLoginRequest(BaseModel):
-    email: Optional[str] = "admin@example.com"
-    password: Optional[str] = "SuperAdminPass123!"
+    email: str = Field(..., min_length=3, max_length=320)
+    password: str = Field(..., min_length=1, max_length=500)
 
 
 class CandidateLoginRequest(BaseModel):
-    email: Optional[str] = "candidate@example.com"
-    password: Optional[str] = "CandidatePass123!"
+    email: str = Field(..., min_length=3, max_length=320)
+    password: str = Field(..., min_length=1, max_length=500)
 
 
 class UserCreateRequest(BaseModel):
@@ -352,6 +352,42 @@ class UserUpdateRequest(BaseModel):
     role: Optional[str] = Field(None, description="super_admin | admin | candidate")
     plan_tier: Optional[str] = Field(None, description="free | pro | enterprise")
     is_active: Optional[bool] = None
+
+
+class SubscriptionPlanCreateRequest(BaseModel):
+    code: str = Field(..., min_length=2, max_length=80, pattern=r"^[a-zA-Z0-9][a-zA-Z0-9_-]*$")
+    name: str = Field(..., min_length=1, max_length=160)
+    description: Optional[str] = Field(None, max_length=4000)
+    price_minor: int = Field(..., gt=0)
+    currency: str = Field(..., min_length=3, max_length=3, pattern=r"^[A-Za-z]{3}$")
+
+
+class SubscriptionAssignmentRequest(BaseModel):
+    user_id: int = Field(..., gt=0)
+    plan_id: int = Field(..., gt=0)
+    provider: str = Field(..., min_length=1, max_length=80)
+    provider_reference: str = Field(..., min_length=1, max_length=255)
+    amount_minor: int = Field(..., gt=0)
+    currency: str = Field(..., min_length=3, max_length=3, pattern=r"^[A-Za-z]{3}$")
+    reason: str = Field(..., min_length=3, max_length=2000)
+
+
+class SubscriptionRenewalRequest(BaseModel):
+    plan_id: int = Field(..., gt=0)
+    provider: str = Field(..., min_length=1, max_length=80)
+    provider_reference: str = Field(..., min_length=1, max_length=255)
+    amount_minor: int = Field(..., gt=0)
+    currency: str = Field(..., min_length=3, max_length=3, pattern=r"^[A-Za-z]{3}$")
+    reason: str = Field(..., min_length=3, max_length=2000)
+
+
+class SubscriptionActionRequest(BaseModel):
+    reason: str = Field(..., min_length=3, max_length=2000)
+
+
+class SubscriptionPaymentStatusRequest(BaseModel):
+    status: Literal["rejected", "disputed", "refunded", "chargeback", "reversed"]
+    reason: str = Field(..., min_length=3, max_length=2000)
 
 
 class UserResponse(BaseModel):
@@ -696,6 +732,7 @@ class CandidateRecentActivityItem(BaseModel):
     title: str
     detail: Optional[str] = None
     score: Optional[float] = None
+    record_id: Optional[int] = None
     created_at: str
 
 
@@ -703,6 +740,7 @@ class CandidateDashboardResponse(BaseModel):
     user: CandidateUserSummary
     preparation_readiness: int = Field(..., ge=0, le=100, description="Overall readiness score 0-100")
     questions_practiced: int = Field(..., ge=0, description="Total questions practiced")
+    question_generation_sessions: int = Field(..., ge=0, description="Saved question-generation sessions")
     mock_interviews: int = Field(..., ge=0, description="Total mock interviews completed")
     average_score: float = Field(..., ge=0.0, le=100.0, description="Average evaluation / mock score")
     preparation_streak: int = Field(..., ge=0, description="Consecutive active UTC days streak")

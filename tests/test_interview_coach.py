@@ -14,6 +14,7 @@ from app.database import Base, get_db
 from app.db_models import (
     CandidateMistakesLedger,
     CandidateSkillAnalytics,
+    CoachMessage,
     CoachSession,
     InterviewHistory,
     MockInterview,
@@ -22,6 +23,7 @@ from app.db_models import (
 )
 from app.main import app
 from app.security import create_access_token, hash_password
+from app.services import AIProviderError
 
 
 engine = create_engine(
@@ -66,9 +68,15 @@ class TestInterviewCoach(unittest.TestCase):
             self.candidate_id = self.candidate.id
             self.other_candidate_id = self.other_candidate.id
 
+        self.entitlement_patch = patch(
+            "app.subscription_service.ensure_candidate_entitlement",
+            return_value=None,
+        )
+        self.entitlement_patch.start()
         self.login_as(self.candidate_id, "coach_candidate@example.com")
 
     def tearDown(self):
+        self.entitlement_patch.stop()
         client.cookies.clear()
         app.dependency_overrides.pop(get_db, None)
         Base.metadata.drop_all(bind=engine)
@@ -91,6 +99,9 @@ class TestInterviewCoach(unittest.TestCase):
             self.assertNotIn("72%", response.text)
             self.assertIn('id="coachNewConversation"', response.text)
             self.assertIn('id="coachReadinessValue"', response.text)
+            self.assertIn('window.location.protocol === "file:"', response.text)
+            self.assertNotIn('window.location.origin.includes("127.0.0.1")', response.text)
+            self.assertIn('errorData.error_category === "string"', response.text)
 
     def test_chat_requires_authentication(self):
         client.cookies.clear()
@@ -132,6 +143,15 @@ class TestInterviewCoach(unittest.TestCase):
         previous = client.get(f"/api/coach/conversations/{data['conversation_id']}")
         self.assertEqual(previous.status_code, 200)
         self.assertEqual(len(previous.json()["messages"]), 2)
+
+    @patch("app.main.generate_coach_reply", side_effect=AssertionError("Conversation creation must not call the AI provider."))
+    def test_new_conversation_creation_is_provider_independent(self, generate_reply):
+        response = client.post("/api/coach/conversations")
+
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertIsInstance(response.json()["conversation_id"], int)
+        self.assertEqual(response.json()["messages"], [])
+        generate_reply.assert_not_called()
 
     def test_context_is_candidate_scoped_and_readiness_requires_real_data(self):
         empty_context = client.get("/api/coach/context")
@@ -282,6 +302,71 @@ class TestInterviewCoach(unittest.TestCase):
         self.assertNotIn("private provider configuration", response.text)
         self.assertIn("temporarily unavailable", response.json()["detail"])
         self.assertIsInstance(response.json()["conversation_id"], int)
+
+    def test_provider_failures_return_safe_categories_and_preserve_coach_history(self):
+        failures = (
+            (AIProviderError("Credentials were rejected.", 503, "authentication"), 503, "authentication"),
+            (AIProviderError("Configured model was rejected.", 502, "model_or_request_configuration"), 502, "model_or_request_configuration"),
+            (AIProviderError("Provider rate limit reached.", 503, "rate_limit_or_quota"), 503, "rate_limit_or_quota"),
+            (AIProviderError("Provider request timed out.", 504, "timeout"), 504, "timeout"),
+            (AIProviderError("Provider response was malformed.", 502, "malformed_response"), 502, "malformed_response"),
+            (AIProviderError("Provider configuration is missing.", 503, "not_configured"), 503, "not_configured"),
+        )
+
+        with TestingSessionLocal() as db:
+            conversation = CoachSession(user_id=self.candidate_id)
+            db.add(conversation)
+            db.flush()
+            conversation_id = conversation.id
+            db.add_all([
+                CoachMessage(
+                    session_id=conversation_id,
+                    role="user",
+                    content="Earlier question.",
+                ),
+                CoachMessage(
+                    session_id=conversation_id,
+                    role="assistant",
+                    content="Earlier answer.",
+                ),
+            ])
+            db.commit()
+
+        for attempt, (error, expected_status, expected_category) in enumerate(failures, start=1):
+            with self.subTest(category=expected_category), patch(
+                "app.main.generate_coach_reply",
+                side_effect=error,
+            ):
+                response = client.post(
+                    "/api/coach/chat",
+                    json={
+                        "message": "What should I practice?",
+                        "conversation_id": conversation_id,
+                    },
+                )
+
+            self.assertEqual(response.status_code, expected_status)
+            self.assertEqual(response.json()["error_category"], expected_category)
+            self.assertNotIn("authorization", response.text.lower())
+            self.assertNotIn("api_key", response.text.lower())
+            self.assertEqual(response.json()["conversation_id"], conversation_id)
+
+            history = client.get(
+                f"/api/coach/conversations/{conversation_id}"
+            )
+            self.assertEqual(history.status_code, 200)
+            history_messages = [
+                (item["role"], item["message"])
+                for item in history.json()["messages"]
+            ]
+            self.assertEqual(
+                history_messages[:2],
+                [("user", "Earlier question."), ("assistant", "Earlier answer.")],
+            )
+            self.assertEqual(
+                history_messages[2:],
+                [("user", "What should I practice?")] * attempt,
+            )
 
 
 if __name__ == "__main__":

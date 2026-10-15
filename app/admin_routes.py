@@ -36,12 +36,15 @@ from app.auth_deps import (
     get_current_user,
     require_admin,
     require_super_admin,
+    require_paid_candidate,
     record_audit_log,
     get_client_ip,
     is_request_https,
     check_login_rate_limit,
     record_failed_login_attempt,
-    clear_failed_login_attempts
+    clear_failed_login_attempts,
+    is_local_demo_access_enabled,
+    is_local_demo_access_configured,
 )
 
 admin_router = APIRouter(tags=["Admin Portal"])
@@ -131,8 +134,8 @@ def candidate_login(
     Authenticates candidate credentials securely server-side.
     Returns signed JWT token and sets candidate_session HttpOnly cookie.
     """
-    raw_email = payload.email if payload.email and payload.email.strip() else "candidate@example.com"
-    raw_pass = payload.password if payload.password and payload.password.strip() else "CandidatePass123!"
+    raw_email = payload.email
+    raw_pass = payload.password
     email_clean = raw_email.strip().lower()
     check_login_rate_limit(request, email_clean)
     
@@ -233,7 +236,7 @@ def get_candidate_profile(
 @candidate_router.get("/dashboard/metrics", response_model=CandidateDashboardResponse, tags=["Candidate Dashboard"])
 def get_candidate_dashboard_endpoint(
     request: Request,
-    current_user: UserAccount = Depends(get_current_user),
+    current_user: UserAccount = Depends(require_paid_candidate),
     db: Session = Depends(get_db)
 ):
     """
@@ -262,8 +265,8 @@ def admin_login(
     Includes sliding-window rate limiting against brute-force attempts.
     Returns signed access token and sets an HttpOnly secure session cookie.
     """
-    raw_email = payload.email if payload.email and payload.email.strip() else "admin@example.com"
-    raw_pass = payload.password if payload.password and payload.password.strip() else "SuperAdminPass123!"
+    raw_email = payload.email
+    raw_pass = payload.password
     email_clean = raw_email.strip().lower()
     
     # 1. Check Rate Limit (5 attempts per 5 min)
@@ -1015,6 +1018,8 @@ def is_candidate_menu_enabled(identifier: str, db: Session) -> bool:
     clean_id = (identifier or "").strip().lower()
     if not clean_id:
         return True
+    if is_local_demo_access_configured():
+        return True
         
     menus = _get_stored_menus(db)
     for m in menus:
@@ -1047,7 +1052,8 @@ def is_candidate_menu_enabled(identifier: str, db: Session) -> bool:
 @candidate_router.get("/public/menus")
 @candidate_router.get("/public-menus")
 def get_public_menus(
-    db: Session = Depends(get_db)
+    request: Request,
+    db: Session = Depends(get_db),
 ):
     """
     Public Endpoint: Returns active candidate-visible navigation menus.
@@ -1060,7 +1066,7 @@ def get_public_menus(
     permitted_menus = []
     for m in all_menus:
         status_clean = (m.get("status") or "active").lower()
-        if status_clean == "disabled":
+        if status_clean == "disabled" and not is_local_demo_access_enabled(request):
             continue
             
         visibility = (m.get("visibility") or "").lower()
@@ -1093,6 +1099,7 @@ def get_public_menus(
 @candidate_router.get("/candidate/menus")
 @candidate_router.get("/menus")
 def get_candidate_menus(
+    request: Request,
     current_user: UserAccount = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -1108,7 +1115,7 @@ def get_candidate_menus(
     
     for m in all_menus:
         status_clean = (m.get("status") or "active").lower()
-        if status_clean == "disabled":
+        if status_clean == "disabled" and not is_local_demo_access_enabled(request):
             continue
             
         visibility = (m.get("visibility") or "").lower()

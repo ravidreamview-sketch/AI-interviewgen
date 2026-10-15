@@ -78,7 +78,7 @@ def override_get_db():
         db.close()
 
 
-client = TestClient(app)
+client = TestClient(app, base_url="http://127.0.0.1", client=("127.0.0.1", 50004))
 
 
 class TestPhase5DAdaptiveMatchIntegration(unittest.TestCase):

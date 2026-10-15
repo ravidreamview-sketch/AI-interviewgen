@@ -1,6 +1,65 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, ForeignKey, Float
-from datetime import datetime
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
+from sqlalchemy.orm import relationship
+from sqlalchemy.types import TypeDecorator
+from datetime import datetime, timezone
 from app.database import Base
+
+
+class UTCDateTime(TypeDecorator):
+    """Persist timezone-aware UTC datetimes consistently on SQLite and PostgreSQL."""
+
+    impl = DateTime
+    cache_ok = True
+
+    def load_dialect_impl(self, dialect):
+        return dialect.type_descriptor(DateTime(timezone=True))
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)
+        value = value.astimezone(timezone.utc)
+        if dialect.name == "sqlite":
+            return value.replace(tzinfo=None)
+        return value
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return None
+        if value.tzinfo is None:
+            return value.replace(tzinfo=timezone.utc)
+        return value.astimezone(timezone.utc)
+
+
+def _currency_checks(column_name):
+    """Return portable currency checks plus dialect-specific ASCII-letter checks."""
+    return (
+        CheckConstraint(
+            f"length({column_name}) = 3 AND {column_name} = upper({column_name})",
+            name=f"ck_{column_name}_uppercase_3",
+        ),
+        CheckConstraint(
+            f"{column_name} GLOB '[A-Z][A-Z][A-Z]'",
+            name=f"ck_{column_name}_sqlite_ascii_currency",
+        ).ddl_if(dialect="sqlite"),
+        CheckConstraint(
+            f"{column_name} ~ '^[A-Z]{{3}}$'",
+            name=f"ck_{column_name}_postgres_ascii_currency",
+        ).ddl_if(dialect="postgresql"),
+    )
 
 
 class UserAccount(Base):
@@ -15,6 +74,172 @@ class UserAccount(Base):
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     last_login = Column(DateTime, nullable=True)
+
+    subscriptions = relationship(
+        "Subscription",
+        back_populates="user",
+        foreign_keys="Subscription.user_id",
+        passive_deletes=True,
+    )
+
+
+class SubscriptionPlan(Base):
+    __tablename__ = "subscription_plans"
+
+    id = Column(Integer, primary_key=True)
+    code = Column(String(80), nullable=False, unique=True)
+    name = Column(String(160), nullable=False)
+    description = Column(Text, nullable=True)
+    duration_days = Column(Integer, nullable=False)
+    price_minor = Column(Integer, nullable=False)
+    currency = Column(String(3), nullable=False)
+    features_json = Column(Text, nullable=True)
+    is_active = Column(Boolean, nullable=False, default=True)
+    created_at = Column(UTCDateTime(), nullable=False, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(
+        UTCDateTime(),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    subscriptions = relationship("Subscription", back_populates="plan", passive_deletes=True)
+
+    __table_args__ = (
+        CheckConstraint("duration_days > 0", name="ck_subscription_plans_duration_positive"),
+        CheckConstraint("price_minor > 0", name="ck_subscription_plans_price_positive"),
+        *_currency_checks("currency"),
+    )
+
+
+class Subscription(Base):
+    __tablename__ = "subscriptions"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("user_accounts.id", ondelete="RESTRICT"), nullable=False)
+    plan_id = Column(Integer, ForeignKey("subscription_plans.id", ondelete="RESTRICT"), nullable=False)
+    status = Column(String(20), nullable=False, default="pending")
+    starts_at = Column(UTCDateTime(), nullable=False)
+    ends_at = Column(UTCDateTime(), nullable=False)
+    plan_code_snapshot = Column(String(80), nullable=False)
+    plan_name_snapshot = Column(String(160), nullable=False)
+    amount_minor_snapshot = Column(Integer, nullable=False)
+    currency_snapshot = Column(String(3), nullable=False)
+    auto_renew = Column(Boolean, nullable=False, default=False)
+    renewal_of_id = Column(Integer, ForeignKey("subscriptions.id", ondelete="RESTRICT"), nullable=True)
+    approved_by_id = Column(Integer, ForeignKey("user_accounts.id", ondelete="RESTRICT"), nullable=True)
+    approved_at = Column(UTCDateTime(), nullable=True)
+    suspended_at = Column(UTCDateTime(), nullable=True)
+    suspended_by_id = Column(Integer, ForeignKey("user_accounts.id", ondelete="RESTRICT"), nullable=True)
+    suspension_reason = Column(Text, nullable=True)
+    revoked_at = Column(UTCDateTime(), nullable=True)
+    revoked_by_id = Column(Integer, ForeignKey("user_accounts.id", ondelete="RESTRICT"), nullable=True)
+    revocation_reason = Column(Text, nullable=True)
+    created_at = Column(UTCDateTime(), nullable=False, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(
+        UTCDateTime(),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    user = relationship("UserAccount", back_populates="subscriptions", foreign_keys=[user_id])
+    plan = relationship("SubscriptionPlan", back_populates="subscriptions")
+    payment_verification = relationship(
+        "PaymentVerification", back_populates="subscription", uselist=False, passive_deletes=True
+    )
+    renewal_of = relationship("Subscription", remote_side=[id], foreign_keys=[renewal_of_id])
+
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('pending', 'active', 'suspended', 'revoked', 'expired')",
+            name="ck_subscriptions_status",
+        ),
+        CheckConstraint("ends_at > starts_at", name="ck_subscriptions_date_order"),
+        CheckConstraint("amount_minor_snapshot > 0", name="ck_subscriptions_snapshot_price_positive"),
+        CheckConstraint("auto_renew = false", name="ck_subscriptions_auto_renew_disabled"),
+        CheckConstraint(
+            "(approved_by_id IS NULL AND approved_at IS NULL) OR "
+            "(approved_by_id IS NOT NULL AND approved_at IS NOT NULL)",
+            name="ck_subscriptions_approval_metadata_pair",
+        ),
+        CheckConstraint(
+            "status <> 'active' OR (approved_by_id IS NOT NULL AND approved_at IS NOT NULL)",
+            name="ck_subscriptions_active_requires_approval",
+        ),
+        CheckConstraint(
+            "status <> 'suspended' OR (suspended_at IS NOT NULL AND suspended_by_id IS NOT NULL "
+            "AND suspension_reason IS NOT NULL AND length(trim(suspension_reason)) > 0)",
+            name="ck_subscriptions_suspended_requires_metadata",
+        ),
+        CheckConstraint(
+            "(status = 'revoked' AND revoked_at IS NOT NULL AND revoked_by_id IS NOT NULL "
+            "AND revocation_reason IS NOT NULL AND length(trim(revocation_reason)) > 0) OR "
+            "(status <> 'revoked' AND revoked_at IS NULL AND revoked_by_id IS NULL "
+            "AND revocation_reason IS NULL)",
+            name="ck_subscriptions_revoked_requires_metadata",
+        ),
+        *_currency_checks("currency_snapshot"),
+        UniqueConstraint("renewal_of_id", name="uq_subscriptions_direct_renewal"),
+        Index("ix_subscriptions_user_status_period", "user_id", "status", "starts_at", "ends_at"),
+        Index("ix_subscriptions_plan_id", "plan_id"),
+    )
+
+
+class PaymentVerification(Base):
+    __tablename__ = "payment_verifications"
+
+    id = Column(Integer, primary_key=True)
+    subscription_id = Column(
+        Integer, ForeignKey("subscriptions.id", ondelete="RESTRICT"), nullable=False, unique=True
+    )
+    provider = Column(String(80), nullable=False)
+    provider_reference = Column(String(255), nullable=False)
+    amount_minor = Column(Integer, nullable=False)
+    currency = Column(String(3), nullable=False)
+    status = Column(String(20), nullable=False, default="pending")
+    recorded_by_id = Column(Integer, ForeignKey("user_accounts.id", ondelete="RESTRICT"), nullable=True)
+    verified_by_id = Column(Integer, ForeignKey("user_accounts.id", ondelete="RESTRICT"), nullable=True)
+    verified_at = Column(UTCDateTime(), nullable=True)
+    status_changed_by_id = Column(Integer, ForeignKey("user_accounts.id", ondelete="RESTRICT"), nullable=True)
+    status_changed_at = Column(UTCDateTime(), nullable=True)
+    status_reason = Column(Text, nullable=True)
+    created_at = Column(UTCDateTime(), nullable=False, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(
+        UTCDateTime(),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    subscription = relationship("Subscription", back_populates="payment_verification")
+
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('pending', 'verified', 'disputed', 'rejected', 'refunded', 'chargeback', 'reversed')",
+            name="ck_payment_verifications_status",
+        ),
+        CheckConstraint("amount_minor > 0", name="ck_payment_verifications_amount_positive"),
+        CheckConstraint(
+            "(verified_by_id IS NULL AND verified_at IS NULL) OR "
+            "(verified_by_id IS NOT NULL AND verified_at IS NOT NULL)",
+            name="ck_payment_verifications_verification_metadata_pair",
+        ),
+        CheckConstraint(
+            "status <> 'verified' OR (verified_by_id IS NOT NULL AND verified_at IS NOT NULL)",
+            name="ck_payment_verifications_verified_requires_metadata",
+        ),
+        CheckConstraint(
+            "(status = 'pending' AND status_changed_by_id IS NULL AND status_changed_at IS NULL "
+            "AND status_reason IS NULL) OR "
+            "(status <> 'pending' AND status_changed_by_id IS NOT NULL AND status_changed_at IS NOT NULL "
+            "AND status_reason IS NOT NULL AND length(trim(status_reason)) > 0)",
+            name="ck_payment_verifications_status_change_metadata",
+        ),
+        *_currency_checks("currency"),
+        UniqueConstraint("provider", "provider_reference", name="uq_payment_verifications_provider_reference"),
+        Index("ix_payment_verifications_status", "status"),
+    )
 
 
 
@@ -52,6 +277,9 @@ class InterviewHistory(Base):
     experience = Column(String, nullable=False)
     skills = Column(Text, nullable=False)
     difficulty = Column(String, nullable=False)
+    interview_type = Column(String, nullable=True)
+    company = Column(String, nullable=True)
+    requested_question_count = Column(Integer, nullable=True)
     questions = Column(Text, nullable=False)
     question_engine_version = Column(String, nullable=True, default="qengine-v1.0.0")
     created_at = Column(DateTime, default=datetime.utcnow)

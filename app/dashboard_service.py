@@ -321,8 +321,9 @@ def get_recent_activity(user_id: int, db: Session, limit: int = 10) -> List[Cand
             activities.append({
                 "type": "question_practice",
                 "title": f"Question Practice ({h.role})",
-                "detail": f"{h.difficulty or 'Hard'} · {q_count} questions synthesized",
+                "detail": f"{h.interview_type or 'Interview'} · {h.difficulty or 'Hard'} · {q_count} questions",
                 "score": None,
+                "record_id": h.id,
                 "created_at_dt": h.created_at,
                 "created_at": h.created_at.isoformat()
             })
@@ -355,6 +356,7 @@ def get_recent_activity(user_id: int, db: Session, limit: int = 10) -> List[Cand
             title=item["title"],
             detail=item.get("detail"),
             score=item.get("score"),
+            record_id=item.get("record_id"),
             created_at=item["created_at"]
         )
         for item in activities[:limit]
@@ -373,7 +375,12 @@ def compute_candidate_dashboard(user: UserAccount, db: Session) -> CandidateDash
     user_id = user.id
 
     # 1. Interview History & Questions Practiced
-    user_history = db.query(InterviewHistory).filter(InterviewHistory.user_id == user_id).all()
+    user_history = (
+        db.query(InterviewHistory)
+        .filter(InterviewHistory.user_id == user_id)
+        .order_by(desc(InterviewHistory.created_at), desc(InterviewHistory.id))
+        .all()
+    )
     total_questions = sum(parse_questions_count(h.questions) for h in user_history)
 
     # 2. Mock Interviews
@@ -483,6 +490,7 @@ def compute_candidate_dashboard(user: UserAccount, db: Session) -> CandidateDash
         user=user_summary,
         preparation_readiness=readiness,
         questions_practiced=total_questions,
+        question_generation_sessions=len(user_history),
         mock_interviews=total_mocks,
         average_score=average_score,
         preparation_streak=streak_days,

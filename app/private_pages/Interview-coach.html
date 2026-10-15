@@ -2409,8 +2409,6 @@
     =========================================================== */
 
     const API_BASE =
-      window.location.origin.includes("localhost") ||
-      window.location.origin.includes("127.0.0.1") ||
       window.location.protocol === "file:"
         ? "http://127.0.0.1:8000"
         : "";
@@ -3029,10 +3027,11 @@
             );
           }
 
+          const category = typeof errorData.error_category === "string"
+            ? ` (${errorData.error_category})`
+            : "";
           throw new Error(
-            typeof errorData.detail === "string"
-              ? errorData.detail
-              : `HTTP ${response.status}`
+            `${typeof errorData.detail === "string" ? errorData.detail : `HTTP ${response.status}`}${category}`
           );
 
         }

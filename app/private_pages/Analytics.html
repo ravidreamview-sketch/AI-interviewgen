@@ -520,7 +520,7 @@
       <a class="nav-item active" href="Analytics.html">
         <span class="nav-icon">📊</span> Live Analytics
       </a>
-      <a class="nav-item" href="USER_GUIDE.md" target="_blank">
+      <a class="nav-item" href="/user-guide">
         <span class="nav-icon">📖</span> User Guide
       </a>
     </div>
@@ -705,6 +705,10 @@
     let rawAnalyticsData = null;
     let autoRefreshInterval = null;
 
+    function escapeHtml(value) {
+      return String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+    }
+
     function timeAgo(isoString) {
       if (!isoString) return 'Just now';
       const now = new Date();
@@ -728,86 +732,44 @@
 
     async function loadAnalytics() {
       try {
-        const res = await fetch(`${API_BASE}/api/analytics/stats`);
-        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const res = await fetch(`${API_BASE}/api/analytics/stats`, { credentials: 'include' });
+        if (!res.ok) {
+          const err = new Error(res.status === 401 || res.status === 403 ? 'Administrator sign-in is required to view analytics.' : `Analytics request failed (HTTP ${res.status}).`);
+          err.status = res.status;
+          throw err;
+        }
         const data = await res.json();
         rawAnalyticsData = data;
         renderAnalytics(data);
       } catch (err) {
-        console.warn('Backend analytics API offline, checking local session feed:', err.message);
-        renderLocalFallback();
+        console.warn('Analytics unavailable:', err.message);
+        rawAnalyticsData = null;
+        renderAnalytics(null);
+        showToast(err.message || 'Analytics are unavailable.');
+        if (err.status === 401 || err.status === 403) {
+          clearInterval(autoRefreshInterval);
+          autoRefreshInterval = null;
+        }
       }
-    }
-
-    function renderLocalFallback() {
-      let localClicks = JSON.parse(localStorage.getItem('ai_interview_local_clicks') || '[]');
-      let localViews = JSON.parse(localStorage.getItem('ai_interview_local_pageviews') || '[]');
-      
-      if (!localClicks.length) {
-        localClicks = [
-          { id: 1, element_text: "🎨 UX Designer", action_type: "preset_select", target_role: "UX Designer", page: "Interview-studio.html", device: "Desktop", os: "Windows", browser: "Chrome", timestamp: new Date(Date.now() - 45 * 1000).toISOString() },
-          { id: 2, element_text: "Compose question paper", action_type: "generate_submit", target_role: "UX Designer", page: "Interview-studio.html", device: "Desktop", os: "Windows", browser: "Chrome", timestamp: new Date(Date.now() - 3 * 60 * 1000).toISOString() },
-          { id: 3, element_text: "Replay Question", action_type: "voice_audio", target_role: "Frontend Developer", page: "Mock-interview.html", device: "MacBook Pro", os: "macOS", browser: "Safari", timestamp: new Date(Date.now() - 8 * 60 * 1000).toISOString() },
-          { id: 4, element_text: "Analyze Resume & JD Match", action_type: "ats_analysis", target_role: "Product Designer", page: "Resume-match.html", device: "Desktop", os: "Windows", browser: "Chrome", timestamp: new Date(Date.now() - 14 * 60 * 1000).toISOString() },
-          { id: 5, element_text: "🤖 GenAI Engineer", action_type: "preset_select", target_role: "GenAI Engineer", page: "Dashboard.html", device: "Mobile", os: "iOS", browser: "Mobile Safari", timestamp: new Date(Date.now() - 22 * 60 * 1000).toISOString() },
-          { id: 6, element_text: "Export PDF", action_type: "export_action", target_role: "Backend Developer", page: "Interview-studio.html", device: "Desktop", os: "Linux", browser: "Firefox", timestamp: new Date(Date.now() - 38 * 60 * 1000).toISOString() }
-        ];
-      }
-
-      if (!localViews.length) {
-        localViews = [
-          { id: 1, page: "Interview-studio.html", referrer: "Dashboard.html", device: "Desktop", browser: "Chrome", os: "Windows", ip: "127.0.0.1", timestamp: new Date(Date.now() - 45 * 1000).toISOString() },
-          { id: 2, page: "Mock-interview.html", referrer: "Interview-studio.html", device: "MacBook Pro", browser: "Safari", os: "macOS", ip: "192.168.1.14", timestamp: new Date(Date.now() - 8 * 60 * 1000).toISOString() },
-          { id: 3, page: "Resume-match.html", referrer: "Google Search", device: "Desktop", browser: "Chrome", os: "Windows", ip: "127.0.0.1", timestamp: new Date(Date.now() - 14 * 60 * 1000).toISOString() },
-          { id: 4, page: "Dashboard.html", referrer: "Direct", device: "Mobile", browser: "Safari", os: "iOS", ip: "172.56.21.8", timestamp: new Date(Date.now() - 22 * 60 * 1000).toISOString() },
-          { id: 5, page: "scorecard.html", referrer: "Mock-interview.html", device: "Desktop", browser: "Firefox", os: "Linux", ip: "10.0.0.42", timestamp: new Date(Date.now() - 38 * 60 * 1000).toISOString() }
-        ];
-      }
-      
-      const fallbackData = {
-        total_pageviews: 1248 + localViews.length,
-        unique_visitors: 486,
-        total_clicks: 894 + localClicks.length,
-        active_sessions: 3,
-        clicks_by_role: [
-          { role: 'UX Designer', count: 342 },
-          { role: 'Frontend Developer', count: 284 },
-          { role: 'Product Designer', count: 198 },
-          { role: 'GenAI Engineer', count: 165 },
-          { role: 'Backend Developer', count: 124 }
-        ],
-        recent_clicks: localClicks,
-        recent_visitors: localViews,
-        device_breakdown: [
-          { device: 'Desktop / Laptop', count: 742 },
-          { device: 'Mobile', count: 368 },
-          { device: 'Tablet', count: 138 }
-        ],
-        browser_breakdown: [
-          { browser: 'Chrome', count: 780 },
-          { browser: 'Safari', count: 260 },
-          { browser: 'Firefox', count: 140 },
-          { browser: 'Edge', count: 68 }
-        ]
-      };
-      renderAnalytics(fallbackData);
     }
 
     function renderAnalytics(data) {
+      const available = data !== null;
+      data = data || {};
       // 1. KPIs
-      document.getElementById('kpiPageviews').textContent = (data.total_pageviews || 0).toLocaleString();
-      document.getElementById('kpiUniqueVisitors').textContent = (data.unique_visitors || 0).toLocaleString();
-      document.getElementById('kpiTotalClicks').textContent = (data.total_clicks || 0).toLocaleString();
-      document.getElementById('activeVisitorsTxt').textContent = `${data.active_sessions || 1} Active Session${(data.active_sessions || 1) > 1 ? 's' : ''}`;
+      document.getElementById('kpiPageviews').textContent = available ? (data.total_pageviews || 0).toLocaleString() : '?';
+      document.getElementById('kpiUniqueVisitors').textContent = available ? (data.unique_visitors || 0).toLocaleString() : '?';
+      document.getElementById('kpiTotalClicks').textContent = available ? (data.total_clicks || 0).toLocaleString() : '?';
+      document.getElementById('activeVisitorsTxt').textContent = available ? `${data.active_sessions || 0} Active Session${(data.active_sessions || 0) === 1 ? '' : 's'}` : 'Analytics unavailable';
 
       // Top Role
       if (data.clicks_by_role && data.clicks_by_role.length > 0) {
         const top = data.clicks_by_role[0];
-        document.getElementById('kpiTopRole').textContent = top.role || 'UX Designer';
+        document.getElementById('kpiTopRole').textContent = top.role || 'Unknown';
         document.getElementById('kpiTopRoleSub').textContent = `${top.count} interactions recorded`;
       } else {
-        document.getElementById('kpiTopRole').textContent = 'UX Designer';
-        document.getElementById('kpiTopRoleSub').textContent = 'Primary preset';
+        document.getElementById('kpiTopRole').textContent = '?';
+        document.getElementById('kpiTopRoleSub').textContent = available ? 'No role interactions recorded' : 'Analytics unavailable';
       }
 
       // 2. Clickstream Table
@@ -835,19 +797,19 @@
 
       let html = '';
       clicks.forEach(c => {
-        const roleHtml = c.target_role ? `<span class="tag-badge role">🎨 ${c.target_role}</span>` : '<span style="color:var(--ink-faint)">—</span>';
-        const actionHtml = `<span class="tag-badge action">${c.action_type || 'click'}</span>`;
-        const deviceHtml = `<span class="tag-badge device">${c.device || 'Desktop'} · ${c.os || 'Windows'}</span>`;
+        const roleHtml = c.target_role ? `<span class="tag-badge role">🎨 ${escapeHtml(c.target_role)}</span>` : '<span style="color:var(--ink-faint)">—</span>';
+        const actionHtml = `<span class="tag-badge action">${escapeHtml(c.action_type || 'click')}</span>`;
+        const deviceHtml = `<span class="tag-badge device">${escapeHtml(c.device || 'Desktop')} · ${escapeHtml(c.os || 'Windows')}</span>`;
 
         html += `
           <tr>
             <td style="font-family:var(--f-mono);font-size:11.5px;color:var(--ink-faint);white-space:nowrap">${timeAgo(c.timestamp)}</td>
             <td>
-              <div style="font-weight:700;color:var(--ink)">${c.element_text || c.element_id || 'Button Click'}</div>
+              <div style="font-weight:700;color:var(--ink)">${escapeHtml(c.element_text || c.element_id || 'Button Click')}</div>
               <div style="margin-top:2px">${actionHtml}</div>
             </td>
             <td>${roleHtml}</td>
-            <td style="font-family:var(--f-mono);font-size:12px">${c.page || 'Dashboard.html'}</td>
+            <td style="font-family:var(--f-mono);font-size:12px">${escapeHtml(c.page || 'Dashboard.html')}</td>
             <td>${deviceHtml}</td>
           </tr>
         `;
@@ -886,7 +848,7 @@
         html += `
           <div class="bar-item">
             <div class="bar-header">
-              <span>${r.role}</span>
+              <span>${escapeHtml(r.role)}</span>
               <span style="font-family:var(--f-mono);color:var(--ink-soft)">${r.count} clicks (${pct}%)</span>
             </div>
             <div class="bar-track">
@@ -907,7 +869,7 @@
         html += `
           <div class="bar-item">
             <div class="bar-header">
-              <span>${d.device}</span>
+              <span>${escapeHtml(d.device)}</span>
               <span style="font-family:var(--f-mono);color:var(--ink-soft)">${d.count} (${pct}%)</span>
             </div>
             <div class="bar-track">
@@ -933,10 +895,10 @@
         html += `
           <tr>
             <td style="font-family:var(--f-mono);font-size:11.5px;color:var(--ink-faint);white-space:nowrap">${timeAgo(v.timestamp)}</td>
-            <td style="font-weight:700;color:var(--ink)">${v.page || 'index.html'}</td>
-            <td style="color:var(--ink-soft)">${v.referrer || 'Direct'}</td>
-            <td><span class="tag-badge device">${v.device || 'Desktop'} · ${v.browser || 'Chrome'} (${v.os || 'Windows'})</span></td>
-            <td style="font-family:var(--f-mono);font-size:11px;color:var(--ink-faint)">${v.ip || '127.0.0.1'}</td>
+            <td style="font-weight:700;color:var(--ink)">${escapeHtml(v.page || 'index.html')}</td>
+            <td style="color:var(--ink-soft)">${escapeHtml(v.referrer || 'Direct')}</td>
+            <td><span class="tag-badge device">${escapeHtml(v.device || 'Desktop')} · ${escapeHtml(v.browser || 'Chrome')} (${escapeHtml(v.os || 'Windows')})</span></td>
+            <td style="font-family:var(--f-mono);font-size:11px;color:var(--ink-faint)">${escapeHtml(v.ip || '127.0.0.1')}</td>
           </tr>
         `;
       });
@@ -946,13 +908,12 @@
     async function confirmClearAnalytics() {
       if (!confirm('Are you sure you want to clear all visitor and clickstream logs?')) return;
       try {
-        await fetch(`${API_BASE}/api/analytics/clear`, { method: 'DELETE' });
-        localStorage.removeItem('ai_interview_local_clicks');
-        localStorage.removeItem('ai_interview_local_pageviews');
+        const res = await fetch(`${API_BASE}/api/analytics/clear`, { method: 'DELETE', credentials: 'include' });
+        if (!res.ok) throw new Error(res.status === 401 || res.status === 403 ? 'Administrator sign-in is required.' : 'Could not clear analytics.');
         showToast('Analytics logs cleared successfully');
         loadAnalytics();
       } catch (e) {
-        showToast('Failed to clear analytics');
+        showToast(e.message || 'Failed to clear analytics');
       }
     }
 

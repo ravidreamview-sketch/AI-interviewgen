@@ -26,6 +26,7 @@ from app.security import hash_password, create_access_token
 from app.speech_service import get_stt_provider, BrowserSpeechProvider
 from app.tts_service import get_tts_provider, BrowserSynthesisTTSProvider
 from app.avatar_service import get_avatar_provider, InteractiveCanvasAvatarProvider
+from app.services import AIProviderError
 
 
 class TestVideoVoiceInterviewEngine(unittest.TestCase):
@@ -48,13 +49,31 @@ class TestVideoVoiceInterviewEngine(unittest.TestCase):
                 db.close()
 
         app.dependency_overrides[get_db] = override_get_db
-        cls.client = TestClient(app)
+        cls.client = TestClient(
+            app,
+            base_url="http://127.0.0.1",
+            client=("127.0.0.1", 50000),
+        )
 
     @classmethod
     def tearDownClass(cls):
         app.dependency_overrides.clear()
 
     def setUp(self):
+        self.demo_environment = patch.dict(os.environ, {
+            "ENV": "test",
+            "LOCAL_DEMO_ACCESS": "true",
+            "DEV_AUTH_BYPASS": "false",
+            "VERCEL": "",
+            "AWS_LAMBDA_FUNCTION_NAME": "",
+            "K_SERVICE": "",
+            "DYNO": "",
+            "RENDER": "",
+            "RAILWAY_ENVIRONMENT": "",
+            "FLY_APP_NAME": "",
+            "WEBSITE_INSTANCE_ID": "",
+        }, clear=False)
+        self.demo_environment.start()
         self.db = self.TestingSessionLocal()
         self.db.query(MockInterview).delete()
         self.db.query(UserAccount).delete()
@@ -86,8 +105,18 @@ class TestVideoVoiceInterviewEngine(unittest.TestCase):
 
         token1 = create_access_token({"sub": self.candidate1.id, "role": "candidate"})
         token2 = create_access_token({"sub": self.candidate2.id, "role": "candidate"})
-        self.client1 = TestClient(app, cookies={"candidate_session": token1})
-        self.client2 = TestClient(app, cookies={"candidate_session": token2})
+        self.client1 = TestClient(
+            app,
+            base_url="http://127.0.0.1",
+            client=("127.0.0.1", 50001),
+            cookies={"candidate_session": token1},
+        )
+        self.client2 = TestClient(
+            app,
+            base_url="http://127.0.0.1",
+            client=("127.0.0.1", 50002),
+            cookies={"candidate_session": token2},
+        )
         self.ai_patch = patch(
             "app.interview_engine.generate_ai_questions",
             side_effect=self.fake_ai_response,
@@ -97,6 +126,7 @@ class TestVideoVoiceInterviewEngine(unittest.TestCase):
     def tearDown(self):
         self.ai_patch.stop()
         self.db.close()
+        self.demo_environment.stop()
 
     @staticmethod
     def fake_ai_response(prompt):
@@ -119,7 +149,7 @@ class TestVideoVoiceInterviewEngine(unittest.TestCase):
 
     def test_providers_endpoint(self):
         """Verify GET /api/interview/providers returns active provider capabilities."""
-        resp = self.client.get("/api/interview/providers")
+        resp = self.client1.get("/api/interview/providers")
         self.assertEqual(resp.status_code, 200)
         data = resp.json()
         self.assertIn("stt", data)
@@ -203,15 +233,17 @@ class TestVideoVoiceInterviewEngine(unittest.TestCase):
         response = self.client.post("/api/interview/start", json={"role": "Backend Engineer"})
         self.assertEqual(response.status_code, 401)
 
-    def test_development_auth_bypass_creates_candidate_and_opens_dashboard(self):
-        with patch.dict(os.environ, {"ENV": "development", "DEV_AUTH_BYPASS": "true"}):
+    def test_development_auth_bypass_does_not_grant_paid_feature_access(self):
+        with patch.dict(os.environ, {
+            "ENV": "development", "DEV_AUTH_BYPASS": "true", "LOCAL_DEMO_ACCESS": "true",
+        }):
             response = self.client.post("/api/interview/start", json={
                 "role": "Backend Engineer",
                 "questions": ["Describe a reliable API design."],
             })
             login_page = self.client.get("/login", follow_redirects=False)
 
-        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(response.status_code, 402, response.text)
         self.assertEqual(login_page.status_code, 307)
         self.assertEqual(login_page.headers["location"], "/candidate/dashboard")
         dev_candidate = (
@@ -220,7 +252,7 @@ class TestVideoVoiceInterviewEngine(unittest.TestCase):
             .one()
         )
         self.assertEqual(dev_candidate.role, "candidate")
-        self.assertEqual(dev_candidate.id, self.db.query(MockInterview).one().user_id)
+        self.assertEqual(self.db.query(MockInterview).count(), 0)
 
     def test_development_auth_bypass_ignores_expired_browser_cookie(self):
         stale_session = TestClient(
@@ -251,6 +283,23 @@ class TestVideoVoiceInterviewEngine(unittest.TestCase):
         self.assertEqual(response.status_code, 503)
         self.assertIn("Set GEMINI_API_KEY or GROQ_API_KEY", response.json()["detail"])
         self.assertNotIn("AIza", response.text)
+        self.assertEqual(self.db.query(MockInterview).count(), 0)
+
+    def test_interview_start_returns_sanitized_provider_error_category(self):
+        self.ai_mock.side_effect = AIProviderError(
+            "The configured AI provider rejected its credentials.",
+            503,
+            "authentication",
+        )
+        response = self.client1.post(
+            "/api/interview/start",
+            json={"role": "Backend Engineer"},
+        )
+
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.headers.get("X-AI-Error-Category"), "authentication")
+        self.assertNotIn("Authorization", response.text)
+        self.assertNotIn("api_key", response.text.lower())
         self.assertEqual(self.db.query(MockInterview).count(), 0)
 
     def test_interview_turn_answer_and_followup(self):

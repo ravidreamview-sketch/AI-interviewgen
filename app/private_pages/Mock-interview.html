@@ -2687,7 +2687,7 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
     }
   };
 
-  // Comprehensive Dynamic Role Question Banks (Offline Fallback & AI Synthesis)
+  // Curated templates for the explicitly labeled manual re-roll action.
   const DYNAMIC_ROLE_BANKS = {
     ux: [
       "Walk through how you design and execute a mixed-methods user research study to define information architecture for a complex enterprise workflow at {company}.",
@@ -3548,102 +3548,37 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
     }, 250);
   }
 
-  // API or Fallback Questions Fetcher
+  // Questions must come from the authenticated generation API.
   async function fetchInterviewQuestions(role, exp, type, company, count, customQuestion = '') {
     const targetCount = Number(count) || 10;
     const skills = getSkillsForRole(role);
-    const endpoints = ['/generate', '/api/generate'];
-
-    for (const ep of endpoints) {
-      try {
-        const res = await fetch(ep, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            role: role,
-            company: company,
-            interview_type: type,
-            experience: exp,
-            skills: skills,
-            difficulty: "Hard",
-            number_of_questions: targetCount,
-            questionCount: targetCount,
-            custom_question: customQuestion || undefined
-          })
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          if (data.questions_details && data.questions_details.length >= targetCount) {
-            return data.questions_details.slice(0, targetCount);
-          }
-          if (data.questions && data.questions.length >= targetCount) {
-            return data.questions.slice(0, targetCount).map((q, i) => ({
-              id: i + 1,
-              question: typeof q === 'string' ? q.replace(/^\d+[\.\)]\s*/, '') : (q.question || String(q)),
-              category: type,
-              difficulty: "Hard",
-              source_type: i < 2 ? "verified" : "AI_generated",
-              source_title: i < 2 ? `${company} Bar` : `AI Synthesis (${role})`
-            }));
-          }
-        }
-      } catch (err) {
-        console.warn(`Endpoint ${ep} connection notice:`, err.message);
-      }
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        role,
+        company,
+        interview_type: type,
+        experience: exp,
+        skills,
+        difficulty: 'Hard',
+        number_of_questions: targetCount,
+        custom_question: customQuestion || null,
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const error = new Error(data.detail || `AI question generation failed (HTTP ${res.status}).`);
+      error.category = res.headers.get('X-AI-Error-Category') || `http_${res.status}`;
+      throw error;
     }
 
-    // Dynamic Role-Calibrated Synthesis from Offline Bank
-    const rLower = (role || '').toLowerCase();
-    let bankKey = 'general';
-    if (rLower.includes('ux') && !rLower.includes('product') && !rLower.includes('ui/ux')) bankKey = 'ux';
-    else if (rLower.includes('product designer') || rLower.includes('product design')) bankKey = 'product';
-    else if (rLower.includes('ui/ux') || rLower.includes('visual') || rLower.includes('ui designer')) bankKey = 'uiux';
-    else if (rLower.includes('frontend') || rLower.includes('react') || rLower.includes('web') || rLower.includes('next.js')) bankKey = 'frontend';
-    else if (rLower.includes('genai') || rLower.includes('llm') || rLower.includes('ai') || rLower.includes('machine learning')) bankKey = 'genai';
-    else if (rLower.includes('fullstack') || rLower.includes('full stack')) bankKey = 'fullstack';
-    else if (rLower.includes('devops') || rLower.includes('cloud') || rLower.includes('sre') || rLower.includes('infrastructure')) bankKey = 'devops';
-    else if (rLower.includes('data engineer') || rLower.includes('data') || rLower.includes('analytics engineer')) bankKey = 'data';
-    else if (rLower.includes('backend') || rLower.includes('python') || rLower.includes('api') || rLower.includes('software')) bankKey = 'backend';
-
-    const sourceBank = DYNAMIC_ROLE_BANKS[bankKey] || DYNAMIC_ROLE_BANKS.general;
-    const companyClean = company.includes('Generic') ? 'our engineering team' : company.split('(')[0].trim();
-    const generated = [];
-
-    // If custom seed provided, craft the first question branching directly from it
-    if (customQuestion && customQuestion.trim()) {
-      generated.push({
-        id: 1,
-        question: `Focus Assessment: In your experience as a ${role}, walk through how you approach: "${customQuestion.trim()}" at ${companyClean}.`,
-        category: type,
-        difficulty: "Hard",
-        source_type: "derived",
-        source_title: `Seed Topic (${customQuestion.slice(0, 20)}...)`,
-        confidence: 0.96
-      });
+    const details = Array.isArray(data.questions_details) ? data.questions_details : [];
+    if (details.length !== targetCount || details.some(item => !item?.question)) {
+      throw new Error('The server did not return the requested number of generated questions. Please retry.');
     }
-
-    const startIndex = generated.length;
-    for (let i = startIndex; i < targetCount; i++) {
-      const template = sourceBank[(i - startIndex) % sourceBank.length];
-      const qText = template
-        .replace(/\{role\}/g, role)
-        .replace(/\{company\}/g, companyClean);
-
-      generated.push({
-        id: i + 1,
-        question: qText,
-        category: type,
-        difficulty: "Hard",
-        source_type: i < 2 ? "verified" : "AI_generated",
-        source_title: i < 2 ? `${companyClean} Assessment Bar` : `AI Synthesis (${role})`,
-        source_url: null,
-        source_date: new Date().toISOString().slice(0, 10),
-        confidence: 0.94
-      });
-    }
-
-    return generated;
+    return details;
   }
 
   // Generate and Preview Questions in Stage 1
@@ -3653,6 +3588,7 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
     const type = $('#mockType').value;
     const company = $('#mockCompany').value;
     const count = Number($('#mockCount').value) || 10;
+    const customTopic = $('#mockCustomTopic')?.value.trim() || '';
 
     const btn = $('#btnGenRoleQuestions');
     const btnText = $('#genBtnText');
@@ -3677,7 +3613,8 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
 
     } catch (err) {
       console.error("Question generation error:", err);
-      alert("Notice: Could not load questions from server. Using role offline synthesis.");
+      const category = typeof err?.category === 'string' ? ` (${err.category})` : '';
+      alert(`AI question regeneration failed${category}: ${err.message || 'Check the provider configuration and retry.'}`);
     } finally {
       btn.disabled = false;
       btnText.innerHTML = '<span>⚡ Regenerate Role Questions</span>';
@@ -3701,7 +3638,7 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
           <div class="preview-q-text" id="prevQText_${i}">${qObj.question}</div>
           <div class="preview-q-meta">
             <span class="prov-tag ${qObj.source_type === 'verified' ? 'verified' : (qObj.source_type === 'derived' ? 'derived' : 'aigen')}">
-              ${qObj.source_type === 'verified' ? '🟢 Verified' : (qObj.source_type === 'derived' ? '🔵 Derived' : '🟣 AI Synthesized')}
+              ${qObj.source_type === 'verified' ? '🟢 Verified' : (qObj.source_type === 'derived' ? '🔵 Derived' : (qObj.source_type === 'curated' ? 'Curated Practice Bank' : '🟣 AI Synthesized'))}
             </span>
             <span style="font-size:11px;color:var(--ink-soft);font-family:var(--f-mono)">${qObj.category || 'Technical'}</span>
             ${qObj.source_title ? `<span style="font-size:11px;color:var(--ink-faint);font-family:var(--f-mono)">· ${qObj.source_title}</span>` : ''}
@@ -3757,8 +3694,8 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
       question: newText,
       category: $('#mockType').value,
       difficulty: "Hard",
-      source_type: "AI_generated",
-      source_title: `AI Synthesis (${role})`,
+      source_type: "curated",
+      source_title: "Curated practice bank",
       confidence: 0.95
     };
 

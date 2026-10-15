@@ -530,7 +530,7 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
           <span class="input-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
           </span>
-          <input class="form-input" type="email" id="email" value="candidate@example.com" placeholder="name@company.com">
+          <input class="form-input" type="email" id="email" placeholder="name@company.com">
         </div>
       </div>
 
@@ -540,7 +540,7 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
           <span class="input-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
           </span>
-          <input class="form-input" type="password" id="password" value="CandidatePass123!" placeholder="••••••••">
+          <input class="form-input" type="password" id="password" placeholder="••••••••">
           <span class="eye-toggle" id="eyeToggle" onclick="togglePassword()">
             <svg id="eyeSvg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </span>
@@ -604,14 +604,14 @@ function selectDemoRole(role) {
   if (role === 'admin') {
     cardAdmin.classList.add('active');
     cardCand.classList.remove('active');
-    emailInput.value = 'admin@example.com';
-    passInput.value = 'SuperAdminPass123!';
+    emailInput.value = '';
+    passInput.value = '';
     submitBtn.innerHTML = `<span>⚡ Sign In as Super Admin</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
   } else {
     cardCand.classList.add('active');
     cardAdmin.classList.remove('active');
-    emailInput.value = 'candidate@example.com';
-    passInput.value = 'CandidatePass123!';
+    emailInput.value = '';
+    passInput.value = '';
     submitBtn.innerHTML = `<span>🚀 Sign In to Candidate Workspace</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
   }
 }
@@ -663,64 +663,36 @@ async function handleAuth(e) {
   if (e) e.preventDefault();
   const btn = document.getElementById('submitBtn');
   const alertBox = document.getElementById('loginAlert');
-  const email = (document.getElementById('email').value || 'candidate@example.com').trim();
-  let password = document.getElementById('password').value;
-  
-  if (!password) {
-    password = email.toLowerCase().includes('admin') ? 'SuperAdminPass123!' : 'CandidatePass123!';
-  }
-
-  btn.disabled = true;
-  btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><circle cx="12" cy="12" r="10"/></svg> Opening Workspace...`;
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const isSuperAdmin = document.getElementById('cardAdmin')?.classList.contains('active');
+  const targetUrl = isSuperAdmin ? '/admin' : '/Dashboard.html';
   alertBox.style.display = 'none';
-
-  const isSuperAdmin = email.toLowerCase().includes('admin');
-  const targetUrl = isSuperAdmin 
-    ? (window.location.protocol === 'file:' ? 'Admin.html' : '/admin')
-    : (window.location.protocol === 'file:' ? 'Dashboard.html' : '/Dashboard.html');
-
+  btn.disabled = true;
   try {
-    const endpoint = isSuperAdmin ? '/api/admin/login' : '/api/candidate/login';
-    const res = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
+    const res = await fetch(isSuperAdmin ? '/api/admin/login' : '/api/candidate/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
       body: JSON.stringify({ email, password })
     });
     const data = await res.json().catch(() => ({}));
-    if (data && data.user) {
-      localStorage.setItem('candidate_user', JSON.stringify({
-        email: data.user.email,
-        name: data.user.full_name || (isSuperAdmin ? 'Super Administrator' : 'Candidate'),
-        role: data.user.role || (isSuperAdmin ? 'super_admin' : 'candidate'),
-        plan: (data.user.plan_tier || 'PRO').toUpperCase() + ' Plan'
-      }));
-    } else {
-      localStorage.setItem('candidate_user', JSON.stringify({
-        email: email,
-        name: isSuperAdmin ? 'Super Administrator' : 'Candidate',
-        role: isSuperAdmin ? 'super_admin' : 'candidate',
-        plan: 'Pro Plan'
-      }));
-    }
-  } catch (err) {
+    if (!res.ok || !data.user) throw new Error(data.detail || 'Sign in failed. Check your credentials.');
     localStorage.setItem('candidate_user', JSON.stringify({
-      email: email,
-      name: isSuperAdmin ? 'Super Administrator' : 'Candidate',
-      role: isSuperAdmin ? 'super_admin' : 'candidate',
-      plan: 'Pro Plan'
+      email: data.user.email, name: data.user.full_name || (isSuperAdmin ? 'Administrator' : 'Candidate'),
+      role: data.user.role || (isSuperAdmin ? 'super_admin' : 'candidate'),
+      plan: (data.user.plan_tier || 'PRO').toUpperCase() + ' Plan'
     }));
+    window.location.href = targetUrl;
+  } catch (err) {
+    alertBox.textContent = err.message || 'Server connection error. Please try again.';
+    alertBox.style.display = 'block';
+    btn.disabled = false;
   }
-
-  window.location.href = targetUrl;
 }
 
 function demoLogin(provider) {
-  const btn = document.getElementById('submitBtn');
-  btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><circle cx="12" cy="12" r="10"/></svg> Connecting ${provider}...`;
-  setTimeout(() => {
-    window.location.href = window.location.protocol === 'file:' ? 'Dashboard.html' : '/Dashboard.html';
-  }, 600);
+  const alertBox = document.getElementById('loginAlert');
+  alertBox.textContent = `${provider} sign-in is not configured. Please use your account credentials.`;
+  alertBox.style.display = 'block';
 }
 
 // Auto Slider Logic

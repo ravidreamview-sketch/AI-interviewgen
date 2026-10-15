@@ -1,8 +1,10 @@
 import os
 import re
 import logging
+import socket
 from pathlib import Path
 from typing import List, Optional
+import urllib.error
 from dotenv import load_dotenv
 
 load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env")
@@ -12,6 +14,80 @@ import json
 import urllib.request
 
 logger = logging.getLogger("ravi.ai_provider")
+
+
+class AIProviderError(RuntimeError):
+    """Provider failure with a safe client message and upstream HTTP status."""
+
+    def __init__(self, message: str, status_code: int, category: str):
+        super().__init__(message)
+        self.status_code = status_code
+        self.category = category
+
+
+class AIProviderNotConfigured(AIProviderError):
+    def __init__(self):
+        super().__init__(
+            "AI provider is not configured. Set GEMINI_API_KEY or GROQ_API_KEY in the server environment.",
+            503,
+            "not_configured",
+        )
+
+
+def _provider_failure(exc: Exception) -> tuple[str, Optional[int], int]:
+    """Classify provider errors without inspecting or logging their messages."""
+    status_code = getattr(exc, "status_code", None)
+    if isinstance(exc, urllib.error.HTTPError):
+        status_code = exc.code
+
+    if status_code == 401:
+        return "authentication", status_code, 503
+    if status_code == 403:
+        return "permission", status_code, 503
+    if status_code == 429:
+        return "rate_limit_or_quota", status_code, 503
+    if status_code in (400, 404, 422):
+        return "model_or_request_configuration", status_code, 502
+    if status_code is not None and status_code >= 500:
+        return "provider_server_error", status_code, 502
+    if isinstance(exc, (TimeoutError, socket.timeout)) or "timeout" in type(exc).__name__.lower():
+        return "timeout", status_code, 504
+    if isinstance(exc, (urllib.error.URLError, ConnectionError, OSError)):
+        return "network", status_code, 502
+    if isinstance(exc, (ValueError, KeyError, IndexError, TypeError)):
+        return "malformed_response", status_code, 502
+    if isinstance(exc, ImportError):
+        return "client_dependency", status_code, 503
+    return "provider_error", status_code, 502
+
+
+def _log_provider_failure(provider: str, model: str, exc: Exception) -> tuple[str, Optional[int], int]:
+    category, status_code, client_status = _provider_failure(exc)
+    logger.warning(
+        "AI provider request failed provider=%s model=%s category=%s status=%s error_type=%s",
+        provider,
+        model,
+        category,
+        status_code if status_code is not None else "unavailable",
+        type(exc).__name__,
+    )
+    return category, status_code, client_status
+
+
+def _public_provider_error(category: str, status_code: Optional[int], client_status: int) -> AIProviderError:
+    messages = {
+        "authentication": "The configured AI provider rejected its credentials. Check the server-side API key.",
+        "permission": "The configured AI provider denied access. Check key and model permissions.",
+        "rate_limit_or_quota": "The configured AI provider rate limit or quota was reached. Try again later or check provider usage.",
+        "model_or_request_configuration": "The AI provider rejected the configured model or request. Check the server-side model configuration.",
+        "provider_server_error": "The AI provider is temporarily unavailable. Try again shortly.",
+        "timeout": "The AI provider request timed out. Try again.",
+        "network": "The AI provider could not be reached from the server.",
+        "malformed_response": "The AI provider returned a malformed or empty response.",
+        "client_dependency": "The configured AI provider client is unavailable. Check installed server dependencies.",
+        "provider_error": "The configured AI provider request failed. Check sanitized server logs for its failure category.",
+    }
+    return AIProviderError(messages.get(category, messages["provider_error"]), client_status, category)
 
 
 def get_ai_provider_status() -> tuple[str, bool]:
@@ -25,10 +101,12 @@ def get_ai_provider_status() -> tuple[str, bool]:
 
 def generate_ai_questions(prompt: str) -> str:
     # Gemini is preferred; Groq remains the configured fallback.
+    last_failure: Optional[tuple[str, Optional[int], int]] = None
     gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
     if gemini_key:
+        model_name = "gemini-2.5-flash"
         try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
             payload = {
                 "contents": [{"parts": [{"text": prompt}]}],
                 "generationConfig": {"temperature": 0.65, "maxOutputTokens": 3000}
@@ -36,19 +114,16 @@ def generate_ai_questions(prompt: str) -> str:
             req = urllib.request.Request(
                 url,
                 data=json.dumps(payload).encode("utf-8"),
-                headers={"Content-Type": "application/json"}
+                headers={"Content-Type": "application/json", "x-goog-api-key": gemini_key},
             )
             with urllib.request.urlopen(req, timeout=20) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
-                text = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
-                if text:
-                    return text
-            logger.warning("Gemini provider returned an empty response; trying Groq if configured")
+                text = data["candidates"][0]["content"]["parts"][0]["text"]
+                if not isinstance(text, str) or not text.strip():
+                    raise ValueError("empty provider response")
+                return text
         except Exception as gemini_err:
-            logger.warning(
-                "Gemini provider request failed (%s); trying Groq if configured",
-                type(gemini_err).__name__,
-            )
+            last_failure = _log_provider_failure("Gemini", model_name, gemini_err)
 
     groq_key = os.getenv("GROQ_API_KEY", "").strip()
     if groq_key:
@@ -70,29 +145,17 @@ def generate_ai_questions(prompt: str) -> str:
                     text = response.choices[0].message.content
                     if text and text.strip():
                         return text
-                    logger.warning("Groq model %s returned an empty response", model_name)
+                    raise ValueError("empty provider response")
                 except Exception as groq_err:
-                    logger.warning(
-                        "Groq model %s request failed (%s)",
-                        model_name,
-                        type(groq_err).__name__,
-                    )
+                    last_failure = _log_provider_failure("Groq", model_name, groq_err)
         except Exception as groq_err:
-            logger.warning("Groq provider is unavailable (%s)", type(groq_err).__name__)
+            last_failure = _log_provider_failure("Groq", "client_initialization", groq_err)
 
     if not gemini_key and not groq_key:
-        logger.error(
-            "AI provider is not configured. "
-            "Set GEMINI_API_KEY or GROQ_API_KEY in the server environment."
-        )
-        raise RuntimeError(
-            "AI provider is not configured. "
-            "Set GEMINI_API_KEY or GROQ_API_KEY in the server environment."
-        )
-    raise RuntimeError(
-        "Configured AI provider request failed. "
-        "Check the server-side provider configuration and try again."
-    )
+        logger.error("AI provider is not configured; required_key_present=NO")
+        raise AIProviderNotConfigured()
+    category, status_code, client_status = last_failure or ("provider_error", None, 502)
+    raise _public_provider_error(category, status_code, client_status)
 
 
 # Rich fallback questions bank (25+ questions per discipline)

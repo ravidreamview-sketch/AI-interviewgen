@@ -3,6 +3,8 @@ import uuid
 import json
 import logging
 import traceback
+import time
+from threading import Lock
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -17,6 +19,20 @@ from sqlalchemy.orm import Session
 logger = logging.getLogger("ravi.main")
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+PRIVATE_HTML_FILES = {
+    "Admin.html",
+    "Analytics.html",
+    "Candidate-dashboard.html",
+    "Dashboard.html",
+    "Interview-studio.html",
+    "Answer-evaluator.html",
+    "Mock-interview.html",
+    "Resume-match.html",
+    "Company-playbooks.html",
+    "Interview history.html",
+    "Upgrade-pro.html",
+    "Interview-coach.html",
+}
 
 from app.models import (
     InterviewRequest,
@@ -63,10 +79,10 @@ from app.tts_service import get_tts_provider
 from app.avatar_service import get_avatar_provider
 from app.prompts import interview_prompt
 from app.services import (
+    AIProviderError,
     generate_ai_questions,
     get_ai_provider_status,
     parse_raw_questions,
-    get_fallback_questions,
 )
 from app.coach_service import build_candidate_context, generate_coach_reply
 from app.adaptive_service import (
@@ -97,10 +113,17 @@ from app.db_models import (
     CoachMessage,
 )
 from app.admin_routes import admin_router, candidate_router
+from app.subscription_routes import subscription_admin_router, subscription_candidate_router
 from app.auth_deps import (
     get_current_user,
     get_current_user_optional,
+    require_admin,
+    require_authenticated_candidate,
+    require_candidate_page_access,
+    require_paid_candidate,
     is_development_auth_bypass_enabled,
+    is_local_demo_access_enabled,
+    is_local_demo_access_configured,
 )
 
 _ai_provider, _ai_provider_configured = get_ai_provider_status()
@@ -134,7 +157,6 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
-    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
@@ -217,9 +239,13 @@ async def global_production_exception_handler(request: Request, exc: Exception):
 # Mount Super Admin & Candidate API routers with dual prefix support for Vercel serverless compatibility
 app.include_router(admin_router, prefix="/api/admin")
 app.include_router(admin_router, prefix="/admin/api")
+app.include_router(subscription_admin_router, prefix="/api/admin")
+app.include_router(subscription_admin_router, prefix="/admin/api")
 
 app.include_router(candidate_router, prefix="/api")
 app.include_router(candidate_router, prefix="")
+app.include_router(subscription_candidate_router, prefix="/api")
+app.include_router(subscription_candidate_router, prefix="")
 
 from fastapi import Response
 from app.admin_routes import candidate_login, admin_login
@@ -289,6 +315,10 @@ def direct_update_menu(
     return update_menu(menu_id, payload, request, db, current_user)
 
 def check_menu_access_or_block(menu_key: str, db: Session):
+    # Local preview makes every candidate page shell reachable. API endpoints
+    # continue to enforce menu configuration and subscription entitlement.
+    if is_local_demo_access_configured():
+        return None
     try:
         if not is_candidate_menu_enabled(menu_key, db):
             content = f"""<!DOCTYPE html>
@@ -336,6 +366,9 @@ def format_interview_response(interview: InterviewHistory) -> dict:
         "experience": interview.experience,
         "skills": skills_list,
         "difficulty": interview.difficulty,
+        "interview_type": interview.interview_type,
+        "company": interview.company,
+        "requested_question_count": interview.requested_question_count,
         "questions": parsed_qs,
         "raw_questions": interview.questions,
         "count": len(parsed_qs),
@@ -353,6 +386,8 @@ def check_feature_enabled(feature_key: str, db: Session):
     Backend Security Guard: Verifies if a feature/route is currently enabled in database Menu Management.
     If disabled by Super Admin, raises HTTP 403 Forbidden.
     """
+    if is_local_demo_access_configured():
+        return
     try:
         menus = _get_stored_menus(db)
         key_raw = (feature_key or "").lower().replace("%20", " ")
@@ -390,34 +425,21 @@ def check_feature_enabled(feature_key: str, db: Session):
 @app.post("/api/generate")
 def generate_questions(
     data: InterviewRequest,
-    current_user: UserAccount = Depends(get_current_user),
+    current_user: UserAccount = Depends(require_paid_candidate),
     db: Session = Depends(get_db)
 ):
     check_feature_enabled("Interview-studio.html", db)
     target_count = data.number_of_questions or 5
     try:
-        custom_q = getattr(data, "custom_question", None) or ""
-        try:
-            prompt = interview_prompt(data)
-            raw_output = generate_ai_questions(prompt)
-            clean_questions = parse_raw_questions(raw_output, target_count=target_count)
-        except Exception as ai_err:
-            print(f"[AI Generator] LLM unavailable/fallback: {ai_err}")
-            clean_questions = get_fallback_questions(
-                data.role, data.skills, target_count, custom_q
+        prompt = interview_prompt(data)
+        raw_output = generate_ai_questions(prompt)
+        clean_questions = parse_raw_questions(raw_output, target_count=target_count)
+        if len(clean_questions) != target_count:
+            raise AIProviderError(
+                "The AI provider returned fewer usable questions than requested. Please retry.",
+                502,
+                "malformed_response",
             )
-
-        # Strictly enforce target count
-        if len(clean_questions) < target_count:
-            fallback = get_fallback_questions(data.role, data.skills, target_count, custom_q)
-            for q in fallback:
-                if q not in clean_questions:
-                    clean_questions.append(q)
-                if len(clean_questions) >= target_count:
-                    break
-
-        if len(clean_questions) > target_count:
-            clean_questions = clean_questions[:target_count]
 
         # Format questions consistently as numbered lines
         formatted_raw = "\n".join([f"{i+1}. {q}" for i, q in enumerate(clean_questions)])
@@ -427,6 +449,9 @@ def generate_questions(
             experience=data.experience,
             skills=", ".join(data.skills),
             difficulty=data.difficulty,
+            interview_type=data.interview_type,
+            company=data.company,
+            requested_question_count=target_count,
             questions=formatted_raw,
             user_id=getattr(current_user, "id", None) if current_user else None,
             adaptive_session_id=getattr(data, "adaptive_session_id", None),
@@ -435,43 +460,56 @@ def generate_questions(
         )
 
         db.add(interview)
-        db.commit()
-        db.refresh(interview)
-
-        res = format_interview_response(interview)
-        res["company"] = getattr(data, "company", "General Tech")
-        res["interview_type"] = getattr(data, "interview_type", "Technical & Architecture")
-        res["questions_details"] = [
-            {
-                "id": i + 1,
-                "question": q,
-                "category": getattr(data, "interview_type", "Technical & Architecture"),
-                "difficulty": data.difficulty,
-                "source_type": "AI_generated",
-                "source_title": f"AI Synthesis ({data.role})",
-                "source_url": None,
-                "source_date": datetime.utcnow().strftime("%Y-%m-%d"),
-                "confidence": 0.91,
-                "model_answer": f"Evaluates depth in {', '.join(data.skills[:3]) if data.skills else data.role} with clear trade-offs."
-            }
-            for i, q in enumerate(clean_questions)
-        ]
-        res["message"] = "Interview questions generated and saved successfully"
+        try:
+            db.flush()
+            res = format_interview_response(interview)
+            res["company"] = getattr(data, "company", "General Tech")
+            res["interview_type"] = getattr(data, "interview_type", "Technical & Architecture")
+            res["questions_details"] = [
+                {
+                    "id": i + 1,
+                    "question": q,
+                    "category": getattr(data, "interview_type", "Technical & Architecture"),
+                    "difficulty": data.difficulty,
+                    "source_type": "AI_generated",
+                    "source_title": f"AI Synthesis ({data.role})",
+                    "source_url": None,
+                    "source_date": datetime.utcnow().strftime("%Y-%m-%d"),
+                    "confidence": 0.91,
+                    "model_answer": f"Evaluates depth in {', '.join(data.skills[:3]) if data.skills else data.role} with clear trade-offs."
+                }
+                for i, q in enumerate(clean_questions)
+            ]
+            res["message"] = "Interview questions generated and saved successfully"
+            db.commit()
+        except Exception as persistence_error:
+            db.rollback()
+            raise HTTPException(
+                status_code=500,
+                detail="Generated questions could not be saved. Please retry.",
+            ) from persistence_error
         return res
 
     except HTTPException:
         raise
+    except AIProviderError as provider_error:
+        raise HTTPException(
+            status_code=provider_error.status_code,
+            detail=str(provider_error),
+            headers={"X-AI-Error-Category": provider_error.category},
+        ) from provider_error
     except Exception as e:
+        logger.error("Question generation failed error_type=%s", type(e).__name__)
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to generate interview questions: {str(e)}"
-        )
+            detail="Question generation failed. Check sanitized server logs and try again.",
+        ) from e
 
 
 @app.get("/history")
 @app.get("/api/history")
 def get_history(
-    current_user: UserAccount = Depends(get_current_user),
+    current_user: UserAccount = Depends(require_paid_candidate),
     db: Session = Depends(get_db),
 ):
     _require_candidate_account(current_user)
@@ -480,7 +518,7 @@ def get_history(
         interviews = (
             db.query(InterviewHistory)
             .filter(InterviewHistory.user_id == current_user.id)
-            .order_by(InterviewHistory.id.desc())
+            .order_by(desc(InterviewHistory.created_at), desc(InterviewHistory.id))
             .all()
         )
         return [format_interview_response(item) for item in interviews]
@@ -497,7 +535,7 @@ def get_history(
 @app.get("/api/history/{interview_id}")
 def get_interview_detail(
     interview_id: int,
-    current_user: UserAccount = Depends(get_current_user),
+    current_user: UserAccount = Depends(require_paid_candidate),
     db: Session = Depends(get_db),
 ):
     _require_candidate_account(current_user)
@@ -518,7 +556,7 @@ def get_interview_detail(
 @app.delete("/api/history/{interview_id}")
 def delete_interview(
     interview_id: int,
-    current_user: UserAccount = Depends(get_current_user),
+    current_user: UserAccount = Depends(require_paid_candidate),
     db: Session = Depends(get_db),
 ):
     _require_candidate_account(current_user)
@@ -542,7 +580,7 @@ def delete_interview(
 
 @app.get("/api/adaptive/profile", response_model=AdaptiveProfileResponse)
 def get_adaptive_profile(
-    current_user: UserAccount = Depends(get_current_user),
+    current_user: UserAccount = Depends(require_paid_candidate),
     db: Session = Depends(get_db)
 ):
     """
@@ -571,7 +609,7 @@ def get_adaptive_profile(
 @app.post("/api/adaptive/generate", response_model=AdaptiveGenerateResponse)
 def generate_adaptive_questions(
     data: InterviewRequest,
-    current_user: UserAccount = Depends(get_current_user),
+    current_user: UserAccount = Depends(require_paid_candidate),
     db: Session = Depends(get_db)
 ):
     """
@@ -586,7 +624,7 @@ def generate_adaptive_questions(
 @app.post("/api/adaptive/evaluate-response", response_model=ResponseEvaluationResult)
 def evaluate_response_endpoint(
     payload: EvaluateResponseRequest,
-    current_user: UserAccount = Depends(get_current_user),
+    current_user: UserAccount = Depends(require_paid_candidate),
     db: Session = Depends(get_db)
 ):
     """
@@ -599,7 +637,7 @@ def evaluate_response_endpoint(
 @app.post("/api/adaptive/next-question", response_model=AdaptiveNextQuestionResponse)
 def next_question_endpoint(
     payload: NextQuestionRequest,
-    current_user: UserAccount = Depends(get_current_user),
+    current_user: UserAccount = Depends(require_paid_candidate),
     db: Session = Depends(get_db)
 ):
     """
@@ -614,7 +652,7 @@ def next_question_endpoint(
 @app.post("/adaptive/from-match", response_model=AdaptiveFromMatchResponse)
 def adaptive_from_match_endpoint(
     payload: AdaptiveFromMatchRequest,
-    current_user: UserAccount = Depends(get_current_user),
+    current_user: UserAccount = Depends(require_paid_candidate),
     db: Session = Depends(get_db)
 ):
     """
@@ -635,7 +673,7 @@ def adaptive_from_match_endpoint(
 @app.post("/candidate/jd/extract-url", response_model=JobURLExtractResponse)
 def extract_jd_from_url(
     payload: JobURLExtractRequest,
-    current_user: UserAccount = Depends(get_current_user),
+    current_user: UserAccount = Depends(require_paid_candidate),
     db: Session = Depends(get_db)
 ):
     """
@@ -672,7 +710,7 @@ def extract_jd_from_url(
 @app.post("/candidate/jd/upload", response_model=JobUploadExtractResponse)
 async def upload_jd_document(
     file: UploadFile = File(...),
-    current_user: UserAccount = Depends(get_current_user),
+    current_user: UserAccount = Depends(require_paid_candidate),
     db: Session = Depends(get_db)
 ):
     """
@@ -771,7 +809,7 @@ async def upload_jd_document(
 @app.post("/candidate/resume/upload", response_model=ResumeUploadExtractResponse)
 async def upload_resume_document(
     file: UploadFile = File(...),
-    current_user: UserAccount = Depends(get_current_user),
+    current_user: UserAccount = Depends(require_paid_candidate),
     db: Session = Depends(get_db)
 ):
     """
@@ -869,7 +907,7 @@ async def upload_resume_document(
 @app.post("/candidate/resume-jd/match", response_model=ResumeJDMatchResponse)
 async def create_resume_jd_match(
     payload: ResumeJDMatchRequest,
-    current_user: UserAccount = Depends(get_current_user),
+    current_user: UserAccount = Depends(require_paid_candidate),
     db: Session = Depends(get_db)
 ):
     """
@@ -1045,7 +1083,7 @@ async def create_resume_jd_match(
 @app.get("/candidate/resume-jd/match/{scan_id}", response_model=ResumeJDMatchResponse)
 def get_resume_jd_match(
     scan_id: str,
-    current_user: UserAccount = Depends(get_current_user),
+    current_user: UserAccount = Depends(require_paid_candidate),
     db: Session = Depends(get_db)
 ):
     """
@@ -1097,7 +1135,7 @@ def get_resume_jd_match(
 @app.get("/api/candidate/resume-jd/history", response_model=List[ResumeJDMatchSummaryItem])
 @app.get("/candidate/resume-jd/history", response_model=List[ResumeJDMatchSummaryItem])
 def get_resume_jd_history(
-    current_user: UserAccount = Depends(get_current_user),
+    current_user: UserAccount = Depends(require_paid_candidate),
     db: Session = Depends(get_db)
 ):
     """
@@ -1130,7 +1168,7 @@ def get_resume_jd_history(
 @app.post("/api/interview/start", response_model=InterviewStartResponse)
 def start_realtime_interview(
     payload: InterviewStartRequest,
-    current_user: UserAccount = Depends(get_current_user),
+    current_user: UserAccount = Depends(require_paid_candidate),
     db: Session = Depends(get_db)
 ):
     """
@@ -1164,6 +1202,12 @@ def start_realtime_interview(
             question_count=payload.question_count,
             candidate_context=evidence,
         )
+    except AIProviderError as exc:
+        raise HTTPException(
+            status_code=exc.status_code,
+            detail=str(exc),
+            headers={"X-AI-Error-Category": exc.category},
+        ) from exc
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
@@ -1172,7 +1216,7 @@ def start_realtime_interview(
 def answer_realtime_interview_turn(
     interview_id: str,
     payload: InterviewAnswerRequest,
-    current_user: UserAccount = Depends(get_current_user),
+    current_user: UserAccount = Depends(require_paid_candidate),
     db: Session = Depends(get_db)
 ):
     """
@@ -1194,6 +1238,8 @@ def answer_realtime_interview_turn(
         raise HTTPException(status_code=404, detail="Interview session not found.") from exc
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except AIProviderError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
@@ -1201,7 +1247,7 @@ def answer_realtime_interview_turn(
 @app.post("/api/interview/{interview_id}/complete", response_model=InterviewCompleteResponse)
 def complete_realtime_interview(
     interview_id: str,
-    current_user: UserAccount = Depends(get_current_user),
+    current_user: UserAccount = Depends(require_paid_candidate),
     db: Session = Depends(get_db)
 ):
     """
@@ -1226,7 +1272,7 @@ def complete_realtime_interview(
 
 @app.get("/api/mock-interview/history")
 def get_candidate_mock_interview_history(
-    current_user: UserAccount = Depends(get_current_user),
+    current_user: UserAccount = Depends(require_paid_candidate),
     db: Session = Depends(get_db),
 ):
     _require_candidate_account(current_user)
@@ -1243,7 +1289,7 @@ def get_candidate_mock_interview_history(
 @app.get("/api/mock-interview/{interview_id}")
 def get_candidate_mock_interview(
     interview_id: str,
-    current_user: UserAccount = Depends(get_current_user),
+    current_user: UserAccount = Depends(require_paid_candidate),
     db: Session = Depends(get_db),
 ):
     _require_candidate_account(current_user)
@@ -1254,7 +1300,7 @@ def get_candidate_mock_interview(
 @app.delete("/api/mock-interview/{interview_id}")
 def delete_candidate_mock_interview(
     interview_id: str,
-    current_user: UserAccount = Depends(get_current_user),
+    current_user: UserAccount = Depends(require_paid_candidate),
     db: Session = Depends(get_db),
 ):
     _require_candidate_account(current_user)
@@ -1277,7 +1323,7 @@ def reject_legacy_mock_interview_submission(
 
 
 @app.get("/api/interview/providers")
-def get_interview_providers():
+def get_interview_providers(current_user: UserAccount = Depends(require_paid_candidate)):
     """
     Returns active STT, TTS, and Avatar capabilities and configuration tokens for frontend initialization.
     """
@@ -1300,7 +1346,7 @@ def get_interview_providers():
 # ---------- AI ANSWER EVALUATOR API ----------
 
 @app.get("/api/evaluator/presets", response_model=EvaluatorPresetsResponse)
-def get_evaluator_presets():
+def get_evaluator_presets(current_user: UserAccount = Depends(require_paid_candidate)):
     """
     Returns curated preset question library grouped by roles, categories, seniority, and target tiers.
     """
@@ -1310,7 +1356,7 @@ def get_evaluator_presets():
 @app.post("/api/evaluator/evaluate", response_model=AnswerEvaluationResponse)
 def evaluate_single_answer(
     req: AnswerEvaluationRequest,
-    current_user: Optional[UserAccount] = Depends(get_current_user_optional),
+    current_user: UserAccount = Depends(require_paid_candidate),
     db: Session = Depends(get_db)
 ):
     """
@@ -1367,6 +1413,29 @@ def evaluate_single_answer(
 
 # ---------- VISITOR & CLICK ANALYTICS API ----------
 
+ANALYTICS_RATE_WINDOW_SECONDS = 60
+ANALYTICS_RATE_MAX_EVENTS = 120
+_analytics_event_times: Dict[str, List[float]] = {}
+_analytics_rate_lock = Lock()
+
+
+def check_analytics_event_rate_limit(request: Request) -> None:
+    """Apply a per-client in-process cap to public analytics event ingestion."""
+    client_key = request.client.host if request.client else "unknown"
+    now = time.monotonic()
+    with _analytics_rate_lock:
+        if len(_analytics_event_times) > 10000:
+            stale_clients = [key for key, stamps in _analytics_event_times.items()
+                             if not stamps or now - stamps[-1] >= ANALYTICS_RATE_WINDOW_SECONDS]
+            for key in stale_clients:
+                _analytics_event_times.pop(key, None)
+        recent = [stamp for stamp in _analytics_event_times.get(client_key, [])
+                  if now - stamp < ANALYTICS_RATE_WINDOW_SECONDS]
+        if len(recent) >= ANALYTICS_RATE_MAX_EVENTS:
+            raise HTTPException(status_code=429, detail="Analytics event rate limit exceeded.")
+        recent.append(now)
+        _analytics_event_times[client_key] = recent
+
 @app.post("/api/analytics/track")
 @app.post("/api/track")
 @app.post("/track")
@@ -1375,15 +1444,11 @@ def track_page_view(
     request: Request,
     db: Session = Depends(get_db)
 ):
+    check_analytics_event_rate_limit(request)
     try:
-        # Resolve real client IP
-        forwarded_for = request.headers.get("x-forwarded-for")
-        if forwarded_for:
-            ip = forwarded_for.split(",")[0].strip()
-        else:
-            ip = request.client.host if request.client else "127.0.0.1"
+        ip = request.client.host if request.client else "127.0.0.1"
 
-        user_agent = request.headers.get("user-agent", "")
+        user_agent = request.headers.get("user-agent", "")[:500]
 
         event = PageViewEvent(
             session_id=payload.session_id,
@@ -1401,9 +1466,10 @@ def track_page_view(
         db.add(event)
         db.commit()
         return {"status": "ok", "event": "page_view_logged"}
-    except Exception as e:
-        print(f"[Analytics] Track error: {e}")
-        return {"status": "error", "message": str(e)}
+    except Exception:
+        db.rollback()
+        logger.exception("Could not save analytics page view")
+        raise HTTPException(status_code=500, detail="Could not save analytics event.")
 
 
 @app.post("/api/analytics/click")
@@ -1415,12 +1481,9 @@ def track_click_event(
     request: Request,
     db: Session = Depends(get_db)
 ):
+    check_analytics_event_rate_limit(request)
     try:
-        forwarded_for = request.headers.get("x-forwarded-for")
-        if forwarded_for:
-            ip = forwarded_for.split(",")[0].strip()
-        else:
-            ip = request.client.host if request.client else "127.0.0.1"
+        ip = request.client.host if request.client else "127.0.0.1"
 
         event = ClickEvent(
             session_id=payload.session_id,
@@ -1440,13 +1503,17 @@ def track_click_event(
         db.add(event)
         db.commit()
         return {"status": "ok", "event": "click_logged"}
-    except Exception as e:
-        print(f"[Analytics] Click error: {e}")
-        return {"status": "error", "message": str(e)}
+    except Exception:
+        db.rollback()
+        logger.exception("Could not save analytics click")
+        raise HTTPException(status_code=500, detail="Could not save analytics event.")
 
 
 @app.get("/api/analytics/stats")
-def get_analytics_stats(db: Session = Depends(get_db)):
+def get_analytics_stats(
+    current_admin: UserAccount = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
     try:
         now = datetime.utcnow()
         active_window = now - timedelta(minutes=5)
@@ -1461,9 +1528,6 @@ def get_analytics_stats(db: Session = Depends(get_db)):
         active_sessions = db.query(func.count(func.distinct(PageViewEvent.session_id))).filter(
             PageViewEvent.timestamp >= active_window
         ).scalar() or 0
-        if active_sessions == 0 and total_pageviews > 0:
-            active_sessions = 1  # current active admin
-
         # 2. Top pages visited
         pages_query = db.query(
             PageViewEvent.page_url,
@@ -1557,7 +1621,10 @@ def get_analytics_stats(db: Session = Depends(get_db)):
 
 
 @app.delete("/api/analytics/clear")
-def clear_analytics(db: Session = Depends(get_db)):
+def clear_analytics(
+    current_admin: UserAccount = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
     try:
         db.query(ClickEvent).delete()
         db.query(PageViewEvent).delete()
@@ -1569,13 +1636,20 @@ def clear_analytics(db: Session = Depends(get_db)):
 
 
 # ---------- SUPER ADMIN PORTAL (PHASE 1) ----------
+@app.get("/admin/login", include_in_schema=False)
+def serve_admin_login_page():
+    return get_html_response("Admin.html")
+
+
 @app.get("/admin", include_in_schema=False)
 @app.get("/Admin", include_in_schema=False)
 @app.get("/Admin.html", include_in_schema=False)
 @app.get("/admin/{subpath:path}", include_in_schema=False)
-def serve_admin_portal(subpath: str = ""):
-    f = BASE_DIR / "Admin.html"
-    return FileResponse(f) if f.exists() else HTTPException(404, "Admin.html not found")
+def serve_admin_portal(
+    _: UserAccount = Depends(require_admin),
+    subpath: str = "",
+):
+    return get_html_response("Admin.html")
 
 
 # ---------- FRONTEND PAGES & ASSETS ----------
@@ -1585,9 +1659,8 @@ def serve_admin_portal(subpath: str = ""):
 @app.get("/Analytics.html", include_in_schema=False)
 @app.get("/candidate/analytics", include_in_schema=False)
 @app.get("/candidate/Analytics.html", include_in_schema=False)
-def serve_analytics():
-    f = BASE_DIR / "Analytics.html"
-    return FileResponse(f) if f.exists() else HTTPException(404, "Analytics.html not found")
+def serve_analytics(_: UserAccount = Depends(require_admin)):
+    return get_html_response("Analytics.html")
 
 @app.get("/analytics-tracker.js", include_in_schema=False)
 def serve_tracker_script():
@@ -1606,6 +1679,20 @@ def get_html_response(filename: str, db: Session = None):
     """
     if db:
         check_feature_enabled(filename, db)
+
+    if filename in PRIVATE_HTML_FILES:
+        private_path = BASE_DIR / "app" / "private_pages" / filename
+        if not private_path.is_file():
+            raise HTTPException(status_code=404, detail=f"{filename} not found")
+        try:
+            response = HTMLResponse(content=private_path.read_text(encoding="utf-8"), media_type="text/html")
+            response.headers["Cache-Control"] = "private, no-store, no-cache, must-revalidate, max-age=0"
+            response.headers["Pragma"] = "no-cache"
+            response.headers["Expires"] = "0"
+            return response
+        except OSError as read_err:
+            logger.error("Could not load private page %s (%s)", filename, type(read_err).__name__)
+            raise HTTPException(status_code=500, detail="Page could not be loaded.") from read_err
     
     paths_to_try = [
         BASE_DIR / filename,
@@ -1662,7 +1749,10 @@ def serve_login():
 @app.get("/candidate/Dashboard.html", include_in_schema=False)
 @app.get("/candidate/Candidate-dashboard.html", include_in_schema=False)
 @app.get("/Candidate-dashboard.html", include_in_schema=False)
-def serve_candidate_dashboard(db: Session = Depends(get_db)):
+def serve_candidate_dashboard(
+    db: Session = Depends(get_db),
+    _: UserAccount = Depends(require_candidate_page_access),
+):
     block_res = check_menu_access_or_block("Dashboard", db)
     if block_res: return block_res
     return get_html_response("Candidate-dashboard.html", db)
@@ -1670,7 +1760,10 @@ def serve_candidate_dashboard(db: Session = Depends(get_db)):
 @app.get("/dashboard", include_in_schema=False)
 @app.get("/Dashboard", include_in_schema=False)
 @app.get("/Dashboard.html", include_in_schema=False)
-def serve_dashboard(db: Session = Depends(get_db)):
+def serve_dashboard(
+    db: Session = Depends(get_db),
+    _: UserAccount = Depends(require_authenticated_candidate),
+):
     block_res = check_menu_access_or_block("Dashboard", db)
     if block_res: return block_res
     return get_html_response("Dashboard.html", db)
@@ -1678,7 +1771,10 @@ def serve_dashboard(db: Session = Depends(get_db)):
 @app.get("/candidate/evaluator", include_in_schema=False)
 @app.get("/api/candidate/evaluator", include_in_schema=False)
 @app.get("/evaluator", include_in_schema=False)
-def serve_evaluator(db: Session = Depends(get_db)):
+def serve_evaluator(
+    db: Session = Depends(get_db),
+    _: UserAccount = Depends(require_candidate_page_access),
+):
     block_res = check_menu_access_or_block("Interview Studio", db)
     if block_res: return block_res
     return get_html_response("Interview-studio.html", db)
@@ -1690,7 +1786,7 @@ def serve_evaluator(db: Session = Depends(get_db)):
 @app.get("/admin/roles-permissions", include_in_schema=False)
 @app.get("/admin/prompts", include_in_schema=False)
 @app.get("/Admin.html", include_in_schema=False)
-def serve_admin_page():
+def serve_admin_page(_: UserAccount = Depends(require_admin)):
     return get_html_response("Admin.html")
 
 @app.get("/candidate/interview-studio", include_in_schema=False)
@@ -1701,7 +1797,10 @@ def serve_admin_page():
 @app.get("/Interview-studio", include_in_schema=False)
 @app.get("/interview-studio", include_in_schema=False)
 @app.get("/Interview-studio.html", include_in_schema=False)
-def serve_studio(db: Session = Depends(get_db)):
+def serve_studio(
+    db: Session = Depends(get_db),
+    _: UserAccount = Depends(require_candidate_page_access),
+):
     block_res = check_menu_access_or_block("Interview Studio", db)
     if block_res: return block_res
     return get_html_response("Interview-studio.html", db)
@@ -1713,7 +1812,10 @@ def serve_studio(db: Session = Depends(get_db)):
 @app.get("/Answer-evaluator", include_in_schema=False)
 @app.get("/Answer-evaluator.html", include_in_schema=False)
 @app.get("/evaluator", include_in_schema=False)
-def serve_answer_evaluator(db: Session = Depends(get_db)):
+def serve_answer_evaluator(
+    db: Session = Depends(get_db),
+    _: UserAccount = Depends(require_candidate_page_access),
+):
     block_res = check_menu_access_or_block("Answer Evaluator", db)
     if block_res: return block_res
     return get_html_response("Answer-evaluator.html", db)
@@ -1724,7 +1826,10 @@ def serve_answer_evaluator(db: Session = Depends(get_db)):
 @app.get("/mock-interview", include_in_schema=False)
 @app.get("/Mock-interview", include_in_schema=False)
 @app.get("/Mock-interview.html", include_in_schema=False)
-def serve_mock(db: Session = Depends(get_db)):
+def serve_mock(
+    db: Session = Depends(get_db),
+    _: UserAccount = Depends(require_candidate_page_access),
+):
     block_res = check_menu_access_or_block("AI Mock Interview", db)
     if block_res: return block_res
     return get_html_response("Mock-interview.html", db)
@@ -1737,7 +1842,10 @@ def serve_mock(db: Session = Depends(get_db)):
 @app.get("/resume-match", include_in_schema=False)
 @app.get("/Resume-match", include_in_schema=False)
 @app.get("/Resume-match.html", include_in_schema=False)
-def serve_resume_match(db: Session = Depends(get_db)):
+def serve_resume_match(
+    db: Session = Depends(get_db),
+    _: UserAccount = Depends(require_candidate_page_access),
+):
     block_res = check_menu_access_or_block("Resume & JD Match", db)
     if block_res: return block_res
     return get_html_response("Resume-match.html", db)
@@ -1748,7 +1856,10 @@ def serve_resume_match(db: Session = Depends(get_db)):
 @app.get("/company-playbooks", include_in_schema=False)
 @app.get("/Company-playbooks", include_in_schema=False)
 @app.get("/Company-playbooks.html", include_in_schema=False)
-def serve_company_playbooks(db: Session = Depends(get_db)):
+def serve_company_playbooks(
+    db: Session = Depends(get_db),
+    _: UserAccount = Depends(require_candidate_page_access),
+):
     block_res = check_menu_access_or_block("Company Playbooks", db)
     if block_res: return block_res
     return get_html_response("Company-playbooks.html", db)
@@ -1762,7 +1873,10 @@ def serve_company_playbooks(db: Session = Depends(get_db)):
 @app.get("/interview-history", include_in_schema=False)
 @app.get("/Interview history.html", include_in_schema=False)
 @app.get("/Interview%20history.html", include_in_schema=False)
-def serve_history_page(db: Session = Depends(get_db)):
+def serve_history_page(
+    db: Session = Depends(get_db),
+    _: UserAccount = Depends(require_candidate_page_access),
+):
     block_res = check_menu_access_or_block("Session History", db)
     if block_res: return block_res
     return get_html_response("Interview history.html", db)
@@ -1773,7 +1887,10 @@ def serve_history_page(db: Session = Depends(get_db)):
 @app.get("/upgrade-pro", include_in_schema=False)
 @app.get("/Upgrade-pro", include_in_schema=False)
 @app.get("/Upgrade-pro.html", include_in_schema=False)
-def serve_upgrade(db: Session = Depends(get_db)):
+def serve_upgrade(
+    db: Session = Depends(get_db),
+    _: UserAccount = Depends(require_authenticated_candidate),
+):
     block_res = check_menu_access_or_block("Upgrade Pro", db)
     if block_res: return block_res
     return get_html_response("Upgrade-pro.html", db)
@@ -1890,7 +2007,10 @@ def _require_coach_candidate(current_user: UserAccount) -> None:
 @app.get("/candidate/Interview-coach.html", include_in_schema=False)
 @app.get("/candidate/interview-coach", include_in_schema=False)
 @app.get("/interview-coach", include_in_schema=False)
-def serve_interview_coach(db: Session = Depends(get_db)):
+def serve_interview_coach(
+    db: Session = Depends(get_db),
+    _: UserAccount = Depends(require_candidate_page_access),
+):
     block_res = check_menu_access_or_block("Interview Coach", db)
     if block_res:
         return block_res
@@ -1899,7 +2019,7 @@ def serve_interview_coach(db: Session = Depends(get_db)):
 
 @app.get("/api/coach/conversation", include_in_schema=False)
 def get_coach_conversation(
-    current_user: UserAccount = Depends(get_current_user),
+    current_user: UserAccount = Depends(require_paid_candidate),
     db: Session = Depends(get_db),
 ):
     _require_coach_candidate(current_user)
@@ -1938,7 +2058,7 @@ def get_coach_conversation(
 
 @app.get("/api/coach/context", include_in_schema=False)
 def get_coach_context(
-    current_user: UserAccount = Depends(get_current_user),
+    current_user: UserAccount = Depends(require_paid_candidate),
     db: Session = Depends(get_db),
 ):
     _require_coach_candidate(current_user)
@@ -1949,7 +2069,7 @@ def get_coach_context(
 
 @app.get("/api/coach/conversations", include_in_schema=False)
 def list_coach_conversations(
-    current_user: UserAccount = Depends(get_current_user),
+    current_user: UserAccount = Depends(require_paid_candidate),
     db: Session = Depends(get_db),
 ):
     _require_coach_candidate(current_user)
@@ -1988,7 +2108,7 @@ def list_coach_conversations(
 
 @app.post("/api/coach/conversations", include_in_schema=False)
 def create_coach_conversation(
-    current_user: UserAccount = Depends(get_current_user),
+    current_user: UserAccount = Depends(require_paid_candidate),
     db: Session = Depends(get_db),
 ):
     _require_coach_candidate(current_user)
@@ -2004,7 +2124,7 @@ def create_coach_conversation(
 @app.get("/api/coach/conversations/{conversation_id}", include_in_schema=False)
 def get_coach_conversation_by_id(
     conversation_id: int,
-    current_user: UserAccount = Depends(get_current_user),
+    current_user: UserAccount = Depends(require_paid_candidate),
     db: Session = Depends(get_db),
 ):
     _require_coach_candidate(current_user)
@@ -2044,7 +2164,7 @@ def get_coach_conversation_by_id(
 @app.post("/api/coach/chat", include_in_schema=False)
 def chat_with_coach(
     payload: CoachChatRequest,
-    current_user: UserAccount = Depends(get_current_user),
+    current_user: UserAccount = Depends(require_paid_candidate),
     db: Session = Depends(get_db),
 ):
     _require_coach_candidate(current_user)
@@ -2120,6 +2240,22 @@ def chat_with_coach(
             current_user,
             [(item.role, item.content) for item in prior_messages],
             message,
+        )
+    except AIProviderError as exc:
+        db.rollback()
+        logger.warning(
+            "Interview Coach provider failure user_id=%s category=%s status=%s",
+            current_user.id,
+            exc.category,
+            exc.status_code,
+        )
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={
+                "detail": "The AI Coach could not generate a response. Please try again after the provider issue is resolved.",
+                "error_category": exc.category,
+                "conversation_id": conversation.id,
+            },
         )
     except Exception:
         db.rollback()
