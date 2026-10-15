@@ -399,6 +399,12 @@ table.admin-table tr:hover td{background:var(--rule-soft)}
         </a>
       </li>
       <li>
+        <a class="nav-link" id="navAISettings" onclick="switchView('ai-settings')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.7 2.94-.08-.02a1.7 1.7 0 0 0-1.78.35l-.06.06h-3.4l-.03-.08a1.7 1.7 0 0 0-1.45-1.14l-.08-.01-1.7-2.94.06-.06A1.7 1.7 0 0 0 9.86 14l-.08-.03v-3.4l.08-.03a1.7 1.7 0 0 0 1.14-1.45l.01-.08 2.94-1.7.06.06a1.7 1.7 0 0 0 1.88.34l.06-.06h3.4l.03.08a1.7 1.7 0 0 0 1.45 1.14l.08.01 1.7 2.94-.06.06A1.7 1.7 0 0 0 21.2 14l.08.03v.97"/></svg>
+          <span>AI Provider Keys</span>
+        </a>
+      </li>
+      <li>
         <a class="nav-link" id="navUsers" onclick="switchView('users')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           <span>User Management</span>
@@ -663,6 +669,36 @@ table.admin-table tr:hover td{background:var(--rule-soft)}
                 <tr><td colspan="6" style="text-align:center;color:var(--ink-soft);padding:24px">Loading recent question papers...</td></tr>
               </tbody>
             </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- AI PROVIDER KEY SETTINGS -->
+      <section id="viewAISettings" class="admin-view" style="display:none">
+        <div class="page-head">
+          <div>
+            <h1>AI Provider Keys</h1>
+            <p>Configure Gemini or Groq for mock interviews and AI generation. Keys are saved on the server and never shown again.</p>
+          </div>
+        </div>
+        <div class="card" style="max-width:760px">
+          <div class="card-head"><h2 class="card-title">Provider configuration</h2></div>
+          <div class="card-body">
+            <div id="aiProviderStatus" role="status" style="padding:12px 14px;border-radius:10px;background:var(--paper);margin-bottom:20px">Loading provider status…</div>
+            <form id="aiProviderForm" onsubmit="saveAIProviderKey(event)" style="display:grid;gap:16px">
+              <label style="display:grid;gap:7px;font-weight:700">Provider
+                <select id="aiProviderName" required class="form-control" style="padding:11px;border:1px solid var(--rule);border-radius:8px;background:var(--paper);color:var(--ink)">
+                  <option value="gemini">Google Gemini (recommended)</option>
+                  <option value="groq">Groq</option>
+                </select>
+              </label>
+              <label style="display:grid;gap:7px;font-weight:700">New API key
+                <input id="aiProviderKey" type="password" autocomplete="new-password" required minlength="8" maxlength="500" placeholder="Paste your provider key" style="padding:11px;border:1px solid var(--rule);border-radius:8px;background:var(--paper);color:var(--ink)" />
+              </label>
+              <p style="margin:0;color:var(--ink-soft);font-size:13px">Only a super administrator can update keys. This local setup writes to the server’s <code>.env</code> file. Restart the server if the change is not picked up by another worker.</p>
+              <div><button id="saveAIProviderBtn" class="btn-primary" type="submit">Save API Key</button></div>
+              <div id="aiProviderMessage" role="status" aria-live="polite" style="font-size:13px"></div>
+            </form>
           </div>
         </div>
       </section>
@@ -1551,6 +1587,7 @@ function switchView(viewName) {
     'dashboard': 'navDashboard',
     'menu-management': 'navMenuManagement',
     'prompt-management': 'navPrompts',
+    'ai-settings': 'navAISettings',
     'users': 'navUsers',
     'roles-permissions': 'navRoles'
   };
@@ -1558,6 +1595,7 @@ function switchView(viewName) {
     'dashboard': 'Dashboard',
     'menu-management': 'Menu Management',
     'prompt-management': 'Prompt Management',
+    'ai-settings': 'AI Provider Keys',
     'users': 'User Management',
     'roles-permissions': 'Roles & Permissions'
   };
@@ -1574,6 +1612,9 @@ function switchView(viewName) {
   } else if (viewName === 'prompt-management') {
     document.getElementById('viewPrompts').style.display = 'block';
     loadPromptsList();
+  } else if (viewName === 'ai-settings') {
+    document.getElementById('viewAISettings').style.display = 'block';
+    loadAIProviderStatus();
   } else if (viewName === 'users') {
     document.getElementById('viewUsers').style.display = 'block';
     loadUsersList();
@@ -1585,6 +1626,55 @@ function switchView(viewName) {
   if (activeNav) activeNav.classList.add('active');
   document.getElementById('crumbTitle').textContent = titleMap[viewName] || 'Dashboard';
   window.location.hash = viewName;
+}
+
+async function loadAIProviderStatus() {
+  const statusBox = document.getElementById('aiProviderStatus');
+  const message = document.getElementById('aiProviderMessage');
+  message.textContent = '';
+  try {
+    const res = await fetch('/api/admin/ai-provider', {
+      headers: getAuthHeaders(),
+      credentials: 'include'
+    });
+    if (!res.ok) throw new Error((await res.json()).detail || 'Could not load provider status.');
+    const data = await res.json();
+    statusBox.textContent = `Gemini: ${data.gemini_configured ? 'configured' : 'not configured'} · Groq: ${data.groq_configured ? 'configured' : 'not configured'}`;
+    if (!data.local_file_updates_supported) {
+      message.textContent = 'This deployment uses environment settings. Update the key in your hosting provider dashboard.';
+    }
+    const isSuperAdmin = CURRENT_ADMIN && CURRENT_ADMIN.role === 'super_admin';
+    document.getElementById('aiProviderForm').querySelectorAll('input, select, button').forEach(el => { el.disabled = !isSuperAdmin || !data.local_file_updates_supported; });
+    if (!isSuperAdmin) message.textContent = 'Only a super administrator can update provider keys.';
+  } catch (err) {
+    statusBox.textContent = err.message || 'Could not load provider status.';
+  }
+}
+
+async function saveAIProviderKey(event) {
+  event.preventDefault();
+  const button = document.getElementById('saveAIProviderBtn');
+  const message = document.getElementById('aiProviderMessage');
+  const keyInput = document.getElementById('aiProviderKey');
+  button.disabled = true;
+  message.textContent = 'Saving key…';
+  try {
+    const res = await fetch('/api/admin/ai-provider', {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      credentials: 'include',
+      body: JSON.stringify({ provider: document.getElementById('aiProviderName').value, api_key: keyInput.value })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Could not save API key.');
+    keyInput.value = '';
+    message.textContent = 'Key saved. The server can use it now.';
+    await loadAIProviderStatus();
+  } catch (err) {
+    message.textContent = err.message || 'Could not save API key.';
+  } finally {
+    button.disabled = false;
+  }
 }
 
 function routeFromHash() {

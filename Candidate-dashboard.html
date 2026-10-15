@@ -852,10 +852,7 @@
 
     /* Sparkline SVGs */
     .stat-sparkline {
-      width: 100%;
-      height: 32px;
-      margin-top: auto;
-      overflow: visible;
+      display: none; /* Trend points are not yet backed by historical dashboard data. */
     }
 
     /* -------------------------------------------------------------
@@ -2399,6 +2396,7 @@
         const res = await fetch(generateEndpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: 'include',
           body: JSON.stringify({
             role: role,
             experience: "5 Years",
@@ -2409,29 +2407,20 @@
           })
         });
 
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        const data = await res.json();
-        questions = data.questions || [];
-      } catch (err) {
-        if (role.includes('Product')) {
-          questions = [
-            "How do you balance business conversion goals with user cognitive friction in a multi-step checkout redesign?",
-            "Describe your strategy for auditing and establishing multi-brand design tokens in Figma Variables.",
-            "Walk through a time an A/B test delivered positive revenue metrics but negative qualitative user sentiment. How did you diagnose the trade-off?"
-          ];
-        } else if (role.includes('Frontend')) {
-          questions = [
-            "Explain how React 19 Concurrent rendering and Server Actions change data fetching and hydration patterns.",
-            "How do you profile, identify, and eliminate memory leaks and layout shifts (CLS) in a high-throughput dashboard?",
-            "Compare optimistic UI mutation rollback strategies in TanStack Query vs local Zustand state."
-          ];
-        } else {
-          questions = [
-            "How do you design a mixed-methods user research protocol to validate ambiguous feature requirements?",
-            "Explain how you ensure design system components meet WCAG 2.2 AA accessibility standards across dark mode.",
-            "How do you structure design handoff in Figma to guarantee edge cases and error states are implemented precisely?"
-          ];
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.detail || `Question generation failed (HTTP ${res.status}).`);
         }
+        const data = await res.json();
+        questions = Array.isArray(data.questions) ? data.questions : [];
+        if (!questions.length) throw new Error('The generator returned no questions. Please try again.');
+      } catch (err) {
+        dashCurrentQs = [];
+        listEl.innerHTML = `<div style="padding:16px;text-align:center;color:#b42318;font-size:13px">${escapeHtml(err.message || 'Could not generate questions. Please try again.')}</div>`;
+        btn.innerHTML = '<span>⚡ Generate</span>';
+        btn.style.opacity = '1';
+        btn.style.pointerEvents = 'auto';
+        return;
       }
 
       dashCurrentQs = questions;
@@ -2466,6 +2455,9 @@
         }
         cursor.remove();
       }
+
+      // Generation is persisted by the API. Refresh the saved dashboard totals/activity.
+      await loadDashboardDynamicData();
 
       btn.innerHTML = '<span>⚡ Generate</span>';
       btn.style.opacity = '1';

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request, Query
 from fastapi.responses import JSONResponse, RedirectResponse
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, func
 from datetime import datetime, timedelta
@@ -45,6 +46,11 @@ from app.auth_deps import (
 
 admin_router = APIRouter(tags=["Admin Portal"])
 candidate_router = APIRouter(tags=["Candidate Auth"])
+
+
+class AIProviderKeyUpdate(BaseModel):
+    provider: str = Field(pattern="^(gemini|groq)$")
+    api_key: str = Field(min_length=8, max_length=500)
 
 
 # ------------------------------------------------------------------------------
@@ -361,6 +367,60 @@ def get_current_admin_profile(
         "user": serialize_user(current_user),
         "permissions": perms
     }
+
+
+@admin_router.get("/ai-provider")
+def get_ai_provider_configuration(
+    current_admin: UserAccount = Depends(require_admin),
+):
+    """Return provider configuration state without disclosing secrets."""
+    return {
+        "gemini_configured": bool(os.environ.get("GEMINI_API_KEY", "").strip()),
+        "groq_configured": bool(os.environ.get("GROQ_API_KEY", "").strip()),
+        "local_file_updates_supported": (
+            not bool(os.environ.get("VERCEL"))
+            and os.environ.get("ENV", "").strip().lower() not in {"prod", "production"}
+        ),
+    }
+
+
+@admin_router.put("/ai-provider")
+def update_ai_provider_key(
+    payload: AIProviderKeyUpdate,
+    request: Request,
+    current_admin: UserAccount = Depends(require_super_admin),
+    db: Session = Depends(get_db),
+):
+    """Save a provider key to local .env and activate it for this process."""
+    if os.environ.get("VERCEL") or os.environ.get("ENV", "").strip().lower() in {"prod", "production"}:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Update AI provider keys in your deployment environment settings.",
+        )
+
+    provider_env = {"gemini": "GEMINI_API_KEY", "groq": "GROQ_API_KEY"}[payload.provider]
+    api_key = payload.api_key.strip()
+    if not api_key or "\n" in api_key or "\r" in api_key:
+        raise HTTPException(status_code=400, detail="API key cannot be blank.")
+
+    from dotenv import set_key
+
+    env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
+    try:
+        set_key(env_path, provider_env, api_key, quote_mode="always")
+        os.environ[provider_env] = api_key
+    except OSError:
+        raise HTTPException(status_code=500, detail="Could not save the provider key to the server .env file.")
+
+    record_audit_log(
+        db=db,
+        admin_user=current_admin,
+        action="AI_PROVIDER_KEY_UPDATED",
+        resource=f"ai_provider:{payload.provider}",
+        new_value="API key updated; value redacted",
+        ip_address=get_client_ip(request),
+    )
+    return {"success": True, "provider": payload.provider, "message": "API key saved. It is active for this server process."}
 
 
 # ------------------------------------------------------------------------------
