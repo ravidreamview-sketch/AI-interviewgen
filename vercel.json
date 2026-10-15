@@ -2,7 +2,7 @@
   "version": 2,
   "functions": {
     "api/index.py": {
-      "includeFiles": "app/**",
+      "includeFiles": ["app/**", "Public-home.html"],
       "maxDuration": 15
     }
   },
@@ -75,6 +75,6 @@
     { "source": "/admin/logo.png", "destination": "/logo.png" },
     { "source": "/candidate/logo.png", "destination": "/logo.png" },
     { "source": "/candidate/analytics-tracker.js", "destination": "/analytics-tracker.js" },
-    { "source": "/", "destination": "/Public-home.html" }
+    { "source": "/", "destination": "/api/index.py?__path=/" }
   ]
 }
