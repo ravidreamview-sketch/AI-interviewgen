@@ -28,7 +28,9 @@ class TestPublicHome(unittest.TestCase):
         root_rewrite = next(rule for rule in config["rewrites"] if rule["source"] == "/")
 
         self.assertEqual(root_rewrite["destination"], "/api/index.py?__path=/")
-        self.assertIn("Public-home.html", config["functions"]["api/index.py"]["includeFiles"])
+        include_files = config["functions"]["api/index.py"]["includeFiles"]
+        self.assertIsInstance(include_files, str)
+        self.assertEqual(include_files, "{app/**,Public-home.html}")
 
     def test_login_page_remains_available_without_authentication(self):
         response = client.get("/candidate/login")
