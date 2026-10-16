@@ -1,6 +1,7 @@
 import unittest
 import os
 import sys
+from pathlib import Path
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -214,6 +215,9 @@ class TestCandidateAuthentication(unittest.TestCase):
             res = client.get(endpoint, headers=cand_headers)
             self.assertEqual(res.status_code, 403)
 
+        candidate_profile = client.get("/api/candidate/me")
+        self.assertEqual(candidate_profile.status_code, 200)
+
     def test_9_inactive_candidate_cannot_login(self):
         token = self.get_admin_token()
         headers = {"Authorization": f"Bearer {token}", "X-Requested-With": "XMLHttpRequest"}
@@ -253,6 +257,18 @@ class TestCandidateAuthentication(unittest.TestCase):
         })
         self.assertEqual(res2.status_code, 401)
         self.assertEqual(res2.json()["detail"], "Invalid email or password.")
+
+    def test_interview_coach_redirects_only_for_unauthorized_sessions(self):
+        page = Path(__file__).resolve().parent.parent / "Interview-coach.html"
+        content = page.read_text(encoding="utf-8")
+
+        self.assertIn('if (response.status === 401) {', content)
+        self.assertIn('if (response.status === 403) {', content)
+        permission_branch = content.split(
+            'if (response.status === 403) {', 1
+        )[1].split("if (!response.ok)", 1)[0]
+        self.assertIn("addMessage(", permission_branch)
+        self.assertNotIn("window.location.replace", permission_branch)
 
     def test_11_candidate_cannot_change_role(self):
         token = self.get_admin_token()

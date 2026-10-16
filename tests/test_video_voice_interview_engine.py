@@ -203,6 +203,32 @@ class TestVideoVoiceInterviewEngine(unittest.TestCase):
         response = self.client.post("/api/interview/start", json={"role": "Backend Engineer"})
         self.assertEqual(response.status_code, 401)
 
+    def test_candidate_login_session_survives_protected_menu_api_navigation(self):
+        client = TestClient(app)
+        login_response = client.post("/api/candidate/login", json={
+            "email": "candidate1@example.com",
+            "password": "Pass123!",
+        })
+        self.assertEqual(login_response.status_code, 200)
+        self.assertIn("candidate_session", login_response.cookies)
+
+        protected_requests = [
+            client.get("/api/candidate/me"),
+            client.get("/api/candidate/dashboard"),
+            client.get("/api/mock-interview/history"),
+            client.get("/api/candidate/me"),
+        ]
+        for response in protected_requests:
+            self.assertEqual(response.status_code, 200, response.text)
+
+        start_response = client.post("/api/interview/start", json={
+            "role": "Python Backend Engineer",
+            "questions": ["Describe a reliable API design."],
+            "question_count": 1,
+        })
+        self.assertEqual(start_response.status_code, 200, start_response.text)
+        self.assertTrue(start_response.json()["interview_id"].startswith("mock_"))
+
     def test_development_auth_bypass_creates_candidate_and_opens_dashboard(self):
         with patch.dict(os.environ, {"ENV": "development", "DEV_AUTH_BYPASS": "true"}):
             response = self.client.post("/api/interview/start", json={
