@@ -18,7 +18,7 @@ from datetime import datetime
 
 from sqlalchemy.orm import Session
 from app.db_models import UserAccount, MockInterview
-from app.services import AIProviderError, generate_ai_questions, parse_raw_questions
+from app.services import generate_ai_questions, parse_raw_questions
 from app.tts_service import get_tts_provider
 from app.avatar_service import get_avatar_provider
 
@@ -96,8 +96,6 @@ Output only the question, with no greeting or explanation.
 """
         try:
             generated_response = generate_ai_questions(prompt)
-        except AIProviderError:
-            raise
         except RuntimeError as exc:
             logger.warning(
                 "AI provider unavailable while starting interview (%s)",
@@ -327,24 +325,15 @@ Output ONLY valid JSON matching this schema:
         if not json_match:
             raise ValueError("The evaluator response was not valid JSON.")
         eval_result = json.loads(json_match.group(0))
-    except AIProviderError as exc:
-        logger.warning(
-            "Interview evaluation provider failure user_id=%s category=%s status=%s",
-            user_id,
-            exc.category,
-            exc.status_code,
-        )
-        raise AIProviderError(
-            f"{exc} Your answer is saved; retry after the provider issue is resolved.",
-            exc.status_code,
-            exc.category,
-        ) from exc
     except Exception as exc:
         logger.warning(
             "Interview evaluation failed for user_id=%s (%s)",
             user_id,
             type(exc).__name__,
         )
+        error_message = str(exc)
+        if error_message.startswith(("AI provider is not configured.", "Configured AI provider request failed.")):
+            raise RuntimeError(f"{error_message} Your answer is saved; retry after configuration.") from exc
         raise RuntimeError("The answer could not be evaluated. Your answer is saved; retry when ready.") from exc
 
     evaluation = eval_result.get("evaluation")

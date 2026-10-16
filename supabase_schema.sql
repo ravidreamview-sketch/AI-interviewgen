@@ -110,55 +110,40 @@ ALTER TABLE public.resume_scans ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.candidate_skill_analytics ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.candidate_mistakes_ledger ENABLE ROW LEVEL SECURITY;
 
--- Existing installs may still have the old unrestricted policies.
-DROP POLICY IF EXISTS "Allow public read on candidate_skill_analytics" ON public.candidate_skill_analytics;
-DROP POLICY IF EXISTS "Allow public insert on candidate_skill_analytics" ON public.candidate_skill_analytics;
-DROP POLICY IF EXISTS "Allow public update on candidate_skill_analytics" ON public.candidate_skill_analytics;
-DROP POLICY IF EXISTS "Allow public read on candidate_mistakes_ledger" ON public.candidate_mistakes_ledger;
-DROP POLICY IF EXISTS "Allow public insert on candidate_mistakes_ledger" ON public.candidate_mistakes_ledger;
-DROP POLICY IF EXISTS "Allow public update on candidate_mistakes_ledger" ON public.candidate_mistakes_ledger;
-DROP POLICY IF EXISTS "Allow public read on interview_papers" ON public.interview_papers;
-DROP POLICY IF EXISTS "Allow public insert on interview_papers" ON public.interview_papers;
-DROP POLICY IF EXISTS "Allow public update on interview_papers" ON public.interview_papers;
-DROP POLICY IF EXISTS "Allow public delete on interview_papers" ON public.interview_papers;
-DROP POLICY IF EXISTS "Allow public read on mock_interviews" ON public.mock_interviews;
-DROP POLICY IF EXISTS "Allow public insert on mock_interviews" ON public.mock_interviews;
-DROP POLICY IF EXISTS "Allow public read on resume_scans" ON public.resume_scans;
-DROP POLICY IF EXISTS "Allow public insert on resume_scans" ON public.resume_scans;
+CREATE POLICY "Allow public read on candidate_skill_analytics" ON public.candidate_skill_analytics FOR SELECT USING (true);
+CREATE POLICY "Allow public insert on candidate_skill_analytics" ON public.candidate_skill_analytics FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update on candidate_skill_analytics" ON public.candidate_skill_analytics FOR UPDATE USING (true);
 
-DO $$
-DECLARE tbl TEXT; pol RECORD;
-BEGIN
-  FOREACH tbl IN ARRAY ARRAY['interview_papers','mock_interviews','resume_scans','candidate_skill_analytics','candidate_mistakes_ledger'] LOOP
-    FOR pol IN SELECT policyname FROM pg_policies WHERE schemaname='public' AND tablename=tbl LOOP
-      EXECUTE format('DROP POLICY %I ON public.%I', pol.policyname, tbl);
-    END LOOP;
-    EXECUTE format('DROP POLICY IF EXISTS owner_select ON public.%I', tbl);
-    EXECUTE format('DROP POLICY IF EXISTS owner_insert ON public.%I', tbl);
-    EXECUTE format('DROP POLICY IF EXISTS owner_update ON public.%I', tbl);
-    EXECUTE format('DROP POLICY IF EXISTS owner_delete ON public.%I', tbl);
-    EXECUTE format('CREATE POLICY owner_select ON public.%I FOR SELECT TO authenticated USING ((SELECT auth.uid()) = user_id)', tbl);
-    EXECUTE format('CREATE POLICY owner_insert ON public.%I FOR INSERT TO authenticated WITH CHECK ((SELECT auth.uid()) = user_id)', tbl);
-    EXECUTE format('CREATE POLICY owner_update ON public.%I FOR UPDATE TO authenticated USING ((SELECT auth.uid()) = user_id) WITH CHECK ((SELECT auth.uid()) = user_id)', tbl);
-    EXECUTE format('CREATE POLICY owner_delete ON public.%I FOR DELETE TO authenticated USING ((SELECT auth.uid()) = user_id)', tbl);
-  END LOOP;
-END $$;
+CREATE POLICY "Allow public read on candidate_mistakes_ledger" ON public.candidate_mistakes_ledger FOR SELECT USING (true);
+CREATE POLICY "Allow public insert on candidate_mistakes_ledger" ON public.candidate_mistakes_ledger FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update on candidate_mistakes_ledger" ON public.candidate_mistakes_ledger FOR UPDATE USING (true);
+
+-- Allow public read access (for portfolio/demo/dashboard views)
+CREATE POLICY "Allow public read on interview_papers" ON public.interview_papers FOR SELECT USING (true);
+CREATE POLICY "Allow public insert on interview_papers" ON public.interview_papers FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update on interview_papers" ON public.interview_papers FOR UPDATE USING (true);
+CREATE POLICY "Allow public delete on interview_papers" ON public.interview_papers FOR DELETE USING (true);
+
+CREATE POLICY "Allow public read on mock_interviews" ON public.mock_interviews FOR SELECT USING (true);
+CREATE POLICY "Allow public insert on mock_interviews" ON public.mock_interviews FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Allow public read on resume_scans" ON public.resume_scans FOR SELECT USING (true);
+CREATE POLICY "Allow public insert on resume_scans" ON public.resume_scans FOR INSERT WITH CHECK (true);
 
 -- ==============================================================================
 -- 6. ENABLE REAL-TIME WEBSOCKET BROADCASTING (SUPABASE REALTIME)
 -- ==============================================================================
 -- Add tables to the supabase_realtime publication to stream live INSERT/UPDATE/DELETE events
-DO $$
-DECLARE tbl TEXT;
-BEGIN
-  IF EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
-    FOREACH tbl IN ARRAY ARRAY['interview_papers','mock_interviews','resume_scans','candidate_skill_analytics','candidate_mistakes_ledger'] LOOP
-      IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname='supabase_realtime' AND schemaname='public' AND tablename=tbl) THEN
-        EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE public.%I', tbl);
-      END IF;
-    END LOOP;
-  END IF;
-END $$;
+BEGIN;
+  DROP PUBLICATION IF EXISTS supabase_realtime;
+  CREATE PUBLICATION supabase_realtime;
+COMMIT;
+
+ALTER PUBLICATION supabase_realtime ADD TABLE public.interview_papers;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.mock_interviews;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.resume_scans;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.candidate_skill_analytics;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.candidate_mistakes_ledger;
 
 -- Set replica identity to FULL so listeners receive complete old/new payloads
 ALTER TABLE public.interview_papers REPLICA IDENTITY FULL;

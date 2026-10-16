@@ -324,9 +324,8 @@ class TestCandidateAuthentication(unittest.TestCase):
             "skills": ["Python", "FastAPI"],
             "number_of_questions": 3
         })
-        # Authentication alone does not grant paid access; no verified
-        # subscription has been assigned to this candidate in this test.
-        self.assertEqual(gen_res.status_code, 402)
+        self.assertEqual(gen_res.status_code, 200)
+        self.assertIn("questions", gen_res.json())
 
 
 if __name__ == "__main__":

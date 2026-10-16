@@ -1,5 +1,4 @@
 from fastapi import Request, HTTPException, Depends, status
-import ipaddress
 from sqlalchemy.orm import Session
 from typing import Optional, List, Dict
 import time
@@ -7,7 +6,7 @@ import os
 import uuid
 import secrets
 
-from app.database import engine, get_db
+from app.database import get_db
 from app.db_models import UserAccount, AuditLog
 from app.security import decode_access_token, hash_password
 
@@ -18,48 +17,6 @@ def is_development_auth_bypass_enabled() -> bool:
         and os.environ.get("DEV_AUTH_BYPASS", "").strip().lower() in {"1", "true", "yes"}
         and not os.environ.get("VERCEL")
     )
-
-
-def is_local_demo_access_configured() -> bool:
-    """Check explicit local mode configuration; does not establish request locality."""
-    runtime_env = os.environ.get("ENV", "").strip().lower()
-    local_environment = runtime_env in {
-        "dev", "development", "local", "test",
-    }
-    explicitly_enabled = os.environ.get("LOCAL_DEMO_ACCESS", "").strip().lower() in {
-        "1", "true", "yes",
-    }
-    deployment_markers = (
-        "VERCEL", "AWS_LAMBDA_FUNCTION_NAME", "K_SERVICE", "DYNO",
-        "RENDER", "RAILWAY_ENVIRONMENT", "FLY_APP_NAME", "WEBSITE_INSTANCE_ID",
-    )
-    running_on_hosted_platform = any(os.environ.get(name) for name in deployment_markers)
-    auth_bypass_enabled = os.environ.get("DEV_AUTH_BYPASS", "").strip().lower() in {
-        "1", "true", "yes",
-    }
-    local_database = engine.dialect.name == "sqlite"
-    return (
-        local_environment
-        and explicitly_enabled
-        and local_database
-        and not running_on_hosted_platform
-        and not auth_bypass_enabled
-    )
-
-
-def is_local_demo_access_enabled(request: Optional[Request] = None) -> bool:
-    """Enable demo access only for loopback requests to a configured SQLite app."""
-    if not is_local_demo_access_configured():
-        return False
-    if request is None or request.client is None:
-        return False
-    try:
-        client_is_loopback = ipaddress.ip_address(request.client.host).is_loopback
-        host = (request.url.hostname or "").strip("[]").lower()
-        host_is_loopback = host == "localhost" or ipaddress.ip_address(host).is_loopback
-        return client_is_loopback and host_is_loopback
-    except ValueError:
-        return False
 
 
 def _get_development_candidate(db: Session) -> UserAccount:
@@ -309,51 +266,6 @@ def require_candidate(
             detail="Authentication required. Please log in."
         )
     return current_user
-
-
-def require_authenticated_candidate(
-    current_user: UserAccount = Depends(get_current_user),
-) -> UserAccount:
-    """Require a candidate principal; administrators are not candidates."""
-    if current_user.role != "candidate":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Candidate access is required.",
-        )
-    return current_user
-
-
-def require_candidate_page_access(
-    request: Request,
-    current_user: UserAccount = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> UserAccount:
-    """Require candidate identity and normal entitlement outside explicit local demo mode."""
-    candidate = require_authenticated_candidate(current_user)
-    if not candidate.is_active:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="An active candidate account is required.")
-    if not is_local_demo_access_enabled(request):
-        from app.subscription_service import ensure_candidate_entitlement
-
-        ensure_candidate_entitlement(db, candidate)
-    return candidate
-
-
-def require_paid_candidate(
-    request: Request,
-    current_user: UserAccount = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> UserAccount:
-    """Require an active candidate and entitlement unless explicit local demo mode is enabled."""
-    candidate = require_authenticated_candidate(current_user)
-    if not candidate.is_active:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="An active candidate account is required.")
-    if is_local_demo_access_enabled(request):
-        return candidate
-    from app.subscription_service import ensure_candidate_entitlement
-
-    ensure_candidate_entitlement(db, candidate)
-    return candidate
 
 
 def record_audit_log(

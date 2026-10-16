@@ -20,7 +20,6 @@ Tests:
 import unittest
 from datetime import datetime, timezone, timedelta
 import json
-from unittest.mock import patch
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -77,15 +76,7 @@ class TestPhase6ACandidateDashboard(unittest.TestCase):
         Base.metadata.drop_all(bind=cls.engine)
 
     def setUp(self):
-        self.client.cookies.clear()
         self.db = self.TestingSessionLocal()
-        # These tests cover dashboard data behavior. Mock only subscription
-        # decisions so candidates in the isolated SQLite fixture can reach it.
-        self.entitlement_patch = patch(
-            "app.subscription_service.ensure_candidate_entitlement",
-            return_value=None,
-        )
-        self.entitlement_patch.start()
         # Clean test tables
         self.db.query(CandidateMistakesLedger).delete()
         self.db.query(CandidateSkillAnalytics).delete()
@@ -125,7 +116,6 @@ class TestPhase6ACandidateDashboard(unittest.TestCase):
         self.token_b = create_access_token(data={"sub": str(self.user_b.id), "email": self.user_b.email, "role": self.user_b.role})
 
     def tearDown(self):
-        self.entitlement_patch.stop()
         self.db.close()
 
     def test_1_authenticated_dashboard_access_and_schema(self):
