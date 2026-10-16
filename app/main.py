@@ -182,7 +182,11 @@ async def fix_vercel_path_middleware(request: Request, call_next):
     override_path = request.query_params.get("__path")
 
     if override_path:
-        request.scope["path"] = override_path
+        if override_path == "/api/index.py" or override_path.startswith("/api/index.py/"):
+            clean = override_path[len("/api/index.py"):]
+            request.scope["path"] = clean if clean else "/"
+        else:
+            request.scope["path"] = override_path
     elif matched_path and not matched_path.startswith("/api/index.py") and not matched_path.startswith("/index.py"):
         request.scope["path"] = matched_path
     elif forwarded_path and not forwarded_path.startswith("/api/index.py") and not forwarded_path.startswith("/index.py"):
