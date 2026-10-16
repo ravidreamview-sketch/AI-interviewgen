@@ -258,6 +258,28 @@ PYTHON_ROLE_BANKS = {
         "How do you handle contextual document updates, deletions, and real-time vector re-indexing in production RAG systems?",
         "Describe your approach to evaluating agentic reasoning trajectories when there is no single deterministic ground truth answer.",
         "Scenario: Multi-modal LLM applications process complex scanned PDFs with mixed tables and charts. How do you structure the OCR and vision ingestion pipeline?"
+    ],
+    "devsecops": [
+        "How would you design a Jenkins or GitLab CI/CD pipeline that builds, tests, scans, and promotes an application across environments with auditable approvals?",
+        "A change merged to the main branch unexpectedly breaks a release. How would you use Git history, branch protections, and pipeline evidence to identify and safely recover?",
+        "A container image works locally but fails its Kubernetes readiness probe after deployment. What would you inspect, and how would you isolate the cause?",
+        "How would you troubleshoot a pod that is repeatedly restarting in OpenShift, and what evidence would you collect before changing its resource limits?",
+        "How would you structure Helm values and Argo CD applications for consistent deployments across development, staging, and production?",
+        "Argo CD continuously reports drift after a release. How would you determine whether the change is intentional, identify its source, and restore the desired state safely?",
+        "Where would you place SonarQube, SAST, DAST, Trivy, and secret-detection checks in a delivery pipeline, and how would you handle a newly discovered critical finding?",
+        "A scanner reports a vulnerable dependency that has no available patch. How would you assess exposure, document the decision, and control the risk while awaiting remediation?",
+        "How would you use Terraform and Ansible together to provision and configure a Linux host while keeping runs repeatable and minimizing unsafe changes?",
+        "A Linux service becomes unavailable after an automation run. Describe how you would investigate logs, processes, disk, networking, and recent configuration changes.",
+        "How would you promote a signed container image through Quay or Artifactory while maintaining traceability and preventing unreviewed artifact replacement?",
+        "A production deployment uses a dependency version different from the one tested in CI. How would you investigate the artifact and dependency chain and prevent recurrence?",
+        "Prometheus alerts show elevated errors while Grafana dashboards appear healthy. How would you correlate metrics, Dynatrace traces, and ELK logs to scope the incident?",
+        "During an incident, what monitoring and communication steps would you take to determine impact, mitigate safely, and verify recovery?",
+        "How would you secure access to an EKS or AKS cluster for an application team while applying least privilege and avoiding long-lived cloud credentials?",
+        "A Kubernetes workload needs to call an external service but should not be publicly reachable. How would you design and verify the relevant cloud and cluster network controls?",
+        "How would you demonstrate that a banking workload's RBAC, TLS, network policies, and secrets handling support PCI DSS-aligned controls?",
+        "A secret is found in a repository and may have reached a build artifact. What immediate containment, rotation, investigation, and prevention steps would you take?",
+        "A deployment pipeline is blocked by a failed security gate shortly before a planned release. How would you assess urgency, risk, and safe next steps without bypassing the control?",
+        "A new release is healthy in staging but causes intermittent production failures on OpenShift. Walk through how you would compare environments, gather evidence, roll back if needed, and prevent recurrence."
     ]
 }
 
@@ -387,11 +409,13 @@ def generate_seed_derived_questions(seed_q: str, role: str, count: int) -> List[
 
 def get_fallback_questions(role: str, skills: List[str], count: int, custom_q: str = "") -> List[str]:
     """Provides a guaranteed list of exactly `count` role-specific questions."""
-    if custom_q and len(custom_q.strip()) > 5:
+    role_lower = (role or "").lower()
+    if "devsecops" in role_lower or "devsec ops" in role_lower:
+        key = "devsecops"
+    elif custom_q and len(custom_q.strip()) > 5:
         return generate_seed_derived_questions(custom_q.strip(), role, count)
 
-    role_lower = (role or "").lower()
-    if any(k in role_lower for k in ["ux designer", "user experience", "ux researcher", "interaction designer"]) and "product" not in role_lower and "ui/ux" not in role_lower:
+    elif any(k in role_lower for k in ["ux designer", "user experience", "ux researcher", "interaction designer"]) and "product" not in role_lower and "ui/ux" not in role_lower:
         key = "ux"
     elif "product designer" in role_lower or "lead product designer" in role_lower:
         key = "product"

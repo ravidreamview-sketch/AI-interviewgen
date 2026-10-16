@@ -61,7 +61,7 @@ from app.evaluator_service import evaluate_candidate_answer, get_curated_presets
 from app.speech_service import get_stt_provider
 from app.tts_service import get_tts_provider
 from app.avatar_service import get_avatar_provider
-from app.prompts import interview_prompt
+from app.prompts import DEVSECOPS_QUESTION_DOMAINS, interview_prompt
 from app.services import (
     generate_ai_questions,
     get_ai_provider_status,
@@ -445,21 +445,28 @@ def generate_questions(
         res = format_interview_response(interview)
         res["company"] = getattr(data, "company", "General Tech")
         res["interview_type"] = getattr(data, "interview_type", "Technical & Architecture")
-        res["questions_details"] = [
-            {
+        is_devsecops = "devsecops" in (data.role or "").lower()
+        res["questions_details"] = []
+        for i, question in enumerate(clean_questions):
+            domain = None
+            if is_devsecops:
+                domain_index = min(
+                    i * len(DEVSECOPS_QUESTION_DOMAINS) // len(clean_questions),
+                    len(DEVSECOPS_QUESTION_DOMAINS) - 1,
+                )
+                domain = DEVSECOPS_QUESTION_DOMAINS[domain_index]
+            res["questions_details"].append({
                 "id": i + 1,
-                "question": q,
-                "category": getattr(data, "interview_type", "Technical & Architecture"),
+                "question": question,
+                "category": domain[0] if domain else getattr(data, "interview_type", "Technical & Architecture"),
                 "difficulty": data.difficulty,
                 "source_type": "AI_generated",
                 "source_title": f"AI Synthesis ({data.role})",
                 "source_url": None,
                 "source_date": datetime.utcnow().strftime("%Y-%m-%d"),
                 "confidence": 0.91,
-                "model_answer": f"Evaluates depth in {', '.join(data.skills[:3]) if data.skills else data.role} with clear trade-offs."
-            }
-            for i, q in enumerate(clean_questions)
-        ]
+                "model_answer": domain[2] if domain else f"Evaluates depth in {', '.join(data.skills[:3]) if data.skills else data.role} with clear trade-offs."
+            })
         res["message"] = "Interview questions generated and saved successfully"
         return res
 

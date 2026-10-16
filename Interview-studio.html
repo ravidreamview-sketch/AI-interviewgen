@@ -3532,7 +3532,7 @@
                   <div class="role-header-desc">Choose a role preset to auto-fill the brief</div>
                 </div>
 
-                <!-- 6 Role Cards Grid (Top Grid) -->
+                <!-- Role Cards Grid (Top Grid) -->
                 <div class="role-cards-grid" id="roleCardsGrid" role="radiogroup" aria-label="Role Presets">
                   <div class="role-card selected" role="radio" tabindex="0" aria-checked="true" data-role="ux" onclick="selectRole('ux')" onkeydown="handleRoleCardKeydown(event, 'ux')">
                     <div class="role-avatar-wrap" style="background:#E6F7F0">
@@ -3723,6 +3723,7 @@
                         <option value="1 Year">1 Year</option>
                         <option value="2 Years">2 Years</option>
                         <option value="3 Years">3 Years</option>
+                        <option value="3+ Years">3+ Years</option>
                         <option value="5 Years" selected>5 Years</option>
                         <option value="8+ Years">8+ Years</option>
                       </select>
@@ -3768,6 +3769,16 @@
                           <div class="c-opt-info">
                             <span class="c-opt-title">3 Years</span>
                             <span class="c-opt-sub">Solid autonomous engineering &amp; design</span>
+                          </div>
+                          <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                              stroke-width="2.5">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg></span>
+                        </div>
+                        <div class="c-opt" role="option" data-val="3+ Years">
+                          <div class="c-opt-info">
+                            <span class="c-opt-title">3+ Years</span>
+                            <span class="c-opt-sub">Experienced hands-on engineering &amp; operations</span>
                           </div>
                           <span class="c-opt-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                               stroke-width="2.5">
@@ -4743,6 +4754,28 @@
         "Describe your approach to evaluating agentic reasoning trajectories when there is no single deterministic ground truth answer.",
         "Scenario: Multi-modal LLM applications process complex scanned PDFs with mixed tables and charts. How do you structure the OCR and vision ingestion pipeline?"
       ],
+      devsecops: [
+        "How would you design a Jenkins or GitLab CI/CD pipeline that builds, tests, scans, and promotes an application across environments with auditable approvals?",
+        "A change merged to the main branch unexpectedly breaks a release. How would you use Git history, branch protections, and pipeline evidence to identify and safely recover?",
+        "A container image works locally but fails its Kubernetes readiness probe after deployment. What would you inspect, and how would you isolate the cause?",
+        "How would you troubleshoot a pod that is repeatedly restarting in OpenShift, and what evidence would you collect before changing its resource limits?",
+        "How would you structure Helm values and Argo CD applications for consistent deployments across development, staging, and production?",
+        "Argo CD continuously reports drift after a release. How would you determine whether the change is intentional, identify its source, and restore the desired state safely?",
+        "Where would you place SonarQube, SAST, DAST, Trivy, and secret-detection checks in a delivery pipeline, and how would you handle a newly discovered critical finding?",
+        "A scanner reports a vulnerable dependency that has no available patch. How would you assess exposure, document the decision, and control the risk while awaiting remediation?",
+        "How would you use Terraform and Ansible together to provision and configure a Linux host while keeping runs repeatable and minimizing unsafe changes?",
+        "A Linux service becomes unavailable after an automation run. Describe how you would investigate logs, processes, disk, networking, and recent configuration changes.",
+        "How would you promote a signed container image through Quay or Artifactory while maintaining traceability and preventing unreviewed artifact replacement?",
+        "A production deployment uses a dependency version different from the one tested in CI. How would you investigate the artifact and dependency chain and prevent recurrence?",
+        "Prometheus alerts show elevated errors while Grafana dashboards appear healthy. How would you correlate metrics, Dynatrace traces, and ELK logs to scope the incident?",
+        "During an incident, what monitoring and communication steps would you take to determine impact, mitigate safely, and verify recovery?",
+        "How would you secure access to an EKS or AKS cluster for an application team while applying least privilege and avoiding long-lived cloud credentials?",
+        "A Kubernetes workload needs to call an external service but should not be publicly reachable. How would you design and verify the relevant cloud and cluster network controls?",
+        "How would you demonstrate that a banking workload's RBAC, TLS, network policies, and secrets handling support PCI DSS-aligned controls?",
+        "A secret is found in a repository and may have reached a build artifact. What immediate containment, rotation, investigation, and prevention steps would you take?",
+        "A deployment pipeline is blocked by a failed security gate shortly before a planned release. How would you assess urgency, risk, and safe next steps without bypassing the control?",
+        "A new release is healthy in staging but causes intermittent production failures on OpenShift. Walk through how you would compare environments, gather evidence, roll back if needed, and prevent recurrence."
+      ],
       figma: [
         "How do you structure component variants, boolean properties, and nested instances in Figma to maximize reuse across product teams?",
         "Explain how you leverage Figma Variables and Modes for dynamic light/dark theming and responsive layout spacing.",
@@ -4885,14 +4918,16 @@
 
     function pickQuestions(skillList, n, role = '', customQ = '') {
       const targetCount = Number(n) || 10;
-      if (customQ && customQ.trim().length > 5) {
+      const roleLower = (role || '').toLowerCase();
+      if (customQ && customQ.trim().length > 5 && !roleLower.includes('devsecops')) {
         return generateRelatedQuestionsFromSeed(customQ.trim(), role, skillList, 'Hard', targetCount);
       }
 
-      const roleLower = (role || '').toLowerCase();
       let pool = [];
 
-      if (roleLower.includes('product designer')) {
+      if (roleLower.includes('devsecops')) {
+        pool = BANK.devsecops;
+      } else if (roleLower.includes('product designer')) {
         pool = BANK.product;
       } else if (roleLower.includes('ui/ux') || roleLower.includes('ui designer') || roleLower.includes('visual')) {
         pool = BANK.uiux;
@@ -5180,6 +5215,81 @@
           { name: "LLM Evaluation", icon: "user-search" }
         ],
         defaultSelectedFocus: ["LLMs", "Prompt Engineering", "RAG"]
+      },
+      devsecops: {
+        id: "devsecops",
+        title: "DevSecOps Engineer",
+        bg: "#ECFDF5",
+        color: "#059669",
+        iconSvg: `<svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+          <path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z"/>
+          <path d="m9 12 2 2 4-4"/>
+        </svg>`,
+        keywordsLine1: "CI/CD • Kubernetes • DevSecOps Security",
+        keywordsLine2: "GitOps • Terraform • Monitoring",
+        defaultRoleInput: "DevSecOps Engineer",
+        defaultExp: "3+ Years",
+        defaultDiff: "Hard",
+        defaultCompany: "General Tech",
+        defaultType: "Technical & Architecture",
+        defaultQuestionCount: 20,
+        autoFillOnSelect: true,
+        location: "Chennai",
+        defaultPrompt: `Role: DevSecOps Engineer
+Experience: 3+ Years
+Location: Chennai
+
+Responsibilities:
+- Build and maintain secure CI/CD pipelines with automated code, dependency, container, and secret scanning.
+- Package, scan, publish, and promote container artifacts through controlled registries and release workflows.
+- Operate Kubernetes and OpenShift deployments using GitOps, Helm, and infrastructure-as-code practices.
+- Support Linux-based environments, troubleshoot deployment and production issues, and improve service observability.
+- Apply access control, network security, secrets management, and PCI DSS-aligned controls in a banking context.
+
+Required skills:
+Jenkins and GitLab CI/CD; Git, GitLab and Bitbucket; Docker and Podman; Kubernetes and Red Hat OpenShift; Argo CD, OpenShift GitOps and Helm; SonarQube, SAST, DAST, Trivy and secret detection; JFrog Artifactory, Nexus and Quay; Terraform and Ansible; Bash/Shell scripting and Python fundamentals; Linux administration and troubleshooting; Prometheus, Grafana, Dynatrace and ELK; AWS/Azure fundamentals and EKS/AKS; RBAC, TLS, network policies, secrets management and PCI DSS.
+
+Interview topics:
+CI/CD and Git workflows; Docker, Kubernetes and OpenShift; GitOps, Argo CD and Helm; DevSecOps, SAST/DAST and vulnerability scanning; Terraform, Ansible, Linux and scripting; artifact registries and dependency management; monitoring, logging and incident response; AWS/Azure, EKS/AKS and infrastructure security; banking security, PCI DSS, RBAC and secrets management; practical troubleshooting and scenario-based problem solving.`,
+        requiredSkills: [
+          "Jenkins and GitLab CI/CD",
+          "Git, GitLab and Bitbucket",
+          "Docker and Podman",
+          "Kubernetes and Red Hat OpenShift",
+          "Argo CD, OpenShift GitOps and Helm",
+          "SonarQube, SAST, DAST, Trivy and secret detection",
+          "JFrog Artifactory, Nexus and Quay",
+          "Terraform and Ansible",
+          "Bash/Shell scripting and Python fundamentals",
+          "Linux administration and troubleshooting",
+          "Prometheus, Grafana, Dynatrace and ELK",
+          "AWS/Azure fundamentals and EKS/AKS",
+          "RBAC, TLS, network policies, secrets management and PCI DSS"
+        ],
+        focusAreas: [
+          { name: "CI/CD and Git workflows", icon: "layers" },
+          { name: "Docker, Kubernetes and OpenShift", icon: "layout" },
+          { name: "GitOps, Argo CD and Helm", icon: "tree" },
+          { name: "DevSecOps and vulnerability scanning", icon: "target" },
+          { name: "Terraform, Ansible, Linux and scripting", icon: "sparkle" },
+          { name: "Artifact registries and dependencies", icon: "layers" },
+          { name: "Monitoring, logging and incident response", icon: "user-search" },
+          { name: "AWS/Azure, EKS/AKS and infrastructure security", icon: "layout" },
+          { name: "Banking security, PCI DSS and secrets", icon: "users" },
+          { name: "Practical troubleshooting scenarios", icon: "target" }
+        ],
+        defaultSelectedFocus: [
+          "CI/CD and Git workflows",
+          "Docker, Kubernetes and OpenShift",
+          "GitOps, Argo CD and Helm",
+          "DevSecOps and vulnerability scanning",
+          "Terraform, Ansible, Linux and scripting",
+          "Artifact registries and dependencies",
+          "Monitoring, logging and incident response",
+          "AWS/Azure, EKS/AKS and infrastructure security",
+          "Banking security, PCI DSS and secrets",
+          "Practical troubleshooting scenarios"
+        ]
       }
     };
 
@@ -5232,7 +5342,7 @@
         </div>
         <div class="role-selected-overline">SELECTED ROLE</div>
         <div class="role-selected-title">${role.title}</div>
-        <div class="role-selected-desc">We'll customize your interview experience to match ${role.title} expectations.</div>
+        <div class="role-selected-desc">${role.location ? `${role.defaultExp} · ${role.location} · ` : ''}We'll customize your interview experience to match ${role.title} expectations.</div>
       `;
     }
 
@@ -5279,6 +5389,10 @@
       renderRoleSelectedSummary();
       renderFocusCards();
 
+      if (roleData.autoFillOnSelect) {
+        handleAutoFillBrief({ silent: true });
+      }
+
       if (!isFromAuto) {
         toast(`Selected ${roleData.title}`);
       }
@@ -5319,7 +5433,7 @@
       }
     }
 
-    function handleAutoFillBrief() {
+    function handleAutoFillBrief({ silent = false } = {}) {
       if (!selectedRoleId || !ROLE_PRESETS_DATA[selectedRoleId]) {
         toast('Please select a primary role first');
         return;
@@ -5332,7 +5446,9 @@
       $('#role').value = role.title;
 
       // 2. Populate Skills Stack with selected focus areas
-      if (selectedFocus.length > 0) {
+      if (role.requiredSkills) {
+        skills = [...role.requiredSkills];
+      } else if (selectedFocus.length > 0) {
         skills = [...selectedFocus];
       } else {
         skills = role.focusAreas.map(f => f.name).slice(0, 4);
@@ -5344,6 +5460,7 @@
       if ($('#diff')) $('#diff').value = role.defaultDiff || 'Hard';
       if ($('#company')) $('#company').value = role.defaultCompany || 'General Tech';
       if ($('#interviewType')) $('#interviewType').value = role.defaultType || 'Technical & Architecture';
+      if (role.defaultQuestionCount) setCount(role.defaultQuestionCount);
 
       // 4. Update custom prompt/focus question
       if ($('#customQuestion')) {
@@ -5357,7 +5474,7 @@
       syncCustomSelect('interviewType');
 
       // 6. Provide user feedback and smooth scroll
-      toast(`✓ Auto-filled brief for ${role.title}!`);
+      if (!silent) toast(`✓ Auto-filled brief for ${role.title}!`);
 
       const targetEl = document.getElementById('sectionInterviewContext');
       if (targetEl) {
@@ -6306,7 +6423,7 @@
       $('#emailModalBackdrop').classList.remove('open');
     }
 
-    $('#emailPackageBtn').onclick = openEmailModal;
+    if ($('#emailPackageBtn')) $('#emailPackageBtn').onclick = openEmailModal;
     $('#shareEmailBtn').onclick = openEmailModal;
     $('#closeEmailModal').onclick = closeEmailModal;
     $('#emailModalBackdrop').onclick = (e) => {
