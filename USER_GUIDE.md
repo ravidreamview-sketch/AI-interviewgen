@@ -81,6 +81,8 @@ The platform enforces strict discipline-specific boundaries to prevent generic H
 | **⚛️ Frontend Developer** | HTML5 semantics, modern CSS, JS event loop/closures, React 19/Next.js App Router, Core Web Vitals (LCP, INP, CLS), WAI-ARIA accessibility, client/server state management. | Focus on client-side web architecture. | Principal Frontend Architect |
 | **⚙️ Backend Developer** | Python, FastAPI, PostgreSQL indexing & ACID transactions, Redis caching, JWT/OAuth2 authentication, distributed scalability, rate limiting, microservices, production debugging. | Focus on server systems & database engineering. | Principal Backend & Systems Architect |
 | **🤖 GenAI Engineer** | LLMs, RAG architectures, sparse/dense embeddings, vector databases, LangGraph agentic workflows, hallucination evaluation (Ragas/TruLens), token latency & cost optimization. | Focus on AI systems & LLM engineering. | Chief AI Architect |
+| **🛡️ DevSecOps Engineer** | Secure CI/CD, Kubernetes and Docker, container scanning, secrets management, GitOps, Terraform, and monitoring/observability. | Focus on platform security and delivery; do not substitute general software-development questions. | DevSecOps & Platform Security Lead |
+| **🛠️ Technical Implementation Engineer** | Entry-level SQL and database operations, REST APIs and Postman, client onboarding and integrations, manual/API/integration testing, troubleshooting, production support, and technical communication. Accepts well-reasoned hypothetical answers from fresher candidates. | Do not assume professional experience; assess only demonstrated skills and evidence. | Technical Implementation Interviewer |
 
 ---
 
@@ -117,7 +119,7 @@ The **Dashboard** ([Dashboard.html](file:///e:/Gen%20AI/Project/AI-Interview-Gen
 The **Interview Studio** ([Interview-studio.html](file:///e:/Gen%20AI/Project/AI-Interview-Generator/Interview-studio.html)) gives you full granular control over question creation.
 
 ### Step-by-Step Studio Workflow:
-1. **Choose a Role**: Select a preset chip or type a custom role.
+1. **Choose a Role**: Select a preset chip or type a custom role. The **DevSecOps Engineer** preset fills a security-focused brief for CI/CD, Kubernetes, GitOps, Terraform, and monitoring. The **Technical Implementation Engineer** preset fills an entry-level/fresher brief with SQL, APIs/Postman, integrations, testing, troubleshooting, production support, and communication skills.
 2. **Specify Experience Level**: Choose from `Intern/Fresher`, `1-2 Years`, `3-5 Years`, `5-8 Years`, or `8+ Years (Staff/Principal)`.
 3. **Add Skills & Tools**: Tag specific frameworks, libraries, or methodologies (e.g. `Figma`, `Auto Layout`, `WCAG 2.2`).
 4. **Enter a Specific Focus Question (Optional)**:

@@ -16,6 +16,7 @@ import re
 import json
 import logging
 from app.services import generate_ai_questions
+from app.prompts import technical_implementation_role_guidance
 
 logger = logging.getLogger("ravi.evaluator_service")
 
@@ -150,6 +151,12 @@ def evaluate_candidate_answer(
     and generates an optimized Staff Engineer Gold-Standard model answer.
     """
     word_count = len(answer.strip().split())
+    is_technical_implementation_role = (role or "").strip().casefold() == "technical implementation engineer"
+    model_answer_target = (
+        "entry-level / fresher candidate"
+        if is_technical_implementation_role
+        else "FAANG Staff Engineer"
+    )
     
     prompt = f"""
 You are a Staff Bar Raiser and Principal Technical Interviewer at a Tier-1 tech company evaluating a candidate's interview answer.
@@ -159,6 +166,7 @@ SENIORITY TARGET: {seniority}
 TARGET COMPANY TIER: {company_tier}
 QUESTION CATEGORY: {category or "General Technical"}
 JOB CONTEXT / SPECIAL REQUIREMENTS: {jd_context or "None provided"}
+{technical_implementation_role_guidance(role)}
 
 INTERVIEW QUESTION:
 \"\"\"{question}\"\"\"
@@ -190,7 +198,7 @@ EVALUATION RUBRIC & INSTRUCTIONS:
    - 2-4 specific missing elements, risks, or red flags.
 
 5. GOLD-STANDARD MODEL ANSWER (FAANG Staff Level Rewrite):
-   - Provide a complete, polished, word-for-word exemplary answer showing exactly how a Staff/Principal Engineer would answer this question in 180-260 words.
+   - Provide a complete, polished, word-for-word exemplary answer appropriate for a {model_answer_target}; do not expect claimed professional experience from a fresher.
 
 6. ACTIONABLE IMPROVEMENTS:
    - 3 prioritized step-by-step coaching tips to elevate this answer to 95+ score.
@@ -246,7 +254,11 @@ Output ONLY valid JSON matching this exact structure:
 
     if not parsed_result or "overall_score" not in parsed_result:
         # High-Fidelity Heuristic Fallback
-        base_score = min(88, max(42, int(45 + (word_count * 0.35))))
+        base_score = (
+            42
+            if is_technical_implementation_role
+            else min(88, max(42, int(45 + (word_count * 0.35))))
+        )
         is_strong = base_score >= 80
         
         sit_score = min(22, max(10, int(base_score * 0.24)))
@@ -257,7 +269,12 @@ Output ONLY valid JSON matching this exact structure:
         parsed_result = {
             "overall_score": base_score,
             "hiring_verdict": "Hire" if is_strong else "Leaning Hire" if base_score >= 65 else "No Hire",
-            "verdict_summary": f"Demonstrated solid foundational awareness for {role}. To reach Staff level, incorporate specific quantitative performance metrics and trade-off comparisons.",
+            "verdict_summary": (
+                "Automated evaluation was unavailable, so technical correctness could not be verified. "
+                "No unsupported experience or skill credit was assigned."
+                if is_technical_implementation_role
+                else f"Demonstrated solid foundational awareness for {role}. To reach Staff level, incorporate specific quantitative performance metrics and trade-off comparisons."
+            ),
             "star_breakdown": {
                 "situation_score": sit_score,
                 "situation_feedback": "Established relevant context, though scope could be defined more crisply with scale numbers.",
@@ -274,26 +291,51 @@ Output ONLY valid JSON matching this exact structure:
                 "trade_off_analysis": max(40, base_score - 8),
                 "business_impact": max(40, base_score - 6)
             },
-            "strengths": [
-                "Direct and articulate answer addressing the core question prompt.",
-                f"Demonstrates practical familiarity with standard {role} patterns and workflows."
-            ],
-            "weaknesses": [
-                "Lacks explicit quantitative metrics (e.g. percentage improvements, SLA guarantees).",
-                "Did not compare chosen approach against alternative solutions or trade-offs."
-            ],
-            "model_answer": (
-                f"In my previous role leading backend services, we encountered a similar challenge when scaling our core API to 40,000 requests per second. "
-                f"My task was to guarantee idempotency and sub-50ms p99 latency without introducing race conditions. "
-                f"I implemented a distributed locking strategy using Redis with Redis-cell rate limiting combined with database-level atomic upserts and exponential backoff retry queues. "
-                f"We also established Prometheus latency telemetry and automated circuit breakers. "
-                f"As a result, we eliminated duplicate transaction errors by 100%, reduced p99 query latency from 240ms to 38ms, and saved over $120K annually in redundant compute costs."
+            "strengths": (
+                ["Response received; technical correctness was not verified."]
+                if is_technical_implementation_role
+                else [
+                    "Direct and articulate answer addressing the core question prompt.",
+                    f"Demonstrates practical familiarity with standard {role} patterns and workflows."
+                ]
             ),
-            "actionable_improvements": [
-                "Quantify your results: Always mention at least 2 concrete numbers (e.g. 'reduced latency by 45%', 'handled 50K RPS').",
-                "Highlight trade-offs: Explicitly explain why you chose your specific approach over an alternative pattern.",
-                "Structure with STAR: Clearly demarcate your Situation, Task, Action, and Measurable Result."
-            ],
+            "weaknesses": (
+                [
+                    "Technical correctness and evidence-based reasoning could not be verified because automated evaluation was unavailable.",
+                    "No demonstrated skill should be inferred from an unverified answer."
+                ]
+                if is_technical_implementation_role
+                else [
+                    "Lacks explicit quantitative metrics (e.g. percentage improvements, SLA guarantees).",
+                    "Did not compare chosen approach against alternative solutions or trade-offs."
+                ]
+            ),
+            "model_answer": (
+                "I would first compare the transaction ID and relevant timestamps in the API response with the database query filters. "
+                "I would check the correct environment, account, transaction status, and any timezone or delayed-processing behavior. "
+                "I would record the request ID and query results, then share the evidence with the implementation or development team if the mismatch remained unresolved."
+                if is_technical_implementation_role
+                else (
+                    f"In my previous role leading backend services, we encountered a similar challenge when scaling our core API to 40,000 requests per second. "
+                    f"My task was to guarantee idempotency and sub-50ms p99 latency without introducing race conditions. "
+                    f"I implemented a distributed locking strategy using Redis with Redis-cell rate limiting combined with database-level atomic upserts and exponential backoff retry queues. "
+                    f"We also established Prometheus latency telemetry and automated circuit breakers. "
+                    f"As a result, we eliminated duplicate transaction errors by 100%, reduced p99 query latency from 240ms to 38ms, and saved over $120K annually in redundant compute costs."
+                )
+            ),
+            "actionable_improvements": (
+                [
+                    "Explain the investigation in clear steps and distinguish observed evidence from assumptions.",
+                    "Check relevant request details, database records, status, and environment before drawing a conclusion.",
+                    "If unresolved, describe what evidence you would document and how you would escalate it."
+                ]
+                if is_technical_implementation_role
+                else [
+                    "Quantify your results: Always mention at least 2 concrete numbers (e.g. 'reduced latency by 45%', 'handled 50K RPS').",
+                    "Highlight trade-offs: Explicitly explain why you chose your specific approach over an alternative pattern.",
+                    "Structure with STAR: Clearly demarcate your Situation, Task, Action, and Measurable Result."
+                ]
+            ),
             "word_count": word_count
         }
 

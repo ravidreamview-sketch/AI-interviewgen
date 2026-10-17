@@ -36,7 +36,7 @@ from app.models import (
     AdaptiveFromMatchResponse
 )
 from fastapi import HTTPException
-from app.prompts import interview_prompt
+from app.prompts import interview_prompt, technical_implementation_role_guidance
 from app.services import generate_ai_questions, parse_raw_questions, get_fallback_questions
 
 # Role Importance Tiers
@@ -504,6 +504,7 @@ QUESTION:
 "{question}"
 
 CANDIDATE TARGET ROLE: {role} (Difficulty: {difficulty})
+{technical_implementation_role_guidance(role)}
 PRIMARY TARGET SKILL: {target_skill} (Nuance / Focus: {focus_skill})
 EXPECTED SIGNALS: {", ".join(payload.expected_signals) if payload.expected_signals else "Practical trade-offs, correct technical reasoning, clear structure, edge cases"}
 
@@ -911,6 +912,7 @@ def determine_adaptive_next_question(
     question_text = ""
     next_q_prompt = f"""
 You are an expert interviewer conducting an adaptive interview for a {role} ({exp}, Level: {next_diff}).
+{technical_implementation_role_guidance(role)}
 
 CONTEXT:
 - Target Skill to Probe: {target_skill} (Focus: {focus_skill})
@@ -923,6 +925,7 @@ TASK:
 Generate EXACTLY 1 new, highly focused interview question that executes this strategy ({strategy}).
 CRITICAL RULES:
 - Do NOT repeat or duplicate the previous question.
+- Ask exactly one question.
 - If strategy is "mistake_follow_up", explicitly test whether the candidate corrects the identified mistake.
 - If strategy is "scale_difficulty", present a complex, high-concurrency or ambiguous scenario.
 - Return ONLY the question text on a single line with NO numbering or preamble.

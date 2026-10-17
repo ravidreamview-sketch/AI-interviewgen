@@ -1,55 +1,20 @@
-DEVSECOPS_QUESTION_DOMAINS = (
-    (
-        "CI/CD and Git workflows",
-        "Jenkins and GitLab CI/CD; Git, GitLab, Bitbucket, pipeline design, branching, approvals, and release safety",
-        "Assesses pipeline design, reproducibility, safe promotion, and practical Git workflow choices.",
-    ),
-    (
-        "Docker, Kubernetes, and OpenShift",
-        "Docker and Podman image builds; Kubernetes and Red Hat OpenShift workload operations, scheduling, probes, and rollout behavior",
-        "Assesses container fundamentals, Kubernetes/OpenShift operations, and diagnosis of workload failures.",
-    ),
-    (
-        "GitOps, Argo CD, and Helm",
-        "Argo CD, OpenShift GitOps, Helm releases, declarative configuration, drift detection, and rollback",
-        "Assesses reconciliation, environment promotion, drift handling, and safe rollback.",
-    ),
-    (
-        "DevSecOps and vulnerability scanning",
-        "SonarQube, SAST, DAST, Trivy, dependency and image scanning, secret detection, and actionable remediation",
-        "Assesses security-control placement, finding triage, false-positive handling, and remediation ownership.",
-    ),
-    (
-        "Terraform, Ansible, Linux, and scripting",
-        "Terraform, Ansible, Bash/Shell, Python fundamentals, Linux administration, troubleshooting, and idempotent automation",
-        "Assesses repeatable infrastructure changes, safe automation, Linux diagnosis, and scripting fundamentals.",
-    ),
-    (
-        "Artifact registries and dependency management",
-        "JFrog Artifactory, Nexus, Quay, artifact provenance, image promotion, retention, and dependency controls",
-        "Assesses artifact traceability, registry access, dependency hygiene, and controlled promotion.",
-    ),
-    (
-        "Monitoring, logging, and incident response",
-        "Prometheus, Grafana, Dynatrace, ELK, alert quality, log investigation, service health, and incident response",
-        "Assesses useful signals, alert triage, log/metric correlation, and incident communication.",
-    ),
-    (
-        "AWS/Azure, EKS/AKS, and infrastructure security",
-        "AWS and Azure fundamentals, EKS and AKS, identity boundaries, network controls, and secure cloud configuration",
-        "Assesses cloud access boundaries, cluster security, network exposure, and practical configuration risks.",
-    ),
-    (
-        "Banking security, PCI DSS, RBAC, and secrets management",
-        "PCI DSS-aligned controls, least-privilege RBAC, TLS, Kubernetes network policies, secrets management, and auditability",
-        "Assesses least privilege, protection of sensitive data, audit evidence, and security-control trade-offs.",
-    ),
-    (
-        "Practical troubleshooting and scenario-based questions",
-        "Realistic CI/CD failures, unhealthy deployments, security findings, infrastructure drift, and production incidents",
-        "Assesses a structured diagnostic approach, risk containment, verification, and clear follow-up actions.",
-    ),
-)
+from typing import Optional
+
+
+def technical_implementation_role_guidance(role: Optional[str] = None) -> str:
+    if (role or "").strip().casefold() != "technical implementation engineer":
+        return ""
+
+    return """
+ENTRY-LEVEL / FRESHER CANDIDATE GUIDANCE:
+- Do not assume professional employment, production ownership, or prior client work.
+- Accept well-reasoned hypothetical answers and clearly stated investigation steps.
+- Evaluate only skills demonstrated in the answer; do not infer experience or award credit for unsupported claims.
+- Accept equivalent correct SQL syntax and approaches.
+- Use foundational follow-ups for gaps; increase difficulty through practical multi-step tasks when answers are strong, without requiring senior-level architecture.
+- Evaluate technical correctness, SQL logic, API understanding, data analysis, testing, troubleshooting/root-cause reasoning, evidence use, and communication clarity.
+- In a live interview, ask exactly one concise question per turn.
+"""
 
 
 def interview_prompt(data):
@@ -162,27 +127,23 @@ REQUIRED TOPIC DOMAINS (Distribute the {num_q} questions across these areas):
 {format_instruction}
 """
 
-    # 5. DEVSECOPS ENGINEER
-    elif "devsecops" in role_lower or "devsec ops" in role_lower:
-        domains = "\n".join(
-            f"{index}. {name} ({coverage})"
-            for index, (name, coverage, _) in enumerate(DEVSECOPS_QUESTION_DOMAINS, 1)
-        )
+    # 5. TECHNICAL IMPLEMENTATION ENGINEER
+    elif role_lower == "technical implementation engineer":
         return f"""
-You are a senior DevSecOps interviewer assessing a {role_str} ({exp}, Level: {diff}, Skills: {skills_str}).
+You are an interviewer assessing an entry-level / fresher Technical Implementation Engineer ({exp}, Level: {diff}, Skills: {skills_str}).
 
-Generate exactly {num_q} practical interview questions for a DevSecOps Engineer with approximately 3+ years of experience.
+Generate exactly {num_q} practical, role-specific interview questions.
 {seed_instruction}
-STRICT REQUIREMENTS:
-- Cover the required topic domains below in order, distributing questions as evenly as the requested count allows.
-- Make questions hands-on and scenario-based, testing practical decisions, trade-offs, verification, and safe remediation.
-- Include banking security and PCI DSS context where relevant, without assuming undocumented company-specific processes.
-- Do not present questions as actual or previously asked questions from any employer.
-- Do not generate generic HR questions.
-- Return questions only in the numbered format specified below; the frontend labels each question with its corresponding topic.
+{technical_implementation_role_guidance(role_str)}
+Distribute questions across these entry-level areas, using basic, intermediate, scenario-based, practical, and communication formats:
+1. SQL and databases: SELECT, INSERT, UPDATE, DELETE; WHERE, ORDER BY, GROUP BY, HAVING; INNER/LEFT and other JOINs; COUNT, SUM, AVG; filtering, sorting, validation; keys and relationships; query writing/debugging; identify duplicate, missing, inconsistent records and investigate transaction/data discrepancies.
+2. REST APIs and Postman: GET, POST, PUT, PATCH, DELETE; status codes; headers, authentication, parameters, request/response bodies; JSON and XML; Postman collections, response validation, HTTP vs HTTPS, client-server communication and API error troubleshooting.
+3. Client implementation and integrations: clarify requirements, configure a product, onboard a client, exchange data between applications, validate environments/configuration, integration testing, and coordinate with development/support.
+4. Testing and QA: manual and basic automation concepts, test cases/scenarios, positive/negative, boundary and invalid-input tests, API/integration/regression testing, expected vs actual results, defect reports and retesting.
+5. Troubleshooting and production support: reproduce an issue, analyze requests/responses, database records, errors/logs and configuration, find likely root cause, prioritize incidents, escalate with evidence, and document resolutions/recurring issues.
+6. Communication and documentation: explain findings to clients, record investigation steps, write troubleshooting notes/FAQs, collaborate across teams, prioritize work, and show ownership.
 
-REQUIRED TOPIC DOMAINS:
-{domains}
+Include practical SQL exercises involving INSERT, JOIN, filtering, aggregation, and data troubleshooting; API response analysis; and scenarios such as a transaction missing from the database, HTTP 200 with failed business outcome, duplicate records, HTTP 401/500, incorrect onboarding configuration, environment-specific test failures, and evidence-based escalation. Questions must remain appropriate for a fresher and allow hypothetical answers.
 {format_instruction}
 """
 
@@ -202,7 +163,7 @@ REQUIRED TOPIC DOMAINS (Distribute the {num_q} questions across these areas):
 {format_instruction}
 """
 
-    # 7. GENAI ENGINEER
+    # 6. GENAI ENGINEER
     elif "genai" in role_lower or "llm" in role_lower or "ai engineer" in role_lower or "machine learning" in role_lower or "rag" in role_lower:
         return f"""
 You are a Chief AI Architect interviewing a {role_str} ({exp}, Level: {diff}, Skills: {skills_str}).
@@ -219,7 +180,7 @@ REQUIRED TOPIC DOMAINS (Distribute the {num_q} questions across these areas):
 {format_instruction}
 """
 
-    # 8. DEFAULT / CUSTOM ROLE
+    # 7. DEFAULT / CUSTOM ROLE
     else:
         return f"""
 You are a Principal Hiring Manager and Senior Interviewer conducting a specialized interview for a {role_str} ({exp}, Level: {diff}, Skills: {skills_str}).

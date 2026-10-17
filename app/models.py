@@ -56,6 +56,7 @@ class QuestionReasonEnum(str, Enum):
 
 class InterviewRequest(BaseModel):
     role: str = Field(..., min_length=2)
+    role_id: Optional[str] = Field(None, min_length=1, max_length=100)
     experience: Optional[str] = Field("Mid Level (3-5 Years)")
     skills: Optional[List[str]] = Field(default_factory=list)
     difficulty: Optional[str] = Field("Hard")

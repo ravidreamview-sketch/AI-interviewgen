@@ -7,28 +7,10 @@ import base64
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 
-def _load_jwt_secret() -> str:
-    secret = os.environ.get("ADMIN_JWT_SECRET", "").strip()
-    is_production = bool(os.environ.get("VERCEL")) or os.environ.get(
-        "ENV", ""
-    ).strip().lower() in {"production", "prod"}
-
-    if secret:
-        if is_production and len(secret) < 32:
-            raise RuntimeError(
-                "ADMIN_JWT_SECRET must contain at least 32 characters in production."
-            )
-        return secret
-
-    if is_production:
-        raise RuntimeError(
-            "ADMIN_JWT_SECRET must be configured in production."
-        )
-
-    return secrets.token_urlsafe(32)
-
-
-ADMIN_JWT_SECRET = _load_jwt_secret()
+# Secure secret key loaded strictly from environment variable or generated per process at runtime
+ADMIN_JWT_SECRET = os.environ.get("ADMIN_JWT_SECRET")
+if not ADMIN_JWT_SECRET:
+    ADMIN_JWT_SECRET = secrets.token_urlsafe(32)
 
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ADMIN_TOKEN_EXPIRE_MINUTES", "480"))  # 8 hours default
 

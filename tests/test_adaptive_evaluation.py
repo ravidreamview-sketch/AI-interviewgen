@@ -1,6 +1,7 @@
 import unittest
 import os
 import sys
+from unittest.mock import patch
 from datetime import datetime, timedelta
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -492,6 +493,47 @@ class TestAdaptiveEvaluationAndNextQuestion(unittest.TestCase):
     # NEXT QUESTION TESTS (17 - 27)
     # =========================================================================
 
+    def test_technical_implementation_adaptive_evaluation_uses_demonstrated_evidence(self):
+        token = self.get_token_a()
+        captured_prompts = []
+        evaluation_json = (
+            '{"overall_score":76,"skill_scores":[{"skill":"SQL & Database Operations",'
+            '"score":76,"evidence":"Identified the transaction ID and environment filters",'
+            '"confidence":"HIGH"}],"good_signals":["Used a concrete investigation step"],'
+            '"missing_signals":["Did not yet compare database status values"],'
+            '"red_flags":[],"mistakes":[],"summary":"Sound initial investigation with a data-validation gap."}'
+        )
+
+        def capture_prompt(prompt):
+            captured_prompts.append(prompt)
+            return evaluation_json
+
+        with patch(
+            "app.adaptive_service.generate_ai_questions",
+            side_effect=capture_prompt,
+        ):
+            res = client.post(
+                "/api/adaptive/evaluate-response",
+                headers={"Authorization": f"Bearer {token}"},
+                json={
+                    "question": "How would you investigate a transaction missing from the database?",
+                    "candidate_response": "I would compare the transaction ID and environment, then check the status and query filters.",
+                    "target_skill": "SQL & Database Operations",
+                    "focus_skill": "Data discrepancy investigation",
+                    "difficulty": "Medium",
+                    "role": "Technical Implementation Engineer",
+                },
+            )
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.json()["overall_score"], 76.0)
+        self.assertIn("Do not assume professional employment", captured_prompts[0])
+        self.assertIn(
+            "do not infer experience or award credit",
+            captured_prompts[0].casefold(),
+        )
+        self.assertIn("SQL & Database Operations", captured_prompts[0])
+
     def test_17_poor_response_continues_target_skill(self):
         token = self.get_token_a()
         res = client.post(
@@ -517,6 +559,45 @@ class TestAdaptiveEvaluationAndNextQuestion(unittest.TestCase):
         data = res.json()
         self.assertEqual(data["strategy"], "continue_probing")
         self.assertEqual(data["question"]["target_skill"], "PostgreSQL Indexing")
+
+    def test_technical_implementation_adaptive_follow_up_uses_fresher_guidance(self):
+        token = self.get_token_a()
+        captured_prompts = []
+
+        def capture_prompt(prompt):
+            captured_prompts.append(prompt)
+            return "How would you use a LEFT JOIN to find transactions without a matching customer record?"
+
+        with patch(
+            "app.adaptive_service.generate_ai_questions",
+            side_effect=capture_prompt,
+        ):
+            res = client.post(
+                "/api/adaptive/next-question",
+                headers={"Authorization": f"Bearer {token}"},
+                json={
+                    "current_target_skill": "SQL & Database Operations",
+                    "previous_question": "How do you filter transaction records?",
+                    "previous_response": "I would check the transaction ID and status.",
+                    "role": "Technical Implementation Engineer",
+                    "experience": "Intern / Fresher",
+                    "difficulty": "Medium",
+                    "skills": [
+                        "SQL & Database Operations",
+                        "APIs & Postman",
+                        "Implementation & Integrations",
+                    ],
+                },
+            )
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(
+            res.json()["question"]["question"],
+            "How would you use a LEFT JOIN to find transactions without a matching customer record?",
+        )
+        self.assertIn("Technical Implementation Engineer", captured_prompts[0])
+        self.assertIn("Do not assume professional employment", captured_prompts[0])
+        self.assertIn("Ask exactly one question", captured_prompts[0])
 
     def test_18_repeated_mistake_generates_targeted_follow_up(self):
         token = self.get_token_a()

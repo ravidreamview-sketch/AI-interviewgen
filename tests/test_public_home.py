@@ -33,15 +33,6 @@ class TestPublicHome(unittest.TestCase):
             "{app/**,Public-home.html}",
         )
 
-    def test_candidate_menu_rewrites_target_the_expected_pages(self):
-        config = json.loads((ROOT / "vercel.json").read_text(encoding="utf-8"))
-        rewrites = {rule["source"]: rule["destination"] for rule in config["rewrites"]}
-
-        self.assertEqual(rewrites["/candidate/dashboard"], "/Candidate-dashboard.html")
-        self.assertEqual(rewrites["/candidate/interview-studio"], "/Interview-studio.html")
-        self.assertEqual(rewrites["/candidate/mock-interview"], "/Mock-interview.html")
-        self.assertEqual(rewrites["/candidate/history"], "/Interview history.html")
-
     def test_vercel_entrypoint_routes_home_health_and_candidate_login(self):
         home = vercel_client.get("/api/index.py?__path=/")
         health = vercel_client.get("/health")

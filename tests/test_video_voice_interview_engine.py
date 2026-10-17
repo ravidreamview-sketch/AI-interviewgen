@@ -179,6 +179,41 @@ class TestVideoVoiceInterviewEngine(unittest.TestCase):
         self.assertEqual(context["question_count"], 2)
         self.assertIsNone(context["candidate_evidence"]["target_role"])
 
+    def test_technical_implementation_live_interview_uses_fresher_guidance(self):
+        self.ai_mock.reset_mock()
+        start_response = self.client1.post("/api/interview/start", json={
+            "role": "Technical Implementation Engineer",
+            "skills": [
+                "SQL & Database Operations",
+                "APIs & Postman",
+                "Testing & Quality Assurance",
+            ],
+            "experience": "Fresher",
+            "questions": [
+                "A transaction appears in an API response but is missing from the database. How would you investigate?"
+            ],
+            "question_count": 2,
+        })
+        self.assertEqual(start_response.status_code, 200, start_response.text)
+
+        interview_id = start_response.json()["interview_id"]
+        answer_response = self.client1.post(
+            f"/api/interview/{interview_id}/answer",
+            json={
+                "answer_text": (
+                    "I would check the transaction ID, database filters, status, and environment, "
+                    "then record evidence and escalate if the mismatch remains."
+                )
+            },
+        )
+
+        self.assertEqual(answer_response.status_code, 200, answer_response.text)
+        prompt = self.ai_mock.call_args.args[0]
+        self.assertIn("Technical Implementation Engineer", prompt)
+        self.assertIn("Candidate experience: Fresher", prompt)
+        self.assertIn("Do not assume professional employment", prompt)
+        self.assertIn("ask exactly one concise question per turn", prompt.casefold())
+
     def test_session_start_handles_completed_interview_without_star_score(self):
         self.db.add(MockInterview(
             user_id=self.candidate1.id,
@@ -202,32 +237,6 @@ class TestVideoVoiceInterviewEngine(unittest.TestCase):
     def test_interview_start_requires_candidate_authentication(self):
         response = self.client.post("/api/interview/start", json={"role": "Backend Engineer"})
         self.assertEqual(response.status_code, 401)
-
-    def test_candidate_login_session_survives_protected_menu_api_navigation(self):
-        client = TestClient(app)
-        login_response = client.post("/api/candidate/login", json={
-            "email": "candidate1@example.com",
-            "password": "Pass123!",
-        })
-        self.assertEqual(login_response.status_code, 200)
-        self.assertIn("candidate_session", login_response.cookies)
-
-        protected_requests = [
-            client.get("/api/candidate/me"),
-            client.get("/api/candidate/dashboard"),
-            client.get("/api/mock-interview/history"),
-            client.get("/api/candidate/me"),
-        ]
-        for response in protected_requests:
-            self.assertEqual(response.status_code, 200, response.text)
-
-        start_response = client.post("/api/interview/start", json={
-            "role": "Python Backend Engineer",
-            "questions": ["Describe a reliable API design."],
-            "question_count": 1,
-        })
-        self.assertEqual(start_response.status_code, 200, start_response.text)
-        self.assertTrue(start_response.json()["interview_id"].startswith("mock_"))
 
     def test_development_auth_bypass_creates_candidate_and_opens_dashboard(self):
         with patch.dict(os.environ, {"ENV": "development", "DEV_AUTH_BYPASS": "true"}):

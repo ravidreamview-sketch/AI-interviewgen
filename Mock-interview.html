@@ -3346,6 +3346,79 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
         { name: "LLM Evaluation", icon: "user-search" }
       ],
       defaultSelectedFocus: ["LLMs", "Prompt Engineering", "RAG"]
+    },
+    devsecops_engineer: {
+      id: "devsecops_engineer",
+      title: "DevSecOps Engineer",
+      description: "A security-focused platform engineering role covering secure CI/CD, Kubernetes, GitOps, infrastructure as code, and production monitoring.",
+      bg: "#EFF6FF",
+      color: "#2563EB",
+      persona: "Alex",
+      iconSvg: `<svg viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+        <path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z"/>
+        <path d="m9 12 2 2 4-4"/>
+      </svg>`,
+      keywordsLine1: "CI/CD • Kubernetes • DevSecOps Security •",
+      keywordsLine2: "GitOps • Terraform • Monitoring",
+      defaultRoleInput: "DevSecOps Engineer",
+      defaultExp: "Mid Level (3-5 Years)",
+      defaultType: "Technical & System Architecture",
+      defaultCompany: "AWS",
+      focusAreas: [
+        { name: "CI/CD (GitHub Actions)", icon: "layout" },
+        { name: "Kubernetes & Docker", icon: "layers" },
+        { name: "DevSecOps Security (Trivy & Vault)", icon: "users" },
+        { name: "GitOps", icon: "tree" },
+        { name: "Terraform (IaC)", icon: "target" },
+        { name: "Monitoring & Observability (Prometheus/Grafana)", icon: "sparkle" },
+        { name: "AWS / GCP Multi-Region", icon: "layers" },
+        { name: "Zero-Downtime Deployments", icon: "target" }
+      ],
+      defaultSelectedFocus: [
+        "CI/CD (GitHub Actions)",
+        "Kubernetes & Docker",
+        "DevSecOps Security (Trivy & Vault)",
+        "GitOps",
+        "Terraform (IaC)",
+        "Monitoring & Observability (Prometheus/Grafana)",
+        "AWS / GCP Multi-Region",
+        "Zero-Downtime Deployments"
+      ]
+    },
+    technical_implementation_engineer: {
+      id: "technical_implementation_engineer",
+      title: "Technical Implementation Engineer",
+      description: "A technical role focused on database queries, API analysis, client implementation, application integrations, testing, troubleshooting, and production support.",
+      bg: "#ECFDF5",
+      color: "#059669",
+      persona: "Alex",
+      iconSvg: `<svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+        <ellipse cx="12" cy="5" rx="9" ry="3"/>
+        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+        <path d="M3 12c0 1.66 4 3 9 3 1.3 0 2.53-.12 3.62-.34"/>
+        <path d="m16 18 2 2 4-4"/>
+      </svg>`,
+      keywordsLine1: "SQL & Databases • APIs & Postman •",
+      keywordsLine2: "Integration • Testing • Troubleshooting • Technical Support",
+      defaultRoleInput: "Technical Implementation Engineer",
+      defaultExp: "Fresher",
+      defaultType: "Technical & System Architecture",
+      focusAreas: [
+        { name: "SQL & Database Operations", icon: "layers" },
+        { name: "APIs & Postman", icon: "layout" },
+        { name: "Implementation & Integrations", icon: "tree" },
+        { name: "Testing & Quality Assurance", icon: "target" },
+        { name: "Troubleshooting & Production Support", icon: "users" },
+        { name: "Communication & Documentation", icon: "user-search" }
+      ],
+      defaultSelectedFocus: [
+        "SQL & Database Operations",
+        "APIs & Postman",
+        "Implementation & Integrations",
+        "Testing & Quality Assurance",
+        "Troubleshooting & Production Support",
+        "Communication & Documentation"
+      ]
     }
   };
 
@@ -3398,7 +3471,7 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
       </div>
       <div class="role-selected-overline">SELECTED ROLE</div>
       <div class="role-selected-title">${role.title}</div>
-      <div class="role-selected-desc">We'll customize your interview experience to match ${role.title} expectations.</div>
+      <div class="role-selected-desc">${escapeHtml(role.description || `We'll customize your interview experience to match ${role.title} expectations.`)}</div>
     `;
   }
 
@@ -3552,6 +3625,11 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
   async function fetchInterviewQuestions(role, exp, type, company, count, customQuestion = '') {
     const targetCount = Number(count) || 10;
     const skills = getSkillsForRole(role);
+    const selectedPreset = Object.values(MOCK_ROLE_PRESETS_DATA).find(preset =>
+      [preset.title, preset.defaultRoleInput].some(
+        presetRole => presetRole && presetRole.toLowerCase() === role.toLowerCase()
+      )
+    );
     const endpoints = ['/generate', '/api/generate'];
 
     for (const ep of endpoints) {
@@ -3561,6 +3639,7 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             role: role,
+            role_id: selectedPreset?.id,
             company: company,
             interview_type: type,
             experience: exp,
@@ -3602,7 +3681,7 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
     else if (rLower.includes('frontend') || rLower.includes('react') || rLower.includes('web') || rLower.includes('next.js')) bankKey = 'frontend';
     else if (rLower.includes('genai') || rLower.includes('llm') || rLower.includes('ai') || rLower.includes('machine learning')) bankKey = 'genai';
     else if (rLower.includes('fullstack') || rLower.includes('full stack')) bankKey = 'fullstack';
-    else if (rLower.includes('devops') || rLower.includes('cloud') || rLower.includes('sre') || rLower.includes('infrastructure')) bankKey = 'devops';
+    else if (rLower.includes('devsecops') || rLower.includes('devops') || rLower.includes('cloud') || rLower.includes('sre') || rLower.includes('infrastructure')) bankKey = 'devops';
     else if (rLower.includes('data engineer') || rLower.includes('data') || rLower.includes('analytics engineer')) bankKey = 'data';
     else if (rLower.includes('backend') || rLower.includes('python') || rLower.includes('api') || rLower.includes('software')) bankKey = 'backend';
 
@@ -3739,7 +3818,7 @@ button { font-family: inherit; cursor: pointer; color: inherit; background: none
     else if (rLower.includes('frontend') || rLower.includes('react') || rLower.includes('web')) bankKey = 'frontend';
     else if (rLower.includes('genai') || rLower.includes('llm') || rLower.includes('ai') || rLower.includes('machine learning')) bankKey = 'genai';
     else if (rLower.includes('fullstack') || rLower.includes('full stack')) bankKey = 'fullstack';
-    else if (rLower.includes('devops') || rLower.includes('cloud') || rLower.includes('sre')) bankKey = 'devops';
+    else if (rLower.includes('devsecops') || rLower.includes('devops') || rLower.includes('cloud') || rLower.includes('sre')) bankKey = 'devops';
     else if (rLower.includes('data engineer') || rLower.includes('data')) bankKey = 'data';
     else if (rLower.includes('backend') || rLower.includes('python') || rLower.includes('api')) bankKey = 'backend';
 

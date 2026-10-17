@@ -21,6 +21,7 @@ from app.db_models import UserAccount, MockInterview
 from app.services import generate_ai_questions, parse_raw_questions
 from app.tts_service import get_tts_provider
 from app.avatar_service import get_avatar_provider
+from app.prompts import technical_implementation_role_guidance
 
 logger = logging.getLogger("ravi.interview_engine")
 
@@ -87,6 +88,7 @@ Your interviewing style: {persona_info['tone']}
 Role: {role}
 Interview type: {interview_type or "Mixed interview"}
 Experience: {experience or "Not provided"}
+{technical_implementation_role_guidance(role)}
 Focus skills: {skills_str}
 Candidate focus topic: {custom_question or "No additional topic"}
 Candidate evidence: {json.dumps(candidate_context or {}, ensure_ascii=True)[:4000]}
@@ -288,6 +290,7 @@ You are {persona_info['name']}, a {persona_info['role']} conducting an interview
 Interview style: {persona_info['tone']}
 Interview type: {session_context.get('interview_type', 'Mixed interview')}
 Candidate experience: {session_context.get('experience') or 'Not provided'}
+{technical_implementation_role_guidance(role)}
 Focus skills: {', '.join(session_context.get('skills', [])) or 'Role core competencies'}
 Additional focus topic: {session_context.get('custom_question') or 'None'}
 Saved candidate evidence (use only if relevant): {json.dumps(session_context.get('candidate_evidence', {}), ensure_ascii=True)[:4000]}
