@@ -312,7 +312,7 @@ async function handleCandidateLogin(event) {
       }));
     }
 
-    const targetUrl = window.location.protocol === 'file:' ? 'Dashboard.html' : '/Dashboard.html';
+    const targetUrl = window.location.protocol === 'file:' ? 'Candidate-dashboard.html' : '/candidate/dashboard';
     window.location.href = targetUrl;
   } catch (err) {
     if (errorBox) {

@@ -1642,7 +1642,7 @@
       <nav class="nav">
 
         <a
-          href="Dashboard.html"
+          href="/candidate/dashboard"
           class="nav-link"
         >
           <svg
@@ -1660,7 +1660,7 @@
         </a>
 
         <a
-          href="Interview-studio.html"
+          href="/candidate/interview-studio"
           class="nav-link"
         >
           <svg
@@ -1678,7 +1678,7 @@
         </a>
 
         <a
-          href="Mock-interview.html"
+          href="/candidate/mock-interview"
           class="nav-link"
         >
           <svg
@@ -1698,7 +1698,7 @@
         </a>
 
         <a
-          href="Resume-match.html"
+          href="/candidate/resume-match"
           class="nav-link"
         >
           <svg
@@ -1754,7 +1754,7 @@
       <nav class="nav">
 
         <a
-          href="Interview history.html"
+          href="/candidate/history"
           class="nav-link"
         >
           <svg
@@ -1770,7 +1770,7 @@
         </a>
 
         <a
-          href="scorecard.html"
+          href="/scorecard"
           class="nav-link"
         >
           <svg
@@ -1788,7 +1788,7 @@
         </a>
 
         <a
-          href="Company-playbooks.html"
+          href="/candidate/company-playbooks"
           class="nav-link"
         >
           <svg
@@ -1809,7 +1809,7 @@
 
       <div class="side-foot">
 
-        <div class="upgrade-card">
+        <div class="upgrade-card" onclick="location.href='/candidate/upgrade-pro'" role="button" tabindex="0" style="cursor:pointer">
 
           <div class="upgrade-top">
             <span>✦</span>
@@ -2562,7 +2562,7 @@
           );
 
         if (response.status === 401 || response.status === 403) {
-          window.location.replace("/Login.html");
+          window.location.replace("/candidate/login");
           return;
         }
 
@@ -2679,7 +2679,7 @@
       );
 
       window.location.replace(
-        "/Login.html"
+        "/candidate/login"
       );
 
     }

@@ -232,25 +232,25 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
     </div>
     <div class="side-label">Workspace</div>
     <nav class="nav">
-      <a class="nav-link" href="Dashboard.html">
+      <a class="nav-link" href="/candidate/dashboard">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
         Dashboard
       </a>
-      <a class="nav-link" href="Interview-studio.html">
+      <a class="nav-link" href="/candidate/interview-studio">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2.5l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg>
         Generate Questions
       </a>
-      <a class="nav-link" href="Mock-interview.html">
+      <a class="nav-link" href="/candidate/mock-interview">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
         AI Mock Interview
         <span class="nav-badge new">VOICE</span>
       </a>
-      <a class="nav-link" href="/interview-coach">
+      <a class="nav-link" href="/candidate/interview-coach">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 11.5a8.38 8.38 0 0 1-9 8.5 9.2 9.2 0 0 1-4-.9L3 21l1.9-4.2A8.5 8.5 0 1 1 21 11.5Z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>
         <span>Interview Coach</span>
         <span class="nav-badge">AI</span>
       </a>
-      <a class="nav-link" href="Resume-match.html">
+      <a class="nav-link" href="/candidate/resume-match">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
         Resume &amp; JD Match
         <span class="nav-badge pro">PRO</span>
@@ -261,15 +261,15 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 
     <div class="side-label">Library</div>
     <nav class="nav">
-      <a class="nav-link" href="Interview history.html">
+      <a class="nav-link" href="/candidate/history">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
         Interview History
       </a>
-      <a class="nav-link" href="Interview history.html">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-        Question Bank
+      <a class="nav-link" href="/scorecard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+        Public Scorecards
       </a>
-      <a class="nav-link" href="Company-playbooks.html">
+      <a class="nav-link" href="/candidate/company-playbooks">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21h18M3 7v14M21 7v14M6 3h12a2 2 0 012 2v2H4V5a2 2 0 012-2zM9 11h2M13 11h2M9 15h2M13 15h2"/></svg>
         Company Playbooks
       </a>
@@ -296,7 +296,7 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
   <!-- MAIN CANVAS -->
   <main class="main">
     <div class="topbar">
-      <span class="crumb"><a href="Dashboard.html" style="color:inherit;text-decoration:none">WORKSPACE</a> / UPGRADE PRO</span>
+      <span class="crumb"><a href="/candidate/dashboard" style="color:inherit;text-decoration:none">WORKSPACE</a> / UPGRADE PRO</span>
       <div class="top-actions">
         <button class="icon-btn" id="themeBtn" aria-label="Toggle theme">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 12.8A8 8 0 1111.2 3 6.2 6.2 0 0021 12.8z"/></svg>
@@ -444,7 +444,7 @@ async function handleLogout(e) {
     } catch (err) {}
     localStorage.removeItem('candidate_token');
     localStorage.removeItem('candidate_user');
-    window.location.replace('/');
+    window.location.replace('/candidate/login');
   }
 }
 </script>

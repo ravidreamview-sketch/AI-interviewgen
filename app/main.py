@@ -1662,7 +1662,6 @@ def serve_login():
 @app.get("/candidate", include_in_schema=False)
 @app.get("/candidate/", include_in_schema=False)
 @app.get("/candidate/dashboard", include_in_schema=False)
-@app.get("/api/candidate/dashboard", include_in_schema=False)
 @app.get("/candidate/Dashboard.html", include_in_schema=False)
 @app.get("/candidate/Candidate-dashboard.html", include_in_schema=False)
 @app.get("/Candidate-dashboard.html", include_in_schema=False)

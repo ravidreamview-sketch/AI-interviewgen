@@ -322,25 +322,25 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
     </div>
     <div class="side-label">WORKSPACE</div>
     <nav class="nav">
-      <a class="nav-link" href="Dashboard.html">
+      <a class="nav-link" href="/candidate/dashboard">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
         <span>Dashboard</span>
       </a>
-      <a class="nav-link" href="Interview-studio.html">
+      <a class="nav-link" href="/candidate/interview-studio">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2.5l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg>
         <span>Generate Questions</span>
       </a>
-      <a class="nav-link" href="Mock-interview.html">
+      <a class="nav-link" href="/candidate/mock-interview">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
         <span>AI Mock Interview</span>
         <span class="nav-badge new">VIDEO + VOICE</span>
       </a>
-      <a class="nav-link" href="/interview-coach">
+      <a class="nav-link" href="/candidate/interview-coach">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 11.5a8.38 8.38 0 0 1-9 8.5 9.2 9.2 0 0 1-4-.9L3 21l1.9-4.2A8.5 8.5 0 1 1 21 11.5Z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>
         <span>Interview Coach</span>
         <span class="nav-badge">AI</span>
       </a>
-      <a class="nav-link active" href="Resume-match.html">
+      <a class="nav-link active" href="/candidate/resume-match">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
         <span>Resume &amp; JD Match</span>
         <span class="nav-badge pro">PRO</span>
@@ -349,11 +349,15 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 
     <div class="side-label" style="margin-top:14px">LIBRARY</div>
     <nav class="nav">
-      <a class="nav-link" href="Interview history.html">
+      <a class="nav-link" href="/candidate/history">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 16 14"/></svg>
         <span>Interview History</span>
       </a>
-      <a class="nav-link" href="Company-playbooks.html">
+      <a class="nav-link" href="/scorecard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+        <span>Public Scorecards</span>
+      </a>
+      <a class="nav-link" href="/candidate/company-playbooks">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
         <span>Company Playbooks</span>
       </a>
@@ -898,7 +902,7 @@ async function handleLogout(e) {
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
       });
     } catch (err) {}
-    window.location.replace('/');
+    window.location.replace('/candidate/login');
   }
 }
 
