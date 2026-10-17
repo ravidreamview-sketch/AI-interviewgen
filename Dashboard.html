@@ -1695,7 +1695,7 @@
             <p class="na-desc" id="naDesc">You have completed 0% of your current preparation plan.</p>
           </div>
           <div class="na-cta-box">
-            <a href="Mock-interview.html" class="primary-btn">
+            <a href="/candidate/mock-interview" class="primary-btn">
               <span>Continue Preparation</span>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
             </a>
@@ -1888,7 +1888,7 @@
             </div>
             <div class="section-heading-row">
               <h2 class="section-title">Timeline &amp; Assessment History</h2>
-              <a href="Interview history.html" style="font-size: 13px; font-weight: 700; color: #10B981;">View All →</a>
+              <a href="/candidate/history" style="font-size: 13px; font-weight: 700; color: #10B981;">View All →</a>
             </div>
 
             <div class="activity-list" id="activityListContainer">
@@ -1923,7 +1923,7 @@
               <span id="upcomingScheduleText">Self-paced AI Voice &amp; Text Simulation</span>
             </div>
 
-            <a href="Mock-interview.html" class="secondary-cta-btn" id="upcomingCtaBtn">
+            <a href="/candidate/mock-interview" class="secondary-cta-btn" id="upcomingCtaBtn">
               <span>Start Simulation</span>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
             </a>
@@ -1939,7 +1939,7 @@
             <h3 class="ai-insight-title" id="aiInsightTitle">Preparing personalized AI insights…</h3>
             <p class="ai-insight-text" id="aiInsightText">Complete interview simulations and question practice to generate targeted skill analytics.</p>
 
-            <a href="Interview history.html" class="ai-insight-link">
+            <a href="/candidate/history" class="ai-insight-link">
               <span>View Full Analysis</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
             </a>
@@ -2028,7 +2028,7 @@
             <div id="dashSheetTitle" style="font-weight: 700; font-size: 14px; color: var(--ink);">Questions</div>
             <div style="display: flex; gap: 8px;">
               <button id="dashCopyAllBtn" class="rec-card-btn" style="font-size: 11.5px;">📋 Copy All</button>
-              <a id="dashOpenStudioBtn" class="rec-card-btn" href="Interview-studio.html" style="font-size: 11.5px; background: var(--pen-wash);">Open in Studio →</a>
+              <a id="dashOpenStudioBtn" class="rec-card-btn" href="/candidate/interview-studio" style="font-size: 11.5px; background: var(--pen-wash);">Open in Studio →</a>
             </div>
           </div>
           <div id="dashQuestionsList"></div>
@@ -2288,15 +2288,15 @@
             'evaluation': '📝'
           };
           const linkMap = {
-            'mock_interview': 'Mock-interview.html',
-            'question_practice': 'Interview history.html',
-            'resume_match': 'Resume-match.html',
-            'evaluation': 'Interview-studio.html'
+            'mock_interview': '/candidate/mock-interview',
+            'question_practice': '/candidate/history',
+            'resume_match': '/candidate/resume-match',
+            'evaluation': '/candidate/interview-studio'
           };
 
           actContainer.innerHTML = activities.map(item => {
             const icon = iconMap[item.type] || '⚡';
-            const link = linkMap[item.type] || 'Interview history.html';
+            const link = linkMap[item.type] || '/candidate/history';
             const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Recent';
             const scoreBadge = item.score ? `<span class="activity-score-badge">Score ${Math.round(item.score)}%</span>` : '';
 
@@ -2339,7 +2339,7 @@
                   <p class="rec-card-desc">Generate tailored questions across core technical competencies</p>
                 </div>
               </div>
-              <a href="Interview-studio.html" class="rec-card-btn">
+              <a href="/candidate/interview-studio" class="rec-card-btn">
                 <span>Start Practice →</span>
               </a>
             </div>
@@ -2356,7 +2356,7 @@
                     <p class="rec-card-desc">${escapeHtml(item.reason)}</p>
                   </div>
                 </div>
-                <a href="Interview-studio.html?skills=${encodeURIComponent(item.skill)}" class="rec-card-btn">
+                <a href="/candidate/interview-studio?skills=${encodeURIComponent(item.skill)}" class="rec-card-btn">
                   <span>Practice Questions →</span>
                 </a>
               </div>
@@ -2450,7 +2450,7 @@
       listEl.innerHTML = `<div style="padding:16px;text-align:center;color:var(--ink-soft);font-size:13px">⚡ Synthesizing tailored questions for <b>${role}</b>...</div>`;
       titleEl.textContent = `${role} (${diff})`;
 
-      document.getElementById('dashOpenStudioBtn').href = `Interview-studio.html?role=${encodeURIComponent(role)}&diff=${encodeURIComponent(diff)}&skills=${encodeURIComponent(skillsStr)}`;
+      document.getElementById('dashOpenStudioBtn').href = `/candidate/interview-studio?role=${encodeURIComponent(role)}&diff=${encodeURIComponent(diff)}&skills=${encodeURIComponent(skillsStr)}`;
 
       const skillsArr = skillsStr.split(',').map(s => s.trim()).filter(Boolean);
       let questions = [];

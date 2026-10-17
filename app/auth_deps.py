@@ -159,17 +159,20 @@ def get_current_user(
     def development_candidate_or_none() -> Optional[UserAccount]:
         return _get_development_candidate(db) if development_bypass else None
 
-    token = None
+    candidate_tokens = []
     auth_header = request.headers.get("Authorization")
     if auth_header and auth_header.startswith("Bearer "):
-        token = auth_header.split(" ", 1)[1].strip()
+        bearer_tok = auth_header.split(" ", 1)[1].strip()
+        if bearer_tok:
+            candidate_tokens.append(bearer_tok)
     
-    if not token:
-        token = request.cookies.get("admin_session")
-    if not token:
-        token = request.cookies.get("candidate_session")
+    # Priority order: candidate_session, then admin_session
+    for cookie_name in ("candidate_session", "admin_session"):
+        cookie_val = request.cookies.get(cookie_name)
+        if cookie_val and cookie_val not in candidate_tokens:
+            candidate_tokens.append(cookie_val)
     
-    if not token:
+    if not candidate_tokens:
         development_user = development_candidate_or_none()
         if development_user:
             return development_user
@@ -178,45 +181,48 @@ def get_current_user(
             detail="Authentication required. Please log in.",
             headers={"WWW-Authenticate": "Bearer"}
         )
-    
-    payload = decode_access_token(token)
-    if not payload:
-        development_user = development_candidate_or_none()
-        if development_user:
-            return development_user
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Session has expired or token is invalid. Please log in again.",
-            headers={"WWW-Authenticate": "Bearer"}
-        )
-    
-    user_id = payload.get("sub")
-    if not user_id:
-        development_user = development_candidate_or_none()
-        if development_user:
-            return development_user
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token payload."
-        )
-    
-    user = db.query(UserAccount).filter(UserAccount.id == user_id).first()
-    if not user:
-        development_user = development_candidate_or_none()
-        if development_user:
-            return development_user
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User account no longer exists."
-        )
-    
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="This account has been deactivated. Contact Super Admin."
-        )
-    
-    return user
+
+    last_failure_detail = "Session has expired or token is invalid. Please log in again."
+
+    for token in candidate_tokens:
+        payload = decode_access_token(token)
+        if not payload:
+            continue
+        
+        user_id = payload.get("sub")
+        if not user_id:
+            last_failure_detail = "Invalid token payload."
+            continue
+        
+        # Support both integer primary keys and string representations
+        lookup_id = None
+        try:
+            lookup_id = int(user_id)
+        except (ValueError, TypeError):
+            lookup_id = user_id
+
+        user = db.query(UserAccount).filter(UserAccount.id == lookup_id).first()
+        if not user:
+            last_failure_detail = "User account no longer exists."
+            continue
+        
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="This account has been deactivated. Contact Super Admin."
+            )
+        
+        return user
+
+    development_user = development_candidate_or_none()
+    if development_user:
+        return development_user
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail=last_failure_detail,
+        headers={"WWW-Authenticate": "Bearer"}
+    )
 
 
 def require_admin(
