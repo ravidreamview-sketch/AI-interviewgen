@@ -65,6 +65,14 @@ try:
             DATABASE_URL = raw_db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
         else:
             DATABASE_URL = raw_db_url
+            # Strip unsupported query parameters (e.g., channel_binding) that psycopg2 may reject
+            from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
+            parsed = urlparse(DATABASE_URL)
+            allowed = [(k, v) for k, v in parse_qsl(parsed.query) if k != "channel_binding"]
+            if len(allowed) != len(parse_qsl(parsed.query)):
+                logger.info("Removed unsupported 'channel_binding' param from DATABASE_URL for compatibility")
+            cleaned_query = urlencode(allowed)
+            DATABASE_URL = urlunparse(parsed._replace(query=cleaned_query))
 
         # Production guards: disallow SQLite and validate PostgreSQL URL
         if is_production or is_vercel:
