@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Phase 5B Test Suite: Multi-Dimensional Resume ↔ JD Matching Engine
 Tests all required scenarios:

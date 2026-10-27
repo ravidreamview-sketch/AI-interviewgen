@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Phase 5D Test Suite: Resume/JD Match → Adaptive Interview Integration
 Tests all 25 required scenarios:
@@ -161,7 +162,7 @@ class TestPhase5DAdaptiveMatchIntegration(unittest.TestCase):
             normalized_jd=json.dumps(norm_jd_a),
             normalized_resume=json.dumps({"candidate_name": "Alice Candidate", "skills": ["Python", "FastAPI", "Redis", "Docker"]}),
             source_type="paste",
-            created_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc)
         )
         db.add(scan_a)
         db.commit()
@@ -282,7 +283,7 @@ class TestPhase5DAdaptiveMatchIntegration(unittest.TestCase):
             target_role="Product Designer",
             skill_matrix=json.dumps(matrix),
             normalized_jd=json.dumps({"job_title": "Product Designer", "required_skills": ["AI Design"]}),
-            created_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc)
         )
         db.add(scan)
         db.commit()
@@ -409,7 +410,7 @@ class TestPhase5DAdaptiveMatchIntegration(unittest.TestCase):
             user_id=self.cand_a_id,
             target_role="General Tech Engineer",
             skill_matrix="[]",
-            created_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc)
         )
         db.add(sparse_scan)
         db.commit()
@@ -432,7 +433,7 @@ class TestPhase5DAdaptiveMatchIntegration(unittest.TestCase):
             target_role="Data Engineer",
             skill_matrix="INVALID_JSON",
             normalized_jd="INVALID_JSON",
-            created_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc)
         )
         db.add(corrupt_scan)
         db.commit()

@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Regression Test Suite: Vercel Serverless Compatibility & Production Diagnostics
 Verifies serverless entrypoint, database schema migrations, path rewriting middleware,
@@ -38,7 +39,7 @@ class TestVercelProductionCompatibility(unittest.TestCase):
 
     def test_01_api_index_import_and_app_export(self):
         """Verifies api.index entrypoint exports FastAPI app successfully under Vercel simulation."""
-        with patch.dict(os.environ, {"VERCEL": "1", "ENV": "production"}):
+        with patch.dict(os.environ, {"VERCEL": "1", "ENV": "production", "DATABASE_URL": "postgres://user:pass@localhost:5432/postgres"}):
             import api.index
             self.assertIsNotNone(api.index.app)
             self.assertEqual(api.index.app.title, "Ravi — AI Interview Question Generator API")
@@ -204,11 +205,34 @@ class TestVercelProductionCompatibility(unittest.TestCase):
 
     def test_13_postgresql_configuration_logic(self):
         """Verifies PostgreSQL DATABASE_URL handling and engine argument isolation."""
+        # Production guard tests
+        # 1. Missing DATABASE_URL should raise RuntimeError
+        with patch.dict(os.environ, {"VERCEL": "1", "ENV": "production"}):
+            with self.assertRaises(RuntimeError):
+                import importlib
+                import app.database as db_mod
+                importlib.reload(db_mod)
+        # 2. SQLite URL in production should raise RuntimeError
+        with patch.dict(os.environ, {"VERCEL": "1", "ENV": "production", "DATABASE_URL": "sqlite:///./test.db"}):
+            with self.assertRaises(RuntimeError):
+                import importlib
+                import app.database as db_mod
+                importlib.reload(db_mod)
+        # 3. Malformed URL should raise RuntimeError (fails validation)
+        with patch.dict(os.environ, {"VERCEL": "1", "ENV": "production", "DATABASE_URL": "not-a-url"}):
+            with self.assertRaises(RuntimeError):
+                import importlib
+                import app.database as db_mod
+                importlib.reload(db_mod)
+        # 4. Valid PostgreSQL URL passes without error
+        with patch.dict(os.environ, {"VERCEL": "1", "ENV": "production", "DATABASE_URL": "postgres://user:pass@localhost:5432/postgres"}):
+            import importlib
+            import app.database as db_mod
+            importlib.reload(db_mod)
+        # Existing test for engine creation logic remains unchanged
         with patch("app.database.create_engine") as mock_create_engine:
-            # Simulate PostgreSQL URL with postgres:// prefix
             test_pg_url = "postgres://user:pass@db.supabase.co:5432/postgres"
             with patch.dict(os.environ, {"DATABASE_URL": test_pg_url, "VERCEL": "1"}):
-                # Verify normalization logic
                 normalized_url = test_pg_url.replace("postgres://", "postgresql://", 1)
                 self.assertTrue(normalized_url.startswith("postgresql://"))
 

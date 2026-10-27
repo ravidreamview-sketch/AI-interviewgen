@@ -3,9 +3,31 @@ import tempfile
 import logging
 from sqlalchemy import create_engine, text, inspect
 from sqlalchemy.orm import declarative_base, sessionmaker
-
+from datetime import timezone
 import urllib.parse
 from sqlalchemy.pool import NullPool
+# ---------------------------------------------------------------------------
+# Helper: Validate that a DATABASE_URL is a proper PostgreSQL DSN for production.
+# ---------------------------------------------------------------------------
+def _is_valid_postgres_url(url: str) -> bool:
+    """Return True if *url* looks like a PostgreSQL connection string.
+    The function performs a lightweight validation without contacting the DB.
+    It accepts schemes ``postgresql`` or ``postgresql+psycopg2`` and requires
+    a hostname and a non‑empty path (the database name).
+    """
+    from urllib.parse import urlparse
+    try:
+        parsed = urlparse(url)
+        if not parsed.scheme.startswith("postgresql"):
+            return False
+        if not parsed.hostname:
+            return False
+        # ``path`` includes leading '/', ensure there is a name after it
+        if not parsed.path or parsed.path == "/":
+            return False
+        return True
+    except Exception:
+        return False
 
 logger = logging.getLogger("ravi.database")
 
@@ -44,6 +66,14 @@ try:
         else:
             DATABASE_URL = raw_db_url
 
+        # Production guards: disallow SQLite and validate PostgreSQL URL
+        if is_production or is_vercel:
+            if "sqlite" in DATABASE_URL:
+                raise RuntimeError("Production deployment requires a PostgreSQL DATABASE_URL; SQLite URL detected.")
+            if not _is_valid_postgres_url(DATABASE_URL):
+                raise RuntimeError("Production deployment requires a valid PostgreSQL DATABASE_URL; provided value is malformed.")
+
+        # Engine creation
         if "sqlite" in DATABASE_URL:
             engine = create_engine(
                 DATABASE_URL,
@@ -53,9 +83,7 @@ try:
         else:
             # PostgreSQL engine (Supabase / Neon / AWS RDS / Vercel Postgres)
             # In serverless environments, NullPool prevents stale connections and pool exhaustion
-            connect_args = {
-                "connect_timeout": 5,
-            }
+            connect_args = {"connect_timeout": 5}
             if is_vercel:
                 engine = create_engine(
                     DATABASE_URL,
@@ -75,25 +103,24 @@ try:
                 )
                 logger.info("PostgreSQL engine created with QueuePool (pool_pre_ping=True, pool_recycle=300)")
     else:
+        # No DATABASE_URL supplied; enforce production guard
         if is_production or is_vercel:
-            # Serverless fallback when DATABASE_URL is not yet supplied in Vercel environment
-            tmp_db_path = os.path.join(tempfile.gettempdir(), "interview.db")
-            DATABASE_URL = f"sqlite:///{tmp_db_path}"
-            engine = create_engine(
-                DATABASE_URL,
-                connect_args={"check_same_thread": False},
+            raise RuntimeError(
+                "Production deployment requires a valid PostgreSQL DATABASE_URL. No DATABASE_URL was provided."
             )
-            logger.warning("Running in serverless without DATABASE_URL; fallback ephemeral SQLite active")
-        else:
-            # Local development SQLite
-            DATABASE_URL = "sqlite:///./interview.db"
-            engine = create_engine(
-                DATABASE_URL,
-                connect_args={"check_same_thread": False},
-            )
-            logger.info("Local SQLite engine created with check_same_thread=False")
+        # Local development fallback (SQLite)
+        DATABASE_URL = "sqlite:///./interview.db"
+        engine = create_engine(
+            DATABASE_URL,
+            connect_args={"check_same_thread": False},
+        )
+        logger.info("Local SQLite engine created with check_same_thread=False")
 except Exception as engine_err:
-    logger.exception("Unexpected error during database engine creation; falling back to in-memory SQLite")
+    logger.exception("Unexpected error during database engine creation; handling according to environment")
+    # In production or Vercel, re‑raise to avoid silent fallback to SQLite
+    if is_production or is_vercel:
+        raise
+    # Development fallback: use in‑memory SQLite
     DATABASE_URL = "sqlite://"
     engine = create_engine(
         DATABASE_URL,

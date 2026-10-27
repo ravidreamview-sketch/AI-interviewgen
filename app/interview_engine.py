@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Conversational AI Interview Engine
 
@@ -133,7 +134,7 @@ Output only the question, with no greeting or explanation.
         "question": first_question,
         "answer": "",
         "evaluation": None,
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "session_context": {
             "experience": experience,
             "interview_type": interview_type or "Mixed interview",
@@ -162,7 +163,7 @@ Output only the question, with no greeting or explanation.
             transcript=json.dumps([initial_turn]),
             status="in_progress",
             interview_mode=mode,
-            created_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc)
         )
         db.add(mock_record)
         db.commit()
@@ -361,7 +362,7 @@ Output ONLY valid JSON matching this schema:
         raise RuntimeError("The answer is saved, but the interviewer did not return a valid next question. Retry shortly.")
 
     pending_turn["evaluation"] = evaluation
-    pending_turn["answered_at"] = datetime.utcnow().isoformat()
+    pending_turn["answered_at"] = datetime.now(timezone.utc).isoformat()
     pending_turn["is_final"] = ending_turn
     if not ending_turn:
         history.append({
@@ -369,7 +370,7 @@ Output ONLY valid JSON matching this schema:
             "question": next_q[:1000],
             "answer": "",
             "evaluation": None,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         })
     mock_record.transcript = json.dumps(history)
     scores = [
@@ -380,7 +381,16 @@ Output ONLY valid JSON matching this schema:
     mock_record.score = sum(scores) / len(scores) if scores else 0
     mock_record.duration_seconds = max(
         0,
-        int((datetime.utcnow() - mock_record.created_at).total_seconds())
+        int(
+            (
+                datetime.now(timezone.utc)
+                - (
+                    mock_record.created_at.replace(tzinfo=timezone.utc)
+                    if mock_record.created_at and mock_record.created_at.tzinfo is None
+                    else mock_record.created_at
+                )
+            ).total_seconds()
+        )
         if mock_record.created_at else 0,
     )
     try:
@@ -465,7 +475,7 @@ def complete_interview_session(
     recommendations = unique_improvements.copy()
     if mock_record.status != "completed":
         context = history[0].get("session_context", {}) if history else {}
-        context["completed_at"] = datetime.utcnow().isoformat()
+        context["completed_at"] = datetime.now(timezone.utc).isoformat()
         if history:
             history[0]["session_context"] = context
         mock_record.transcript = json.dumps(history)
@@ -475,9 +485,19 @@ def complete_interview_session(
         mock_record.star_depth = None
         mock_record.confidence_score = problem_solving_score
         mock_record.status = "completed"
+        # Ensure duration calculation works with both naive and aware timestamps
         mock_record.duration_seconds = max(
             mock_record.duration_seconds or 0,
-            int((datetime.utcnow() - mock_record.created_at).total_seconds())
+            int(
+                (
+                    datetime.now(timezone.utc)
+                    - (
+                        mock_record.created_at.replace(tzinfo=timezone.utc)
+                        if mock_record.created_at and mock_record.created_at.tzinfo is None
+                        else mock_record.created_at
+                    )
+                ).total_seconds()
+            )
             if mock_record.created_at else 0,
         )
         try:

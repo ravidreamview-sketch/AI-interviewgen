@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Speech-to-Text (STT) Provider Abstraction Layer
 

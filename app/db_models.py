@@ -1,10 +1,11 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, ForeignKey, Float
-from datetime import datetime
+from datetime import datetime, timezone
 from app.database import Base
 
 
 class UserAccount(Base):
     __tablename__ = "user_accounts"
+    __table_args__ = {"extend_existing": True}
 
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
@@ -13,7 +14,7 @@ class UserAccount(Base):
     role = Column(String, nullable=False, default="candidate", index=True)  # super_admin, admin, candidate
     plan_tier = Column(String, nullable=False, default="free")              # free, pro, enterprise
     is_active = Column(Boolean, default=True, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     last_login = Column(DateTime, nullable=True)
 
 
@@ -28,7 +29,7 @@ class AuditLog(Base):
     resource = Column(String, nullable=False)
     previous_value = Column(Text, nullable=True)
     new_value = Column(Text, nullable=True)
-    timestamp = Column(DateTime, default=datetime.utcnow, index=True, nullable=False)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True, nullable=False)
     ip_address = Column(String, nullable=True)
     request_id = Column(String, nullable=True)
 
@@ -39,7 +40,7 @@ class SystemConfig(Base):
     id = Column(Integer, primary_key=True, index=True)
     config_key = Column(String, unique=True, index=True, nullable=False)
     config_value = Column(Text, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
 
 class InterviewHistory(Base):
@@ -54,7 +55,7 @@ class InterviewHistory(Base):
     difficulty = Column(String, nullable=False)
     questions = Column(Text, nullable=False)
     question_engine_version = Column(String, nullable=True, default="qengine-v1.0.0")
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 class CandidateSkillAnalytics(Base):
@@ -70,8 +71,8 @@ class CandidateSkillAnalytics(Base):
     confidence = Column(String, nullable=False, default="LOW")       # LOW | MEDIUM | HIGH
     weakness_status = Column(String, nullable=False, default="identified", index=True) # identified | practicing | improving | resolved
     adaptive_session_id = Column(String, nullable=True, index=True)
-    first_detected_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
-    last_updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False, index=True)
+    first_detected_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
+    last_updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False, index=True)
 
 
 class CandidateMistakesLedger(Base):
@@ -89,7 +90,7 @@ class CandidateMistakesLedger(Base):
     recommendation = Column(Text, nullable=True)
     mistake_status = Column(String, nullable=False, default="identified", index=True) # identified | practicing | resolved
     evaluation_version = Column(String, nullable=False, default="eval-v1.2.0")
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     resolved_at = Column(DateTime, nullable=True)
 
 
@@ -107,7 +108,7 @@ class PageViewEvent(Base):
     os = Column(String, nullable=True)
     device_type = Column(String, nullable=True)
     screen_resolution = Column(String, nullable=True)
-    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
 
 class ClickEvent(Base):
@@ -126,7 +127,7 @@ class ClickEvent(Base):
     os = Column(String, nullable=True)
     device_type = Column(String, nullable=True)
     ip_address = Column(String, nullable=True)
-    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
 
 # ==============================================================================
@@ -151,8 +152,8 @@ class Prompt(Base):
     version = Column(Integer, nullable=False, default=1)
     status = Column(String, nullable=False, default="draft", index=True) # draft, active, archived
     created_by = Column(Integer, ForeignKey("user_accounts.id", ondelete="SET NULL"), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
 
 
@@ -175,7 +176,7 @@ class PromptVersion(Base):
     max_tokens = Column(Integer, nullable=False)
     status = Column(String, nullable=False)
     change_summary = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
 
 class MockInterview(Base):
@@ -195,7 +196,7 @@ class MockInterview(Base):
     transcript = Column(Text, nullable=True)
     status = Column(String, default="completed")
     interview_mode = Column(String, default="voice", nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
 
 class ResumeScan(Base):
@@ -223,8 +224,8 @@ class ResumeScan(Base):
     source_type = Column(String, default="paste")
     source_url = Column(String, nullable=True)
     fetched_at = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, index=True)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now(timezone.utc), index=True)
+    updated_at = Column(DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
 
 class CoachSession(Base):
     __tablename__ = "coach_sessions"
@@ -240,14 +241,14 @@ class CoachSession(Base):
 
     created_at = Column(
         DateTime,
-        default=datetime.utcnow,
+        default=datetime.now(timezone.utc),
         nullable=False,
     )
 
     updated_at = Column(
         DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        default=datetime.now(timezone.utc),
+        onupdate=datetime.now(timezone.utc),
         nullable=False,
     )
 
@@ -270,6 +271,6 @@ class CoachMessage(Base):
 
     created_at = Column(
         DateTime,
-        default=datetime.utcnow,
+        default=datetime.now(timezone.utc),
         nullable=False,
     )

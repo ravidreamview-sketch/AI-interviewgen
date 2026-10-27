@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
+from datetime import timezone
 
 # Ensure project root is in sys.path
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__) + "/.."))
@@ -135,8 +136,8 @@ class TestAdaptiveDataFoundation(unittest.TestCase):
             confidence="HIGH",
             weakness_status="identified",
             adaptive_session_id="asess_test_101",
-            first_detected_at=datetime.utcnow(),
-            last_updated_at=datetime.utcnow()
+            first_detected_at=datetime.now(timezone.utc),
+            last_updated_at=datetime.now(timezone.utc)
         )
         db.add(analytics_entry)
         db.commit()

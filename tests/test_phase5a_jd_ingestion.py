@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Phase 5A Test Suite: Job Description (JD) Ingestion & Multi-Layered SSRF Defense
 Tests all 22 required scenarios:

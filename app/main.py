@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from sqlalchemy import func, desc, text
 from sqlalchemy.orm import Session
+from datetime import timezone
 
 logger = logging.getLogger("ravi.main")
 
@@ -435,7 +436,7 @@ def generate_questions(
             user_id=getattr(current_user, "id", None) if current_user else None,
             adaptive_session_id=getattr(data, "adaptive_session_id", None),
             question_engine_version="qengine-v1.0.0",
-            created_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc)
         )
 
         db.add(interview)
@@ -454,7 +455,7 @@ def generate_questions(
                 "source_type": "AI_generated",
                 "source_title": f"AI Synthesis ({data.role})",
                 "source_url": None,
-                "source_date": datetime.utcnow().strftime("%Y-%m-%d"),
+                "source_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
                 "confidence": 0.91,
                 "model_answer": f"Evaluates depth in {', '.join(data.skills[:3]) if data.skills else data.role} with clear trade-offs."
             }
@@ -983,7 +984,7 @@ async def create_resume_jd_match(
     scan_id = f"scan_{uuid.uuid4().hex}"
 
     # 7. Persist to Database (Phase 5C)
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     try:
         matched_skills_str = ", ".join([item.skill for item in match_result.skill_matrix if item.gap_status == "matched"])
         missing_skills_str = ", ".join([item.skill for item in match_result.skill_matrix if item.gap_status == "gap"])
@@ -1094,7 +1095,7 @@ def get_resume_jd_match(
         candidate_name=scan.candidate_name,
         source_type=scan.source_type or "paste",
         source_url=scan.source_url,
-        created_at=scan.created_at.isoformat() if scan.created_at else datetime.utcnow().isoformat()
+        created_at=scan.created_at.isoformat() if scan.created_at else datetime.now(timezone.utc).isoformat()
     )
 
 
@@ -1355,7 +1356,7 @@ def evaluate_single_answer(
                 }]),
                 status="completed",
                 interview_mode="answer_evaluator",
-                created_at=datetime.utcnow()
+                created_at=datetime.now(timezone.utc)
             )
             db.add(history_record)
             db.commit()
@@ -1400,7 +1401,7 @@ def track_page_view(
             os=payload.os,
             device_type=payload.device_type,
             screen_resolution=payload.screen_resolution,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.now(timezone.utc)
         )
         db.add(event)
         db.commit()
@@ -1439,7 +1440,7 @@ def track_click_event(
             os=payload.os,
             device_type=payload.device_type,
             ip_address=ip,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.now(timezone.utc)
         )
         db.add(event)
         db.commit()
@@ -1452,7 +1453,7 @@ def track_click_event(
 @app.get("/api/analytics/stats")
 def get_analytics_stats(db: Session = Depends(get_db)):
     try:
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         active_window = now - timedelta(minutes=5)
         day_ago = now - timedelta(hours=24)
 
@@ -1554,7 +1555,7 @@ def get_analytics_stats(db: Session = Depends(get_db)):
             "os_breakdown": os_breakdown,
             "recent_clicks": recent_clicks,
             "recent_visitors": recent_visitors,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to load analytics: {str(e)}")
@@ -2057,7 +2058,7 @@ def chat_with_coach(
     if not is_candidate_menu_enabled("Interview Coach", db):
         raise HTTPException(status_code=403, detail="Interview Coach is currently unavailable.")
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     recent_message_count = (
         db.query(func.count(CoachMessage.id))
         .join(CoachSession, CoachMessage.session_id == CoachSession.id)
@@ -2102,7 +2103,7 @@ def chat_with_coach(
     prior_messages.reverse()
 
     try:
-        conversation.updated_at = datetime.utcnow()
+        conversation.updated_at = datetime.now(timezone.utc)
         db.add(CoachMessage(
             session_id=conversation.id,
             role="user",
@@ -2139,7 +2140,7 @@ def chat_with_coach(
         )
 
     try:
-        conversation.updated_at = datetime.utcnow()
+        conversation.updated_at = datetime.now(timezone.utc)
         db.add(CoachMessage(
             session_id=conversation.id,
             role="assistant",

@@ -4,7 +4,7 @@ import hashlib
 import secrets
 import json
 import base64
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from typing import Optional, Dict, Any, List
 
 def _load_jwt_secrets() -> List[str]:
@@ -96,7 +96,7 @@ def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta]
     Creates an HMAC-SHA256 cryptographically signed URL-safe JWT-compatible session token.
     """
     to_encode = data.copy()
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     if expires_delta:
         expire = now + expires_delta
     else:
@@ -152,7 +152,7 @@ def decode_access_token(token: str) -> Optional[Dict[str, Any]]:
         
         # Expiration check
         exp = payload.get("exp")
-        if exp and datetime.utcnow().timestamp() > exp:
+        if exp and datetime.now(timezone.utc).timestamp() > exp:
             return None
         
         return payload

@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Adaptive Candidate Profile Service Layer
 Computes multi-factor, explainable, and deterministic Adaptive Profiles for candidates.
@@ -137,7 +138,7 @@ def get_candidate_adaptive_profile(user: UserAccount, db: Session) -> AdaptivePr
                 description=m.description,
                 severity=m.severity,
                 status=m.mistake_status,
-                created_at=m.created_at.isoformat() if m.created_at else datetime.utcnow().isoformat()
+                created_at=m.created_at.isoformat() if m.created_at else datetime.now(timezone.utc).isoformat()
             ))
             mistake_counts_by_skill[m.skill.lower().strip()] = mistake_counts_by_skill.get(m.skill.lower().strip(), 0) + 1
 
@@ -463,7 +464,7 @@ ADAPTIVE GENERATION DIRECTIVES:
             difficulty=data.difficulty or "Hard",
             questions=formatted_raw,
             question_engine_version="adaptive-qengine-v1.0.0",
-            created_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc)
         )
         db.add(history_record)
         db.commit()
@@ -673,7 +674,7 @@ Output ONLY a valid JSON object matching this schema with NO markdown preamble:
                     recommendation=mistake_obj.recommendation,
                     mistake_status="identified",
                     evaluation_version="eval-v1.2.0",
-                    created_at=datetime.utcnow()
+                    created_at=datetime.now(timezone.utc)
                 )
                 db.add(new_mistake)
 
@@ -686,7 +687,7 @@ Output ONLY a valid JSON object matching this schema with NO markdown preamble:
             ).all()
             for m in open_m:
                 m.mistake_status = "resolved"
-                m.resolved_at = datetime.utcnow()
+                m.resolved_at = datetime.now(timezone.utc)
 
         db.commit()
     except Exception as m_err:
@@ -741,7 +742,7 @@ Output ONLY a valid JSON object matching this schema with NO markdown preamble:
                 existing_skill.evidence_count = new_evidence_count
                 existing_skill.weakness_status = new_status
                 existing_skill.adaptive_session_id = adaptive_session_id
-                existing_skill.last_updated_at = datetime.utcnow()
+                existing_skill.last_updated_at = datetime.now(timezone.utc)
             else:
                 new_status = "improving" if sk_item.score >= 75.0 else "identified"
                 new_skill_record = CandidateSkillAnalytics(
@@ -754,8 +755,8 @@ Output ONLY a valid JSON object matching this schema with NO markdown preamble:
                     confidence="LOW",
                     weakness_status=new_status,
                     adaptive_session_id=adaptive_session_id,
-                    first_detected_at=datetime.utcnow(),
-                    last_updated_at=datetime.utcnow()
+                    first_detected_at=datetime.now(timezone.utc),
+                    last_updated_at=datetime.now(timezone.utc)
                 )
                 db.add(new_skill_record)
 
@@ -972,7 +973,7 @@ CRITICAL RULES:
             difficulty=next_diff,
             questions=f"1. {question_text}",
             question_engine_version="adaptive-qengine-v1.0.0",
-            created_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc)
         )
         db.add(history_record)
         db.commit()
@@ -1269,7 +1270,7 @@ ADAPTIVE GENERATION DIRECTIVES:
             difficulty="Hard",
             questions=formatted_raw,
             question_engine_version="adaptive-qengine-v1.0.0",
-            created_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc)
         )
         db.add(history_record)
         db.commit()

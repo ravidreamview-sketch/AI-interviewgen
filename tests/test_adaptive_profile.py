@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
+from datetime import timezone
 
 # Ensure project root is in sys.path
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__) + "/.."))
@@ -129,7 +130,7 @@ class TestAdaptiveCandidateProfile(unittest.TestCase):
             score=72.0,
             technical_accuracy=70.0,
             communication_clarity=75.0,
-            created_at=datetime.utcnow() - timedelta(days=2)
+            created_at=datetime.now(timezone.utc) - timedelta(days=2)
         )
         db.add(mock)
         db.commit()
@@ -151,19 +152,19 @@ class TestAdaptiveCandidateProfile(unittest.TestCase):
             user_id=self.cand_a_id,
             role="Backend Engineer",
             score=65.0,
-            created_at=datetime.utcnow() - timedelta(days=10)
+            created_at=datetime.now(timezone.utc) - timedelta(days=10)
         )
         mock2 = MockInterview(
             user_id=self.cand_a_id,
             role="Backend Engineer",
             score=75.0,
-            created_at=datetime.utcnow() - timedelta(days=5)
+            created_at=datetime.now(timezone.utc) - timedelta(days=5)
         )
         mock3 = MockInterview(
             user_id=self.cand_a_id,
             role="Backend Engineer",
             score=82.0,
-            created_at=datetime.utcnow() - timedelta(days=1)
+            created_at=datetime.now(timezone.utc) - timedelta(days=1)
         )
         db.add_all([mock1, mock2, mock3])
         db.commit()
@@ -415,7 +416,7 @@ class TestAdaptiveCandidateProfile(unittest.TestCase):
             description="Resolved N+1 queries using DataLoader.",
             severity="medium",
             mistake_status="resolved",
-            resolved_at=datetime.utcnow()
+            resolved_at=datetime.now(timezone.utc)
         )
         db.add(resolved_m)
         db.commit()

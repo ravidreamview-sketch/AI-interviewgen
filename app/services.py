@@ -3,6 +3,36 @@ import re
 import logging
 from pathlib import Path
 from typing import List, Optional
+from datetime import timezone
+
+# Difficulty to temperature mapping (single source of truth)
+DIFFICULTY_TEMPERATURE = {
+    "Beginner": 0.3,
+    "Intermediate": 0.5,
+    "Advanced": 0.6,
+}
+
+def get_temperature(difficulty: str) -> float:
+    """Return temperature based on difficulty, normalizing input.
+    Falls back to Intermediate (0.5) for missing/invalid values.
+    """
+    # Reuse existing normalize_difficulty from prompts to keep logic consistent
+    try:
+        from .prompts import normalize_difficulty
+    except Exception:
+        # Fallback if import fails – simple lower‑case normalization
+        def normalize_difficulty(val: str) -> str:
+            v = (val or "").strip().lower()
+            if v in {"beginner", "entry", "junior", "low"}:
+                return "Beginner"
+            if v in {"intermediate", "medium", "mid", "average"}:
+                return "Intermediate"
+            if v in {"advanced", "senior", "expert", "high"}:
+                return "Advanced"
+            return "Intermediate"
+    norm = normalize_difficulty(difficulty)
+    return DIFFICULTY_TEMPERATURE.get(norm, DIFFICULTY_TEMPERATURE["Intermediate"])
+
 from dotenv import load_dotenv
 
 load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env")
@@ -23,15 +53,16 @@ def get_ai_provider_status() -> tuple[str, bool]:
     return "Not configured", False
 
 
-def generate_ai_questions(prompt: str) -> str:
+def generate_ai_questions(prompt: str, temperature: Optional[float] = None) -> str:
     # Gemini is preferred; Groq remains the configured fallback.
     gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
     if gemini_key:
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}"
+            temp = temperature if temperature is not None else 0.65
             payload = {
                 "contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {"temperature": 0.65, "maxOutputTokens": 3000}
+                "generationConfig": {"temperature": temp, "maxOutputTokens": 3000}
             }
             req = urllib.request.Request(
                 url,
@@ -61,10 +92,11 @@ def generate_ai_questions(prompt: str) -> str:
             ]
             for model_name in models_to_try:
                 try:
+                    temp_groq = temperature if temperature is not None else 0.6
                     response = client.chat.completions.create(
                         model=model_name,
                         messages=[{"role": "user", "content": prompt}],
-                        temperature=0.6,
+                        temperature=temp_groq,
                         max_tokens=3000,
                     )
                     text = response.choices[0].message.content
@@ -495,3 +527,48 @@ def parse_raw_questions(raw_text: str, target_count: Optional[int] = None) -> Li
             cleaned_questions = cleaned_questions[:target_count]
 
     return cleaned_questions
+
+def generate_question_bundle(role: str, difficulty: str, count: int, custom_question: str = "", temperature: Optional[float] = None) -> List[dict]:
+    """Generate a structured question bundle.
+    Returns a list of dictionaries each containing the keys:
+        question, difficulty, model_answer, explanation, key_points, common_mistakes.
+    Handles JSON parsing, markdown fences, and missing/invalid fields gracefully.
+    """
+    from .prompts import question_bundle_prompt
+    # Build the prompt using the existing prompt builder
+    prompt = question_bundle_prompt(role, difficulty, count, custom_question)
+    try:
+        raw = generate_ai_questions(prompt, temperature=temperature)
+    except Exception as exc:
+        logger.warning("Failed to generate question bundle: %s", exc)
+        return []
+    # Strip potential markdown code fences
+    if raw.strip().startswith("```"):
+        # Remove leading/trailing fences
+        raw = re.sub(r"^```[a-zA-Z]*\n?", "", raw.strip())
+        raw = re.sub(r"\n?```$", "", raw)
+    try:
+        bundle = json.loads(raw)
+    except json.JSONDecodeError as jde:
+        logger.warning("Question bundle JSON decode error: %s; raw: %s", jde, raw[:200])
+        return []
+    if not isinstance(bundle, list):
+        logger.warning("Question bundle is not a list; got %s", type(bundle))
+        return []
+    # Validate required fields for each item
+    required_keys = {"question", "difficulty", "model_answer", "explanation", "key_points", "common_mistakes"}
+    valid_items = []
+    for item in bundle:
+        if not isinstance(item, dict):
+            continue
+        if not required_keys.issubset(item.keys()):
+            missing = required_keys - item.keys()
+            logger.warning("Bundle item missing keys %s: %s", missing, item)
+            continue
+        # Ensure lists for key_points and common_mistakes
+        if not isinstance(item.get("key_points"), list):
+            item["key_points"] = []
+        if not isinstance(item.get("common_mistakes"), list):
+            item["common_mistakes"] = []
+        valid_items.append(item)
+    return valid_items

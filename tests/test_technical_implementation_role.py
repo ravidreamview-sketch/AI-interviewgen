@@ -1,6 +1,7 @@
 import unittest
 from pathlib import Path
 from unittest.mock import patch
+from datetime import timezone
 
 from app.evaluator_service import evaluate_candidate_answer
 from app.models import InterviewRequest

@@ -1,6 +1,7 @@
 import logging
 import json
 from typing import List, Tuple
+from datetime import timezone
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session

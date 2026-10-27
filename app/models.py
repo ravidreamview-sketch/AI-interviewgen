@@ -2,6 +2,7 @@ from __future__ import annotations
 from enum import Enum
 from pydantic import BaseModel, ConfigDict, Field
 from typing import List, Optional, Dict, Any
+from datetime import timezone
 
 # ==============================================================================
 # ADAPTIVE INTERVIEW ENGINE ENUMS & VERSION CONSTANTS
@@ -763,6 +764,11 @@ class TurnEvaluationDetail(BaseModel):
 class InterviewAnswerResponse(BaseModel):
     evaluation: TurnEvaluationDetail
     next_question: Optional[str] = None
+    # Structured bundle fields
+    model_answer: Optional[str] = None
+    explanation: Optional[str] = None
+    key_points: Optional[List[str]] = None
+    common_mistakes: Optional[List[str]] = None
     follow_up_required: bool = False
     turn_index: Optional[int] = None
     is_complete: bool = False

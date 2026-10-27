@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
+from datetime import timezone
 
 # Ensure project root is in sys.path
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__) + "/.."))
@@ -389,7 +390,7 @@ class TestAdaptiveQuestionGeneration(unittest.TestCase):
             skills="PostgreSQL, Redis",
             difficulty="Hard",
             questions=f"1. {prev_q}",
-            created_at=datetime.utcnow() - timedelta(hours=1)
+            created_at=datetime.now(timezone.utc) - timedelta(hours=1)
         )
         db.add(history)
         db.commit()

@@ -4,6 +4,7 @@ import sys
 import unittest
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
+from datetime import timezone
 
 from app.services import generate_ai_questions, get_ai_provider_status
 

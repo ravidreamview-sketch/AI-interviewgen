@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Phase 5E Test Suite: Resume/JD Match UI Integration
 Verifies the integration between the frontend Resume-match.html and backend APIs:

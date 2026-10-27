@@ -2,6 +2,7 @@ import os
 import sys
 import unittest
 from unittest.mock import patch
+from datetime import timezone
 
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine

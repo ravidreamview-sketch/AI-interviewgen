@@ -7,6 +7,7 @@ from typing import Optional, List
 import json
 import os
 import uuid
+from datetime import timezone
 
 from app.database import get_db
 from app.db_models import UserAccount, AuditLog, SystemConfig, Prompt, PromptVersion
@@ -147,7 +148,7 @@ def candidate_login(
         )
     
     clear_failed_login_attempts(request, email_clean)
-    user.last_login = datetime.utcnow()
+    user.last_login = datetime.now(timezone.utc)
     db.commit()
     
     token_payload = {
@@ -292,7 +293,7 @@ def admin_login(
     clear_failed_login_attempts(request, email_clean)
     
     # Update last login
-    user.last_login = datetime.utcnow()
+    user.last_login = datetime.now(timezone.utc)
     db.commit()
     
     # Generate signed token
@@ -444,7 +445,7 @@ def create_user(
         role=target_role,
         plan_tier=payload.plan_tier.strip().lower() if payload.plan_tier else "free",
         is_active=payload.is_active if payload.is_active is not None else True,
-        created_at=datetime.utcnow()
+        created_at=datetime.now(timezone.utc)
     )
     db.add(new_user)
     db.commit()
@@ -688,7 +689,7 @@ def get_admin_dashboard_stats(
     total_clicks = db.query(ClickEvent).count()
     
     # Active sessions in last 15 min
-    active_cutoff = datetime.utcnow() - timedelta(minutes=15)
+    active_cutoff = datetime.now(timezone.utc) - timedelta(minutes=15)
     active_sessions = db.query(func.count(func.distinct(PageViewEvent.session_id))).filter(
         PageViewEvent.timestamp >= active_cutoff
     ).scalar() or (1 if active_users > 0 else 0)
@@ -739,7 +740,7 @@ def get_admin_dashboard_stats(
             "enterprise": plan_enterprise
         },
         "recent_papers": recent_papers_list,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
 
@@ -937,7 +938,7 @@ def _save_stored_menus(db: Session, menus: List[dict]):
             db.add(config_entry)
         else:
             config_entry.config_value = json.dumps(menus)
-            config_entry.updated_at = datetime.utcnow()
+            config_entry.updated_at = datetime.now(timezone.utc)
         db.commit()
     except Exception as e:
         print(f"[Menu Save Warning] {e}")
@@ -1508,7 +1509,7 @@ def update_prompt(
         else:
             prompt.variables = ",".join(unique_vars)
 
-    prompt.updated_at = datetime.utcnow()
+    prompt.updated_at = datetime.now(timezone.utc)
 
     # Increment version if prompt template or settings were updated
     if updated_meaningful_field:
@@ -1724,7 +1725,7 @@ def restore_prompt_version(
     prompt.max_tokens = target_ver.max_tokens
     prompt.status = target_ver.status
     prompt.version += 1
-    prompt.updated_at = datetime.utcnow()
+    prompt.updated_at = datetime.now(timezone.utc)
 
     # Record new incremented version log for the restoration
     new_v = PromptVersion(

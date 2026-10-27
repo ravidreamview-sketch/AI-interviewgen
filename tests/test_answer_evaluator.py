@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Automated Test Suite for AI Answer Evaluator Engine
 Tests:
@@ -62,7 +63,7 @@ class TestAnswerEvaluator(unittest.TestCase):
             full_name="Evaluation Candidate",
             role="candidate",
             plan_tier="pro",
-            created_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc)
         )
         self.db.add(self.candidate)
         self.db.commit()

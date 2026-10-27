@@ -1,3 +1,4 @@
+from datetime import timezone
 """
 Automated Test Suite for Real-Time Video + Voice Conversational AI Interview Engine
 Tests:
@@ -67,7 +68,7 @@ class TestVideoVoiceInterviewEngine(unittest.TestCase):
             full_name="Candidate One",
             role="candidate",
             plan_tier="pro",
-            created_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc)
         )
         # Seed Test Candidate 2 (for tenant isolation test)
         self.candidate2 = UserAccount(
@@ -76,7 +77,7 @@ class TestVideoVoiceInterviewEngine(unittest.TestCase):
             full_name="Candidate Two",
             role="candidate",
             plan_tier="free",
-            created_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc)
         )
         self.db.add(self.candidate1)
         self.db.add(self.candidate2)

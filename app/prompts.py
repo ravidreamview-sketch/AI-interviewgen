@@ -1,4 +1,28 @@
 from typing import Optional
+from datetime import timezone
+
+# Difficulty instruction templates (simple English for beginners, deeper for advanced)
+DIFFICULTY_INSTRUCTIONS = {
+    "Beginner": "Ask simple, conceptual questions suitable for a beginner. Avoid deep implementation details, keep language plain, and limit answers to basic explanations.",
+    "Intermediate": "Ask moderately complex questions that test practical knowledge and some implementation details. Encourage concise, technical answers.",
+    "Advanced": "Ask challenging, senior-level questions that require deep technical reasoning, trade-off analysis, and detailed design explanations.",
+}
+
+def normalize_difficulty(value: str) -> str:
+    """Normalize various difficulty inputs to one of Beginner/Intermediate/Advanced.
+    Returns "Intermediate" as default.
+    """
+    if not value:
+        return "Intermediate"
+    v = value.strip().lower()
+    if v in {"beginner", "entry", "junior", "low"}:
+        return "Beginner"
+    if v in {"intermediate", "medium", "mid", "average"}:
+        return "Intermediate"
+    if v in {"advanced", "senior", "expert", "high"}:
+        return "Advanced"
+    return "Intermediate"
+
 
 
 def technical_implementation_role_guidance(role: Optional[str] = None) -> str:
@@ -16,13 +40,40 @@ ENTRY-LEVEL / FRESHER CANDIDATE GUIDANCE:
 - In a live interview, ask exactly one concise question per turn.
 """
 
+def question_bundle_prompt(role: str, difficulty: str, count: int, custom_question: str = "") -> str:
+    """Build a prompt for generating a structured interview question bundle.
+    Returns a JSON array where each item includes:
+        - question (str)
+        - difficulty (Beginner|Intermediate|Advanced)
+        - model_answer (str)
+        - explanation (str)
+        - key_points (list[str])
+        - common_mistakes (list[str])
+    """
+    diff_norm = normalize_difficulty(difficulty)
+    diff_instr = DIFFICULTY_INSTRUCTIONS.get(diff_norm, DIFFICULTY_INSTRUCTIONS["Intermediate"]).strip()
+    seed_instr = f"\nSPECIFIC SEED / FOCUS TOPIC:\n{custom_question.strip()}\n" if custom_question.strip() else ""
+    return f"""You are generating an interview question bundle for role: {role}. Difficulty level: {diff_norm} ({diff_instr}). Generate exactly {count} items.
+{seed_instr}
+Output ONLY a JSON array where each element has the following keys:
+- question: string
+- difficulty: \"Beginner\"|\"Intermediate\"|\"Advanced\"
+- model_answer: string (concise exemplary answer)
+- explanation: string (why the question matters and what is being tested)
+- key_points: array of strings (important concepts to cover)
+- common_mistakes: array of strings (typical pitfalls candidates make)
+Do not include any additional text or markdown.
+"""
+
+
 
 def interview_prompt(data):
     role_str = (data.role or "").strip()
     role_lower = role_str.lower()
     skills_str = ", ".join(data.skills or [])
     exp = data.experience or "3-5 Years"
-    diff = data.difficulty or "Medium"
+    diff_raw = data.difficulty or "Medium"
+    diff = normalize_difficulty(diff_raw)
     company = getattr(data, "company", None) or "General Tech"
     interview_type = getattr(data, "interview_type", None) or "Technical & Architecture"
     num_q = data.number_of_questions or 5
@@ -36,19 +87,21 @@ SPECIFIC SEED / FOCUS TOPIC:
 STRICT REQUIREMENT: Ensure all generated questions directly probe, expand, and branch from this specific topic into deep-dive scenarios, trade-offs, architecture, and edge cases.
 """
 
+    difficulty_instruction = DIFFICULTY_INSTRUCTIONS.get(diff, DIFFICULTY_INSTRUCTIONS["Intermediate"])
     format_instruction = f"""
-CRITICAL REQUIREMENTS:
-- Target Company Bar: {company}
-- Interview Round / Format: {interview_type}
-- You MUST generate EXACTLY {num_q} interview questions (numbered sequentially from 1 to {num_q}).
-- Return ONLY the numbered list of {num_q} questions.
-- Do NOT output any introductory text, section headers, or markdown formatting asterisks around the whole question.
-- Format every question on its own line:
-1. [First question text]
-2. [Second question text]
-...
-{num_q}. [{num_q}th question text]
-"""
+    {difficulty_instruction}
+    CRITICAL REQUIREMENTS:
+    - Target Company Bar: {company}
+    - Interview Round / Format: {interview_type}
+    - You MUST generate EXACTLY {num_q} interview questions (numbered sequentially from 1 to {num_q}).
+    - Return ONLY the numbered list of {num_q} questions.
+    - Do NOT output any introductory text, section headers, or markdown formatting asterisks around the whole question.
+    - Format every question on its own line:
+    1. [First question text]
+    2. [Second question text]
+    ...
+    {num_q}. [{num_q}th question text]
+    """
 
     # 1. UX DESIGNER
     if any(k in role_lower for k in ["ux designer", "user experience designer", "ux researcher", "interaction designer"]) and "product" not in role_lower and "ui/ux" not in role_lower:
