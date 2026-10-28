@@ -80,6 +80,21 @@ class CoachChatRequest(BaseModel):
     conversation_id: Optional[int] = Field(None, gt=0)
 
 
+class SampleAnswerRequest(BaseModel):
+    question: str = Field(..., min_length=3, description="Interview question text")
+    role: Optional[str] = Field("Software Engineer", description="Target job role")
+    skills: Optional[List[str]] = Field(default_factory=list, description="Target technical skills")
+    difficulty: Optional[str] = Field("Intermediate", description="Beginner | Intermediate | Advanced")
+
+
+class SampleAnswerResponse(BaseModel):
+    question: str
+    sample_answer: str
+    key_points: List[str] = Field(default_factory=list)
+    practical_example: Optional[str] = None
+
+
+
 # ==============================================================================
 # CANDIDATE SKILL ANALYTICS & MISTAKES LEDGER SCHEMAS
 # ==============================================================================

@@ -55,6 +55,7 @@ class InterviewHistory(Base):
     difficulty = Column(String, nullable=False)
     questions = Column(Text, nullable=False)
     question_engine_version = Column(String, nullable=True, default="qengine-v1.0.0")
+    questions_payload = Column(Text, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 

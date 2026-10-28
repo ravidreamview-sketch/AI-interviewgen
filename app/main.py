@@ -52,6 +52,8 @@ from app.models import (
     AnswerEvaluationResponse,
     EvaluatorPresetsResponse,
     CoachChatRequest,
+    SampleAnswerRequest,
+    SampleAnswerResponse,
 )
 from app.interview_engine import (
     start_interview_session,
@@ -68,6 +70,7 @@ from app.services import (
     get_ai_provider_status,
     parse_raw_questions,
     get_fallback_questions,
+    generate_sample_answer,
 )
 from app.coach_service import build_candidate_context, generate_coach_reply
 from app.adaptive_service import (
@@ -335,7 +338,18 @@ def format_interview_response(interview: InterviewHistory) -> dict:
     if not parsed_qs and interview.questions:
         parsed_qs = [q.strip() for q in interview.questions.split("\n") if q.strip()]
 
-    return {
+    # Safely unpack structured questions_details from questions_payload if present
+    questions_details = None
+    raw_payload = getattr(interview, "questions_payload", None)
+    if raw_payload:
+        try:
+            loaded = json.loads(raw_payload)
+            if isinstance(loaded, list):
+                questions_details = loaded
+        except Exception as json_err:
+            logger.warning(f"Failed to deserialize questions_payload for interview {getattr(interview, 'id', None)}: {json_err}")
+
+    res = {
         "id": interview.id,
         "role": interview.role,
         "experience": interview.experience,
@@ -349,6 +363,11 @@ def format_interview_response(interview: InterviewHistory) -> dict:
         "question_engine_version": getattr(interview, "question_engine_version", None) or "qengine-v1.0.0",
         "created_at": interview.created_at.isoformat() if getattr(interview, "created_at", None) else None
     }
+
+    if questions_details is not None:
+        res["questions_details"] = questions_details
+
+    return res
 
 
 from app.admin_routes import _get_stored_menus
@@ -427,12 +446,37 @@ def generate_questions(
         # Format questions consistently as numbered lines
         formatted_raw = "\n".join([f"{i+1}. {q}" for i, q in enumerate(clean_questions)])
 
+        questions_details = []
+        for i, q in enumerate(clean_questions):
+            ans_info = generate_sample_answer(
+                question=q,
+                role=data.role,
+                skills=data.skills,
+                difficulty=data.difficulty,
+            )
+            questions_details.append({
+                "id": i + 1,
+                "question": q,
+                "category": getattr(data, "interview_type", "Technical & Architecture"),
+                "difficulty": data.difficulty,
+                "source_type": "AI_generated",
+                "source_title": f"AI Synthesis ({data.role})",
+                "source_url": None,
+                "source_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+                "confidence": 0.91,
+                "model_answer": f"Evaluates depth in {', '.join(data.skills[:3]) if data.skills else data.role} with clear trade-offs.",
+                "sample_answer": ans_info.get("sample_answer") or "",
+                "key_points": ans_info.get("key_points") or [],
+                "practical_example": ans_info.get("practical_example") or None,
+            })
+
         interview = InterviewHistory(
             role=data.role,
             experience=data.experience,
             skills=", ".join(data.skills),
             difficulty=data.difficulty,
             questions=formatted_raw,
+            questions_payload=json.dumps(questions_details),
             user_id=getattr(current_user, "id", None) if current_user else None,
             adaptive_session_id=getattr(data, "adaptive_session_id", None),
             question_engine_version="qengine-v1.0.0",
@@ -446,21 +490,7 @@ def generate_questions(
         res = format_interview_response(interview)
         res["company"] = getattr(data, "company", "General Tech")
         res["interview_type"] = getattr(data, "interview_type", "Technical & Architecture")
-        res["questions_details"] = [
-            {
-                "id": i + 1,
-                "question": q,
-                "category": getattr(data, "interview_type", "Technical & Architecture"),
-                "difficulty": data.difficulty,
-                "source_type": "AI_generated",
-                "source_title": f"AI Synthesis ({data.role})",
-                "source_url": None,
-                "source_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-                "confidence": 0.91,
-                "model_answer": f"Evaluates depth in {', '.join(data.skills[:3]) if data.skills else data.role} with clear trade-offs."
-            }
-            for i, q in enumerate(clean_questions)
-        ]
+        res["questions_details"] = questions_details
         res["message"] = "Interview questions generated and saved successfully"
         return res
 
@@ -470,6 +500,39 @@ def generate_questions(
         raise HTTPException(
             status_code=500,
             detail=f"Failed to generate interview questions: {str(e)}"
+        )
+
+
+@app.post("/api/sample-answer", response_model=SampleAnswerResponse)
+@app.post("/api/generate-sample-answer", response_model=SampleAnswerResponse)
+def get_sample_answer_endpoint(
+    payload: SampleAnswerRequest,
+    current_user: Optional[UserAccount] = Depends(get_current_user_optional),
+    db: Session = Depends(get_db)
+):
+    """
+    On-demand sample answer generator for an individual interview question.
+    Returns structured sample answer, key points to cover, and practical example.
+    """
+    try:
+        ans_info = generate_sample_answer(
+            question=payload.question,
+            role=payload.role or "Software Engineer",
+            skills=payload.skills or [],
+            difficulty=payload.difficulty or "Intermediate"
+        )
+        return SampleAnswerResponse(
+            question=payload.question,
+            sample_answer=ans_info.get("sample_answer") or "",
+            key_points=ans_info.get("key_points") or [],
+            practical_example=ans_info.get("practical_example")
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate sample answer: {str(e)}"
         )
 
 

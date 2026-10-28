@@ -230,6 +230,8 @@ def _run_migration_interview_history(dialect: str):
                 _safe_execute_ddl("ALTER TABLE interview_history ADD COLUMN adaptive_session_id VARCHAR")
             if "question_engine_version" not in ih_cols:
                 _safe_execute_ddl("ALTER TABLE interview_history ADD COLUMN question_engine_version VARCHAR DEFAULT 'qengine-v1.0.0'")
+            if "questions_payload" not in ih_cols:
+                _safe_execute_ddl("ALTER TABLE interview_history ADD COLUMN questions_payload TEXT")
 
             _safe_execute_ddl("CREATE INDEX IF NOT EXISTS idx_interview_history_user ON interview_history(user_id)")
             _safe_execute_ddl("CREATE INDEX IF NOT EXISTS idx_interview_history_asess ON interview_history(adaptive_session_id)")
@@ -239,6 +241,7 @@ def _run_migration_interview_history(dialect: str):
             _safe_execute_ddl('ALTER TABLE "interview_history" ADD COLUMN IF NOT EXISTS "user_id" INTEGER')
             _safe_execute_ddl('ALTER TABLE "interview_history" ADD COLUMN IF NOT EXISTS "adaptive_session_id" VARCHAR')
             _safe_execute_ddl('ALTER TABLE "interview_history" ADD COLUMN IF NOT EXISTS "question_engine_version" VARCHAR DEFAULT \'qengine-v1.0.0\'')
+            _safe_execute_ddl('ALTER TABLE "interview_history" ADD COLUMN IF NOT EXISTS "questions_payload" TEXT')
             _safe_execute_ddl('CREATE INDEX IF NOT EXISTS idx_interview_history_user ON interview_history(user_id)')
             _safe_execute_ddl('CREATE INDEX IF NOT EXISTS idx_interview_history_asess ON interview_history(adaptive_session_id)')
     except Exception as e:

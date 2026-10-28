@@ -2408,6 +2408,183 @@
       color: var(--ink);
     }
 
+    /* Expandable Sample Answer Control & Content */
+    .q-sample-answer-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 6px;
+      font-family: var(--f-ui);
+      font-size: 11px;
+      font-weight: 600;
+      color: #4F46E5;
+      background: #EEF2FF;
+      border: 1px solid #C7D2FE;
+      cursor: pointer;
+      transition: background .18s, color .18s, border-color .18s;
+      user-select: none;
+    }
+
+    .q-sample-answer-btn:hover {
+      background: #E0E7FF;
+      border-color: #A5B4FC;
+      color: #3730A3;
+    }
+
+    [data-theme="dark"] .q-sample-answer-btn {
+      color: #A5B4FC;
+      background: rgba(99, 102, 241, 0.16);
+      border-color: rgba(99, 102, 241, 0.35);
+    }
+
+    [data-theme="dark"] .q-sample-answer-btn:hover {
+      background: rgba(99, 102, 241, 0.28);
+      border-color: rgba(99, 102, 241, 0.5);
+      color: #C7D2FE;
+    }
+
+    .q-toggle-chevron {
+      width: 12px;
+      height: 12px;
+      transition: transform .2s ease;
+      flex-shrink: 0;
+    }
+
+    .q-sample-answer-btn[aria-expanded="true"] .q-toggle-chevron {
+      transform: rotate(180deg);
+    }
+
+    .q-sample-answer-panel {
+      margin-top: 10px;
+      padding: 13px 15px;
+      border-radius: 10px;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      font-size: 13.5px;
+      line-height: 1.55;
+      color: var(--ink);
+    }
+
+    .q-sample-answer-panel[hidden] {
+      display: none !important;
+    }
+
+    .q-answer-section {
+      margin-bottom: 12px;
+    }
+
+    .q-answer-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .q-answer-heading {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--f-mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+      color: #4F46E5;
+      margin-bottom: 5px;
+    }
+
+    [data-theme="dark"] .q-answer-heading {
+      color: #818CF8;
+    }
+
+    .q-answer-heading.heading-keypoints {
+      color: #059669;
+    }
+
+    [data-theme="dark"] .q-answer-heading.heading-keypoints {
+      color: #34D399;
+    }
+
+    .q-answer-heading.heading-example {
+      color: #D97706;
+    }
+
+    [data-theme="dark"] .q-answer-heading.heading-example {
+      color: #FBBF24;
+    }
+
+    .q-answer-text,
+    .q-example-text {
+      color: var(--ink);
+      font-size: 13.5px;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .q-keypoints-list {
+      margin: 4px 0 0 0;
+      padding-left: 18px;
+      color: var(--ink);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .q-keypoints-list li {
+      margin-bottom: 4px;
+    }
+
+    .q-keypoints-list li:last-child {
+      margin-bottom: 0;
+    }
+
+    .q-answer-loading {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--ink-soft);
+      font-size: 12.5px;
+      font-family: var(--f-mono);
+      padding: 8px 4px;
+    }
+
+    .q-answer-spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid var(--rule);
+      border-top-color: #4F46E5;
+      border-radius: 50%;
+      animation: qSpin .7s linear infinite;
+    }
+
+    @keyframes qSpin {
+      to { transform: rotate(360deg); }
+    }
+
+    .q-answer-error {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: #DC2626;
+      font-size: 12.5px;
+      padding: 6px 0;
+    }
+
+    .q-answer-retry-btn {
+      font-family: var(--f-ui);
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 3px 8px;
+      background: var(--paper-2);
+      border: 1px solid var(--rule);
+      border-radius: 5px;
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .q-answer-retry-btn:hover {
+      border-color: #4F46E5;
+      color: #4F46E5;
+    }
+
     /* ---------- preset chips & ai stepper ---------- */
     .preset-chips {
       display: flex;
@@ -5477,6 +5654,9 @@
       const sourceDate = isObj && rawQ.source_date ? rawQ.source_date : null;
       const confidence = isObj && rawQ.confidence ? `${Math.round(rawQ.confidence * 100)}% Fit` : '92% Fit';
       const modelAnswer = isObj && rawQ.model_answer ? rawQ.model_answer : '';
+      const sampleAnswer = isObj && rawQ.sample_answer ? rawQ.sample_answer : '';
+      const keyPoints = isObj && Array.isArray(rawQ.key_points) ? rawQ.key_points : [];
+      const practicalExample = isObj && rawQ.practical_example ? rawQ.practical_example : '';
 
       const badgeHtml = isVerified
         ? `<span class="q-provenance-badge verified">✓ Verified Real Question</span>`
@@ -5494,7 +5674,170 @@
         catHtml,
         confHtml,
         srcHtml,
-        modelAnswer
+        modelAnswer,
+        sampleAnswer,
+        keyPoints,
+        practicalExample
+      };
+    }
+
+    function renderAnswerContent(panel, data) {
+      const answerText = data.sample_answer || data.model_answer || "";
+      const keyPoints = Array.isArray(data.key_points) ? data.key_points : [];
+      const practicalExample = data.practical_example || "";
+
+      if (!answerText && keyPoints.length === 0 && !practicalExample) {
+        panel.innerHTML = `<div class="q-answer-empty" style="color:var(--ink-soft);font-size:13px;padding:4px 0">No sample answer available for this question.</div>`;
+        return;
+      }
+
+      let html = "";
+      if (answerText) {
+        html += `
+          <div class="q-answer-section">
+            <div class="q-answer-heading">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Sample Answer
+            </div>
+            <p class="q-answer-text">${escapeHtml(answerText)}</p>
+          </div>
+        `;
+      }
+
+      if (keyPoints.length > 0) {
+        html += `
+          <div class="q-answer-section">
+            <div class="q-answer-heading heading-keypoints">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              Key Points to Cover
+            </div>
+            <ul class="q-keypoints-list">
+              ${keyPoints.map(kp => `<li>${escapeHtml(kp)}</li>`).join('')}
+            </ul>
+          </div>
+        `;
+      }
+
+      if (practicalExample && practicalExample.trim()) {
+        html += `
+          <div class="q-answer-section">
+            <div class="q-answer-heading heading-example">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              Practical Example
+            </div>
+            <p class="q-example-text">${escapeHtml(practicalExample)}</p>
+          </div>
+        `;
+      }
+
+      panel.innerHTML = html;
+    }
+
+    async function fetchAndRenderSampleAnswer(panel, rawQ, i) {
+      const qText = cleanQuestionText(rawQ);
+      const role = $("#role") ? $("#role").value : "";
+      const diff = $("#diff") ? $("#diff").value : "Intermediate";
+      const skillList = Array.isArray(skills) ? skills : [];
+
+      panel.innerHTML = `
+        <div class="q-answer-loading">
+          <span class="q-answer-spinner"></span>
+          <span>Synthesizing sample answer...</span>
+        </div>
+      `;
+
+      try {
+        const endpoint = API_BASE ? `${API_BASE}/api/sample-answer` : '/api/sample-answer';
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            question: qText,
+            role: role || "Software Engineer",
+            skills: skillList,
+            difficulty: diff || "Intermediate"
+          })
+        });
+
+        if (!res.ok) {
+          throw new Error(`Server returned ${res.status}`);
+        }
+
+        const data = await res.json();
+
+        if (typeof rawQ === 'object' && rawQ !== null) {
+          rawQ.sample_answer = data.sample_answer;
+          rawQ.key_points = data.key_points;
+          rawQ.practical_example = data.practical_example;
+        }
+        if (Array.isArray(currentQs) && currentQs[i] !== undefined) {
+          if (typeof currentQs[i] === 'object' && currentQs[i] !== null) {
+            currentQs[i].sample_answer = data.sample_answer;
+            currentQs[i].key_points = data.key_points;
+            currentQs[i].practical_example = data.practical_example;
+          } else {
+            currentQs[i] = {
+              question: qText,
+              sample_answer: data.sample_answer,
+              key_points: data.key_points,
+              practical_example: data.practical_example
+            };
+          }
+        }
+
+        panel.dataset.loaded = "true";
+        renderAnswerContent(panel, data);
+      } catch (err) {
+        console.warn("Could not fetch sample answer from API:", err);
+        panel.innerHTML = `
+          <div class="q-answer-error">
+            <span>Sample answer is currently unavailable.</span>
+            <button class="q-answer-retry-btn" type="button">Retry</button>
+          </div>
+        `;
+        const retryBtn = panel.querySelector('.q-answer-retry-btn');
+        if (retryBtn) {
+          retryBtn.onclick = (e) => {
+            e.stopPropagation();
+            fetchAndRenderSampleAnswer(panel, rawQ, i);
+          };
+        }
+      }
+    }
+
+    function setupSampleAnswerToggle(li, rawQ, i) {
+      const btn = li.querySelector(`.q-sample-answer-btn[data-q-idx="${i}"]`);
+      const panel = li.querySelector(`#sample-panel-${i}`);
+      if (!btn || !panel) return;
+
+      btn.onclick = async (e) => {
+        e.stopPropagation();
+        const isCurrentlyExpanded = btn.getAttribute('aria-expanded') === 'true';
+
+        if (isCurrentlyExpanded) {
+          btn.setAttribute('aria-expanded', 'false');
+          const label = btn.querySelector('.q-btn-label');
+          if (label) label.textContent = 'View Sample Answer';
+          panel.hidden = true;
+        } else {
+          btn.setAttribute('aria-expanded', 'true');
+          const label = btn.querySelector('.q-btn-label');
+          if (label) label.textContent = 'Hide Sample Answer';
+          panel.hidden = false;
+
+          const qObj = (typeof rawQ === 'object' && rawQ !== null)
+            ? rawQ
+            : (Array.isArray(currentQs) && typeof currentQs[i] === 'object' ? currentQs[i] : null);
+
+          const hasValidAnswer = qObj && (qObj.sample_answer || (qObj.model_answer && qObj.model_answer.length > 80));
+
+          if (hasValidAnswer) {
+            renderAnswerContent(panel, qObj);
+          } else if (!panel.dataset.loaded) {
+            await fetchAndRenderSampleAnswer(panel, rawQ, i);
+          }
+        }
       };
     }
 
@@ -5525,12 +5868,20 @@
             ${catHtml}
             ${confHtml}
             ${srcHtml}
+            <button class="q-sample-answer-btn" type="button" aria-expanded="false" data-q-idx="${i}" aria-label="Toggle sample answer for question ${i + 1}">
+              <span class="q-btn-label">View Sample Answer</span>
+              <svg class="q-toggle-chevron" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
           </div>
           ${modelAnswer ? `<div class="q-model-answer-box"><b>Evaluation Focus:</b> ${modelAnswer}</div>` : ''}
+          <div class="q-sample-answer-panel" id="sample-panel-${i}" hidden></div>
         </div>
         <button class="qcopy" title="Copy question" aria-label="Copy question ${i + 1}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg>
         </button>`;
+          setupSampleAnswerToggle(li, rawQ, i);
           li.querySelector('.qcopy').onclick = (e) => {
             navigator.clipboard?.writeText(plain);
             const b = e.currentTarget; b.classList.add('done');
@@ -5567,12 +5918,20 @@
             ${catHtml}
             ${confHtml}
             ${srcHtml}
+            <button class="q-sample-answer-btn" type="button" aria-expanded="false" data-q-idx="${i}" aria-label="Toggle sample answer for question ${i + 1}">
+              <span class="q-btn-label">View Sample Answer</span>
+              <svg class="q-toggle-chevron" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
           </div>
           ${modelAnswer ? `<div class="q-model-answer-box" style="opacity:0;transition:opacity .3s"><b>Evaluation Focus:</b> ${modelAnswer}</div>` : ''}
+          <div class="q-sample-answer-panel" id="sample-panel-${i}" hidden></div>
         </div>
         <button class="qcopy" title="Copy question" aria-label="Copy question ${i + 1}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg>
         </button>`;
+          setupSampleAnswerToggle(li, rawQ, i);
 
           li.querySelector('.qcopy').onclick = (e) => {
             navigator.clipboard?.writeText(plain);
@@ -5636,7 +5995,15 @@
               source_url: "https://design.google/library",
               source_date: "2024-Q2",
               confidence: 0.94,
-              model_answer: "Focuses on WCAG 2.2 AA compliant focus traps, skip links, aria-expanded states, and tree navigation mental models."
+              model_answer: "Focuses on WCAG 2.2 AA compliant focus traps, skip links, aria-expanded states, and tree navigation mental models.",
+              sample_answer: "When designing accessible interfaces for complex consoles, I anchor the implementation directly to WCAG 2.2 AA standards. I establish a predictable tab order with visible, high-contrast focus indicators and implement focus management so modal drawers trap focus while active and return focus to the trigger upon dismissal. All interactive elements utilize semantic HTML or appropriate ARIA roles like aria-expanded and aria-controls, and keyboard listeners handle Tab, Shift+Tab, Escape, and Arrow keys according to WAI-ARIA authoring practices. Finally, I combine automated axe-core audits with manual screen-reader testing to guarantee compliance.",
+              key_points: [
+                "Strict adherence to WCAG 2.2 AA standards (focus indicators, 4.5:1 text contrast, 24x24px target sizes)",
+                "Focus trapping within modal overlays and returning focus to the triggering element upon close",
+                "Accurate semantic HTML and WAI-ARIA states (aria-expanded, aria-controls, aria-live for dynamic updates)",
+                "Dual verification using automated linting (axe-core) and hands-on screen-reader navigation (NVDA/VoiceOver)"
+              ],
+              practical_example: "In a multi-level configuration drawer, binding an Escape key listener to close the panel and immediately refocus the initiating button ensures keyboard-only users never lose their navigational context."
             },
             {
               id: 2,
@@ -5648,7 +6015,15 @@
               source_url: null,
               source_date: "2024-Q3",
               confidence: 0.92,
-              model_answer: "Evaluates token hierarchies (global vs alias vs component tokens) and theme switching modes."
+              model_answer: "Evaluates token hierarchies (global vs alias vs component tokens) and theme switching modes.",
+              sample_answer: "A scalable design system relies on a three-tier token hierarchy: Global reference tokens (e.g., color palette primitives and a 4pt/8pt spacing base), Semantic tokens that capture intent (such as surface-primary or pen-accent), and Component-scoped tokens that govern specific element states. In tooling like Figma, I organize variables with mode switches to seamlessly support light, dark, and high-contrast themes. I construct components using auto-layout with min/max constraints so they resize fluidly across viewports. To ensure design-engineering parity, token naming follows a standardized JSON schema that directly exports to CSS custom properties in the codebase.",
+              key_points: [
+                "Three-tier token structure (Global primitives -> Semantic intent -> Component-scoped tokens)",
+                "Figma Variables mode switching for zero-drift light and dark theme adaptation",
+                "Auto-layout geometry with fluid min-width and max-width responsive rules",
+                "Automated token compilation syncing Figma design definitions directly to CSS custom properties"
+              ],
+              practical_example: "Mapping color primitives to semantic aliases like var(--pen) and var(--paper) allows an enterprise application to toggle between light and dark themes instantaneously without writing component-level style overrides."
             }
           ]
         }
@@ -5732,7 +6107,9 @@
     }
 
     function loadPaperIntoSheet(paper) {
-      currentQs = paper.questions || [];
+      currentQs = (paper.questions_details && paper.questions_details.length)
+        ? paper.questions_details
+        : (paper.questions || []);
       $("#sheetTitle").textContent = paper.role;
       $("#sheetMeta").innerHTML = `
     <span>Level <b>${paper.difficulty}</b></span>

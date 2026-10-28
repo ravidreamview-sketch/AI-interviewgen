@@ -246,3 +246,43 @@ STRICT REQUIREMENTS:
 - Scale difficulty strictly to match {exp}.
 {format_instruction}
 """
+
+
+def sample_answer_prompt(
+    question: str,
+    role: str = "",
+    skills: Optional[list] = None,
+    difficulty: str = "Intermediate"
+) -> str:
+    """
+    Build prompt to generate a high-quality, relevant sample interview answer,
+    key evaluation points, and a concise practical example.
+    """
+    skills_text = ", ".join(skills) if skills else "relevant industry stack"
+    diff_norm = normalize_difficulty(difficulty)
+    return f"""You are an elite Technical Interview Coach and Staff Interviewer.
+Provide an exemplary, high-scoring sample interview response for the following question.
+
+Target Role: {role or "Software Engineer"}
+Target Skills: {skills_text}
+Difficulty: {diff_norm}
+Interview Question: "{question}"
+
+CRITICAL INSTRUCTIONS:
+1. "sample_answer": Provide a clear, technically accurate response written in natural, professional spoken English as a candidate would deliver in a top-tier interview.
+2. DO NOT invent personal past employment history, specific company names, or exaggerated personal metrics on behalf of the candidate (e.g. do NOT say "At my previous company, I..."). Instead, answer authoritatively using first-principles reasoning, established industry standards, mechanisms, and architectural trade-offs.
+3. "key_points": Provide an array of 3 to 4 specific technical concepts, core evaluation criteria, or trade-offs that interviewers look for in a strong response.
+4. "practical_example": Provide a concise real-world scenario, architectural pattern, or code/system flow illustrating the approach in practice.
+
+Return ONLY valid JSON matching this schema:
+{{
+  "sample_answer": "<Direct, articulate interview answer in professional spoken English>",
+  "key_points": [
+    "<Key concept / technical evaluation criteria 1>",
+    "<Key concept / technical evaluation criteria 2>",
+    "<Key concept / technical evaluation criteria 3>"
+  ],
+  "practical_example": "<Concise real-world example or scenario illustrating the solution>"
+}}
+Do NOT output markdown fences or any text outside the JSON object.
+"""

@@ -572,3 +572,393 @@ def generate_question_bundle(role: str, difficulty: str, count: int, custom_ques
             item["common_mistakes"] = []
         valid_items.append(item)
     return valid_items
+
+
+def build_contextual_sample_answer(
+    question: str,
+    role: str = "",
+    skills: Optional[List[str]] = None,
+    difficulty: str = "Intermediate"
+) -> dict:
+    """
+    Constructs a rich, domain-relevant sample answer, key concepts, and practical example
+    specifically tailored to the question prompt and role context without hallucinating personal credentials.
+    """
+    q_lower = (question or "").lower()
+    skills_list = skills or []
+    role_name = role or "Technical Lead"
+
+    # 1. WCAG / Accessibility / Keyboard Navigation
+    if any(k in q_lower for k in ["wcag", "accessib", "keyboard", "screen reader", "wai-aria", "focus trap", "skip link"]) or re.search(r"\baria\b", q_lower):
+        return {
+            "sample_answer": (
+                "When designing accessible interfaces, I anchor the implementation directly to WCAG 2.2 AA standards. "
+                "I establish a predictable tab order with visible, high-contrast focus indicators and implement focus management "
+                "so modal dialogs and nested drawers trap focus while active and return focus to the trigger upon dismissal. "
+                "All interactive elements utilize semantic HTML or appropriate ARIA roles like aria-expanded and aria-controls, "
+                "and keyboard listeners handle Tab, Shift+Tab, Escape, and Arrow keys according to WAI-ARIA authoring practices. "
+                "Finally, I combine automated axe-core audits with manual screen-reader testing to guarantee compliance."
+            ),
+            "key_points": [
+                "Strict adherence to WCAG 2.2 AA standards (focus indicators, 4.5:1 text contrast, 24x24px target sizes)",
+                "Focus trapping within modal overlays and returning focus to the triggering element upon close",
+                "Accurate semantic HTML and WAI-ARIA states (aria-expanded, aria-controls, aria-live for dynamic updates)",
+                "Dual verification using automated linting (axe-core) and hands-on screen-reader navigation (NVDA/VoiceOver)"
+            ],
+            "practical_example": (
+                "In a multi-level configuration drawer, binding an Escape key listener to close the panel and immediately refocus "
+                "the initiating button ensures keyboard-only users never lose their navigational context."
+            )
+        }
+
+    # 2. Design Systems / Design Tokens / Figma / Auto-layout
+    elif any(k in q_lower for k in ["design token", "figma", "design system", "spatial rhythm", "typography", "auto-layout", "component library", "variables"]):
+        return {
+            "sample_answer": (
+                "A scalable design system relies on a three-tier token hierarchy: Global reference tokens (e.g., color palette primitives and a 4pt/8pt spacing base), "
+                "Semantic tokens that capture intent (such as surface-primary or pen-accent), and Component-scoped tokens that govern specific element states. "
+                "In tooling like Figma, I organize variables with mode switches to seamlessly support light, dark, and high-contrast themes. "
+                "I construct components using auto-layout with min/max constraints so they resize fluidly across viewports. "
+                "To ensure design-engineering parity, token naming follows a standardized JSON schema that directly exports to CSS custom properties in the codebase."
+            ),
+            "key_points": [
+                "Three-tier token structure (Global primitives -> Semantic intent -> Component-scoped tokens)",
+                "Figma Variables mode switching for zero-drift light and dark theme adaptation",
+                "Auto-layout geometry with fluid min-width and max-width responsive rules",
+                "Automated token compilation syncing Figma design definitions directly to CSS custom properties"
+            ],
+            "practical_example": (
+                "Mapping color primitives to semantic aliases like var(--pen) and var(--paper) allows an enterprise application "
+                "to toggle between light and dark themes instantaneously without writing component-level style overrides."
+            )
+        }
+
+    # 3. User Research / Usability Testing / Discovery / Personas
+    elif any(k in q_lower for k in ["user research", "usability test", "discovery", "persona", "journey map", "user drop-off", "interviews", "card sorting"]):
+        return {
+            "sample_answer": (
+                "I approach user research through a mixed-methods framework, triangulating qualitative user observations with quantitative product telemetry. "
+                "When investigating friction or drop-off, I first analyze analytics funnels to pinpoint where drop-offs occur, then conduct task-based usability testing "
+                "with representative participants using open-ended, non-leading prompts. "
+                "I measure task completion rates, time-on-task, and Single Ease Question (SEQ) scores alongside qualitative think-aloud feedback. "
+                "Synthesizing these insights reveals whether user hesitation stems from cognitive load, ambiguous labeling, or missing value propositions, "
+                "allowing the team to iterate with targeted, validated adjustments."
+            ),
+            "key_points": [
+                "Mixed-methods triangulation (combining quantitative funnel metrics with qualitative think-aloud observation)",
+                "Objective, non-leading task scenarios and standardized usability benchmarks (SEQ, SUS)",
+                "Distinguishing cognitive friction and mental model mismatches from value-proposition gaps",
+                "Rapid, evidence-backed iteration loops shared transparently with cross-functional partners"
+            ],
+            "practical_example": (
+                "When users drop off during an onboarding step, pairing heatmaps with 5 unmoderated usability sessions often reveals "
+                "that a single ambiguous form label is causing user hesitation, which an immediate copy iteration resolves."
+            )
+        }
+
+    # 4. Product Management / A/B Testing / Roadmaps / Metrics / Prioritization
+    elif any(k in q_lower for k in ["a/b test", "experiment", "metric", "priorit", "roadmap", "north star", "trade-off", "kano", "rice"]):
+        return {
+            "sample_answer": (
+                "Balancing product metrics requires establishing a primary North Star metric paired with explicit counter-balancing guardrail metrics. "
+                "For instance, when optimizing conversion rate, the guardrail metric must track customer satisfaction and retention to avoid dark patterns. "
+                "I evaluate trade-offs using structured frameworks like RICE or Kano modeling to prioritize initiatives with high customer value against technical effort. "
+                "When A/B testing, I ensure statistical rigor by calculating Minimum Detectable Effect (MDE) and sample sizes beforehand. "
+                "If qualitative sentiment clashes with short-term positive numbers, I prioritize long-term user trust, as short-term gains at the expense of user experience inevitably lead to churn."
+            ),
+            "key_points": [
+                "Pairing primary conversion metrics with health/guardrail metrics (e.g. retention, CSAT, task success)",
+                "Structured prioritization (RICE scoring balancing reach, impact, confidence, and engineering effort)",
+                "Statistical hygiene in A/B experimentation (pre-determining sample size, power, and significance thresholds)",
+                "Defending long-term user trust over short-term conversion gains"
+            ],
+            "practical_example": (
+                "Introducing an optional step in a checkout flow might slightly reduce instantaneous conversion, but if it decreases return rates "
+                "and boosts 90-day repeat purchases, the overall customer lifetime value increases significantly."
+            )
+        }
+
+    # 5. React 19 / Server Components / Next.js / Hydration / Frontend Performance
+    elif any(k in q_lower for k in ["react", "server component", "rsc", "hydration", "next.js", "cls", "lcp", "inp", "web vitals", "render"]):
+        return {
+            "sample_answer": (
+                "Modern frontend architecture centers on minimizing client JavaScript bundle size and optimizing the critical rendering path. "
+                "With React Server Components (RSC), data-fetching and heavy dependencies remain entirely on the server, streaming HTML chunks to the browser "
+                "inside Suspense boundaries while selective hydration activates client-side interactivity where needed. "
+                "For Core Web Vitals, I optimize LCP through resource prioritization and preloading critical hero content, eliminate CLS by defining explicit dimensions "
+                "and aspect-ratio boxes, and maintain low INP by offloading heavy computations and breaking long tasks into smaller microtasks."
+            ),
+            "key_points": [
+                "Executing data fetching and dependencies on the server via React Server Components (RSC) to reduce bundle payload",
+                "Progressive streaming with Suspense boundaries to lower Time-to-First-Byte (TTFB) and First Contentful Paint (FCP)",
+                "Eliminating Cumulative Layout Shift (CLS) through explicit layout sizing and reserved aspect ratios",
+                "Preserving responsive Interaction to Next Paint (INP) by keeping main thread tasks below 50ms"
+            ],
+            "practical_example": (
+                "Moving markdown rendering and syntax highlighting libraries into a Server Component prevents hundreds of kilobytes "
+                "of parsing logic from reaching the client bundle, directly boosting mobile performance."
+            )
+        }
+
+    # 6. State Management / Caching / Zustand / TanStack Query
+    elif any(k in q_lower for k in ["state management", "zustand", "redux", "tanstack query", "cache", "swr", "optimistic"]):
+        return {
+            "sample_answer": (
+                "I approach state architecture by strictly separating server cache state from client UI state. "
+                "Server state—which is asynchronous, shared, and prone to going stale—is managed with tools like TanStack Query using stale-while-revalidate "
+                "caching, automatic deduplication, and optimistic mutations with rollback handlers. "
+                "Client-only state—such as modal visibility, active filters, or draft inputs—is managed with lightweight stores like Zustand. "
+                "This separation prevents bloat in client state managers, removes manual synchronization boilerplate, and ensures clean component boundaries."
+            ),
+            "key_points": [
+                "Clear bifurcation of server cache state (asynchronous, remote) vs client UI state (synchronous, local)",
+                "Leveraging query deduplication, background revalidation, and cache invalidation policies",
+                "Implementing optimistic UI updates with automated rollback upon network failures",
+                "Using atomic selectors to prevent unnecessary re-rendering across component trees"
+            ],
+            "practical_example": (
+                "When a candidate bookmarks a question, immediately updating the bookmark icon locally while triggering an asynchronous "
+                "API mutation provides instantaneous UI feedback, rolling back with an alert only if the network request fails."
+            )
+        }
+
+    # 7. Distributed Systems / Idempotency / Redis / Locking / Concurrency
+    elif any(k in q_lower for k in ["distributed", "idempotenc", "redis", "lock", "concurrency", "race condition", "circuit breaker", "deadlock"]):
+        return {
+            "sample_answer": (
+                "Ensuring reliability across distributed services requires designing for failure and network latency from day one. "
+                "To prevent duplicate executions on network retries, critical write endpoints require an Idempotency-Key header. "
+                "I store idempotency records in an in-memory store like Redis with a suitable TTL and verify them atomically before processing. "
+                "For shared resource synchronization, I utilize distributed locks with automatic lease expirations to prevent deadlocks, "
+                "backed by database-level atomic upserts (INSERT ... ON CONFLICT). "
+                "Between services, I implement circuit breakers and exponential backoff jitter to protect downstream dependencies during degradations."
+            ),
+            "key_points": [
+                "Enforcing idempotency keys on write operations to guarantee at-most-once execution",
+                "Distributed locking with TTL expiration to prevent resource deadlocks",
+                "Database-level atomicity and optimistic concurrency control (version numbers / conditional writes)",
+                "Fault tolerance with circuit breakers, timeouts, and exponential backoff retry jitter"
+            ],
+            "practical_example": (
+                "Generating a unique client transaction UUID stored in Redis with a 24-hour lease ensures payment or score submission "
+                "requests cannot execute twice, even if the user double-clicks or experiences a spotty mobile connection."
+            )
+        }
+
+    # 8. Databases / PostgreSQL / SQL / Indexing / Query Optimization
+    elif any(k in q_lower for k in ["database", "postgresql", "sql", "index", "query", "acid", "transaction", "sharding", "schema"]):
+        return {
+            "sample_answer": (
+                "Database performance begins with proper indexing and relational modeling. "
+                "When analyzing slow queries, I inspect the execution plan using EXPLAIN ANALYZE to identify sequential table scans and nested loops. "
+                "I design B-tree indexes matching query WHERE and ORDER BY predicates, being mindful of index selectivity and write overhead. "
+                "For transactions, I choose appropriate isolation levels to balance consistency against lock contention. "
+                "To support high throughput, I place a connection pooler like PgBouncer in front of PostgreSQL, keep transactions short, "
+                "and separate read queries to read-replicas when analytical queries threaten OLTP workloads."
+            ),
+            "key_points": [
+                "Query diagnosis via EXPLAIN ANALYZE (identifying table scans, buffer usage, and join bottlenecks)",
+                "Targeted composite indexing respecting column selectivity and left-prefix rules",
+                "Transaction isolation hygiene to prevent dirty reads and serialization anomalies",
+                "Connection pooling (PgBouncer) and read-replica offloading to protect primary databases"
+            ],
+            "practical_example": (
+                "Adding a composite index on (candidate_id, created_at DESC) transforms a full sequential scan of hundreds of thousands "
+                "of historical interview records into an instant index scan with sub-5ms response time."
+            )
+        }
+
+    # 9. LLMs / RAG / GenAI / Vector Databases / Embeddings
+    elif any(k in q_lower for k in ["llm", "rag", "vector", "embedding", "genai", "prompt", "chunking", "hallucination", "retrieval"]):
+        return {
+            "sample_answer": (
+                "Architecting high-accuracy RAG systems requires optimizing every stage of the retrieval and generation pipeline. "
+                "I implement semantic chunking with sliding window overlap rather than arbitrary character splits to preserve topical context. "
+                "For retrieval, I combine dense vector search with sparse BM25 keyword matching via Reciprocal Rank Fusion (RRF), "
+                "followed by a cross-encoder reranker to surface the top-5 most relevant context snippets. "
+                "At generation time, I apply strict system prompt guardrails and few-shot examples, and evaluate system accuracy "
+                "using synthetic benchmarks measuring context precision, faithfulness, and answer relevance."
+            ),
+            "key_points": [
+                "Semantic chunking with token overlap to preserve coherent contextual boundaries",
+                "Hybrid search combining dense embeddings (semantic similarity) and sparse BM25 (keyword recall)",
+                "Cross-encoder reranking to filter out noisy context before prompting the LLM",
+                "Systematic evaluation frameworks measuring hallucination rates, retrieval precision, and latency"
+            ],
+            "practical_example": (
+                "In a resume-to-job matching pipeline, hybrid retrieval ensures exact acronym matches (e.g. 'AWS ECS') are captured via BM25 "
+                "while overarching domain capabilities are matched semantically via vector embeddings."
+            )
+        }
+
+    # 10. Security / Authentication / JWT / RBAC
+    elif any(k in q_lower for k in ["security", "jwt", "oauth", "auth", "rbac", "injection", "token"]):
+        return {
+            "sample_answer": (
+                "Application security demands defense-in-depth across the entire stack. "
+                "For authentication, I utilize short-lived JWT access tokens stored in HttpOnly, Secure, SameSite=Lax cookies to mitigate XSS vulnerabilities, "
+                "paired with server-validated refresh tokens with rotation and revocation mechanisms. "
+                "Authorization relies on centralized Role-Based Access Control (RBAC) enforced strictly at the API route layer rather than client-side checks. "
+                "At the data tier, all queries use parameterized statements to prevent SQL injection, and cryptographic routines utilize audited algorithms like PBKDF2 with high iteration counts."
+            ),
+            "key_points": [
+                "Storing authentication tokens in HttpOnly, Secure, SameSite cookies to mitigate XSS interception",
+                "Strict server-side RBAC validation on every protected route and resource ID",
+                "Parameterized queries and ORM abstractions to prevent SQL injection",
+                "Rate-limiting and automated brute-force protection on authentication entrypoints"
+            ],
+            "practical_example": (
+                "Enforcing tenant ownership checks directly in the database query (e.g. WHERE user_id = current_user.id) "
+                "ensures that manipulating an ID in a URL or payload can never expose another candidate's private data."
+            )
+        }
+
+        # 11. DevOps / CI/CD / Docker / Kubernetes / Cloud / Infrastructure
+    elif any(k in q_lower for k in ["devops", "ci/cd", "docker", "kubernetes", "k8s", "deploy", "terraform", "helm", "aws", "gcp", "azure"]):
+        return {
+            "sample_answer": (
+                "My approach to cloud infrastructure and CI/CD revolves around declarative automation and immutable delivery artifacts. "
+                "I configure automated build pipelines that run linting, security scans, and unit suites on every pull request before packaging container images. "
+                "For zero-downtime production deployments, I utilize progressive delivery techniques like canary or blue-green rollouts governed by automated health checks. "
+                "All infrastructure is codified via Terraform or Kubernetes manifests to guarantee environment parity, drift detection, and rapid disaster recovery."
+            ),
+            "key_points": [
+                "Declarative Infrastructure as Code (IaC) ensuring reproducible, auditable environments",
+                "Automated progressive deployment strategies (canary/blue-green) with zero downtime",
+                "Shift-left automated pipeline validation (SAST, unit testing, image vulnerability scanning)",
+                "Comprehensive cluster observability with health checks, readiness probes, and automated rollbacks"
+            ],
+            "practical_example": (
+                "Using Kubernetes readiness probes alongside automated metric thresholds in a canary deployment ensures "
+                "traffic is immediately diverted away from newly rolled-out pods if response latency or error rates spike."
+            )
+        }
+
+    # 12. API Design / Microservices / REST / GraphQL / gRPC
+    elif any(k in q_lower for k in ["api", "rest", "graphql", "grpc", "microservice", "endpoint", "contract"]):
+        return {
+            "sample_answer": (
+                "Designing production APIs requires a contract-first approach with clear domain boundaries. "
+                "I define schemas using OpenAPI specifications before writing endpoint logic, ensuring client teams have predictable contracts. "
+                "For high-volume list endpoints, I implement cursor-based pagination to maintain sub-second performance without pagination drift. "
+                "I enforce standard HTTP semantics, strict payload validation with Pydantic, and centralized error handling with descriptive machine-readable error codes. "
+                "For low-latency inter-service communication, I adopt gRPC with binary serialization to reduce payload overhead."
+            ),
+            "key_points": [
+                "Contract-first schema design with strict payload validation and versioning strategies",
+                "Cursor-based pagination to prevent query degradation on large relational datasets",
+                "Consistent, machine-readable HTTP status codes and structured error responses",
+                "Choosing appropriate communication protocols (REST for external consumers, gRPC for internal mesh)"
+            ],
+            "practical_example": (
+                "Replacing offset/limit queries with cursor-based pagination (WHERE id > last_seen_id) avoids duplicate items "
+                "when new records are inserted while a user scrolls an infinite feed."
+            )
+        }
+
+    # 13. Testing / QA / Test Automation / E2E / TDD
+    elif any(k in q_lower for k in ["test", "tdd", "cypress", "playwright", "mock", "stub", "qa", "coverage"]):
+        return {
+            "sample_answer": (
+                "A resilient quality strategy adheres to the Testing Pyramid, prioritizing fast, deterministic unit tests for core business logic. "
+                "At the boundary layer, integration tests verify database queries and external service contracts against ephemeral test containers. "
+                "I reserve end-to-end tests (via Playwright or Cypress) for critical revenue-generating candidate journeys to guard against UI regressions. "
+                "I treat test code with the same rigor as production code, isolating tests to run concurrently without shared mutable state."
+            ),
+            "key_points": [
+                "Balanced Testing Pyramid (high-coverage unit tests, targeted integration, lean E2E)",
+                "Hermetic, reproducible test environments utilizing ephemeral containerized dependencies",
+                "Contract testing and boundary mocking to decouple third-party API availability from test runs",
+                "Enforcing code coverage and automated regression gates in CI before merge"
+            ],
+            "practical_example": (
+                "Running database tests against an in-memory SQLite instance or containerized Postgres ensures tests execute in milliseconds "
+                "while providing genuine transactional verification."
+            )
+        }
+
+    # 14. Data Engineering / Streaming / Kafka / Pipelines / ETL
+    elif any(k in q_lower for k in ["data", "kafka", "pipeline", "etl", "spark", "streaming", "batch", "warehouse"]):
+        return {
+            "sample_answer": (
+                "Robust data engineering requires treating data pipelines as distributed, fault-tolerant state machines. "
+                "I design event streaming architectures using Kafka with partitioned topics to achieve linear horizontal throughput. "
+                "Consumers are designed to be strictly idempotent, storing offsets alongside transactional writes to guarantee effectively once processing. "
+                "For unparseable or poisoned messages, I route errors to Dead Letter Queues (DLQ) with alert thresholds rather than stalling consumers. "
+                "Data schemas are strictly governed via Schema Registries to prevent downstream pipeline breakage."
+            ),
+            "key_points": [
+                "Topic partitioning and consumer group management for horizontal data scaling",
+                "Idempotent consumer processing ensuring safe retries under at-least-once message delivery",
+                "Dead Letter Queue (DLQ) isolation preventing poison-pill messages from crashing pipelines",
+                "Strict schema enforcement (Avro/Protobuf) protecting analytical consumers from silent drift"
+            ],
+            "practical_example": (
+                "Recording transaction IDs in an atomic deduplication store before applying mutations guarantees event replays "
+                "do not double-increment candidate scores or duplicate analytics records."
+            )
+        }
+
+    # 15. Default / General Engineering Architecture
+    else:
+        return {
+            "sample_answer": (
+                f"When addressing this in a production {role_name} setting, I begin by clarifying the core functional requirements and service-level objectives (SLOs). "
+                "I break the problem into modular components with clean interface boundaries to ensure maintainability and testability. "
+                "I evaluate technical trade-offs—such as latency vs consistency, or development velocity vs long-term scalability—choosing patterns that fit the organization's scale. "
+                "During implementation, I establish comprehensive test coverage and telemetry to monitor system health and catch regressions early."
+            ),
+            "key_points": [
+                "Clear requirement decomposition and establishing measurable SLOs (latency, throughput, reliability)",
+                "Evaluating explicit trade-offs and selecting appropriate industry-standard design patterns",
+                "Designing decoupled, modular components with clear interface contracts",
+                "Comprehensive automated test coverage and operational observability"
+            ],
+            "practical_example": (
+                "Designing systems with clear interfaces and automated integration tests allows teams to refactor internal data stores "
+                "or business logic without risking breaking changes across external consumer services."
+            )
+        }
+
+
+def generate_sample_answer(
+    question: str,
+    role: str = "",
+    skills: Optional[List[str]] = None,
+    difficulty: str = "Intermediate"
+) -> dict:
+    """
+    Generates a structured sample answer with key points and a practical example.
+    Uses configured AI provider (Gemini / Groq) if available; falls back seamlessly to
+    the domain-aware contextual generator if AI is unavailable or fails.
+    """
+    clean_q = (question or "").strip()
+    if not clean_q:
+        return {
+            "sample_answer": "Please provide a valid question to view the sample answer.",
+            "key_points": [],
+            "practical_example": None
+        }
+
+    provider_name, is_configured = get_ai_provider_status()
+    if is_configured:
+        try:
+            from .prompts import sample_answer_prompt
+            prompt = sample_answer_prompt(clean_q, role, skills, difficulty)
+            raw = generate_ai_questions(prompt, temperature=0.4)
+            # Clean markdown code fences if present
+            cleaned_raw = raw.strip()
+            if cleaned_raw.startswith("```"):
+                cleaned_raw = re.sub(r"^```[a-zA-Z]*\n?", "", cleaned_raw)
+                cleaned_raw = re.sub(r"\n?```$", "", cleaned_raw)
+            data = json.loads(cleaned_raw)
+            if isinstance(data, dict) and "sample_answer" in data:
+                return {
+                    "sample_answer": str(data.get("sample_answer", "")).strip(),
+                    "key_points": [str(p).strip() for p in data.get("key_points", []) if str(p).strip()],
+                    "practical_example": str(data.get("practical_example", "")).strip() or None
+                }
+        except Exception as exc:
+            logger.warning("AI provider sample answer generation failed (%s); using contextual engine", exc)
+
+    return build_contextual_sample_answer(clean_q, role, skills, difficulty)
