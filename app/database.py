@@ -202,6 +202,7 @@ def init_db():
     _run_migration_mistakes_indexes(dialect)
     _run_migration_user_accounts(dialect)
     _run_migration_resume_scans(dialect)
+    _run_migration_candidate_answer_attempts(dialect)
 
     # Step 3c: Bootstrap accounts
     logger.info("Bootstrapping administrative and candidate accounts")
@@ -499,3 +500,48 @@ def get_db():
             db.close()
         except Exception:
             pass
+
+def _run_migration_candidate_answer_attempts(dialect: str):
+    """Migration: candidate_answer_attempts table and indexes."""
+    try:
+        if dialect == "sqlite":
+            _safe_execute_ddl("""
+            CREATE TABLE IF NOT EXISTS candidate_answer_attempts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL REFERENCES user_accounts(id) ON DELETE CASCADE,
+                interview_id INTEGER NOT NULL REFERENCES interview_history(id) ON DELETE CASCADE,
+                question_index INTEGER NOT NULL,
+                question_text TEXT NOT NULL,
+                candidate_answer TEXT NOT NULL,
+                evaluation_feedback TEXT NOT NULL,
+                overall_score INTEGER,
+                created_at DATETIME,
+                updated_at DATETIME
+            )
+            """)
+            _safe_execute_ddl("CREATE INDEX IF NOT EXISTS idx_attempt_user ON candidate_answer_attempts(user_id)")
+            _safe_execute_ddl("CREATE INDEX IF NOT EXISTS idx_attempt_interview ON candidate_answer_attempts(interview_id)")
+            _safe_execute_ddl("CREATE INDEX IF NOT EXISTS idx_attempt_user_interview ON candidate_answer_attempts(user_id, interview_id)")
+            _safe_execute_ddl("CREATE INDEX IF NOT EXISTS idx_attempt_q ON candidate_answer_attempts(interview_id, question_index)")
+        else:
+            # PostgreSQL
+            _safe_execute_ddl("""
+            CREATE TABLE IF NOT EXISTS "candidate_answer_attempts" (
+                "id" SERIAL PRIMARY KEY,
+                "user_id" INTEGER NOT NULL REFERENCES "user_accounts"("id") ON DELETE CASCADE,
+                "interview_id" INTEGER NOT NULL REFERENCES "interview_history"("id") ON DELETE CASCADE,
+                "question_index" INTEGER NOT NULL,
+                "question_text" TEXT NOT NULL,
+                "candidate_answer" TEXT NOT NULL,
+                "evaluation_feedback" TEXT NOT NULL,
+                "overall_score" INTEGER,
+                "created_at" TIMESTAMP DEFAULT NOW(),
+                "updated_at" TIMESTAMP DEFAULT NOW()
+            )
+            """)
+            _safe_execute_ddl('CREATE INDEX IF NOT EXISTS idx_attempt_user ON candidate_answer_attempts(user_id)')
+            _safe_execute_ddl('CREATE INDEX IF NOT EXISTS idx_attempt_interview ON candidate_answer_attempts(interview_id)')
+            _safe_execute_ddl('CREATE INDEX IF NOT EXISTS idx_attempt_user_interview ON candidate_answer_attempts(user_id, interview_id)')
+            _safe_execute_ddl('CREATE INDEX IF NOT EXISTS idx_attempt_q ON candidate_answer_attempts(interview_id, question_index)')
+    except Exception as e:
+        logger.warning(f"[DB Migration] candidate_answer_attempts migration notice: {e}")

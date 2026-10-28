@@ -275,3 +275,17 @@ class CoachMessage(Base):
         default=datetime.now(timezone.utc),
         nullable=False,
     )
+
+class CandidateAnswerAttempt(Base):
+    __tablename__ = "candidate_answer_attempts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("user_accounts.id", ondelete="CASCADE"), nullable=False, index=True)
+    interview_id = Column(Integer, ForeignKey("interview_history.id", ondelete="CASCADE"), nullable=False, index=True)
+    question_index = Column(Integer, nullable=False, index=True)
+    question_text = Column(Text, nullable=False)
+    candidate_answer = Column(Text, nullable=False)
+    evaluation_feedback = Column(Text, nullable=False)
+    overall_score = Column(Integer, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)

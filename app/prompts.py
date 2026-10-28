@@ -286,3 +286,82 @@ Return ONLY valid JSON matching this schema:
 }}
 Do NOT output markdown fences or any text outside the JSON object.
 """
+
+def candidate_answer_evaluation_prompt(
+    question: str,
+    answer: str,
+    role: str = "Software Engineer",
+    skills: Optional[list] = None,
+    difficulty: str = "Intermediate",
+    sample_answer: Optional[str] = None,
+    key_points: Optional[list] = None
+) -> str:
+    """
+    Build prompt to evaluate a candidate's actual interview answer with structured feedback,
+    scoring out of 20 (4 dimensions x 5 points), strengths, improvements, missing key points,
+    a suggested model answer for learning, and actionable next steps.
+    """
+    skills_text = ", ".join(skills) if skills else "general software engineering"
+    diff_norm = normalize_difficulty(difficulty)
+    ref_section = ""
+    if sample_answer:
+        ref_section += f"\nREFERENCE SAMPLE ANSWER (Use only for evaluation context, do NOT require an exact match):\n\"\"\"{sample_answer}\"\"\"\n"
+    if key_points:
+        points_str = "\n".join([f"- {p}" for p in key_points])
+        ref_section += f"\nKEY EVALUATION CONCEPTS TO LOOK FOR:\n{points_str}\n"
+
+    return f"""You are a Principal Technical Interviewer and Expert Interview Coach.
+Evaluate the candidate's actual answer to the technical interview question below.
+
+ROLE: {role or "Software Engineer"}
+TARGET SKILLS: {skills_text}
+DIFFICULTY LEVEL: {diff_norm}
+
+INTERVIEW QUESTION:
+\"\"\"{question}\"\"\"
+
+CANDIDATE'S SUBMITTED ANSWER:
+\"\"\"{answer}\"\"\"
+{ref_section}
+EVALUATION RUBRIC & INSTRUCTIONS:
+1. Reward technically correct alternative approaches, creative trade-offs, and sound first-principles reasoning. Do NOT penalize the candidate for wording choices if the underlying technical concept is sound.
+2. If this is a behavioral question, assess alignment with the STAR framework (Situation, Task, Action, Result).
+3. Score each of the 4 dimensions on a strict 1-5 integer scale:
+   - "relevance_score" (1-5): Did the candidate directly answer the core question asked?
+   - "technical_accuracy_score" (1-5): Are the stated technical concepts, mechanisms, APIs, and systems correct?
+   - "depth_score" (1-5): Did the answer explore system trade-offs, edge cases, scalability, or failure modes?
+   - "communication_score" (1-5): Is the delivery structured, clear, and concise without rambling?
+4. "overall_score": Must equal the sum of the 4 dimension scores (1 to 20 total integer).
+5. "strengths": 2 to 4 specific positive observations about what the candidate did well.
+6. "improvements": 2 to 4 concrete constructive suggestions highlighting missing concepts or weak explanations.
+7. "missing_key_points": 1 to 3 important technical concepts, considerations, or metrics that were omitted.
+8. "suggested_answer": A concise, exemplary response (3-5 sentences) written in professional spoken English illustrating how to answer at a top-tier bar. Do NOT invent personal past work achievements on behalf of the candidate; use first-principles explanation.
+9. "next_practice_steps": 2 to 3 actionable exercises, topics to study, or follow-up drills.
+
+Return ONLY a valid JSON object matching this schema:
+{{
+  "overall_score": <integer 1-20>,
+  "relevance_score": <integer 1-5>,
+  "technical_accuracy_score": <integer 1-5>,
+  "depth_score": <integer 1-5>,
+  "communication_score": <integer 1-5>,
+  "strengths": [
+    "<Concrete strength 1>",
+    "<Concrete strength 2>"
+  ],
+  "improvements": [
+    "<Constructive improvement 1>",
+    "<Constructive improvement 2>"
+  ],
+  "missing_key_points": [
+    "<Missing technical concept or trade-off 1>",
+    "<Missing technical concept or trade-off 2>"
+  ],
+  "suggested_answer": "<Concise exemplary model answer in professional spoken English>",
+  "next_practice_steps": [
+    "<Actionable recommendation 1>",
+    "<Actionable recommendation 2>"
+  ]
+}}
+Do NOT output markdown code fences or any text outside the JSON object.
+"""

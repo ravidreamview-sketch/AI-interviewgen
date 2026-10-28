@@ -962,3 +962,240 @@ def generate_sample_answer(
             logger.warning("AI provider sample answer generation failed (%s); using contextual engine", exc)
 
     return build_contextual_sample_answer(clean_q, role, skills, difficulty)
+
+
+def build_contextual_evaluation_fallback(
+    question: str,
+    answer: str = "",
+    role: str = "Software Engineer",
+    skills: Optional[List[str]] = None,
+    difficulty: str = "Intermediate",
+    sample_answer: Optional[str] = None,
+    key_points: Optional[List[str]] = None,
+    candidate_answer: Optional[str] = None,
+    **kwargs
+) -> dict:
+    clean_ans = (candidate_answer if candidate_answer is not None else answer or "").strip()
+    """
+    Deterministic fallback evaluation engine that scores candidate answers
+    using rubrics, keyword relevance, structural analysis, and depth criteria.
+    """
+    clean_ans = (answer or "").strip()
+    words = clean_ans.split()
+    word_count = len(words)
+    ans_lower = clean_ans.lower()
+    q_lower = (question or "").lower()
+
+    # 1. Relevance Score (1-5)
+    stopwords = {"what", "how", "why", "when", "where", "which", "is", "are", "the", "and", "you", "your", "for", "with", "that", "this", "from"}
+    q_words = [w.strip('?,.:;"()[]') for w in q_lower.split() if len(w) > 3 and w not in stopwords]
+    q_matches = sum(1 for w in q_words if w in ans_lower)
+    skills_list = skills or []
+    skills_matches = sum(1 for s in skills_list if s.lower() in ans_lower)
+
+    if word_count < 10:
+        relevance_score = 2
+    elif q_matches >= 2 or skills_matches >= 1:
+        relevance_score = 5 if word_count >= 30 else 4
+    elif q_matches == 1:
+        relevance_score = 3
+    else:
+        relevance_score = 3
+
+    # 2. Technical Accuracy Score (1-5)
+    tech_terms = ["api", "data", "system", "component", "state", "server", "client", "service", "cache",
+                  "database", "index", "query", "async", "sync", "test", "security", "token", "auth",
+                  "scale", "performance", "model", "schema", "architecture", "interface", "protocol"]
+    tech_matches = sum(1 for t in tech_terms if t in ans_lower)
+    if word_count < 15:
+        accuracy_score = 2
+    elif tech_matches >= 4 or skills_matches >= 2:
+        accuracy_score = 5 if word_count >= 40 else 4
+    elif tech_matches >= 2:
+        accuracy_score = 4
+    else:
+        accuracy_score = 3
+
+    # 3. Depth & Trade-offs Score (1-5)
+    depth_terms = ["trade-off", "tradeoff", "because", "latency", "scale", "performance", "metric",
+                   "failure", "edge case", "versus", "vs", "monitoring", "cost", "complexity",
+                   "consistency", "fallback", "resilience", "redundancy", "sla", "slo"]
+    depth_matches = sum(1 for d in depth_terms if d in ans_lower)
+    if word_count < 25:
+        depth_score = 2
+    elif depth_matches >= 3 and word_count >= 50:
+        depth_score = 5
+    elif depth_matches >= 1 and word_count >= 35:
+        depth_score = 4
+    elif depth_matches >= 1 or word_count >= 30:
+        depth_score = 3
+    else:
+        depth_score = 2
+
+    # 4. Communication Clarity Score (1-5)
+    sentences = [s.strip() for s in re.split(r'[.!?]+', clean_ans) if s.strip()]
+    if word_count < 15:
+        comm_score = 2
+    elif len(sentences) >= 3 and 25 <= word_count <= 250:
+        comm_score = 5
+    elif len(sentences) >= 2 and word_count >= 20:
+        comm_score = 4
+    else:
+        comm_score = 3
+
+    # Overall Score (sum of 4 dimensions: 1-20)
+    overall_score = relevance_score + accuracy_score + depth_score + comm_score
+
+    # Concrete Strengths
+    strengths = []
+    if q_matches > 0 or relevance_score >= 4:
+        strengths.append(f"Directly addresses the core scenario presented in the interview question.")
+    if accuracy_score >= 4:
+        strengths.append(f"Demonstrates sound technical accuracy appropriate for a {role or 'Software Engineer'}.")
+    if depth_score >= 3:
+        strengths.append("Shows awareness of engineering implementation details and operational mechanics.")
+    if comm_score >= 4:
+        strengths.append("Communicates with clear sentence structure and natural, professional spoken tone.")
+    if not strengths:
+        strengths.append("Provides a foundational starting response that identifies relevant high-level concepts.")
+
+    # Concrete Constructive Improvements
+    improvements = []
+    if depth_score <= 3:
+        improvements.append("Elaborate further on architectural trade-offs (e.g. latency vs consistency, complexity vs maintenance).")
+    if accuracy_score <= 3:
+        improvements.append(f"Incorporate specific technical tools or mechanisms relevant to {', '.join(skills_list[:2]) if skills_list else role}.")
+    if word_count < 40:
+        improvements.append("Expand on concrete implementation steps or operational monitoring guardrails to show complete end-to-end ownership.")
+    if comm_score <= 3:
+        improvements.append("Structure the delivery into distinct logical points (e.g. approach, execution details, and validation).")
+    if not improvements:
+        improvements.append("Consider citing specific production metrics (e.g. p99 latency targets or error budget impact) to elevate to Staff bar.")
+
+    # Missing Key Points
+    missing_key_points = []
+    if key_points and isinstance(key_points, list):
+        for kp in key_points:
+            # Check if concept is in answer
+            kp_words = [w.lower() for w in kp.split() if len(w) > 4 and w.lower() not in stopwords]
+            if not any(w in ans_lower for w in kp_words):
+                missing_key_points.append(kp)
+            if len(missing_key_points) >= 3:
+                break
+    if not missing_key_points:
+        missing_key_points = [
+            "Explicit quantitative evaluation metrics and operational guardrails (e.g. SLOs, telemetry)",
+            "Failure mode analysis and graceful degradation strategies under unexpected load"
+        ]
+
+    # Model Answer for Learning
+    suggested = sample_answer
+    if not suggested or len(suggested) < 30:
+        ref_pack = build_contextual_sample_answer(question, role, skills, difficulty)
+        suggested = ref_pack.get("sample_answer") or (
+            f"When resolving this as a {role}, I first establish the operational requirements and interface contracts. "
+            "I implement the solution using industry-standard patterns with robust error handling and automated validation. "
+            "Finally, I verify system performance and telemetry to ensure end-to-end reliability in production."
+        )
+
+    # Next Practice Steps
+    next_practice_steps = [
+        f"Re-evaluate this answer by explicitly outlining 2 key technical trade-offs before proposing the final solution.",
+        "Practice delivering the response out loud within a 90-second window to build concise spoken fluency."
+    ]
+
+    return {
+        "overall_score": overall_score,
+        "relevance_score": relevance_score,
+        "technical_accuracy_score": accuracy_score,
+        "depth_score": depth_score,
+        "communication_score": comm_score,
+        "score_breakdown": {
+            "relevance": relevance_score,
+            "technical_accuracy": accuracy_score,
+            "depth": depth_score,
+            "communication": comm_score
+        },
+        "strengths": strengths[:3],
+        "improvements": improvements[:3],
+        "missing_key_points": missing_key_points[:3],
+        "suggested_answer": suggested,
+        "next_practice_steps": next_practice_steps
+    }
+
+
+def evaluate_candidate_practice_answer(
+    question: str,
+    answer: str,
+    role: str = "Software Engineer",
+    skills: Optional[List[str]] = None,
+    difficulty: str = "Intermediate",
+    sample_answer: Optional[str] = None,
+    key_points: Optional[List[str]] = None,
+) -> dict:
+    """
+    Evaluates a candidate's submitted practice answer.
+    Uses AI provider (Gemini / LLM) when configured, and falls back seamlessly
+    to the contextual evaluation engine on failure or missing keys.
+    """
+    clean_ans = (answer or "").strip()
+    clean_q = (question or "").strip()
+
+    provider_name, is_configured = get_ai_provider_status()
+    if is_configured:
+        try:
+            from .prompts import candidate_answer_evaluation_prompt
+            prompt = candidate_answer_evaluation_prompt(
+                question=clean_q,
+                answer=clean_ans,
+                role=role,
+                skills=skills,
+                difficulty=difficulty,
+                sample_answer=sample_answer,
+                key_points=key_points
+            )
+            raw = generate_ai_questions(prompt, temperature=0.3)
+            cleaned_raw = raw.strip()
+            if cleaned_raw.startswith("```"):
+                cleaned_raw = re.sub(r"^```[a-zA-Z]*\n?", "", cleaned_raw)
+                cleaned_raw = re.sub(r"\n?```$", "", cleaned_raw)
+
+            data = json.loads(cleaned_raw)
+            if isinstance(data, dict) and "overall_score" in data:
+                # Sanitize and bound scores
+                rel = max(1, min(5, int(data.get("relevance_score", 3))))
+                acc = max(1, min(5, int(data.get("technical_accuracy_score", 3))))
+                dep = max(1, min(5, int(data.get("depth_score", 3))))
+                com = max(1, min(5, int(data.get("communication_score", 3))))
+                tot = rel + acc + dep + com
+
+                return {
+                    "overall_score": tot,
+                    "relevance_score": rel,
+                    "technical_accuracy_score": acc,
+                    "depth_score": dep,
+                    "communication_score": com,
+                    "score_breakdown": {
+                        "relevance": rel,
+                        "technical_accuracy": acc,
+                        "depth": dep,
+                        "communication": com
+                    },
+                    "strengths": [str(s).strip() for s in data.get("strengths", []) if str(s).strip()],
+                    "improvements": [str(i).strip() for i in data.get("improvements", []) if str(i).strip()],
+                    "missing_key_points": [str(k).strip() for k in data.get("missing_key_points", []) if str(k).strip()],
+                    "suggested_answer": str(data.get("suggested_answer", "")).strip() or sample_answer or "",
+                    "next_practice_steps": [str(n).strip() for n in data.get("next_practice_steps", []) if str(n).strip()]
+                }
+        except Exception as exc:
+            logger.warning("AI answer evaluation failed (%s); using contextual rubric engine", exc)
+
+    return build_contextual_evaluation_fallback(
+        question=clean_q,
+        answer=clean_ans,
+        role=role,
+        skills=skills,
+        difficulty=difficulty,
+        sample_answer=sample_answer,
+        key_points=key_points
+    )

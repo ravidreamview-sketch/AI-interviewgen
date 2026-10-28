@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple, Union, Set
-from fastapi import FastAPI, Depends, HTTPException, Request, UploadFile, File
+from fastapi import FastAPI, Depends, HTTPException, Request, UploadFile, File, status
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
@@ -54,6 +54,9 @@ from app.models import (
     CoachChatRequest,
     SampleAnswerRequest,
     SampleAnswerResponse,
+    EvaluateCandidateAnswerRequest,
+    EvaluateCandidateAnswerResponse,
+    CandidateSavedEvaluationsResponse,
 )
 from app.interview_engine import (
     start_interview_session,
@@ -71,6 +74,7 @@ from app.services import (
     parse_raw_questions,
     get_fallback_questions,
     generate_sample_answer,
+    evaluate_candidate_practice_answer,
 )
 from app.coach_service import build_candidate_context, generate_coach_reply
 from app.adaptive_service import (
@@ -261,7 +265,7 @@ def direct_admin_login(
 
 from app.admin_routes import candidate_logout, get_public_menus, is_candidate_menu_enabled, update_menu
 from app.auth_deps import get_current_user
-from app.db_models import UserAccount
+from app.db_models import UserAccount, CandidateAnswerAttempt
 
 @app.post("/api/candidate/logout", include_in_schema=False)
 @app.post("/candidate/logout", include_in_schema=False)
@@ -534,6 +538,191 @@ def get_sample_answer_endpoint(
             status_code=500,
             detail=f"Failed to generate sample answer: {str(e)}"
         )
+
+
+
+
+@app.post("/api/evaluate-answer", response_model=EvaluateCandidateAnswerResponse)
+@app.post("/api/candidate/evaluate-answer", response_model=EvaluateCandidateAnswerResponse)
+def evaluate_candidate_answer_endpoint(
+    payload: EvaluateCandidateAnswerRequest,
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Evaluates candidate's written practice answer for a specific interview question.
+    Scores 0-20 across relevance, technical accuracy, depth, and communication,
+    and returns constructive strengths, improvements, missing key points, and suggested answer.
+    Enforces candidate paper ownership, length validation, and saves the attempt.
+    """
+    _require_candidate_account(current_user)
+
+    # 1. Validate paper existence and ownership if interview_id is provided
+    interview = None
+    if payload.interview_id is not None:
+        interview = db.query(InterviewHistory).filter(InterviewHistory.id == payload.interview_id).first()
+        if not interview:
+            raise HTTPException(status_code=404, detail="Interview question paper not found.")
+
+        # Enforce candidate ownership (cross-user access protection)
+        if interview.user_id is not None and interview.user_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Forbidden: You do not have permission to evaluate questions from another candidate's paper."
+            )
+
+    # 2. Input validation: empty or excessively long answers
+    raw_answer = payload.answer or payload.candidate_answer or ""
+    clean_ans = raw_answer.strip()
+    if len(clean_ans) < 15 or len(clean_ans.split()) < 3:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Answer is too short to evaluate. Please provide a substantive response (at least 15 characters and 3 words)."
+        )
+    if len(clean_ans) > 10000:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Answer exceeds maximum allowed length of 10,000 characters."
+        )
+
+    # 3. Resolve context material from paper or payload
+    role = (interview.role if interview else None) or payload.role or "Software Engineer"
+    if interview and interview.skills:
+        skills = [s.strip() for s in interview.skills.split(",")]
+    else:
+        skills = payload.skills or []
+    difficulty = (interview.difficulty if interview else None) or payload.difficulty or "Intermediate"
+
+    sample_ans = payload.reference_sample_answer
+    key_pts = None
+    if interview and interview.questions_payload:
+        try:
+            payload_list = json.loads(interview.questions_payload)
+            q_idx = payload.question_index or 0
+            if isinstance(payload_list, list) and 0 <= q_idx < len(payload_list):
+                q_meta = payload_list[q_idx]
+                if isinstance(q_meta, dict):
+                    if not sample_ans:
+                        sample_ans = q_meta.get("sample_answer")
+                    key_pts = q_meta.get("key_points")
+        except Exception:
+            pass
+
+    # 4. Evaluate answer via evaluation service
+    eval_dict = evaluate_candidate_practice_answer(
+        question=payload.question,
+        answer=clean_ans,
+        role=role,
+        skills=skills,
+        difficulty=difficulty,
+        sample_answer=sample_ans,
+        key_points=key_pts
+    )
+
+    # 5. Persist attempt if tied to an interview paper
+    attempt = None
+    if payload.interview_id is not None:
+        attempt = CandidateAnswerAttempt(
+            user_id=current_user.id,
+            interview_id=payload.interview_id,
+            question_index=payload.question_index or 0,
+            question_text=payload.question,
+            candidate_answer=clean_ans,
+            evaluation_feedback=json.dumps(eval_dict),
+            overall_score=eval_dict.get("overall_score"),
+        )
+        db.add(attempt)
+        db.commit()
+        db.refresh(attempt)
+
+    breakdown = eval_dict.get("score_breakdown") or {
+        "relevance": eval_dict.get("relevance_score", 0),
+        "technical_accuracy": eval_dict.get("technical_accuracy_score", 0),
+        "depth": eval_dict.get("depth_score", 0),
+        "communication": eval_dict.get("communication_score", 0),
+    }
+
+    return EvaluateCandidateAnswerResponse(
+        attempt_id=attempt.id if attempt else None,
+        interview_id=payload.interview_id,
+        question_index=payload.question_index or 0,
+        question=payload.question,
+        candidate_answer=clean_ans,
+        overall_score=eval_dict["overall_score"],
+        relevance_score=eval_dict["relevance_score"],
+        technical_accuracy_score=eval_dict["technical_accuracy_score"],
+        depth_score=eval_dict["depth_score"],
+        communication_score=eval_dict["communication_score"],
+        score_breakdown=breakdown,
+        strengths=eval_dict.get("strengths") or [],
+        improvements=eval_dict.get("improvements") or [],
+        missing_key_points=eval_dict.get("missing_key_points") or [],
+        suggested_answer=eval_dict.get("suggested_answer") or "",
+        next_practice_steps=eval_dict.get("next_practice_steps") or [],
+        created_at=attempt.created_at.isoformat() if attempt and getattr(attempt, "created_at", None) else None
+    )
+
+
+@app.get("/api/history/{interview_id}/evaluations", response_model=CandidateSavedEvaluationsResponse)
+def get_interview_saved_evaluations(
+    interview_id: int,
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Retrieves the latest saved evaluations for each question in a paper for the authenticated candidate.
+    Enforces candidate ownership and returns a mapping of question_index to latest evaluation.
+    """
+    _require_candidate_account(current_user)
+
+    interview = db.query(InterviewHistory).filter(InterviewHistory.id == interview_id).first()
+    if not interview:
+        raise HTTPException(status_code=404, detail="Interview question paper not found.")
+
+    if interview.user_id is not None and interview.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: You do not have permission to view evaluations from another candidate's paper."
+        )
+
+    attempts = db.query(CandidateAnswerAttempt).filter(
+        CandidateAnswerAttempt.user_id == current_user.id,
+        CandidateAnswerAttempt.interview_id == interview_id
+    ).order_by(CandidateAnswerAttempt.id.asc()).all()
+
+    eval_map = {}
+    for att in attempts:
+        try:
+            feedback = json.loads(att.evaluation_feedback)
+            breakdown = feedback.get("score_breakdown") or {
+                "relevance": feedback.get("relevance_score", 0),
+                "technical_accuracy": feedback.get("technical_accuracy_score", 0),
+                "depth": feedback.get("depth_score", 0),
+                "communication": feedback.get("communication_score", 0)
+            }
+            eval_map[str(att.question_index)] = EvaluateCandidateAnswerResponse(
+                attempt_id=att.id,
+                interview_id=att.interview_id,
+                question_index=att.question_index,
+                question=att.question_text,
+                candidate_answer=att.candidate_answer,
+                overall_score=feedback.get("overall_score", 0),
+                relevance_score=feedback.get("relevance_score", 0),
+                technical_accuracy_score=feedback.get("technical_accuracy_score", 0),
+                depth_score=feedback.get("depth_score", 0),
+                communication_score=feedback.get("communication_score", 0),
+                score_breakdown=breakdown,
+                strengths=feedback.get("strengths") or [],
+                improvements=feedback.get("improvements") or [],
+                missing_key_points=feedback.get("missing_key_points") or [],
+                suggested_answer=feedback.get("suggested_answer") or "",
+                next_practice_steps=feedback.get("next_practice_steps") or [],
+                created_at=att.created_at.isoformat() if getattr(att, "created_at", None) else None
+            )
+        except Exception as parse_err:
+            logger.warning(f"Error parsing saved evaluation attempt {att.id}: {parse_err}")
+
+    return CandidateSavedEvaluationsResponse(interview_id=interview_id, evaluations=eval_map)
 
 
 @app.get("/history")

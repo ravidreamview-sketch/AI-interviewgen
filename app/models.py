@@ -1,6 +1,6 @@
 from __future__ import annotations
 from enum import Enum
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from typing import List, Optional, Dict, Any
 from datetime import timezone
 
@@ -92,6 +92,56 @@ class SampleAnswerResponse(BaseModel):
     sample_answer: str
     key_points: List[str] = Field(default_factory=list)
     practical_example: Optional[str] = None
+
+
+class EvaluateCandidateAnswerRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    interview_id: Optional[int] = Field(None, description="ID of the interview question paper")
+    question_index: Optional[int] = Field(0, ge=0, description="0-based index of the question")
+    question: str = Field(..., min_length=3, max_length=2000, description="Question text")
+    answer: Optional[str] = Field(None, max_length=15000, description="Candidate submitted answer response")
+    candidate_answer: Optional[str] = Field(None, max_length=15000, description="Alias for answer")
+    role: Optional[str] = None
+    skills: Optional[List[str]] = None
+    difficulty: Optional[str] = None
+    reference_sample_answer: Optional[str] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def resolve_answer(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if not data.get("answer") and data.get("candidate_answer"):
+                data["answer"] = data["candidate_answer"]
+        return data
+
+
+class EvaluateCandidateAnswerResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    attempt_id: Optional[int] = None
+    interview_id: Optional[int] = None
+    question_index: int = 0
+    question: str
+    overall_score: int = Field(..., ge=0, le=20, description="Rubric-based score out of 20")
+    relevance_score: int = Field(..., ge=0, le=5, description="Relevance score out of 5")
+    technical_accuracy_score: int = Field(..., ge=0, le=5, description="Technical accuracy score out of 5")
+    depth_score: int = Field(..., ge=0, le=5, description="Depth and trade-off score out of 5")
+    communication_score: int = Field(..., ge=0, le=5, description="Communication clarity score out of 5")
+    score_breakdown: Dict[str, int] = Field(default_factory=dict, description="Summary dictionary of dimension scores")
+    strengths: List[str] = Field(default_factory=list, description="Specific positive observations")
+    improvements: List[str] = Field(default_factory=list, description="Specific weaknesses or missing concepts")
+    missing_key_points: List[str] = Field(default_factory=list, description="Important missing concepts")
+    suggested_answer: str = Field(..., description="Concise improved example response")
+    next_practice_steps: List[str] = Field(default_factory=list, description="Actionable recommendations")
+    candidate_answer: Optional[str] = None
+    created_at: Optional[str] = None
+
+
+class CandidateSavedEvaluationsResponse(BaseModel):
+    interview_id: int
+    evaluations: Dict[str, EvaluateCandidateAnswerResponse] = Field(default_factory=dict)
+
 
 
 
