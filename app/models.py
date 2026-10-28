@@ -81,17 +81,27 @@ class CoachChatRequest(BaseModel):
 
 
 class SampleAnswerRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
     question: str = Field(..., min_length=3, description="Interview question text")
     role: Optional[str] = Field("Software Engineer", description="Target job role")
     skills: Optional[List[str]] = Field(default_factory=list, description="Target technical skills")
     difficulty: Optional[str] = Field("Intermediate", description="Beginner | Intermediate | Advanced")
+    interview_id: Optional[int] = Field(None, description="Optional interview history ID to persist generated answer")
+    question_index: Optional[int] = Field(None, ge=0, description="Optional 0-based question index in paper")
 
 
 class SampleAnswerResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
     question: str
     sample_answer: str
     key_points: List[str] = Field(default_factory=list)
     practical_example: Optional[str] = None
+    interview_id: Optional[int] = None
+    question_index: Optional[int] = None
+    persisted: bool = False
+    timing_ms: Optional[float] = None
 
 
 class EvaluateCandidateAnswerRequest(BaseModel):

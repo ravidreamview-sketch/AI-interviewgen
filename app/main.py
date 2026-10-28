@@ -1,3 +1,4 @@
+import time
 import os
 import uuid
 import json
@@ -423,13 +424,19 @@ def generate_questions(
 ):
     check_feature_enabled("Interview-studio.html", db)
     target_count = data.number_of_questions or 5
+    t0 = time.perf_counter()
     try:
         custom_q = getattr(data, "custom_question", None) or ""
+        t_provider_start = time.perf_counter()
         try:
             prompt = interview_prompt(data)
             raw_output = generate_ai_questions(prompt)
+            provider_duration_ms = (time.perf_counter() - t_provider_start) * 1000
+            t_parse_start = time.perf_counter()
             clean_questions = parse_raw_questions(raw_output, target_count=target_count)
         except Exception as ai_err:
+            provider_duration_ms = (time.perf_counter() - t_provider_start) * 1000
+            t_parse_start = time.perf_counter()
             print(f"[AI Generator] LLM unavailable/fallback: {ai_err}")
             clean_questions = get_fallback_questions(
                 data.role, data.skills, target_count, custom_q
@@ -447,17 +454,14 @@ def generate_questions(
         if len(clean_questions) > target_count:
             clean_questions = clean_questions[:target_count]
 
+        parse_duration_ms = (time.perf_counter() - t_parse_start) * 1000
+
         # Format questions consistently as numbered lines
         formatted_raw = "\n".join([f"{i+1}. {q}" for i, q in enumerate(clean_questions)])
 
+        # Fast metadata assembly without synchronous sample answer AI calls
         questions_details = []
         for i, q in enumerate(clean_questions):
-            ans_info = generate_sample_answer(
-                question=q,
-                role=data.role,
-                skills=data.skills,
-                difficulty=data.difficulty,
-            )
             questions_details.append({
                 "id": i + 1,
                 "question": q,
@@ -469,11 +473,12 @@ def generate_questions(
                 "source_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
                 "confidence": 0.91,
                 "model_answer": f"Evaluates depth in {', '.join(data.skills[:3]) if data.skills else data.role} with clear trade-offs.",
-                "sample_answer": ans_info.get("sample_answer") or "",
-                "key_points": ans_info.get("key_points") or [],
-                "practical_example": ans_info.get("practical_example") or None,
+                "sample_answer": None,
+                "key_points": [],
+                "practical_example": None,
             })
 
+        t_db_start = time.perf_counter()
         interview = InterviewHistory(
             role=data.role,
             experience=data.experience,
@@ -490,12 +495,26 @@ def generate_questions(
         db.add(interview)
         db.commit()
         db.refresh(interview)
+        db_duration_ms = (time.perf_counter() - t_db_start) * 1000
+
+        total_duration_ms = (time.perf_counter() - t0) * 1000
+
+        logger.info(
+            "[PERF /api/generate] role='%s' count=%d provider=%.2fms parse=%.2fms db=%.2fms total=%.2fms",
+            data.role, target_count, provider_duration_ms, parse_duration_ms, db_duration_ms, total_duration_ms
+        )
 
         res = format_interview_response(interview)
         res["company"] = getattr(data, "company", "General Tech")
         res["interview_type"] = getattr(data, "interview_type", "Technical & Architecture")
         res["questions_details"] = questions_details
         res["message"] = "Interview questions generated and saved successfully"
+        res["timings_ms"] = {
+            "provider": round(provider_duration_ms, 2),
+            "parse": round(parse_duration_ms, 2),
+            "db": round(db_duration_ms, 2),
+            "total": round(total_duration_ms, 2)
+        }
         return res
 
     except HTTPException:
@@ -517,19 +536,109 @@ def get_sample_answer_endpoint(
     """
     On-demand sample answer generator for an individual interview question.
     Returns structured sample answer, key points to cover, and practical example.
+    When interview_id and question_index are supplied:
+    - Enforces authentication and candidate paper ownership
+    - Validates paper existence and question index
+    - Returns immediately if the question already has a saved sample answer
+    - Generates and persists the newly generated answer safely into questions_payload
     """
+    t_start = time.perf_counter()
+    interview = None
+
     try:
+        # 1. Persistence path authentication & ownership enforcement
+        if payload.interview_id is not None:
+            if not current_user:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Authentication required to persist sample answers to an interview paper."
+                )
+            _require_candidate_account(current_user)
+
+            interview = db.query(InterviewHistory).filter(InterviewHistory.id == payload.interview_id).first()
+            if not interview:
+                raise HTTPException(status_code=404, detail="Interview question paper not found.")
+
+            # Cross-user access protection
+            if interview.user_id is not None and interview.user_id != current_user.id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Forbidden: You do not have permission to modify questions from another candidate's paper."
+                )
+
+            # Check if answer is already saved in questions_payload
+            if interview.questions_payload and payload.question_index is not None:
+                try:
+                    payload_list = json.loads(interview.questions_payload)
+                    if isinstance(payload_list, list) and 0 <= payload.question_index < len(payload_list):
+                        existing_q = payload_list[payload.question_index]
+                        existing_ans = existing_q.get("sample_answer")
+                        if existing_ans and isinstance(existing_ans, str) and len(existing_ans.strip()) > 30 and not existing_ans.strip().startswith("Evaluates depth in"):
+                            elapsed_ms = (time.perf_counter() - t_start) * 1000
+                            logger.info(
+                                "[PERF /api/sample-answer] cache_hit interview_id=%s q_idx=%s elapsed=%.2fms",
+                                payload.interview_id, payload.question_index, elapsed_ms
+                            )
+                            return SampleAnswerResponse(
+                                question=payload.question,
+                                sample_answer=existing_ans.strip(),
+                                key_points=existing_q.get("key_points") or [],
+                                practical_example=existing_q.get("practical_example"),
+                                interview_id=payload.interview_id,
+                                question_index=payload.question_index,
+                                persisted=True,
+                                timing_ms=round(elapsed_ms, 2)
+                            )
+                except Exception as parse_err:
+                    logger.warning("Could not read existing questions_payload: %s", parse_err)
+
+        # 2. Generate sample answer via domain engine
+        role = (interview.role if interview else None) or payload.role or "Software Engineer"
+        skills = [s.strip() for s in interview.skills.split(",")] if (interview and interview.skills) else (payload.skills or [])
+        difficulty = (interview.difficulty if interview else None) or payload.difficulty or "Intermediate"
+
+        t_gen_start = time.perf_counter()
         ans_info = generate_sample_answer(
             question=payload.question,
-            role=payload.role or "Software Engineer",
-            skills=payload.skills or [],
-            difficulty=payload.difficulty or "Intermediate"
+            role=role,
+            skills=skills,
+            difficulty=difficulty
         )
+        gen_duration_ms = (time.perf_counter() - t_gen_start) * 1000
+
+        # 3. Concurrency-safe persistence into questions_payload
+        persisted = False
+        if interview is not None and payload.question_index is not None:
+            try:
+                fresh_interview = db.query(InterviewHistory).filter(InterviewHistory.id == payload.interview_id).first()
+                if fresh_interview and fresh_interview.questions_payload:
+                    fresh_list = json.loads(fresh_interview.questions_payload)
+                    if isinstance(fresh_list, list) and 0 <= payload.question_index < len(fresh_list):
+                        fresh_list[payload.question_index]["sample_answer"] = ans_info.get("sample_answer") or ""
+                        fresh_list[payload.question_index]["key_points"] = ans_info.get("key_points") or []
+                        fresh_list[payload.question_index]["practical_example"] = ans_info.get("practical_example")
+                        fresh_interview.questions_payload = json.dumps(fresh_list)
+                        db.commit()
+                        persisted = True
+            except Exception as p_err:
+                logger.error("Failed to persist sample answer into questions_payload: %s", p_err)
+                db.rollback()
+
+        elapsed_ms = (time.perf_counter() - t_start) * 1000
+        logger.info(
+            "[PERF /api/sample-answer] generated interview_id=%s q_idx=%s persisted=%s gen=%.2fms total=%.2fms",
+            payload.interview_id, payload.question_index, persisted, gen_duration_ms, elapsed_ms
+        )
+
         return SampleAnswerResponse(
             question=payload.question,
             sample_answer=ans_info.get("sample_answer") or "",
             key_points=ans_info.get("key_points") or [],
-            practical_example=ans_info.get("practical_example")
+            practical_example=ans_info.get("practical_example"),
+            interview_id=payload.interview_id,
+            question_index=payload.question_index,
+            persisted=persisted,
+            timing_ms=round(elapsed_ms, 2)
         )
     except HTTPException:
         raise

@@ -6,7 +6,7 @@ from app.main import app
 from app.services import generate_sample_answer, build_contextual_sample_answer
 from app.database import SessionLocal
 from app.db_models import UserAccount, InterviewHistory
-from app.security import create_access_token
+from app.security import create_access_token, hash_password
 
 
 client = TestClient(app)
@@ -34,6 +34,25 @@ class TestExpandableSampleAnswers(unittest.TestCase):
             "role": cls.candidate.role
         })
         cls.auth_headers = {"Authorization": f"Bearer {cls.token}"}
+
+        cls.candidate2 = cls.db.query(UserAccount).filter(UserAccount.email == "cand2_sample_answer_test@example.com").first()
+        if not cls.candidate2:
+            cls.candidate2 = UserAccount(
+                email="cand2_sample_answer_test@example.com",
+                role="candidate",
+                full_name="Second Candidate",
+                password_hash=hash_password("Password123!"),
+                is_active=True
+            )
+            cls.db.add(cls.candidate2)
+            cls.db.commit()
+            cls.db.refresh(cls.candidate2)
+        cls.token2 = create_access_token({
+            "sub": str(cls.candidate2.id),
+            "email": cls.candidate2.email,
+            "role": cls.candidate2.role
+        })
+        cls.auth_headers_cand2 = {"Authorization": f"Bearer {cls.token2}"}
 
     @classmethod
     def tearDownClass(cls):
@@ -150,8 +169,8 @@ class TestExpandableSampleAnswers(unittest.TestCase):
             for forbidden in forbidden_phrases:
                 self.assertNotIn(forbidden, answer_text, f"Forbidden personal claim '{forbidden}' found in sample answer")
 
-    # 5. Test Question Generation /api/generate Returns Enriched Sample Answers
-    def test_05_api_generate_includes_sample_answers(self):
+    # 5. Test Question Generation /api/generate Decoupled Fast Response
+    def test_05_api_generate_fast_decoupled(self):
         res = client.post(
             "/api/generate",
             headers=self.auth_headers,
@@ -169,21 +188,42 @@ class TestExpandableSampleAnswers(unittest.TestCase):
         self.assertEqual(len(data["questions"]), 4)
         self.assertIn("questions_details", data)
         self.assertEqual(len(data["questions_details"]), 4)
+        self.assertIn("timings_ms", data)
+        self.assertIn("provider", data["timings_ms"])
+        self.assertIn("total", data["timings_ms"])
 
+        paper_id = data["id"]
+
+        # Ensure decoupled behavior: initial generate does NOT run heavy sample answer generation
         for item in data["questions_details"]:
             self.assertIn("id", item)
             self.assertIn("question", item)
             self.assertIn("model_answer", item)
-            self.assertIn("sample_answer", item)
-            self.assertIn("key_points", item)
-            self.assertIn("practical_example", item)
-            # Ensure sample_answer is populated and relevant
-            self.assertTrue(len(item["sample_answer"]) > 30)
-            self.assertIsInstance(item["key_points"], list)
-            self.assertGreaterEqual(len(item["key_points"]), 3)
+            self.assertIsNone(item.get("sample_answer"))
+            self.assertEqual(item.get("key_points"), [])
+            self.assertIsNone(item.get("practical_example"))
 
-    # 6. Test /generate Alias Route Also Returns Enriched Sample Answers
-    def test_06_generate_alias_includes_sample_answers(self):
+        # On-demand sample answer generation for question 0 with persistence
+        sa_res = client.post(
+            "/api/sample-answer",
+            headers=self.auth_headers,
+            json={
+                "question": data["questions_details"][0]["question"],
+                "role": "Product Designer",
+                "skills": ["Figma", "User Research", "WCAG"],
+                "difficulty": "Hard",
+                "interview_id": paper_id,
+                "question_index": 0
+            }
+        )
+        self.assertEqual(sa_res.status_code, 200)
+        sa_data = sa_res.json()
+        self.assertTrue(sa_data.get("persisted"))
+        self.assertTrue(len(sa_data["sample_answer"]) > 30)
+        self.assertGreaterEqual(len(sa_data["key_points"]), 3)
+
+    # 6. Test /generate Alias Route Also Decoupled and Fast
+    def test_06_generate_alias_fast_decoupled(self):
         res = client.post(
             "/generate",
             headers=self.auth_headers,
@@ -198,9 +238,28 @@ class TestExpandableSampleAnswers(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         data = res.json()
         self.assertEqual(len(data["questions_details"]), 3)
+        self.assertIn("timings_ms", data)
         for item in data["questions_details"]:
-            self.assertTrue(len(item["sample_answer"]) > 30)
-            self.assertGreaterEqual(len(item["key_points"]), 3)
+            self.assertIsNone(item.get("sample_answer"))
+            self.assertEqual(item.get("key_points"), [])
+
+        paper_id = data["id"]
+        sa_res = client.post(
+            "/api/sample-answer",
+            headers=self.auth_headers,
+            json={
+                "question": data["questions_details"][0]["question"],
+                "role": "Backend Engineer",
+                "skills": ["Python", "FastAPI"],
+                "difficulty": "Hard",
+                "interview_id": paper_id,
+                "question_index": 0
+            }
+        )
+        self.assertEqual(sa_res.status_code, 200)
+        sa_data = sa_res.json()
+        self.assertTrue(sa_data.get("persisted"))
+        self.assertTrue(len(sa_data["sample_answer"]) > 30)
 
     # 7. Test Each Question's Answer is Unique to Its Domain
     def test_07_answers_differ_across_different_questions(self):
@@ -265,8 +324,8 @@ class TestExpandableSampleAnswers(unittest.TestCase):
         self.assertIn("q-confidence-tag", content)
 
 
-# 10. Test Database Persistence of Sample Answers in questions_payload
-    def test_10_database_persistence_of_sample_answers(self):
+    # 10. Test Database Persistence of On-Demand Sample Answers in questions_payload
+    def test_10_database_persistence_of_on_demand_sample_answers(self):
         res = client.post(
             "/api/generate",
             headers=self.auth_headers,
@@ -281,21 +340,45 @@ class TestExpandableSampleAnswers(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         paper_id = res.json()["id"]
 
-        # Directly query the database
+        # Directly query the database initially: all sample answers are None
         db = SessionLocal()
         row = db.query(InterviewHistory).filter(InterviewHistory.id == paper_id).first()
         self.assertIsNotNone(row)
         self.assertIsNotNone(row.questions_payload)
-        self.assertIn("sample_answer", row.questions_payload)
-        
         parsed_payload = json.loads(row.questions_payload)
         self.assertEqual(len(parsed_payload), 3)
         for q in parsed_payload:
-            self.assertIn("sample_answer", q)
-            self.assertIn("key_points", q)
-            self.assertIn("practical_example", q)
-            self.assertTrue(len(q["sample_answer"]) > 30)
-            self.assertGreaterEqual(len(q["key_points"]), 3)
+            self.assertIsNone(q.get("sample_answer"))
+            self.assertEqual(q.get("key_points"), [])
+            self.assertIsNone(q.get("practical_example"))
+        db.close()
+
+        # Generate on-demand sample answer for question index 0
+        sa_res = client.post(
+            "/api/sample-answer",
+            headers=self.auth_headers,
+            json={
+                "question": parsed_payload[0]["question"],
+                "role": "Cloud Security Engineer",
+                "skills": ["AWS", "IAM", "KMS"],
+                "difficulty": "Hard",
+                "interview_id": paper_id,
+                "question_index": 0
+            }
+        )
+        self.assertEqual(sa_res.status_code, 200)
+        self.assertTrue(sa_res.json().get("persisted"))
+
+        # Re-query the database: question 0 now has answer persisted; question 1 remains None
+        db = SessionLocal()
+        row = db.query(InterviewHistory).filter(InterviewHistory.id == paper_id).first()
+        updated_payload = json.loads(row.questions_payload)
+        self.assertIsNotNone(updated_payload[0].get("sample_answer"))
+        self.assertTrue(len(updated_payload[0]["sample_answer"]) > 30)
+        self.assertGreaterEqual(len(updated_payload[0]["key_points"]), 3)
+        self.assertIsNotNone(updated_payload[0]["practical_example"])
+        self.assertIsNone(updated_payload[1].get("sample_answer"))
+        self.assertIsNone(updated_payload[2].get("sample_answer"))
         db.close()
 
     # 11. Test History API Returns Stored Question Details with Answers
@@ -313,7 +396,22 @@ class TestExpandableSampleAnswers(unittest.TestCase):
             }
         )
         paper_id = gen_res.json()["id"]
-        original_details = gen_res.json()["questions_details"]
+
+        # Populate sample answer on-demand for question 0
+        sa_res = client.post(
+            "/api/sample-answer",
+            headers=self.auth_headers,
+            json={
+                "question": gen_res.json()["questions_details"][0]["question"],
+                "role": "Machine Learning Engineer",
+                "skills": ["PyTorch", "Transformers", "CUDA"],
+                "difficulty": "Hard",
+                "interview_id": paper_id,
+                "question_index": 0
+            }
+        )
+        self.assertEqual(sa_res.status_code, 200)
+        saved_answer = sa_res.json()["sample_answer"]
 
         # Retrieve through GET /api/history/{id}
         detail_res = client.get(f"/api/history/{paper_id}", headers=self.auth_headers)
@@ -322,8 +420,8 @@ class TestExpandableSampleAnswers(unittest.TestCase):
 
         self.assertIn("questions_details", detail_data)
         self.assertEqual(len(detail_data["questions_details"]), 2)
-        self.assertEqual(detail_data["questions_details"][0]["sample_answer"], original_details[0]["sample_answer"])
-        self.assertEqual(detail_data["questions_details"][0]["key_points"], original_details[0]["key_points"])
+        self.assertEqual(detail_data["questions_details"][0]["sample_answer"], saved_answer)
+        self.assertIsNone(detail_data["questions_details"][1]["sample_answer"])
 
         # Also retrieve via list GET /api/history
         list_res = client.get("/api/history", headers=self.auth_headers)
@@ -331,7 +429,7 @@ class TestExpandableSampleAnswers(unittest.TestCase):
         found = next((item for item in list_res.json() if item["id"] == paper_id), None)
         self.assertIsNotNone(found)
         self.assertIn("questions_details", found)
-        self.assertEqual(found["questions_details"][0]["sample_answer"], original_details[0]["sample_answer"])
+        self.assertEqual(found["questions_details"][0]["sample_answer"], saved_answer)
 
     # 12. Test Backward Compatibility With Legacy NULL questions_payload Records
     def test_12_backward_compatibility_with_null_payload_records(self):
@@ -383,6 +481,166 @@ class TestExpandableSampleAnswers(unittest.TestCase):
         # Ensure loadPaperIntoSheet checks questions_details first
         self.assertIn("paper.questions_details", content)
         self.assertIn("currentQs = (paper.questions_details && paper.questions_details.length)", content)
+
+    # 15. Test Multiple Question Sample Answers Persist Without Overwriting Each Other
+    def test_15_concurrent_answer_saves_do_not_overwrite(self):
+        # Generate paper with 2 questions
+        gen_res = client.post(
+            "/api/generate",
+            headers=self.auth_headers,
+            json={
+                "role": "Site Reliability Engineer",
+                "experience": "5 Years",
+                "skills": ["Kubernetes", "Prometheus", "Linux"],
+                "difficulty": "Hard",
+                "number_of_questions": 2
+            }
+        )
+        self.assertEqual(gen_res.status_code, 200)
+        paper_id = gen_res.json()["id"]
+        q0 = gen_res.json()["questions_details"][0]["question"]
+        q1 = gen_res.json()["questions_details"][1]["question"]
+
+        # Save Q0 sample answer
+        res0 = client.post(
+            "/api/sample-answer",
+            headers=self.auth_headers,
+            json={
+                "question": q0,
+                "role": "Site Reliability Engineer",
+                "skills": ["Kubernetes"],
+                "difficulty": "Hard",
+                "interview_id": paper_id,
+                "question_index": 0
+            }
+        )
+        self.assertEqual(res0.status_code, 200)
+        ans0 = res0.json()["sample_answer"]
+
+        # Save Q1 sample answer
+        res1 = client.post(
+            "/api/sample-answer",
+            headers=self.auth_headers,
+            json={
+                "question": q1,
+                "role": "Site Reliability Engineer",
+                "skills": ["Prometheus"],
+                "difficulty": "Hard",
+                "interview_id": paper_id,
+                "question_index": 1
+            }
+        )
+        self.assertEqual(res1.status_code, 200)
+        ans1 = res1.json()["sample_answer"]
+
+        # Verify DB has BOTH answers intact (neither was lost or overwritten)
+        db = SessionLocal()
+        row = db.query(InterviewHistory).filter(InterviewHistory.id == paper_id).first()
+        payload = json.loads(row.questions_payload)
+        db.close()
+
+        self.assertEqual(payload[0]["sample_answer"], ans0)
+        self.assertEqual(payload[1]["sample_answer"], ans1)
+
+    # 16. Test Security: Cross-User Answer Persistence and Unauthenticated Access are Forbidden
+    def test_16_cross_user_sample_answer_persistence_rejected(self):
+        # Generate paper owned by candidate 1
+        gen_res = client.post(
+            "/api/generate",
+            headers=self.auth_headers,
+            json={
+                "role": "Security Specialist",
+                "experience": "3 Years",
+                "skills": ["Cryptography", "TLS"],
+                "difficulty": "Medium",
+                "number_of_questions": 1
+            }
+        )
+        self.assertEqual(gen_res.status_code, 200)
+        paper_id = gen_res.json()["id"]
+
+        # Unauthenticated request with interview_id -> 401
+        unauth_res = client.post(
+            "/api/sample-answer",
+            json={
+                "question": "Explain TLS 1.3 handshake.",
+                "role": "Security Specialist",
+                "skills": ["TLS"],
+                "difficulty": "Medium",
+                "interview_id": paper_id,
+                "question_index": 0
+            }
+        )
+        self.assertEqual(unauth_res.status_code, 401)
+
+        # Candidate 2 trying to persist on candidate 1's paper -> 403 Forbidden
+        cand2_res = client.post(
+            "/api/sample-answer",
+            headers=self.auth_headers_cand2,
+            json={
+                "question": "Explain TLS 1.3 handshake.",
+                "role": "Security Specialist",
+                "skills": ["TLS"],
+                "difficulty": "Medium",
+                "interview_id": paper_id,
+                "question_index": 0
+            }
+        )
+        self.assertEqual(cand2_res.status_code, 403)
+
+    # 17. Test Cached Sample Answer Hit Avoids Regeneration
+    def test_17_cached_sample_answer_avoids_regeneration(self):
+        gen_res = client.post(
+            "/api/generate",
+            headers=self.auth_headers,
+            json={
+                "role": "Platform Engineer",
+                "experience": "4 Years",
+                "skills": ["Terraform", "AWS"],
+                "difficulty": "Medium",
+                "number_of_questions": 1
+            }
+        )
+        self.assertEqual(gen_res.status_code, 200)
+        paper_id = gen_res.json()["id"]
+        q_text = gen_res.json()["questions_details"][0]["question"]
+
+        # First call generates and persists
+        res1 = client.post(
+            "/api/sample-answer",
+            headers=self.auth_headers,
+            json={
+                "question": q_text,
+                "role": "Platform Engineer",
+                "skills": ["Terraform"],
+                "difficulty": "Medium",
+                "interview_id": paper_id,
+                "question_index": 0
+            }
+        )
+        self.assertEqual(res1.status_code, 200)
+        ans1 = res1.json()["sample_answer"]
+        self.assertTrue(res1.json().get("persisted"))
+
+        # Second call hits cache directly
+        res2 = client.post(
+            "/api/sample-answer",
+            headers=self.auth_headers,
+            json={
+                "question": q_text,
+                "role": "Platform Engineer",
+                "skills": ["Terraform"],
+                "difficulty": "Medium",
+                "interview_id": paper_id,
+                "question_index": 0
+            }
+        )
+        self.assertEqual(res2.status_code, 200)
+        ans2 = res2.json()["sample_answer"]
+        self.assertEqual(ans1, ans2)
+        self.assertTrue(res2.json().get("persisted"))
+        # Cache response must be fast (<20ms)
+        self.assertLess(res2.json().get("timing_ms", 999), 20.0)
 
 
 if __name__ == "__main__":

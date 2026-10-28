@@ -6035,8 +6035,18 @@
       };
     }
 
+    function isRealSampleAnswer(text) {
+      if (!text || typeof text !== 'string') return false;
+      const trimmed = text.trim();
+      if (trimmed.length < 30) return false;
+      if (/^Evaluates\s+depth\s+in/i.test(trimmed)) return false;
+      return true;
+    }
+
     function renderAnswerContent(panel, data) {
-      const answerText = data.sample_answer || data.model_answer || "";
+      const answerText = isRealSampleAnswer(data.sample_answer)
+        ? data.sample_answer
+        : (isRealSampleAnswer(data.model_answer) ? data.model_answer : "");
       const keyPoints = Array.isArray(data.key_points) ? data.key_points : [];
       const practicalExample = data.practical_example || "";
 
@@ -6088,6 +6098,11 @@
     }
 
     async function fetchAndRenderSampleAnswer(panel, rawQ, i) {
+      if (panel.dataset.loading === 'true') {
+        return; // Prevent duplicate in-flight requests
+      }
+      panel.dataset.loading = 'true';
+
       const qText = cleanQuestionText(rawQ);
       const role = $("#role") ? $("#role").value : "";
       const diff = $("#diff") ? $("#diff").value : "Intermediate";
@@ -6107,6 +6122,8 @@
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({
+            interview_id: currentPaperId || undefined,
+            question_index: i,
             question: qText,
             role: role || "Software Engineer",
             skills: skillList,
@@ -6140,9 +6157,11 @@
           }
         }
 
+        panel.dataset.loading = 'false';
         panel.dataset.loaded = "true";
         renderAnswerContent(panel, data);
       } catch (err) {
+        panel.dataset.loading = 'false';
         console.warn("Could not fetch sample answer from API:", err);
         panel.innerHTML = `
           <div class="q-answer-error">
@@ -6478,7 +6497,7 @@
             ? rawQ
             : (Array.isArray(currentQs) && typeof currentQs[i] === 'object' ? currentQs[i] : null);
 
-          const hasValidAnswer = qObj && (qObj.sample_answer || (qObj.model_answer && qObj.model_answer.length > 80));
+          const hasValidAnswer = qObj && (isRealSampleAnswer(qObj.sample_answer) || isRealSampleAnswer(qObj.model_answer));
 
           if (hasValidAnswer) {
             renderAnswerContent(panel, qObj);
@@ -6900,10 +6919,8 @@
       };
 
       setStep(1);
-      setTimeout(() => setStep(2), 350);
-      setTimeout(() => setStep(3), 700);
-
       try {
+        setStep(2);
         const generateEndpoint = API_BASE ? `${API_BASE}/generate` : '/api/generate';
         const response = await fetch(generateEndpoint, {
           method: "POST",
