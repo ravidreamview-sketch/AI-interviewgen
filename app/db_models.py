@@ -289,3 +289,20 @@ class CandidateAnswerAttempt(Base):
     overall_score = Column(Integer, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+
+
+class UserInvitation(Base):
+    __tablename__ = "user_invitations"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, index=True, nullable=False)
+    role = Column(String, nullable=False, default="candidate")
+    plan_tier = Column(String, nullable=False, default="free")
+    token_hash = Column(String, unique=True, index=True, nullable=False)
+    invited_by_user_id = Column(Integer, ForeignKey("user_accounts.id", ondelete="SET NULL"), nullable=True)
+    invited_by_email = Column(String, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    accepted_at = Column(DateTime, nullable=True)
+    is_revoked = Column(Boolean, default=False, nullable=False)

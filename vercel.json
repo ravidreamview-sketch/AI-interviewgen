@@ -23,6 +23,8 @@
     { "source": "/candidate/analytics-tracker.js", "destination": "/analytics-tracker.js" },
     { "source": "/candidate/login", "destination": "/Candidate-login.html" },
     { "source": "/login", "destination": "/Candidate-login.html" },
+    { "source": "/accept-invite", "destination": "/Accept-invite.html" },
+    { "source": "/accept-invite.html", "destination": "/Accept-invite.html" },
     { "source": "/candidate/dashboard", "destination": "/Candidate-dashboard.html" },
     { "source": "/dashboard", "destination": "/Candidate-dashboard.html" },
     { "source": "/Dashboard.html", "destination": "/Candidate-dashboard.html" },

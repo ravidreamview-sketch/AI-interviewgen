@@ -2,7 +2,7 @@ from __future__ import annotations
 from enum import Enum
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from typing import List, Optional, Dict, Any
-from datetime import timezone
+from datetime import datetime, timezone
 
 # ==============================================================================
 # ADAPTIVE INTERVIEW ENGINE ENUMS & VERSION CONSTANTS
@@ -404,13 +404,13 @@ class ClickEventPayload(BaseModel):
 # ==============================================================================
 
 class AdminLoginRequest(BaseModel):
-    email: Optional[str] = "admin@example.com"
-    password: Optional[str] = "SuperAdminPass123!"
+    email: Optional[str] = None
+    password: Optional[str] = None
 
 
 class CandidateLoginRequest(BaseModel):
-    email: Optional[str] = "candidate@example.com"
-    password: Optional[str] = "CandidatePass123!"
+    email: Optional[str] = None
+    password: Optional[str] = None
 
 
 class UserCreateRequest(BaseModel):
@@ -915,3 +915,50 @@ class EvaluatorPresetsResponse(BaseModel):
     roles: List[str]
     seniority_levels: List[str]
     company_tiers: List[str]
+
+# ==============================================================================
+# INVITE-ONLY ACCESS SCHEMAS
+# ==============================================================================
+
+class UserInviteRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    email: str = Field(..., min_length=3, description="Candidate or staff email address")
+    role: Optional[str] = Field("candidate", description="candidate | admin | super_admin")
+    plan_tier: Optional[str] = Field("free", description="free | pro | enterprise")
+
+
+class UserInvitationResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    id: int
+    email: str
+    role: str
+    plan_tier: str
+    invited_by_email: Optional[str] = None
+    created_at: datetime
+    expires_at: datetime
+    accepted_at: Optional[datetime] = None
+    is_revoked: bool = False
+    status: str = "pending"
+    invite_url: Optional[str] = None
+
+
+class ValidateInvitationResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    valid: bool
+    email: Optional[str] = None
+    role: Optional[str] = None
+    plan_tier: Optional[str] = None
+    expires_at: Optional[datetime] = None
+    status: str
+    message: str
+
+
+class AcceptInvitationRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    token: str = Field(..., min_length=16, description="Invitation token from email link")
+    password: str = Field(..., min_length=6, description="Candidate-chosen password")
+    full_name: Optional[str] = Field(None, description="Optional full name")

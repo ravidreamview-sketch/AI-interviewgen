@@ -203,6 +203,7 @@ def init_db():
     _run_migration_user_accounts(dialect)
     _run_migration_resume_scans(dialect)
     _run_migration_candidate_answer_attempts(dialect)
+    _run_migration_user_invitations(dialect)
 
     # Step 3c: Bootstrap accounts
     logger.info("Bootstrapping administrative and candidate accounts")
@@ -545,3 +546,46 @@ def _run_migration_candidate_answer_attempts(dialect: str):
             _safe_execute_ddl('CREATE INDEX IF NOT EXISTS idx_attempt_q ON candidate_answer_attempts(interview_id, question_index)')
     except Exception as e:
         logger.warning(f"[DB Migration] candidate_answer_attempts migration notice: {e}")
+
+def _run_migration_user_invitations(dialect: str):
+    """Migration: user_invitations table and indexes."""
+    try:
+        if dialect == "sqlite":
+            _safe_execute_ddl("""
+            CREATE TABLE IF NOT EXISTS user_invitations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT NOT NULL,
+                role TEXT NOT NULL DEFAULT 'candidate',
+                plan_tier TEXT NOT NULL DEFAULT 'free',
+                token_hash TEXT NOT NULL UNIQUE,
+                invited_by_user_id INTEGER REFERENCES user_accounts(id) ON DELETE SET NULL,
+                invited_by_email TEXT,
+                created_at DATETIME NOT NULL,
+                expires_at DATETIME NOT NULL,
+                accepted_at DATETIME,
+                is_revoked BOOLEAN NOT NULL DEFAULT 0
+            )
+            """)
+            _safe_execute_ddl("CREATE INDEX IF NOT EXISTS idx_invitation_email ON user_invitations(email)")
+            _safe_execute_ddl("CREATE UNIQUE INDEX IF NOT EXISTS idx_invitation_token_hash ON user_invitations(token_hash)")
+        else:
+            # PostgreSQL
+            _safe_execute_ddl("""
+            CREATE TABLE IF NOT EXISTS "user_invitations" (
+                "id" SERIAL PRIMARY KEY,
+                "email" VARCHAR NOT NULL,
+                "role" VARCHAR NOT NULL DEFAULT 'candidate',
+                "plan_tier" VARCHAR NOT NULL DEFAULT 'free',
+                "token_hash" VARCHAR NOT NULL UNIQUE,
+                "invited_by_user_id" INTEGER REFERENCES "user_accounts"("id") ON DELETE SET NULL,
+                "invited_by_email" VARCHAR,
+                "created_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                "expires_at" TIMESTAMP WITH TIME ZONE NOT NULL,
+                "accepted_at" TIMESTAMP WITH TIME ZONE,
+                "is_revoked" BOOLEAN NOT NULL DEFAULT FALSE
+            )
+            """)
+            _safe_execute_ddl('CREATE INDEX IF NOT EXISTS idx_invitation_email ON "user_invitations"(email)')
+            _safe_execute_ddl('CREATE UNIQUE INDEX IF NOT EXISTS idx_invitation_token_hash ON "user_invitations"(token_hash)')
+    except Exception as e:
+        logger.warning(f"[DB Migration] user_invitations migration notice: {e}")

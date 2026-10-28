@@ -327,11 +327,11 @@ table.admin-table tr:hover td{background:var(--rule-soft)}
     <form id="gateLoginForm" onsubmit="handleGateLogin(event)">
       <div class="f-group" style="margin-bottom:16px">
         <label class="f-label" for="gateEmail">Admin Email</label>
-        <input type="email" id="gateEmail" value="admin@example.com" placeholder="admin@example.com">
+        <input type="email" id="gateEmail" required placeholder="admin@example.com" autocomplete="email">
       </div>
       <div class="f-group" style="margin-bottom:22px">
         <label class="f-label" for="gatePassword">Password</label>
-        <input type="password" id="gatePassword" value="SuperAdminPass123!" placeholder="••••••••••••">
+        <input type="password" id="gatePassword" required placeholder="••••••••••••" autocomplete="current-password">
       </div>
       <button type="submit" class="btn-primary" style="width:100%;justify-content:center;padding:12px" id="gateSubmitBtn">
         <span>Authenticate Super Admin</span>
@@ -477,7 +477,7 @@ table.admin-table tr:hover td{background:var(--rule-soft)}
             </button>
             <button class="btn-primary" onclick="openAddUserDrawer()">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              <span>Add New User</span>
+              <span>+ Invite User</span>
             </button>
           </div>
         </div>
@@ -744,7 +744,7 @@ table.admin-table tr:hover td{background:var(--rule-soft)}
             </button>
             <button class="btn-primary" onclick="openAddUserDrawer()">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              <span>+ Add User</span>
+              <span>+ Invite User</span>
             </button>
           </div>
         </div>
@@ -771,7 +771,18 @@ table.admin-table tr:hover td{background:var(--rule-soft)}
             </div>
           </div>
 
-          <div class="table-wrap">
+          <div style="display:flex;gap:12px;padding:0 24px 14px;border-bottom:1px solid var(--rule)">
+            <button type="button" class="btn-secondary active" id="tabUsersBtn" onclick="switchUserTab('users')" style="border-radius:8px;padding:7px 14px;font-size:13px;display:flex;align-items:center;gap:6px">
+              <span>Active Accounts</span>
+              <span class="nav-badge" id="tabActiveUsersBadge" style="background:rgba(99,102,241,0.25);color:#818CF8">...</span>
+            </button>
+            <button type="button" class="btn-secondary" id="tabInvitesBtn" onclick="switchUserTab('invites')" style="border-radius:8px;padding:7px 14px;font-size:13px;display:flex;align-items:center;gap:6px">
+              <span>Pending Invitations</span>
+              <span class="nav-badge" id="tabInvitesBadge" style="background:rgba(52,211,153,0.2);color:#34D399">0</span>
+            </button>
+          </div>
+
+          <div class="table-wrap" id="usersTableWrap">
             <table class="admin-table">
               <thead>
                 <tr>
@@ -787,6 +798,26 @@ table.admin-table tr:hover td{background:var(--rule-soft)}
               </thead>
               <tbody id="userTableBody">
                 <tr><td colspan="8" style="text-align:center;padding:32px;color:var(--ink-soft)">Loading user accounts...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="table-wrap" id="invitationsTableWrap" style="display:none">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Invite ID</th>
+                  <th>Recipient Email</th>
+                  <th>Role</th>
+                  <th>Plan Tier</th>
+                  <th>Invited By</th>
+                  <th>Sent At</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="invitationsTableBody">
+                <tr><td colspan="8" style="text-align:center;padding:32px;color:var(--ink-soft)">Loading invitations...</td></tr>
               </tbody>
             </table>
           </div>
@@ -1150,22 +1181,21 @@ table.admin-table tr:hover td{background:var(--rule-soft)}
   </form>
 </div>
 
-<!-- 3. ADD USER MODAL / DRAWER -->
+<!-- 3. ADD / INVITE USER MODAL / DRAWER -->
 <div class="drawer-backdrop" id="addUserDrawerBackdrop" onclick="closeAddUserDrawer()"></div>
 <div class="side-drawer" id="addUserDrawer">
   <div class="drawer-head">
-    <h3 class="drawer-title">Create New User Account</h3>
-    <button onclick="closeAddUserDrawer()" style="font-size:20px;color:var(--ink-soft)">✕</button>
+    <h3 class="drawer-title" id="addUserDrawerTitle">Invite New User</h3>
+    <button onclick="closeAddUserDrawer()" style="font-size:20px;color:var(--ink-soft);background:none;border:none;cursor:pointer">✕</button>
   </div>
-  <form id="addUserForm" onsubmit="handleCreateUser(event)" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
+  <form id="addUserForm" onsubmit="handleSendInvitation(event)" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
     <div class="drawer-body">
+      <p style="font-size:13px;color:var(--ink-soft);margin-top:0;margin-bottom:16px;line-height:1.5">
+        Send an expiring invitation link to the user's email address. The recipient will set their own password securely upon registration.
+      </p>
       <div class="f-group">
-        <label class="f-label" for="newEmail">User Email Address</label>
+        <label class="f-label" for="newEmail">Recipient Email Address</label>
         <input type="email" id="newEmail" required placeholder="candidate@example.com">
-      </div>
-      <div class="f-group">
-        <label class="f-label" for="newPassword">Initial Password</label>
-        <input type="password" id="newPassword" required placeholder="Minimum 6 characters" minlength="6">
       </div>
       <div class="f-group">
         <label class="f-label" for="newRole">System Role</label>
@@ -1183,10 +1213,17 @@ table.admin-table tr:hover td{background:var(--rule-soft)}
           <option value="enterprise">Enterprise</option>
         </select>
       </div>
+
+      <div style="background:rgba(56, 189, 248, 0.08);border:1px solid rgba(56, 189, 248, 0.2);border-radius:8px;padding:12px 14px;margin-top:8px">
+        <div style="font-size:12px;font-weight:700;color:#38BDF8;margin-bottom:4px">🔒 Zero Password Exposure Policy</div>
+        <div style="font-size:11.5px;color:var(--ink-soft);line-height:1.4">
+          Passwords are never generated or transmitted through email. The recipient receives a single-use token valid for 24 hours to set their own credentials.
+        </div>
+      </div>
     </div>
     <div class="drawer-foot">
       <button type="button" class="btn-secondary" onclick="closeAddUserDrawer()">Cancel</button>
-      <button type="submit" class="btn-primary" id="createUserBtn">Create Account</button>
+      <button type="submit" class="btn-primary" id="createUserBtn">Send Invitation</button>
     </div>
   </form>
 </div>
@@ -1493,8 +1530,15 @@ async function handleGateLogin(e) {
   e.preventDefault();
   const btn = document.getElementById('gateSubmitBtn');
   const alertBox = document.getElementById('gateAlert');
-  const email = (document.getElementById('gateEmail').value || 'admin@example.com').trim();
-  const password = document.getElementById('gatePassword').value || 'SuperAdminPass123!';
+  const email = (document.getElementById('gateEmail').value || '').trim();
+  const password = document.getElementById('gatePassword').value || '';
+  if (!email || !password) {
+    alertBox.textContent = 'Please enter your administrator email and password.';
+    alertBox.style.display = 'block';
+    btn.disabled = false;
+    btn.innerHTML = '<span>Enter Command Console</span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+    return;
+  }
 
   btn.disabled = true;
   btn.innerHTML = '<span>Verifying Credentials...</span>';
@@ -1869,6 +1913,10 @@ async function loadUsersList() {
     const data = await res.json();
     ALL_USERS = data.users;
     document.getElementById('navUserBadge').textContent = data.total;
+    if (document.getElementById('tabActiveUsersBadge')) document.getElementById('tabActiveUsersBadge').textContent = data.total;
+    loadInvitationsList();
+    if (document.getElementById('tabActiveUsersBadge')) document.getElementById('tabActiveUsersBadge').textContent = data.total;
+    loadInvitationsList();
     renderUsersTable(ALL_USERS);
 
   } catch (err) {
@@ -1979,9 +2027,9 @@ async function handleSaveUser(e) {
 }
 
 function openAddUserDrawer() {
-  document.getElementById('newEmail').value = '';
-  document.getElementById('newPassword').value = '';
-  document.getElementById('newPlan').value = 'free';
+  if (document.getElementById('newEmail')) document.getElementById('newEmail').value = '';
+  if (document.getElementById('newPassword')) document.getElementById('newPassword').value = '';
+  if (document.getElementById('newPlan')) document.getElementById('newPlan').value = 'free';
 
   const roleSelect = document.getElementById('newRole');
   if (roleSelect) {
@@ -2040,6 +2088,186 @@ async function handleCreateUser(e) {
     btn.disabled = false;
   }
 }
+let CURRENT_USER_TAB = 'users';
+let ALL_INVITATIONS = [];
+
+function switchUserTab(tab) {
+  CURRENT_USER_TAB = tab;
+  const usersWrap = document.getElementById('usersTableWrap');
+  const invitesWrap = document.getElementById('invitationsTableWrap');
+  const tabUsers = document.getElementById('tabUsersBtn');
+  const tabInvites = document.getElementById('tabInvitesBtn');
+
+  if (tab === 'users') {
+    usersWrap.style.display = 'block';
+    invitesWrap.style.display = 'none';
+    tabUsers.classList.add('active');
+    tabInvites.classList.remove('active');
+  } else {
+    usersWrap.style.display = 'none';
+    invitesWrap.style.display = 'block';
+    tabUsers.classList.remove('active');
+    tabInvites.classList.add('active');
+    loadInvitationsList();
+  }
+}
+
+async function loadInvitationsList() {
+  const tbody = document.getElementById('invitationsTableBody');
+  const search = document.getElementById('userSearchInput').value.trim();
+  let query = '/api/admin/invitations?limit=100';
+  if (search) query += `&search=${encodeURIComponent(search)}`;
+
+  try {
+    const res = await fetch(query, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+      credentials: 'include'
+    });
+    if (!res.ok) throw new Error('Failed to load invitations');
+    const data = await res.json();
+    ALL_INVITATIONS = data.invitations || [];
+    const pendingCount = ALL_INVITATIONS.filter(i => i.status === 'pending').length;
+    document.getElementById('tabInvitesBadge').textContent = pendingCount;
+    renderInvitationsTable(ALL_INVITATIONS);
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--danger);padding:24px">Unable to load invitations.</td></tr>`;
+  }
+}
+
+function renderInvitationsTable(invites) {
+  const tbody = document.getElementById('invitationsTableBody');
+  if (!invites.length) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--ink-soft)">No invitations found. Click "+ Invite User" to issue one.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = invites.map(inv => {
+    let statusClass = 'disabled';
+    let statusLabel = inv.status;
+    if (inv.status === 'accepted') {
+      statusClass = 'active';
+      statusLabel = '✓ Accepted';
+    } else if (inv.status === 'pending') {
+      statusClass = 'beta';
+      statusLabel = '● Pending';
+    } else if (inv.status === 'revoked') {
+      statusClass = 'disabled';
+      statusLabel = '✕ Revoked';
+    } else if (inv.status === 'expired') {
+      statusClass = 'disabled';
+      statusLabel = '⏰ Expired';
+    }
+
+    const canAct = inv.status === 'pending' || inv.status === 'expired';
+
+    return `
+      <tr>
+        <td style="font-family:var(--f-mono);font-weight:700">#INV-${String(inv.id).padStart(4, '0')}</td>
+        <td>
+          <div style="font-weight:700">${escapeHtml(inv.email)}</div>
+        </td>
+        <td><span class="role-badge ${inv.role}">${inv.role === 'super_admin' ? '👑 Super Admin' : (inv.role === 'admin' ? '🛡️ Admin' : '👤 Candidate')}</span></td>
+        <td><span class="status-pill ${inv.plan_tier === 'enterprise' ? 'active' : (inv.plan_tier === 'pro' ? 'beta' : 'disabled')}">${escapeHtml(inv.plan_tier.toUpperCase())}</span></td>
+        <td style="font-size:12px;color:var(--ink-soft)">${escapeHtml(inv.invited_by_email || 'Admin')}</td>
+        <td style="font-family:var(--f-mono);font-size:12px;color:var(--ink-soft)">${inv.created_at ? inv.created_at.split('T')[0] : 'N/A'}</td>
+        <td><span class="status-pill ${statusClass}">${statusLabel}</span></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:6px">
+            ${canAct ? `
+              <button class="btn-secondary" style="padding:4px 8px;font-size:12px" onclick="resendInvitation(${inv.id}, '${escapeHtml(inv.email)}')">🔄 Resend</button>
+              <button class="btn-danger" style="padding:4px 8px;font-size:12px" onclick="revokeInvitation(${inv.id}, '${escapeHtml(inv.email)}')">🚫 Revoke</button>
+            ` : `<span style="font-size:12px;color:var(--ink-faint)">—</span>`}
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function resendInvitation(id, email) {
+  try {
+    const res = await fetch(`/api/admin/invitations/${id}/resend`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      credentials: 'include'
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showToast(`Fresh invitation email sent to '${email}'.`, 'success');
+      loadInvitationsList();
+    } else {
+      showToast(data.detail || 'Failed to resend invitation.', 'error');
+    }
+  } catch (err) {
+    showToast('Network error resending invitation.', 'error');
+  }
+}
+
+function revokeInvitation(id, email) {
+  CONFIRM_CALLBACK = async () => {
+    try {
+      const res = await fetch(`/api/admin/invitations/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(`Invitation for '${email}' revoked.`, 'success');
+        loadInvitationsList();
+      } else {
+        showToast(data.detail || 'Failed to revoke invitation.', 'error');
+      }
+    } catch (e) {
+      showToast('Error executing revoke action.', 'error');
+    }
+  };
+
+  document.getElementById('confirmTitle').textContent = 'Revoke Invitation';
+  document.getElementById('confirmMessage').textContent = `Are you sure you want to revoke the pending invitation for '${email}'? The registration link will become unusable immediately.`;
+  document.getElementById('confirmModal').classList.add('open');
+}
+
+async function handleSendInvitation(e) {
+  e.preventDefault();
+  const payload = {
+    email: document.getElementById('newEmail').value.trim(),
+    role: document.getElementById('newRole').value,
+    plan_tier: document.getElementById('newPlan').value
+  };
+
+  const btn = document.getElementById('createUserBtn');
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+
+  try {
+    const res = await fetch('/api/admin/invitations', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      credentials: 'include',
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      showToast(data.detail || 'Failed to send invitation.', 'error');
+      return;
+    }
+
+    showToast(data.message || 'Invitation sent successfully.', 'success');
+    closeAddUserDrawer();
+    loadUsersList();
+    loadInvitationsList();
+
+  } catch (err) {
+    showToast('Error connecting to server.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Send Invitation';
+  }
+}
+
 
 function confirmDeleteUser(userId, email) {
   CONFIRM_CALLBACK = async () => {
