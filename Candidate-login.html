@@ -233,12 +233,12 @@ body{
   <form id="candidateLoginForm" method="POST" action="javascript:void(0);" onsubmit="handleCandidateLogin(event)">
     <div class="form-group">
       <label class="form-label" for="candidateEmail">Email / Username</label>
-      <input type="email" id="candidateEmail" class="form-input" value="candidate@example.com" placeholder="candidate@example.com" autocomplete="email" required />
+      <input type="email" id="candidateEmail" class="form-input" placeholder="candidate@example.com" autocomplete="email" required />
     </div>
 
     <div class="form-group">
       <label class="form-label" for="candidatePassword">Password</label>
-      <input type="password" id="candidatePassword" class="form-input" value="CandidatePass123!" placeholder="••••••••••••" autocomplete="current-password" required />
+      <input type="password" id="candidatePassword" class="form-input" placeholder="••••••••••••" autocomplete="current-password" required />
     </div>
 
     <button type="submit" id="submitBtn" class="btn-primary">Sign In</button>
@@ -263,8 +263,19 @@ async function handleCandidateLogin(event) {
   const errorBox = document.getElementById('errorBox');
   const submitBtn = document.getElementById('submitBtn');
   const emailInput = document.getElementById('candidateEmail');
-  const email = (emailInput && emailInput.value ? emailInput.value : 'candidate@example.com').trim();
-  const password = document.getElementById('candidatePassword')?.value || 'CandidatePass123!';
+  const email = (emailInput && emailInput.value ? emailInput.value : '').trim();
+  const password = document.getElementById('candidatePassword')?.value || '';
+  if (!email || !password) {
+    if (errorBox) {
+      errorBox.textContent = 'Please enter your email and password.';
+      errorBox.style.display = 'block';
+    }
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Sign In';
+    }
+    return;
+  }
 
   if (errorBox) {
     errorBox.style.display = 'none';

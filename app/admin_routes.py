@@ -1,3 +1,8 @@
+
+import secrets
+import hashlib
+import re
+from app.email_service import send_invitation_email, get_base_app_url
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request, Query
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
@@ -10,8 +15,12 @@ import uuid
 from datetime import timezone
 
 from app.database import get_db
-from app.db_models import UserAccount, AuditLog, SystemConfig, Prompt, PromptVersion
+from app.db_models import UserAccount, AuditLog, SystemConfig, Prompt, PromptVersion, UserInvitation
 from app.models import (
+    UserInviteRequest,
+    UserInvitationResponse,
+    ValidateInvitationResponse,
+    AcceptInvitationRequest,
     AdminLoginRequest,
     CandidateLoginRequest,
     UserCreateRequest,
@@ -108,6 +117,35 @@ def serialize_user(u: UserAccount) -> dict:
         "created_at": u.created_at.isoformat() if u.created_at else None,
         "last_login": u.last_login.isoformat() if u.last_login else None
     }
+def serialize_invitation(inv: UserInvitation) -> dict:
+    now = datetime.now(timezone.utc)
+    exp = inv.expires_at
+    if exp.tzinfo is None:
+        exp = exp.replace(tzinfo=timezone.utc)
+
+    if inv.accepted_at:
+        status_str = "accepted"
+    elif inv.is_revoked:
+        status_str = "revoked"
+    elif exp < now:
+        status_str = "expired"
+    else:
+        status_str = "pending"
+
+    return {
+        "id": inv.id,
+        "email": inv.email,
+        "role": inv.role,
+        "plan_tier": inv.plan_tier,
+        "invited_by_user_id": inv.invited_by_user_id,
+        "invited_by_email": inv.invited_by_email,
+        "created_at": inv.created_at.isoformat() if inv.created_at else None,
+        "expires_at": inv.expires_at.isoformat() if inv.expires_at else None,
+        "accepted_at": inv.accepted_at.isoformat() if inv.accepted_at else None,
+        "is_revoked": inv.is_revoked,
+        "status": status_str
+    }
+
 
 
 # ------------------------------------------------------------------------------
@@ -126,9 +164,14 @@ def candidate_login(
     Authenticates candidate credentials securely server-side.
     Returns signed JWT token and sets candidate_session HttpOnly cookie.
     """
-    raw_email = payload.email if payload.email and payload.email.strip() else "candidate@example.com"
-    raw_pass = payload.password if payload.password and payload.password.strip() else "CandidatePass123!"
-    email_clean = raw_email.strip().lower()
+    raw_email = (payload.email or "").strip()
+    raw_pass = payload.password or ""
+    if not raw_email or not raw_pass:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email and password are required."
+        )
+    email_clean = raw_email.lower()
     check_login_rate_limit(request, email_clean)
     
     user = db.query(UserAccount).filter(func.lower(UserAccount.email) == email_clean).first()
@@ -185,6 +228,192 @@ def candidate_login(
         "user": serialize_user(user),
         "role": user.role,
         "permissions": ROLE_PERMISSIONS.get(user.role, {}).get("permissions", [])
+    }
+
+
+
+@candidate_router.get("/api/auth/invitation", tags=["Candidate Auth"])
+@candidate_router.get("/auth/invitation", tags=["Candidate Auth"])
+def validate_invitation(
+    token: str = Query(..., min_length=10),
+    db: Session = Depends(get_db)
+):
+    token_clean = token.strip()
+    token_hash = hashlib.sha256(token_clean.encode("utf-8")).hexdigest()
+
+    inv = db.query(UserInvitation).filter(UserInvitation.token_hash == token_hash).first()
+    if not inv:
+        return JSONResponse(
+            status_code=404,
+            content={
+                "valid": False,
+                "status": "not_found",
+                "message": "Invalid invitation link. Please request a new invitation from your administrator."
+            }
+        )
+
+    now = datetime.now(timezone.utc)
+    exp = inv.expires_at
+    if exp.tzinfo is None:
+        exp = exp.replace(tzinfo=timezone.utc)
+
+    if inv.accepted_at is not None:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "valid": False,
+                "status": "already_accepted",
+                "email": inv.email,
+                "message": "This invitation has already been accepted. Please sign in to your account."
+            }
+        )
+
+    if inv.is_revoked:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "valid": False,
+                "status": "revoked",
+                "email": inv.email,
+                "message": "This invitation has been revoked by an administrator."
+            }
+        )
+
+    if exp < now:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "valid": False,
+                "status": "expired",
+                "email": inv.email,
+                "expires_at": inv.expires_at.isoformat(),
+                "message": "This invitation link has expired (valid for 24 hours). Please contact your administrator."
+            }
+        )
+
+    return {
+        "valid": True,
+        "status": "valid",
+        "email": inv.email,
+        "role": inv.role,
+        "plan_tier": inv.plan_tier,
+        "expires_at": inv.expires_at.isoformat(),
+        "message": "Invitation is valid."
+    }
+
+
+@candidate_router.post("/api/auth/accept-invite", tags=["Candidate Auth"])
+@candidate_router.post("/auth/accept-invite", tags=["Candidate Auth"])
+def accept_invitation(
+    payload: AcceptInvitationRequest,
+    request: Request,
+    response: Response,
+    db: Session = Depends(get_db)
+):
+    token_clean = payload.token.strip()
+    if len(token_clean) < 16:
+        raise HTTPException(status_code=400, detail="Invalid invitation token.")
+
+    if not payload.password or len(payload.password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters long.")
+
+    token_hash = hashlib.sha256(token_clean.encode("utf-8")).hexdigest()
+    now = datetime.now(timezone.utc)
+
+    # Atomic token consumption via conditional update to prevent concurrent double-acceptance race conditions
+    rows_affected = db.query(UserInvitation).filter(
+        UserInvitation.token_hash == token_hash,
+        UserInvitation.accepted_at.is_(None),
+        UserInvitation.is_revoked.is_(False),
+        UserInvitation.expires_at >= now
+    ).update({UserInvitation.accepted_at: now}, synchronize_session=False)
+
+    if rows_affected == 0:
+        inv_check = db.query(UserInvitation).filter(UserInvitation.token_hash == token_hash).first()
+        if not inv_check:
+            raise HTTPException(status_code=404, detail="Invalid invitation token.")
+        if inv_check.accepted_at is not None:
+            raise HTTPException(status_code=400, detail="This invitation has already been accepted.")
+        if inv_check.is_revoked:
+            raise HTTPException(status_code=400, detail="This invitation has been revoked by an administrator.")
+        exp_check = inv_check.expires_at
+        if exp_check.tzinfo is None:
+            exp_check = exp_check.replace(tzinfo=timezone.utc)
+        if exp_check < now:
+            raise HTTPException(status_code=400, detail="This invitation has expired.")
+        raise HTTPException(status_code=400, detail="Unable to process invitation.")
+
+    inv = db.query(UserInvitation).filter(UserInvitation.token_hash == token_hash).first()
+    email_clean = inv.email.strip().lower()
+
+    user = db.query(UserAccount).filter(func.lower(UserAccount.email) == email_clean).first()
+    hashed_pwd = hash_password(payload.password)
+
+    if user:
+        user.password_hash = hashed_pwd
+        user.is_active = True
+        if payload.full_name:
+            user.full_name = payload.full_name.strip()
+        user.role = inv.role
+        user.plan_tier = inv.plan_tier
+    else:
+        user = UserAccount(
+            email=email_clean,
+            full_name=payload.full_name.strip() if payload.full_name else None,
+            password_hash=hashed_pwd,
+            role=inv.role,
+            plan_tier=inv.plan_tier,
+            is_active=True,
+            created_at=datetime.now(timezone.utc)
+        )
+        db.add(user)
+
+    db.commit()
+    db.refresh(user)
+
+    token_payload = {
+        "sub": user.id,
+        "email": user.email,
+        "role": user.role,
+        "plan_tier": user.plan_tier
+    }
+    access_token = create_access_token(token_payload)
+
+    is_https = is_request_https(request)
+    response.set_cookie(
+        key="candidate_session",
+        value=access_token,
+        httponly=True,
+        secure=is_https,
+        samesite="lax",
+        max_age=8 * 3600,
+        path="/"
+    )
+    if user.role in ["admin", "super_admin"]:
+        response.set_cookie(
+            key="admin_session",
+            value=access_token,
+            httponly=True,
+            secure=is_https,
+            samesite="lax",
+            max_age=8 * 3600,
+            path="/"
+        )
+
+    record_audit_log(
+        db=db,
+        admin_user=None,
+        action="INVITATION_ACCEPTED",
+        resource=f"user:{user.id}",
+        new_value=json.dumps({"email": user.email, "role": user.role}),
+        ip_address=get_client_ip(request)
+    )
+
+    return {
+        "success": True,
+        "message": f"Welcome, {user.email}! Your account is active.",
+        "access_token": access_token,
+        "user": serialize_user(user)
     }
 
 
@@ -257,9 +486,14 @@ def admin_login(
     Includes sliding-window rate limiting against brute-force attempts.
     Returns signed access token and sets an HttpOnly secure session cookie.
     """
-    raw_email = payload.email if payload.email and payload.email.strip() else "admin@example.com"
-    raw_pass = payload.password if payload.password and payload.password.strip() else "SuperAdminPass123!"
-    email_clean = raw_email.strip().lower()
+    raw_email = (payload.email or "").strip()
+    raw_pass = payload.password or ""
+    if not raw_email or not raw_pass:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email and password are required."
+        )
+    email_clean = raw_email.lower()
     
     # 1. Check Rate Limit (5 attempts per 5 min)
     check_login_rate_limit(request, email_clean)
@@ -602,6 +836,270 @@ def delete_user(
 # ------------------------------------------------------------------------------
 # 3. ROLES & PERMISSIONS DIRECTORY
 # ------------------------------------------------------------------------------
+
+
+@admin_router.post("/invitations", status_code=status.HTTP_201_CREATED)
+def create_invitation(
+    payload: UserInviteRequest,
+    request: Request,
+    current_admin: UserAccount = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    email_clean = payload.email.strip().lower()
+    target_role = payload.role.strip().lower() if payload.role else "candidate"
+    plan_tier = payload.plan_tier.strip().lower() if payload.plan_tier else "free"
+
+    # Strict role and plan allowlists
+    ALLOWED_ROLES = {"candidate", "admin", "super_admin"}
+    if target_role not in ALLOWED_ROLES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid role '{target_role}'. Allowed roles: {', '.join(sorted(ALLOWED_ROLES))}."
+        )
+
+    ALLOWED_PLANS = {"free", "pro", "enterprise"}
+    if plan_tier not in ALLOWED_PLANS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid plan tier '{plan_tier}'. Allowed plan tiers: {', '.join(sorted(ALLOWED_PLANS))}."
+        )
+
+    # Email pattern validation
+    email_regex = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
+    if not email_regex.match(email_clean) or len(email_clean) > 255:
+        raise HTTPException(status_code=400, detail="Invalid email format.")
+
+    existing_user = db.query(UserAccount).filter(func.lower(UserAccount.email) == email_clean).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail=f"User '{email_clean}' is already registered in the platform.")
+
+    if current_admin.role != "super_admin" and target_role in ["super_admin", "admin"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only Super Administrators can invite Admin or Super Admin accounts."
+        )
+
+    # Invalidate any prior pending invitations for this email
+    prior_invites = db.query(UserInvitation).filter(
+        func.lower(UserInvitation.email) == email_clean,
+        UserInvitation.is_revoked == False,
+        UserInvitation.accepted_at == None
+    ).all()
+    for prior in prior_invites:
+        prior.is_revoked = True
+
+    raw_token = secrets.token_urlsafe(32)
+    token_hash = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
+
+    invitation = UserInvitation(
+        email=email_clean,
+        role=target_role,
+        plan_tier=plan_tier,
+        token_hash=token_hash,
+        invited_by_user_id=current_admin.id,
+        invited_by_email=current_admin.email,
+        created_at=datetime.now(timezone.utc),
+        expires_at=expires_at,
+        is_revoked=False
+    )
+    db.add(invitation)
+    db.commit()
+    db.refresh(invitation)
+
+    base_url = get_base_app_url()
+    invite_url = f"{base_url}/accept-invite?token={raw_token}"
+
+    email_result = send_invitation_email(
+        to_email=email_clean,
+        invite_url=invite_url,
+        role=target_role,
+        expires_at=expires_at,
+        invited_by=current_admin.email
+    )
+
+    record_audit_log(
+        db=db,
+        admin_user=current_admin,
+        action="USER_INVITED",
+        resource=f"invitation:{invitation.id}",
+        new_value=json.dumps({"email": email_clean, "role": target_role, "plan": plan_tier}),
+        ip_address=get_client_ip(request)
+    )
+
+    is_prod = bool(os.environ.get("VERCEL") or os.environ.get("ENV", "").lower() in ["production", "prod"])
+
+    if email_result.get("provider") in ["resend", "smtp"]:
+        msg = f"Invitation successfully sent to '{email_clean}'."
+    elif is_prod:
+        msg = (
+            f"Invitation created for '{email_clean}'. "
+            "Notice: Email delivery provider (RESEND_API_KEY or SMTP_HOST) is not configured in this environment; "
+            "invitation email could not be dispatched."
+        )
+    else:
+        msg = f"Invitation successfully sent to '{email_clean}'."
+
+    serialized = serialize_invitation(invitation)
+
+    response_data = {
+        "success": True,
+        "message": msg,
+        "invitation": serialized,
+        "email_delivery": {
+            "dispatched": email_result.get("provider") in ["resend", "smtp"],
+            "provider": email_result.get("provider")
+        }
+    }
+
+    # Only include invite_url in non-production environments for testing and local dev
+    if not is_prod:
+        serialized["invite_url"] = invite_url
+        response_data["invite_url"] = invite_url
+
+    return response_data
+
+
+@admin_router.get("/invitations")
+def list_invitations(
+    status_filter: Optional[str] = Query(None, alias="status"),
+    search: Optional[str] = None,
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    current_admin: UserAccount = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    query = db.query(UserInvitation)
+
+    if search:
+        s_clean = search.strip().lower()
+        query = query.filter(func.lower(UserInvitation.email).contains(s_clean))
+
+    all_invites = query.order_by(desc(UserInvitation.created_at)).all()
+    serialized = [serialize_invitation(inv) for inv in all_invites]
+
+    if status_filter:
+        sf = status_filter.strip().lower()
+        serialized = [inv for inv in serialized if inv["status"] == sf]
+
+    total = len(serialized)
+    paginated = serialized[offset:offset + limit]
+
+    return {
+        "total": total,
+        "offset": offset,
+        "limit": limit,
+        "invitations": paginated
+    }
+
+
+@admin_router.post("/invitations/{invitation_id}/resend")
+def resend_invitation(
+    invitation_id: int,
+    request: Request,
+    current_admin: UserAccount = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    inv = db.query(UserInvitation).filter(UserInvitation.id == invitation_id).first()
+    if not inv:
+        raise HTTPException(status_code=404, detail="Invitation record not found.")
+
+    if inv.accepted_at:
+        raise HTTPException(status_code=400, detail="Cannot resend an invitation that has already been accepted.")
+
+    raw_token = secrets.token_urlsafe(32)
+    inv.token_hash = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
+    inv.expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
+    inv.is_revoked = False
+    db.commit()
+    db.refresh(inv)
+
+    base_url = get_base_app_url()
+    invite_url = f"{base_url}/accept-invite?token={raw_token}"
+
+    email_result = send_invitation_email(
+        to_email=inv.email,
+        invite_url=invite_url,
+        role=inv.role,
+        expires_at=inv.expires_at,
+        invited_by=current_admin.email
+    )
+
+    record_audit_log(
+        db=db,
+        admin_user=current_admin,
+        action="INVITATION_RESENT",
+        resource=f"invitation:{inv.id}",
+        new_value=json.dumps({"email": inv.email, "expires_at": inv.expires_at.isoformat()}),
+        ip_address=get_client_ip(request)
+    )
+
+    is_prod = bool(os.environ.get("VERCEL") or os.environ.get("ENV", "").lower() in ["production", "prod"])
+
+    if email_result.get("provider") in ["resend", "smtp"]:
+        msg = f"Invitation resent to '{inv.email}'."
+    elif is_prod:
+        msg = (
+            f"Invitation refreshed for '{inv.email}'. "
+            "Notice: Email delivery provider (RESEND_API_KEY or SMTP_HOST) is not configured in this environment; "
+            "invitation email could not be dispatched."
+        )
+    else:
+        msg = f"Invitation resent to '{inv.email}'."
+
+    serialized = serialize_invitation(inv)
+
+    response_data = {
+        "success": True,
+        "message": msg,
+        "invitation": serialized,
+        "email_delivery": {
+            "dispatched": email_result.get("provider") in ["resend", "smtp"],
+            "provider": email_result.get("provider")
+        }
+    }
+
+    if not is_prod:
+        serialized["invite_url"] = invite_url
+        response_data["invite_url"] = invite_url
+
+    return response_data
+
+
+@admin_router.delete("/invitations/{invitation_id}")
+@admin_router.post("/invitations/{invitation_id}/revoke")
+def revoke_invitation(
+    invitation_id: int,
+    request: Request,
+    current_admin: UserAccount = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    inv = db.query(UserInvitation).filter(UserInvitation.id == invitation_id).first()
+    if not inv:
+        raise HTTPException(status_code=404, detail="Invitation record not found.")
+
+    if inv.accepted_at:
+        raise HTTPException(status_code=400, detail="Cannot revoke an invitation that has already been accepted.")
+
+    inv.is_revoked = True
+    db.commit()
+    db.refresh(inv)
+
+    record_audit_log(
+        db=db,
+        admin_user=current_admin,
+        action="INVITATION_REVOKED",
+        resource=f"invitation:{inv.id}",
+        new_value=f"Revoked invitation for {inv.email}",
+        ip_address=get_client_ip(request)
+    )
+
+    return {
+        "success": True,
+        "message": f"Invitation for '{inv.email}' has been revoked.",
+        "invitation": serialize_invitation(inv)
+    }
+
 
 @admin_router.get("/roles")
 def get_roles_directory(

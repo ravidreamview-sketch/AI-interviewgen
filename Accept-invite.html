@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RaviGen AI Studio — Accept Invitation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#08141E;      --paper-2:#0D2130;    --sheet:#112B3E;
+  --ink:#F8FAFC;        --ink-soft:#94A3B8;   --ink-faint:#64748B;
+  --board:#050D14;      --board-2:#0A1926;    --board-ink:#F8FAFC;
+  --primary:#34D399;    --primary-dark:#10B981; --primary-forest:#15803D;
+  --primary-grad:linear-gradient(135deg, #166534 0%, #15803D 50%, #16A34A 100%);
+  --emerald-grad:linear-gradient(135deg, #059669 0%, #10B981 50%, #34D399 100%);
+  --pen:#34D399;        --pen-soft:#6EE7B7;   --pen-wash:rgba(16, 185, 129, 0.15);
+  --label-color:#34D399;
+  --rule:#1A364E;       --rule-soft:#132738;
+  --gold:#FBBF24;       --pass:#34D399;       --err:#F87171; --err-wash:rgba(239, 68, 68, 0.15);
+  --shadow:0 14px 40px -10px rgba(0, 0, 0, 0.6);
+  --radius:16px;
+  --f-ui:"Inter",system-ui,-apple-system,sans-serif;
+  --f-mono:"JetBrains Mono","Inter",ui-monospace,monospace;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100vh;height:100%}
+body{
+  background:var(--paper-2);color:var(--ink);
+  font-family:var(--f-ui);font-size:15px;line-height:1.5;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;overflow-x:hidden;
+}
+
+.bg-glow {
+  position: absolute;
+  width: 600px; height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.18) 0%, rgba(6, 182, 212, 0.08) 50%, transparent 70%);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 460px;
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 40px 36px;
+  box-shadow: var(--shadow);
+  position: relative;
+  z-index: 10;
+  backdrop-filter: blur(16px);
+}
+
+.brand-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.brand-logo-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.brand-logo-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 18px rgba(56, 189, 248, 0.45), 0 0 10px rgba(129, 140, 248, 0.4);
+  border: 1.5px solid rgba(56, 189, 248, 0.6);
+  background: #08141E;
+}
+
+.brand-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: #FFF;
+}
+
+.brand-title .brand-name { color: #38BDF8; }
+.brand-title .brand-ai {
+  background: linear-gradient(135deg, #818CF8 0%, #C084FC 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.brand-sub {
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #94A3B8;
+  margin-top: 2px;
+  font-weight: 700;
+}
+
+.subtitle {
+  color: var(--ink-soft);
+  font-size: 14px;
+  margin-top: 6px;
+}
+
+.form-group { margin-bottom: 18px; }
+
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+.invite-badge-box {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.invite-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.invite-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  font-family: var(--f-mono);
+  background: rgba(56, 189, 248, 0.15);
+  color: #38BDF8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #166534 0%, #15803D 50%, #16A34A 100%);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  box-shadow: 0 8px 24px rgba(22, 163, 74, 0.4);
+  border-radius: 12px;
+  color: #FFF;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-top: 8px;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px -4px rgba(22, 163, 74, 0.55);
+}
+
+.btn-secondary {
+  width: 100%;
+  padding: 12px 20px;
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  color: var(--ink-soft);
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 10px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+}
+.btn-secondary:hover { color: var(--ink); border-color: var(--ink-soft); }
+
+.alert-box {
+  padding: 14px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 20px;
+  display: none;
+  line-height: 1.5;
+}
+
+.alert-error {
+  background: var(--err-wash);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: var(--err);
+}
+
+.alert-success {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: var(--primary);
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 24px auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-view { text-align: center; padding: 20px 0; }
+</style>
+<link rel="stylesheet" href="/typography.css">
+</head>
+<body>
+
+<div class="bg-glow"></div>
+
+<div class="login-card">
+  <div class="brand-header">
+    <div class="brand-logo-row">
+      <img class="brand-logo-img" src="/logo.png" alt="RaviGen AI Logo" onerror="this.onerror=null;this.src='/logo.png';" />
+      <div style="text-align: left;">
+        <div class="brand-title"><span class="brand-name">RaviGen</span> <span class="brand-ai">AI</span></div>
+        <div class="brand-sub">INTERVIEW STUDIO</div>
+      </div>
+    </div>
+    <div class="subtitle">Complete Your Registration</div>
+  </div>
+
+  <div id="errorBox" class="alert-box alert-error"></div>
+  <div id="successBox" class="alert-box alert-success"></div>
+
+  <!-- 1. LOADING VIEW -->
+  <div id="loadingView" class="loading-view">
+    <div class="spinner"></div>
+    <div style="color:var(--ink-soft);font-size:13.5px">Validating your invitation...</div>
+  </div>
+
+  <!-- 2. INVALID / EXPIRED VIEW -->
+  <div id="invalidView" style="display:none;text-align:center">
+    <p id="invalidMessage" style="color:var(--err);font-size:14px;margin-bottom:20px"></p>
+    <a href="/candidate/login" class="btn-primary" style="display:inline-block;text-decoration:none">Go to Sign In</a>
+  </div>
+
+  <!-- 3. ACCEPT INVITATION FORM -->
+  <form id="acceptInviteForm" style="display:none" onsubmit="handleAcceptInvitation(event)">
+    <div class="invite-badge-box">
+      <div class="invite-row">
+        <span style="color:var(--ink-soft)">Invited Email:</span>
+        <b id="displayEmail" style="color:#FFF"></b>
+      </div>
+      <div class="invite-row">
+        <span style="color:var(--ink-soft)">Assigned Role:</span>
+        <span id="displayRole" class="invite-pill">Candidate</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="fullName">Your Full Name (Optional)</label>
+      <input type="text" id="fullName" class="form-input" placeholder="e.g. John Doe" autocomplete="name" />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="password">Create Password</label>
+      <input type="password" id="password" class="form-input" placeholder="Minimum 6 characters" minlength="6" autocomplete="new-password" required />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="confirmPassword">Confirm Password</label>
+      <input type="password" id="confirmPassword" class="form-input" placeholder="Repeat your password" minlength="6" autocomplete="new-password" required />
+    </div>
+
+    <button type="submit" id="submitBtn" class="btn-primary">Activate Account &amp; Sign In</button>
+  </form>
+</div>
+
+<script>
+let INVITE_TOKEN = "";
+
+async function initAcceptPage() {
+  const urlParams = new URLSearchParams(window.location.search);
+  INVITE_TOKEN = urlParams.get('token');
+
+  if (!INVITE_TOKEN) {
+    showInvalid("No invitation token provided. Please check your invitation link.");
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/auth/invitation?token=${encodeURIComponent(INVITE_TOKEN)}`);
+    const data = await res.json();
+
+    document.getElementById('loadingView').style.display = 'none';
+
+    if (!res.ok || !data.valid) {
+      showInvalid(data.message || "This invitation is invalid or has expired.");
+      return;
+    }
+
+    // Populate invitation details
+    document.getElementById('displayEmail').textContent = data.email || 'You';
+    document.getElementById('displayRole').textContent = (data.role || 'candidate').toUpperCase();
+    document.getElementById('acceptInviteForm').style.display = 'block';
+
+  } catch (err) {
+    document.getElementById('loadingView').style.display = 'none';
+    showInvalid("Unable to verify invitation link. Please check your network connection.");
+  }
+}
+
+function showInvalid(msg) {
+  document.getElementById('loadingView').style.display = 'none';
+  document.getElementById('invalidView').style.display = 'block';
+  document.getElementById('invalidMessage').textContent = msg;
+}
+
+async function handleAcceptInvitation(e) {
+  e.preventDefault();
+  const pwd = document.getElementById('password').value;
+  const cpwd = document.getElementById('confirmPassword').value;
+  const name = document.getElementById('fullName').value.trim();
+
+  const errorBox = document.getElementById('errorBox');
+  const successBox = document.getElementById('successBox');
+  errorBox.style.display = 'none';
+  successBox.style.display = 'none';
+
+  if (pwd.length < 6) {
+    errorBox.textContent = "Password must be at least 6 characters long.";
+    errorBox.style.display = 'block';
+    return;
+  }
+
+  if (pwd !== cpwd) {
+    errorBox.textContent = "Passwords do not match.";
+    errorBox.style.display = 'block';
+    return;
+  }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = "Creating Account...";
+
+  try {
+    const res = await fetch('/api/auth/accept-invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        token: INVITE_TOKEN,
+        password: pwd,
+        full_name: name || undefined
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      errorBox.textContent = data.detail || data.message || "Failed to accept invitation.";
+      errorBox.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = "Activate Account & Sign In";
+      return;
+    }
+
+    // Success!
+    if (data.access_token) {
+      localStorage.setItem('candidate_token', data.access_token);
+      if (data.user) {
+        localStorage.setItem('candidate_user', JSON.stringify(data.user));
+      }
+    }
+
+    successBox.textContent = "Account successfully activated! Redirecting to your workspace...";
+    successBox.style.display = 'block';
+    document.getElementById('acceptInviteForm').style.display = 'none';
+
+    setTimeout(() => {
+      if (data.user && (data.user.role === 'admin' || data.user.role === 'super_admin')) {
+        window.location.href = '/admin';
+      } else {
+        window.location.href = '/candidate/dashboard';
+      }
+    }, 1200);
+
+  } catch (err) {
+    errorBox.textContent = "Network error connecting to authentication server.";
+    errorBox.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = "Activate Account & Sign In";
+  }
+}
+
+window.addEventListener('DOMContentLoaded', initAcceptPage);
+</script>
+</body>
+</html>
+

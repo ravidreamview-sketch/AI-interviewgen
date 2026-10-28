@@ -2021,6 +2021,12 @@ def serve_login():
         return RedirectResponse(url="/candidate/dashboard", status_code=307)
     return get_html_response("Candidate-login.html")
 
+@app.get("/accept-invite", include_in_schema=False)
+@app.get("/accept-invite.html", include_in_schema=False)
+@app.get("/invite/accept", include_in_schema=False)
+def serve_accept_invite():
+    return get_html_response("Accept-invite.html")
+
 @app.get("/candidate", include_in_schema=False)
 @app.get("/candidate/", include_in_schema=False)
 @app.get("/candidate/dashboard", include_in_schema=False)
