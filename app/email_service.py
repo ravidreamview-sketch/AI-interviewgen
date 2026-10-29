@@ -15,17 +15,64 @@ logger = logging.getLogger("ravi.email_service")
 def get_base_app_url() -> str:
     """
     Resolves the canonical base application URL for invitation links.
-    Priority:
-    1. Explicit APP_URL configuration (APP_URL, NEXT_PUBLIC_APP_URL, PUBLIC_URL)
-    2. Vercel Preview deployment (VERCEL_ENV=preview or ENV=preview):
-       resolves PREVIEW_APP_URL or deployment-specific VERCEL_URL.
-    3. Production deployment (VERCEL_ENV=production or ENVIRONMENT/ENV in ['production', 'prod']):
-       resolves VERCEL_PROJECT_PRODUCTION_URL or canonical default "https://ai-interviewgen.vercel.app".
-    4. Deployment-specific VERCEL_URL (if present in other Vercel contexts).
-    5. Local development fallback ("http://localhost:8000").
-    Note: VERCEL=1 alone is NOT treated as proof of production.
+
+    Precedence & Environment Scoping:
+    1. Vercel Preview Deployments (VERCEL_ENV=preview or ENV=preview):
+       - Uses PREVIEW_APP_URL if explicitly configured.
+       - Uses deployment-specific VERCEL_URL (e.g. https://{VERCEL_URL}).
+       - Guards against accidentally inheriting a production-only APP_URL
+         (e.g., https://ai-interviewgen.vercel.app) configured globally in Vercel.
+       - Uses APP_URL only if it is a non-production custom preview domain.
+    2. Explicit Production APP_URL (APP_URL, NEXT_PUBLIC_APP_URL, PUBLIC_URL):
+       - Takes precedence in production or non-preview environments.
+    3. Production Environment (VERCEL_ENV=production or ENVIRONMENT/ENV in ['production', 'prod']):
+       - Uses VERCEL_PROJECT_PRODUCTION_URL if set.
+       - Falls back to canonical production domain: "https://ai-interviewgen.vercel.app".
+    4. General Vercel Deployment Fallback:
+       - Uses VERCEL_URL if set.
+    5. Local Development Fallback:
+       - Defaults to "http://localhost:8000".
+       - VERCEL=1 alone without VERCEL_ENV=production is NOT treated as production.
     """
-    # 1. Explicit configuration takes absolute precedence
+    vercel_env = (os.environ.get("VERCEL_ENV") or "").lower().strip()
+    generic_env = (os.environ.get("ENVIRONMENT") or os.environ.get("ENV") or "").lower().strip()
+    canonical_prod_domain = "ai-interviewgen.vercel.app"
+    vercel_prod_domain = (os.environ.get("VERCEL_PROJECT_PRODUCTION_URL") or "").strip().rstrip("/")
+    if vercel_prod_domain.startswith("https://"):
+        vercel_prod_domain = vercel_prod_domain[len("https://"):]
+    elif vercel_prod_domain.startswith("http://"):
+        vercel_prod_domain = vercel_prod_domain[len("http://"):]
+
+    # 1. Preview Deployment Scoping
+    if vercel_env == "preview" or generic_env == "preview":
+        # A. Explicit preview override
+        preview_app_url = (os.environ.get("PREVIEW_APP_URL") or "").strip()
+        if preview_app_url:
+            if not preview_app_url.startswith("http://") and not preview_app_url.startswith("https://"):
+                preview_app_url = f"https://{preview_app_url}"
+            return preview_app_url.rstrip("/")
+
+        # B. Intentional explicit override (APP_URL), provided it is NOT the production domain
+        raw_app_url = (os.environ.get("APP_URL") or os.environ.get("NEXT_PUBLIC_APP_URL") or os.environ.get("PUBLIC_URL") or "").strip()
+        if raw_app_url:
+            cleaned_app_url = raw_app_url
+            if not cleaned_app_url.startswith("http://") and not cleaned_app_url.startswith("https://"):
+                cleaned_app_url = f"https://{cleaned_app_url}"
+            cleaned_app_url = cleaned_app_url.rstrip("/")
+
+            parsed_host = cleaned_app_url.split("://")[-1].split("/")[0].lower()
+            is_prod_target = (parsed_host == canonical_prod_domain.lower()) or (vercel_prod_domain and parsed_host == vercel_prod_domain.lower())
+            if not is_prod_target:
+                return cleaned_app_url
+
+        # C. Deployment-specific VERCEL_URL (canonical for Preview deployments)
+        vercel_url = (os.environ.get("VERCEL_URL") or "").strip()
+        if vercel_url:
+            if not vercel_url.startswith("http://") and not vercel_url.startswith("https://"):
+                vercel_url = f"https://{vercel_url}"
+            return vercel_url.rstrip("/")
+
+    # 2. Explicit APP_URL (for Production or non-preview environments)
     for env_key in ("APP_URL", "NEXT_PUBLIC_APP_URL", "PUBLIC_URL"):
         val = (os.environ.get(env_key) or "").strip()
         if val:
@@ -33,34 +80,20 @@ def get_base_app_url() -> str:
                 val = f"https://{val}"
             return val.rstrip("/")
 
-    vercel_env = (os.environ.get("VERCEL_ENV") or "").lower().strip()
-    generic_env = (os.environ.get("ENVIRONMENT") or os.environ.get("ENV") or "").lower().strip()
-
-    # 2. Preview deployments: use preview-specific URL
-    if vercel_env == "preview" or generic_env == "preview":
-        preview_url = (os.environ.get("PREVIEW_APP_URL") or os.environ.get("VERCEL_URL") or "").strip()
-        if preview_url:
-            if not preview_url.startswith("http://") and not preview_url.startswith("https://"):
-                preview_url = f"https://{preview_url}"
-            return preview_url.rstrip("/")
-
-    # 3. Production deployments: resolve canonical production URL
+    # 3. Production Environment Resolution
     if vercel_env == "production" or generic_env in ["production", "prod"]:
-        vercel_prod = (os.environ.get("VERCEL_PROJECT_PRODUCTION_URL") or "").strip()
-        if vercel_prod:
-            if not vercel_prod.startswith("http://") and not vercel_prod.startswith("https://"):
-                vercel_prod = f"https://{vercel_prod}"
-            return vercel_prod.rstrip("/")
-        return "https://ai-interviewgen.vercel.app"
+        if vercel_prod_domain:
+            return f"https://{vercel_prod_domain}"
+        return f"https://{canonical_prod_domain}"
 
-    # 4. Fallback for deployment-specific URL if present (without assuming production)
+    # 4. Fallback for other Vercel contexts
     vercel_url = (os.environ.get("VERCEL_URL") or "").strip()
     if vercel_url:
         if not vercel_url.startswith("http://") and not vercel_url.startswith("https://"):
             vercel_url = f"https://{vercel_url}"
         return vercel_url.rstrip("/")
 
-    # 5. Local development fallback
+    # 5. Local Development Fallback
     return "http://localhost:8000"
 
 
@@ -73,7 +106,10 @@ def send_invitation_email(
 ) -> Dict[str, Any]:
     """
     Sends an invitation email with a secure registration link.
-    Supports SMTP, Resend HTTP API, SendGrid API, or local dev/test fallback logging.
+    Supports Resend HTTP API, SMTP, or safe local dev fallback.
+    Guarantees:
+    - Configured provider failures return explicit failure (never falsely reported success).
+    - Production and Preview environments do not log sensitive invitation tokens.
     """
     role_display = "Staff Administrator" if role == "admin" else ("Super Administrator" if role == "super_admin" else "Candidate")
     sender_name = invited_by or "The Administrator"
@@ -156,9 +192,13 @@ If you did not request this invitation, you can safely ignore this message.
 — RaviGen AI Team
 """
 
+    attempted_providers = []
+    provider_errors = {}
+
     # 1. Try Resend API (if configured)
     resend_key = (os.environ.get("RESEND_API_KEY") or "").strip()
     if resend_key:
+        attempted_providers.append("resend")
         try:
             req_data = {
                 "from": os.environ.get("EMAIL_FROM") or "RaviGen AI <invitations@ai-interviewgen.vercel.app>",
@@ -181,11 +221,13 @@ If you did not request this invitation, you can safely ignore this message.
                 logger.info("[EmailService] Resend email dispatched to %s (id: %s)", to_email, resp_body.get("id"))
                 return {"success": True, "provider": "resend", "delivery_id": resp_body.get("id")}
         except Exception as e:
-            logger.warning("[EmailService] Resend API failed, falling back to SMTP/Dev: %s", e)
+            provider_errors["resend"] = str(e)
+            logger.warning("[EmailService] Resend API delivery failed: %s", e)
 
     # 2. Try Standard SMTP (if configured)
     smtp_host = (os.environ.get("SMTP_HOST") or "").strip()
     if smtp_host:
+        attempted_providers.append("smtp")
         try:
             smtp_port = int(os.environ.get("SMTP_PORT", "587"))
             smtp_user = os.environ.get("SMTP_USER", "").strip()
@@ -206,15 +248,31 @@ If you did not request this invitation, you can safely ignore this message.
                 if smtp_user and smtp_pass:
                     server.login(smtp_user, smtp_pass)
                 server.sendmail(smtp_from, [to_email], msg.as_string())
-            
+
             logger.info("[EmailService] SMTP email sent to %s via %s", to_email, smtp_host)
             return {"success": True, "provider": "smtp"}
         except Exception as e:
+            provider_errors["smtp"] = str(e)
             logger.warning("[EmailService] SMTP delivery failed: %s", e)
 
-    # 3. Development / Safe Local Fallback
-    is_prod = bool(os.environ.get("VERCEL") or os.environ.get("ENV", "").lower() in ["production", "prod"])
-    if is_prod:
+    # If any provider was configured but failed, report an explicit delivery failure
+    if attempted_providers:
+        err_msg = "; ".join(f"{k}: {v}" for k, v in provider_errors.items())
+        return {
+            "success": False,
+            "provider": attempted_providers[0],
+            "error": err_msg,
+            "message": f"Email delivery provider failed: {err_msg}"
+        }
+
+    # 3. Development / Safe Local Fallback when no provider is configured
+    is_deployed = bool(
+        os.environ.get("VERCEL_ENV") in ["production", "preview"]
+        or os.environ.get("ENVIRONMENT") in ["production", "preview", "prod"]
+        or os.environ.get("ENV", "").lower() in ["production", "preview", "prod"]
+        or os.environ.get("VERCEL")
+    )
+    if is_deployed:
         logger.warning(
             "[EmailService] No active email delivery provider configured (RESEND_API_KEY or SMTP_HOST missing). "
             "Invitation email for %s could not be dispatched.",
@@ -240,4 +298,3 @@ If you did not request this invitation, you can safely ignore this message.
         "message": f"Invitation link generated and logged for {to_email}",
         "invite_url": invite_url
     }
-

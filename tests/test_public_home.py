@@ -29,10 +29,30 @@ class TestPublicHome(unittest.TestCase):
         root_rewrite = next(rule for rule in config["rewrites"] if rule["source"] == "/")
 
         self.assertEqual(root_rewrite["destination"], "/api/index.py?__path=/")
-        self.assertEqual(
-            config["functions"]["api/index.py"]["includeFiles"],
-            "{app/**,Public-home.html}",
-        )
+        include_files = config["functions"]["api/index.py"]["includeFiles"]
+        self.assertIn("Public-home.html", include_files)
+        self.assertIn("Accept-invite.html", include_files)
+        self.assertEqual(include_files, "{app/**,Public-home.html,Accept-invite.html}")
+
+    def test_vercel_entrypoint_routes_accept_invite_page(self):
+        # 1. Direct path via Vercel override query param with token
+        res_override = vercel_client.get("/api/index.py?__path=/accept-invite&token=TEST_TOKEN_12345")
+        self.assertEqual(res_override.status_code, 200)
+        self.assertIn("text/html", res_override.headers.get("content-type", ""))
+        self.assertIn("Accept Invitation", res_override.text)
+        self.assertIn("RaviGen AI Studio", res_override.text)
+
+        # 2. Canonical /accept-invite path
+        res_direct = client.get("/accept-invite?token=TEST_TOKEN_12345")
+        self.assertEqual(res_direct.status_code, 200)
+        self.assertIn("text/html", res_direct.headers.get("content-type", ""))
+        self.assertIn("Accept Invitation", res_direct.text)
+
+        # 3. PascalCase /Accept-invite.html path
+        res_html = client.get("/Accept-invite.html?token=TEST_TOKEN_12345")
+        self.assertEqual(res_html.status_code, 200)
+        self.assertIn("text/html", res_html.headers.get("content-type", ""))
+        self.assertIn("Accept Invitation", res_html.text)
 
     def test_vercel_entrypoint_routes_home_health_and_candidate_login(self):
         home = vercel_client.get("/api/index.py?__path=/")

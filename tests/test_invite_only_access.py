@@ -1,3 +1,4 @@
+from pathlib import Path
 import unittest
 from unittest.mock import patch
 import os
@@ -887,6 +888,48 @@ class TestInviteOnlyAccess(unittest.TestCase):
             self.assertEqual(parsed.path, "/accept-invite")
             query_params = urllib.parse.parse_qs(parsed.query)
             self.assertEqual(query_params.get("token"), [dummy_token])
+
+
+    # 28. Serverless Bundle includeFiles Configuration
+    def test_vercel_serverless_bundle_includes_accept_invite_html(self):
+        ROOT = Path(__file__).resolve().parent.parent
+        config = json.loads((ROOT / "vercel.json").read_text(encoding="utf-8"))
+        include_files = config.get("functions", {}).get("api/index.py", {}).get("includeFiles", "")
+        self.assertIn("Accept-invite.html", include_files)
+        self.assertIn("Public-home.html", include_files)
+        self.assertIn("app/**", include_files)
+
+    # 29. Preview Scoping Prevents Inherited Production APP_URL Leakage
+    def test_preview_scoping_prevents_inherited_production_app_url_leakage(self):
+        from app.email_service import get_base_app_url
+        with patch.dict(os.environ, {
+            "VERCEL": "1",
+            "VERCEL_ENV": "preview",
+            "APP_URL": "https://ai-interviewgen.vercel.app",  # Production URL unintentionally shared
+            "VERCEL_URL": "ai-interviewgen-git-preview-pr-42.vercel.app",
+            "VERCEL_PROJECT_PRODUCTION_URL": "ai-interviewgen.vercel.app",
+            "PREVIEW_APP_URL": ""
+        }, clear=False):
+            # Must resolve to preview deployment, NOT leaked production APP_URL
+            self.assertEqual(get_base_app_url(), "https://ai-interviewgen-git-preview-pr-42.vercel.app")
+
+    # 30. Explicit Email Provider Failure Handling
+    def test_email_provider_failure_returns_explicit_failure_and_protects_tokens(self):
+        from app.email_service import send_invitation_email
+        with patch.dict(os.environ, {
+            "RESEND_API_KEY": "re_invalid_test_key_xyz",
+            "SMTP_HOST": "",
+            "VERCEL_ENV": "production"
+        }, clear=False):
+            # A configured but failing provider must return an explicit failure
+            res = send_invitation_email(
+                to_email="test_failure@example.com",
+                invite_url="https://ai-interviewgen.vercel.app/accept-invite?token=SECRET_TOKEN_XYZ",
+                role="candidate"
+            )
+            self.assertFalse(res.get("success"))
+            self.assertEqual(res.get("provider"), "resend")
+            self.assertIn("Email delivery provider failed", res.get("message", ""))
 
 
 if __name__ == "__main__":
