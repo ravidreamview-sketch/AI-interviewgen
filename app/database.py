@@ -198,6 +198,14 @@ def _acquire_advisory_lock(conn, dialect: str) -> bool:
         return True
     except Exception as e:
         logger.warning(f"Could not acquire PostgreSQL advisory lock: {e}")
+        if _is_production_mode():
+            logger.error(
+                f"[DB Init Error] Failed to acquire PostgreSQL advisory lock in production mode: {e}. "
+                "Aborting schema initialization to prevent concurrent migration corruption."
+            )
+            raise RuntimeError(
+                f"PostgreSQL advisory lock acquisition failed in production: {e}"
+            ) from e
         return False
 
 
@@ -220,6 +228,8 @@ def _advisory_lock_guard(conn, dialect: str):
     acquired = False
     if is_postgres:
         acquired = _acquire_advisory_lock(conn, dialect)
+        if not acquired and _is_production_mode():
+            raise RuntimeError("PostgreSQL advisory lock could not be acquired in production mode.")
     try:
         yield acquired
     finally:

@@ -296,6 +296,58 @@ class TestDatabaseInitResilience(unittest.TestCase):
             os.environ.pop("SUPER_ADMIN_EMAIL", None)
             os.environ.pop("SUPER_ADMIN_PASSWORD", None)
 
+    def test_14_advisory_lock_failure_in_production_raises_runtime_error(self):
+        """Verifies advisory lock failure in production raises RuntimeError and aborts concurrent migration."""
+        mock_conn = MagicMock()
+        mock_conn.execute.side_effect = RuntimeError("Lock acquisition timeout")
+
+        orig_env = os.environ.get("ENV")
+        try:
+            os.environ["ENV"] = "production"
+            with self.assertRaises(RuntimeError) as ctx:
+                _acquire_advisory_lock(mock_conn, "postgresql")
+            self.assertIn("PostgreSQL advisory lock acquisition failed in production", str(ctx.exception))
+        finally:
+            if orig_env is not None:
+                os.environ["ENV"] = orig_env
+            else:
+                os.environ.pop("ENV", None)
+
+    def test_15_advisory_lock_guard_in_production_fails_fast_on_unacquired_lock(self):
+        """Verifies _advisory_lock_guard raises RuntimeError in production when lock cannot be acquired."""
+        mock_conn = MagicMock()
+        mock_conn.execute.side_effect = RuntimeError("Deadlock detected")
+
+        orig_env = os.environ.get("ENV")
+        try:
+            os.environ["ENV"] = "production"
+            with self.assertRaises(RuntimeError):
+                with _advisory_lock_guard(mock_conn, "postgresql"):
+                    self.fail("Should not execute protected migration block when advisory lock fails in production")
+        finally:
+            if orig_env is not None:
+                os.environ["ENV"] = orig_env
+            else:
+                os.environ.pop("ENV", None)
+
+    def test_16_advisory_lock_failure_in_development_returns_false_safely(self):
+        """Verifies advisory lock failure in development mode logs warning and returns False without raising."""
+        mock_conn = MagicMock()
+        mock_conn.execute.side_effect = RuntimeError("Development mock error")
+
+        orig_env = os.environ.get("ENV")
+        orig_vercel = os.environ.get("VERCEL")
+        try:
+            os.environ.pop("ENV", None)
+            os.environ.pop("VERCEL", None)
+            acquired = _acquire_advisory_lock(mock_conn, "postgresql")
+            self.assertFalse(acquired)
+        finally:
+            if orig_env is not None:
+                os.environ["ENV"] = orig_env
+            if orig_vercel is not None:
+                os.environ["VERCEL"] = orig_vercel
+
     @classmethod
     def tearDownClass(cls):
         """Restores default development accounts so local login works seamlessly."""
