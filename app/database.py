@@ -507,9 +507,11 @@ def _run_account_bootstrap():
                 clean_email = admin_email.strip().lower()
                 clean_password = admin_password.strip()
 
-                if not existing_super:
+                admin_user = db.query(db_models.UserAccount).filter(db_models.UserAccount.email == clean_email).first()
+                if not admin_user:
                     super_admin = db_models.UserAccount(
                         email=clean_email,
+                        full_name="Super Administrator",
                         password_hash=hash_password(clean_password),
                         role="super_admin",
                         plan_tier="enterprise",
@@ -519,8 +521,10 @@ def _run_account_bootstrap():
                     db.commit()
                     logger.info("Provisioned initial Super Admin account (development fallback)")
                 else:
-                    if not verify_password(clean_password, existing_super.password_hash):
-                        existing_super.password_hash = hash_password(clean_password)
+                    admin_user.role = "super_admin"
+                    admin_user.is_active = True
+                    if not verify_password(clean_password, admin_user.password_hash):
+                        admin_user.password_hash = hash_password(clean_password)
                         db.commit()
 
                 # Provision default candidate account candidate@example.com if not present in dev

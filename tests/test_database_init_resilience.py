@@ -296,6 +296,23 @@ class TestDatabaseInitResilience(unittest.TestCase):
             os.environ.pop("SUPER_ADMIN_EMAIL", None)
             os.environ.pop("SUPER_ADMIN_PASSWORD", None)
 
+    @classmethod
+    def tearDownClass(cls):
+        """Restores default development accounts so local login works seamlessly."""
+        orig_env = os.environ.get("ENV")
+        orig_vercel = os.environ.get("VERCEL")
+        try:
+            os.environ.pop("ENV", None)
+            os.environ.pop("VERCEL", None)
+            os.environ.pop("SUPER_ADMIN_EMAIL", None)
+            os.environ.pop("SUPER_ADMIN_PASSWORD", None)
+            _run_account_bootstrap()
+        finally:
+            if orig_env is not None:
+                os.environ["ENV"] = orig_env
+            if orig_vercel is not None:
+                os.environ["VERCEL"] = orig_vercel
+
 
 if __name__ == "__main__":
     unittest.main()
