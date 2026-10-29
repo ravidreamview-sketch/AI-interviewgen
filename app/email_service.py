@@ -16,29 +16,51 @@ def get_base_app_url() -> str:
     """
     Resolves the canonical base application URL for invitation links.
     Priority:
-    1. EXPLICIT_APP_URL / APP_URL / NEXT_PUBLIC_APP_URL
-    2. Vercel deployment URL (VERCEL_PROJECT_PRODUCTION_URL or VERCEL_URL)
-    3. Production default or localhost fallback
+    1. Explicit APP_URL configuration (APP_URL, NEXT_PUBLIC_APP_URL, PUBLIC_URL)
+    2. Vercel Preview deployment (VERCEL_ENV=preview or ENV=preview):
+       resolves PREVIEW_APP_URL or deployment-specific VERCEL_URL.
+    3. Production deployment (VERCEL_ENV=production or ENVIRONMENT/ENV in ['production', 'prod']):
+       resolves VERCEL_PROJECT_PRODUCTION_URL or canonical default "https://ai-interviewgen.vercel.app".
+    4. Deployment-specific VERCEL_URL (if present in other Vercel contexts).
+    5. Local development fallback ("http://localhost:8000").
+    Note: VERCEL=1 alone is NOT treated as proof of production.
     """
+    # 1. Explicit configuration takes absolute precedence
     for env_key in ("APP_URL", "NEXT_PUBLIC_APP_URL", "PUBLIC_URL"):
         val = (os.environ.get(env_key) or "").strip()
         if val:
-            if not val.startswith("http"):
+            if not val.startswith("http://") and not val.startswith("https://"):
                 val = f"https://{val}"
             return val.rstrip("/")
 
-    vercel_prod = (os.environ.get("VERCEL_PROJECT_PRODUCTION_URL") or "").strip()
-    if vercel_prod:
-        return f"https://{vercel_prod.rstrip('/')}"
+    vercel_env = (os.environ.get("VERCEL_ENV") or "").lower().strip()
+    generic_env = (os.environ.get("ENVIRONMENT") or os.environ.get("ENV") or "").lower().strip()
 
-    vercel_branch = (os.environ.get("VERCEL_URL") or "").strip()
-    if vercel_branch:
-        return f"https://{vercel_branch.rstrip('/')}"
+    # 2. Preview deployments: use preview-specific URL
+    if vercel_env == "preview" or generic_env == "preview":
+        preview_url = (os.environ.get("PREVIEW_APP_URL") or os.environ.get("VERCEL_URL") or "").strip()
+        if preview_url:
+            if not preview_url.startswith("http://") and not preview_url.startswith("https://"):
+                preview_url = f"https://{preview_url}"
+            return preview_url.rstrip("/")
 
-    # Default production URL
-    if os.environ.get("VERCEL") or os.environ.get("ENV", "").lower() in ["production", "prod"]:
+    # 3. Production deployments: resolve canonical production URL
+    if vercel_env == "production" or generic_env in ["production", "prod"]:
+        vercel_prod = (os.environ.get("VERCEL_PROJECT_PRODUCTION_URL") or "").strip()
+        if vercel_prod:
+            if not vercel_prod.startswith("http://") and not vercel_prod.startswith("https://"):
+                vercel_prod = f"https://{vercel_prod}"
+            return vercel_prod.rstrip("/")
         return "https://ai-interviewgen.vercel.app"
 
+    # 4. Fallback for deployment-specific URL if present (without assuming production)
+    vercel_url = (os.environ.get("VERCEL_URL") or "").strip()
+    if vercel_url:
+        if not vercel_url.startswith("http://") and not vercel_url.startswith("https://"):
+            vercel_url = f"https://{vercel_url}"
+        return vercel_url.rstrip("/")
+
+    # 5. Local development fallback
     return "http://localhost:8000"
 
 

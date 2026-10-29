@@ -1,6 +1,8 @@
 import unittest
+from unittest.mock import patch
 import os
 import sys
+import uuid
 import hashlib
 import json
 from datetime import datetime, timezone, timedelta
@@ -657,6 +659,234 @@ class TestInviteOnlyAccess(unittest.TestCase):
         for reg_path in ["/register", "/signup", "/api/register", "/api/signup"]:
             res = client.post(reg_path, json={"email": "intruder@example.com", "password": "Pass123!"})
             self.assertEqual(res.status_code, 404, f"Public registration route {reg_path} unexpectedly accessible!")
+
+    # 21. Accept-Invite Page Serves HTML, Never JSON 404
+    def test_accept_invite_page_serves_html_across_all_aliases(self):
+        paths_to_test = [
+            "/accept-invite",
+            "/accept-invite/",
+            "/accept-invite.html",
+            "/Accept-invite",
+            "/Accept-invite/",
+            "/Accept-invite.html",
+            "/invite/accept",
+            "/api/accept-invite",
+            "/api/accept-invite.html",
+            "/api/Accept-invite.html",
+            "/api/index.py/accept-invite",
+            "/api/index.py/Accept-invite.html",
+        ]
+        for p in paths_to_test:
+            res = client.get(p)
+            self.assertEqual(res.status_code, 200, f"Path {p} failed to serve HTML (status {res.status_code})")
+            self.assertIn("text/html", res.headers.get("content-type", ""))
+            self.assertIn("Complete Your Registration", res.text)
+            self.assertIn("Accept Invitation", res.text)
+            self.assertNotIn("{\"detail\":\"Not Found\"}", res.text)
+
+    # 22. Accept-Invite Query Parameter Token Preserved
+    def test_accept_invite_preserves_token_parameter(self):
+        sample_token = "SECURE_TEST_INVITE_TOKEN_QUERY_PRESERVED_12345"
+        # Test standard URL query string
+        res = client.get(f"/accept-invite?token={sample_token}")
+        self.assertEqual(res.status_code, 200)
+        self.assertIn("text/html", res.headers.get("content-type", ""))
+        self.assertNotIn("{\"detail\":\"Not Found\"}", res.text)
+
+        # Test Vercel rewritten query string format (__path override)
+        res_rewritten = client.get(f"/api/index.py?__path=/accept-invite&token={sample_token}")
+        self.assertEqual(res_rewritten.status_code, 200)
+        self.assertIn("text/html", res_rewritten.headers.get("content-type", ""))
+
+    # 23. Deliberately Invalid Token Rejection
+    def test_deliberately_invalid_token_returns_expected_rejection(self):
+        # 1. Non-existent but well-formed token
+        res = client.get("/api/auth/invitation?token=definitely_invalid_invitation_token_1234567890")
+        self.assertEqual(res.status_code, 404)
+        data = res.json()
+        self.assertFalse(data.get("valid"))
+        self.assertEqual(data.get("status"), "not_found")
+        self.assertIn("Invalid invitation link", data.get("message", ""))
+
+        # 2. Too short token fails validation with 422
+        res_short = client.get("/api/auth/invitation?token=short")
+        self.assertEqual(res_short.status_code, 422)
+
+    # 24. Valid Invitation Acceptance Lifecycle
+    def test_valid_invitation_lifecycle_acceptance_and_account_creation(self):
+        super_token = self.super_admin_token
+        unique_email = f"verified_invite_flow_{uuid.uuid4().hex[:6]}@example.com"
+
+        # Admin issues invitation
+        create_res = client.post(
+            "/api/admin/invitations",
+            headers={"Authorization": f"Bearer {super_token}"},
+            json={"email": unique_email, "role": "candidate", "plan_tier": "free"}
+        )
+        self.assertEqual(create_res.status_code, 201)
+        raw_token = create_res.json()["invite_url"].split("token=")[1]
+
+        # Candidate validates token
+        val_res = client.get(f"/api/auth/invitation?token={raw_token}")
+        self.assertEqual(val_res.status_code, 200)
+        val_data = val_res.json()
+        self.assertTrue(val_data.get("valid"))
+        self.assertEqual(val_data.get("email"), unique_email)
+        self.assertEqual(val_data.get("role"), "candidate")
+
+        # Candidate completes registration / accepts invitation
+        accept_res = client.post("/api/auth/accept-invite", json={
+            "token": raw_token,
+            "password": "SecurePassword123!",
+            "full_name": "Verified Candidate"
+        })
+        self.assertEqual(accept_res.status_code, 200)
+        accept_data = accept_res.json()
+        self.assertTrue(accept_data.get("success"))
+        self.assertEqual(accept_data.get("user", {}).get("email"), unique_email)
+        self.assertIn("access_token", accept_data)
+
+        # Newly registered candidate can immediately authenticate
+        login_res = client.post("/candidate/login", json={
+            "email": unique_email,
+            "password": "SecurePassword123!"
+        })
+        self.assertEqual(login_res.status_code, 200)
+
+    # 25. Canonical Email CTA URL Generation and Environment Resolution
+    def test_email_cta_url_generation_production_vs_development(self):
+        from app.email_service import get_base_app_url
+
+        # Explicit APP_URL
+        with patch.dict(os.environ, {"APP_URL": "https://ai-interviewgen.vercel.app"}, clear=False):
+            self.assertEqual(get_base_app_url(), "https://ai-interviewgen.vercel.app")
+
+        # Explicit APP_URL with trailing slash
+        with patch.dict(os.environ, {"APP_URL": "https://ai-interviewgen.vercel.app/"}, clear=False):
+            self.assertEqual(get_base_app_url(), "https://ai-interviewgen.vercel.app")
+
+        # Vercel Project Production URL
+        with patch.dict(os.environ, {"APP_URL": "", "VERCEL_ENV": "production", "VERCEL_PROJECT_PRODUCTION_URL": "ai-interviewgen.vercel.app"}, clear=False):
+            self.assertEqual(get_base_app_url(), "https://ai-interviewgen.vercel.app")
+
+        # Production environment flag
+        with patch.dict(os.environ, {"APP_URL": "", "VERCEL_PROJECT_PRODUCTION_URL": "", "ENVIRONMENT": "production"}, clear=False):
+            self.assertEqual(get_base_app_url(), "https://ai-interviewgen.vercel.app")
+
+        # Local development fallback
+        with patch.dict(os.environ, {"APP_URL": "", "NEXT_PUBLIC_APP_URL": "", "PUBLIC_URL": "", "VERCEL_PROJECT_PRODUCTION_URL": "", "VERCEL_URL": "", "VERCEL": "", "ENVIRONMENT": "development", "ENV": "", "VERCEL_ENV": ""}, clear=True):
+            self.assertEqual(get_base_app_url(), "http://localhost:8000")
+
+    # 26. Vercel Environment Detection: Production vs Preview vs Dev Fallback
+    def test_vercel_environment_detection_production_and_preview(self):
+        from app.email_service import get_base_app_url
+
+        clean_env = {
+            "APP_URL": "",
+            "NEXT_PUBLIC_APP_URL": "",
+            "PUBLIC_URL": "",
+            "PREVIEW_APP_URL": "",
+            "VERCEL_PROJECT_PRODUCTION_URL": "",
+            "VERCEL_URL": "",
+            "ENVIRONMENT": "",
+            "ENV": "",
+        }
+
+        # Case A: VERCEL=1 and VERCEL_ENV=production -> resolves canonical production URL
+        with patch.dict(os.environ, {**clean_env, "VERCEL": "1", "VERCEL_ENV": "production"}, clear=False):
+            self.assertEqual(get_base_app_url(), "https://ai-interviewgen.vercel.app")
+
+        with patch.dict(os.environ, {**clean_env, "VERCEL": "1", "VERCEL_ENV": "production", "VERCEL_PROJECT_PRODUCTION_URL": "custom-prod.domain.com"}, clear=False):
+            self.assertEqual(get_base_app_url(), "https://custom-prod.domain.com")
+
+        # Case B: VERCEL=1 and VERCEL_ENV=preview -> resolves preview URL, NOT production URL
+        with patch.dict(os.environ, {
+            **clean_env,
+            "VERCEL": "1",
+            "VERCEL_ENV": "preview",
+            "VERCEL_URL": "ai-interviewgen-git-preview-pr-42.vercel.app",
+            "VERCEL_PROJECT_PRODUCTION_URL": "ai-interviewgen.vercel.app"  # Must NOT override preview
+        }, clear=False):
+            self.assertEqual(get_base_app_url(), "https://ai-interviewgen-git-preview-pr-42.vercel.app")
+
+        # Case C: VERCEL=1 and VERCEL_ENV=preview with explicit PREVIEW_APP_URL
+        with patch.dict(os.environ, {
+            **clean_env,
+            "VERCEL": "1",
+            "VERCEL_ENV": "preview",
+            "PREVIEW_APP_URL": "https://preview.staging.ai-interviewgen.com",
+            "VERCEL_URL": "preview-fallback.vercel.app",
+        }, clear=False):
+            self.assertEqual(get_base_app_url(), "https://preview.staging.ai-interviewgen.com")
+
+        # Case D: VERCEL=1 alone without VERCEL_ENV or VERCEL_URL is NOT treated as production
+        with patch.dict(os.environ, {**clean_env, "VERCEL": "1", "VERCEL_ENV": ""}, clear=False):
+            self.assertEqual(get_base_app_url(), "http://localhost:8000")
+
+        # Case E: Explicit APP_URL always takes precedence, even in preview
+        with patch.dict(os.environ, {
+            **clean_env,
+            "APP_URL": "https://explicit-override.com",
+            "VERCEL": "1",
+            "VERCEL_ENV": "preview",
+            "VERCEL_URL": "ai-interviewgen-preview.vercel.app"
+        }, clear=False):
+            self.assertEqual(get_base_app_url(), "https://explicit-override.com")
+
+        # Case F: Local development fallback
+        with patch.dict(os.environ, {**clean_env, "VERCEL": "", "VERCEL_ENV": ""}, clear=True):
+            self.assertEqual(get_base_app_url(), "http://localhost:8000")
+
+    # 27. Invitation Token Query Parameter Preservation in Generated URLs
+    def test_invitation_token_query_parameter_preservation_across_environments(self):
+        from app.email_service import get_base_app_url
+        import urllib.parse
+
+        dummy_token = "test-token-safe-12345_XYZ-abcd"
+
+        # Production environment
+        with patch.dict(os.environ, {"VERCEL": "1", "VERCEL_ENV": "production", "APP_URL": ""}, clear=False):
+            base_url = get_base_app_url()
+            invite_url = f"{base_url}/accept-invite?token={dummy_token}"
+            parsed = urllib.parse.urlparse(invite_url)
+            self.assertEqual(parsed.scheme, "https")
+            self.assertEqual(parsed.netloc, "ai-interviewgen.vercel.app")
+            self.assertEqual(parsed.path, "/accept-invite")
+            query_params = urllib.parse.parse_qs(parsed.query)
+            self.assertEqual(query_params.get("token"), [dummy_token])
+
+        # Preview environment
+        with patch.dict(os.environ, {
+            "VERCEL": "1",
+            "VERCEL_ENV": "preview",
+            "VERCEL_URL": "ai-interviewgen-branch-test.vercel.app",
+            "APP_URL": ""
+        }, clear=False):
+            base_url = get_base_app_url()
+            invite_url = f"{base_url}/accept-invite?token={dummy_token}"
+            parsed = urllib.parse.urlparse(invite_url)
+            self.assertEqual(parsed.scheme, "https")
+            self.assertEqual(parsed.netloc, "ai-interviewgen-branch-test.vercel.app")
+            self.assertEqual(parsed.path, "/accept-invite")
+            query_params = urllib.parse.parse_qs(parsed.query)
+            self.assertEqual(query_params.get("token"), [dummy_token])
+
+        # Local development fallback
+        with patch.dict(os.environ, {
+            "APP_URL": "",
+            "VERCEL": "",
+            "VERCEL_ENV": "",
+            "VERCEL_URL": "",
+            "VERCEL_PROJECT_PRODUCTION_URL": ""
+        }, clear=True):
+            base_url = get_base_app_url()
+            invite_url = f"{base_url}/accept-invite?token={dummy_token}"
+            parsed = urllib.parse.urlparse(invite_url)
+            self.assertEqual(parsed.scheme, "http")
+            self.assertEqual(parsed.netloc, "localhost:8000")
+            self.assertEqual(parsed.path, "/accept-invite")
+            query_params = urllib.parse.parse_qs(parsed.query)
+            self.assertEqual(query_params.get("token"), [dummy_token])
 
 
 if __name__ == "__main__":
