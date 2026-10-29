@@ -280,6 +280,15 @@ class TestVercelProductionCompatibility(unittest.TestCase):
         self.assertIn("/api/candidate/resume-jd/match", routes)
         self.assertIn("/api/adaptive/generate", routes)
 
+    @classmethod
+    def tearDownClass(cls):
+        import importlib
+        import app.database as db_mod
+        os.environ.pop("DATABASE_URL", None)
+        os.environ.pop("VERCEL", None)
+        os.environ.pop("ENV", None)
+        importlib.reload(db_mod)
+
 
 
 if __name__ == "__main__":

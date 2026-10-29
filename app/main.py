@@ -2023,7 +2023,17 @@ def serve_login():
 
 @app.get("/accept-invite", include_in_schema=False)
 @app.get("/accept-invite.html", include_in_schema=False)
+@app.get("/accept-invite/", include_in_schema=False)
+@app.get("/Accept-invite", include_in_schema=False)
+@app.get("/Accept-invite/", include_in_schema=False)
+@app.get("/Accept-invite.html", include_in_schema=False)
 @app.get("/invite/accept", include_in_schema=False)
+@app.get("/api/accept-invite", include_in_schema=False)
+@app.get("/api/accept-invite.html", include_in_schema=False)
+@app.get("/api/Accept-invite.html", include_in_schema=False)
+@app.get("/api/index.py/accept-invite", include_in_schema=False)
+@app.get("/api/index.py/accept-invite.html", include_in_schema=False)
+@app.get("/api/index.py/Accept-invite.html", include_in_schema=False)
 def serve_accept_invite():
     return get_html_response("Accept-invite.html")
 
