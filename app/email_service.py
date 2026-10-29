@@ -12,13 +12,14 @@ from typing import Dict, Any, Optional
 logger = logging.getLogger("ravi.email_service")
 
 
-def get_base_app_url() -> str:
+def get_base_app_url(request: Optional[Any] = None) -> str:
     """
     Resolves the canonical base application URL for invitation links.
 
     Precedence & Environment Scoping:
     1. Vercel Preview Deployments (VERCEL_ENV=preview or ENV=preview):
        - Uses PREVIEW_APP_URL if explicitly configured.
+       - Uses incoming request host/proto if in an active HTTP preview session.
        - Uses deployment-specific VERCEL_URL (e.g. https://{VERCEL_URL}).
        - Guards against accidentally inheriting a production-only APP_URL
          (e.g., https://ai-interviewgen.vercel.app) configured globally in Vercel.
@@ -29,13 +30,16 @@ def get_base_app_url() -> str:
        - Uses VERCEL_PROJECT_PRODUCTION_URL if set.
        - Falls back to canonical production domain: "https://ai-interviewgen.vercel.app".
     4. General Vercel Deployment Fallback:
-       - Uses VERCEL_URL if set.
+       - Uses request host if external, or VERCEL_URL.
     5. Local Development Fallback:
        - Defaults to "http://localhost:8000".
        - VERCEL=1 alone without VERCEL_ENV=production is NOT treated as production.
     """
     vercel_env = (os.environ.get("VERCEL_ENV") or "").lower().strip()
     generic_env = (os.environ.get("ENVIRONMENT") or os.environ.get("ENV") or "").lower().strip()
+    is_preview = (vercel_env == "preview" or generic_env == "preview")
+    is_production = (vercel_env == "production" or generic_env in ["production", "prod"])
+
     canonical_prod_domain = "ai-interviewgen.vercel.app"
     vercel_prod_domain = (os.environ.get("VERCEL_PROJECT_PRODUCTION_URL") or "").strip().rstrip("/")
     if vercel_prod_domain.startswith("https://"):
@@ -43,8 +47,26 @@ def get_base_app_url() -> str:
     elif vercel_prod_domain.startswith("http://"):
         vercel_prod_domain = vercel_prod_domain[len("http://"):]
 
+    # Extract request-level host if available
+    req_host = ""
+    req_proto = "https"
+    if request:
+        try:
+            req_headers = getattr(request, "headers", {})
+            req_host = (req_headers.get("x-forwarded-host") or req_headers.get("host") or "").strip()
+            req_proto = (req_headers.get("x-forwarded-proto") or getattr(getattr(request, "url", None), "scheme", "") or "https").strip()
+            if req_host.startswith("http://") or req_host.startswith("https://"):
+                req_host = req_host.split("://", 1)[-1]
+            req_host = req_host.split("/")[0].strip()
+        except Exception:
+            pass
+
+    is_req_external = bool(
+        req_host and req_host.lower() not in ["testserver", "localhost", "127.0.0.1", "::1"]
+    )
+
     # 1. Preview Deployment Scoping
-    if vercel_env == "preview" or generic_env == "preview":
+    if is_preview:
         # A. Explicit preview override
         preview_app_url = (os.environ.get("PREVIEW_APP_URL") or "").strip()
         if preview_app_url:
@@ -65,12 +87,29 @@ def get_base_app_url() -> str:
             if not is_prod_target:
                 return cleaned_app_url
 
-        # C. Deployment-specific VERCEL_URL (canonical for Preview deployments)
+        # C. Request-level preview host if request is from active preview session
+        if is_req_external:
+            return f"{req_proto}://{req_host}".rstrip("/")
+
+        # D. Deployment-specific VERCEL_URL (canonical for Preview deployments)
         vercel_url = (os.environ.get("VERCEL_URL") or "").strip()
         if vercel_url:
             if not vercel_url.startswith("http://") and not vercel_url.startswith("https://"):
                 vercel_url = f"https://{vercel_url}"
             return vercel_url.rstrip("/")
+
+        # E. Preview hostname could not be resolved:
+        # Do not silently fall back to localhost or the Production URL.
+        logger.error(
+            "[EmailService] Preview invitation URL resolution failed: "
+            "VERCEL_ENV=preview but VERCEL_URL and PREVIEW_APP_URL are unset, "
+            "and incoming request host is not an external preview domain. "
+            "Cannot safely construct preview invitation URL."
+        )
+        raise ValueError(
+            "Preview environment base URL could not be resolved. "
+            "Please ensure VERCEL_URL is provided by Vercel or configure PREVIEW_APP_URL."
+        )
 
     # 2. Explicit APP_URL (for Production or non-preview environments)
     for env_key in ("APP_URL", "NEXT_PUBLIC_APP_URL", "PUBLIC_URL"):
@@ -81,12 +120,15 @@ def get_base_app_url() -> str:
             return val.rstrip("/")
 
     # 3. Production Environment Resolution
-    if vercel_env == "production" or generic_env in ["production", "prod"]:
+    if is_production:
         if vercel_prod_domain:
             return f"https://{vercel_prod_domain}"
         return f"https://{canonical_prod_domain}"
 
     # 4. Fallback for other Vercel contexts
+    if is_req_external:
+        return f"{req_proto}://{req_host}".rstrip("/")
+
     vercel_url = (os.environ.get("VERCEL_URL") or "").strip()
     if vercel_url:
         if not vercel_url.startswith("http://") and not vercel_url.startswith("https://"):
@@ -94,6 +136,9 @@ def get_base_app_url() -> str:
         return vercel_url.rstrip("/")
 
     # 5. Local Development Fallback
+    if is_req_external:
+        return f"{req_proto}://{req_host}".rstrip("/")
+
     return "http://localhost:8000"
 
 

@@ -932,6 +932,277 @@ class TestInviteOnlyAccess(unittest.TestCase):
             self.assertIn("Email delivery provider failed", res.get("message", ""))
 
 
+    # 31. Comprehensive Environment URL Resolution Matrix
+    def test_comprehensive_environment_url_resolution_matrix(self):
+        from app.email_service import get_base_app_url
+
+        # A. No environment variables configured -> localhost:8000
+        with patch.dict(os.environ, {
+            "APP_URL": "", "NEXT_PUBLIC_APP_URL": "", "PUBLIC_URL": "",
+            "PREVIEW_APP_URL": "", "VERCEL_PROJECT_PRODUCTION_URL": "",
+            "VERCEL_URL": "", "VERCEL": "", "ENVIRONMENT": "", "ENV": "", "VERCEL_ENV": ""
+        }, clear=True):
+            self.assertEqual(get_base_app_url(), "http://localhost:8000")
+
+        # B. Local development with explicit APP_URL
+        with patch.dict(os.environ, {
+            "APP_URL": "http://127.0.0.1:3000",
+            "VERCEL": "", "VERCEL_ENV": "", "VERCEL_URL": ""
+        }, clear=True):
+            self.assertEqual(get_base_app_url(), "http://127.0.0.1:3000")
+
+        # C. VERCEL=1 and VERCEL_ENV=preview with VERCEL_URL
+        with patch.dict(os.environ, {
+            "VERCEL": "1", "VERCEL_ENV": "preview",
+            "VERCEL_URL": "ai-interviewgen-preview-123.vercel.app",
+            "APP_URL": ""
+        }, clear=False):
+            self.assertEqual(get_base_app_url(), "https://ai-interviewgen-preview-123.vercel.app")
+
+        # D. VERCEL_ENV=preview with explicit PREVIEW_APP_URL
+        with patch.dict(os.environ, {
+            "VERCEL": "1", "VERCEL_ENV": "preview",
+            "PREVIEW_APP_URL": "https://custom-preview-branch.acme.org",
+            "VERCEL_URL": "fallback-deploy-url.vercel.app",
+            "APP_URL": "https://ai-interviewgen.vercel.app"
+        }, clear=False):
+            self.assertEqual(get_base_app_url(), "https://custom-preview-branch.acme.org")
+
+        # E. Production APP_URL exists but does NOT leak into Preview
+        with patch.dict(os.environ, {
+            "VERCEL": "1", "VERCEL_ENV": "preview",
+            "APP_URL": "https://ai-interviewgen.vercel.app",
+            "VERCEL_URL": "ai-interviewgen-preview-456.vercel.app",
+            "VERCEL_PROJECT_PRODUCTION_URL": "ai-interviewgen.vercel.app",
+            "PREVIEW_APP_URL": ""
+        }, clear=False):
+            self.assertEqual(get_base_app_url(), "https://ai-interviewgen-preview-456.vercel.app")
+
+        # F. Preview with NO valid preview hostname -> raises explicit ValueError
+        with patch.dict(os.environ, {
+            "VERCEL": "1", "VERCEL_ENV": "preview",
+            "APP_URL": "https://ai-interviewgen.vercel.app",  # Production URL must NOT be used
+            "VERCEL_URL": "",
+            "PREVIEW_APP_URL": "",
+            "VERCEL_PROJECT_PRODUCTION_URL": "ai-interviewgen.vercel.app"
+        }, clear=False):
+            with self.assertRaises(ValueError) as ctx:
+                get_base_app_url()
+            self.assertIn("Preview environment base URL could not be resolved", str(ctx.exception))
+
+        # G. VERCEL_ENV=production with VERCEL_PROJECT_PRODUCTION_URL
+        with patch.dict(os.environ, {
+            "VERCEL": "1", "VERCEL_ENV": "production", "APP_URL": "",
+            "VERCEL_PROJECT_PRODUCTION_URL": "custom-prod.org"
+        }, clear=False):
+            self.assertEqual(get_base_app_url(), "https://custom-prod.org")
+
+        # H. VERCEL_ENV=production -> canonical production URL
+        with patch.dict(os.environ, {
+            "VERCEL": "1", "VERCEL_ENV": "production", "APP_URL": "",
+            "VERCEL_PROJECT_PRODUCTION_URL": ""
+        }, clear=False):
+            self.assertEqual(get_base_app_url(), "https://ai-interviewgen.vercel.app")
+
+        # I. Explicit APP_URL in production
+        with patch.dict(os.environ, {
+            "APP_URL": "https://custom-domain.enterprise.com",
+            "VERCEL_ENV": "production"
+        }, clear=False):
+            self.assertEqual(get_base_app_url(), "https://custom-domain.enterprise.com")
+
+    # 32. Deployment-Level Invitation Creation Never Generates Localhost in Preview or Production
+    def test_invitation_creation_never_generates_localhost_in_preview_or_production(self):
+        super_token = self.super_admin_token
+
+        # Preview Deployment Context
+        with patch.dict(os.environ, {
+            "VERCEL": "1",
+            "VERCEL_ENV": "preview",
+            "VERCEL_URL": "ai-interviewgen-branch-pr42.vercel.app",
+            "APP_URL": "https://ai-interviewgen.vercel.app"  # Potentially leaked production URL
+        }, clear=False):
+            res_preview = client.post(
+                "/api/admin/invitations",
+                headers={"Authorization": f"Bearer {super_token}"},
+                json={"email": f"preview_scope_{uuid.uuid4().hex[:6]}@example.com", "role": "candidate"}
+            )
+            self.assertEqual(res_preview.status_code, 201)
+            invite_url_preview = res_preview.json()["invite_url"]
+            self.assertFalse(invite_url_preview.startswith("http://localhost"), "Preview invite URL must NOT be localhost")
+            self.assertTrue(invite_url_preview.startswith("https://ai-interviewgen-branch-pr42.vercel.app"), "Preview invite URL must match preview domain")
+            self.assertIn("/accept-invite?token=", invite_url_preview)
+
+        # Production Deployment Context
+        with patch("app.admin_routes.send_invitation_email") as mock_mailer:
+            mock_mailer.return_value = {"success": True, "provider": "resend"}
+            with patch.dict(os.environ, {
+                "VERCEL": "1",
+                "VERCEL_ENV": "production",
+                "APP_URL": "",
+                "VERCEL_PROJECT_PRODUCTION_URL": "ai-interviewgen.vercel.app"
+            }, clear=False):
+                res_prod = client.post(
+                    "/api/admin/invitations",
+                    headers={"Authorization": f"Bearer {super_token}"},
+                    json={"email": f"prod_scope_{uuid.uuid4().hex[:6]}@example.com", "role": "candidate"}
+                )
+                self.assertEqual(res_prod.status_code, 201)
+                self.assertNotIn("invite_url", res_prod.json(), "Production API must protect tokens and not leak in response")
+                self.assertTrue(mock_mailer.called)
+                call_args, call_kwargs = mock_mailer.call_args
+                invite_url_prod = call_kwargs.get("invite_url") or (call_args[1] if len(call_args) > 1 else None)
+                self.assertIsNotNone(invite_url_prod)
+                self.assertFalse(invite_url_prod.startswith("http://localhost"), "Production invite URL must NOT be localhost")
+                self.assertTrue(invite_url_prod.startswith("https://ai-interviewgen.vercel.app"), "Production invite URL must match canonical production domain")
+                self.assertIn("/accept-invite?token=", invite_url_prod)
+
+
+# 33. Invitation API Reports Provider Delivery Failure Instead of False Success
+    def test_invitation_creation_reports_provider_delivery_failure_explicitly(self):
+        super_token = self.super_admin_token
+
+        with patch("app.admin_routes.send_invitation_email") as mock_mailer:
+            mock_mailer.return_value = {
+                "success": False,
+                "provider": "resend",
+                "error": "HTTP Error 401: Unauthorized API key",
+                "message": "Email delivery provider failed: HTTP Error 401: Unauthorized API key"
+            }
+            res = client.post(
+                "/api/admin/invitations",
+                headers={"Authorization": f"Bearer {super_token}"},
+                json={"email": f"fail_delivery_{uuid.uuid4().hex[:6]}@example.com", "role": "candidate"}
+            )
+            self.assertEqual(res.status_code, 201)
+            data = res.json()
+            self.assertFalse(data["email_delivery"]["dispatched"], "Dispatched must be False when provider fails")
+            self.assertEqual(data["email_delivery"]["provider"], "resend")
+            self.assertIn("unauthorized", data["email_delivery"]["error"].lower())
+            self.assertIn("failed", data["message"].lower())
+            self.assertNotIn("successfully sent", data["message"].lower())
+
+    # 34. Local Development Context Generates Localhost URL and Safe Dev Response
+    def test_invitation_creation_in_local_development_context(self):
+        super_token = self.super_admin_token
+
+        with patch.dict(os.environ, {
+            "VERCEL": "",
+            "VERCEL_ENV": "",
+            "VERCEL_URL": "",
+            "APP_URL": "",
+            "RESEND_API_KEY": "",
+            "SMTP_HOST": ""
+        }, clear=True):
+            res = client.post(
+                "/api/admin/invitations",
+                headers={"Authorization": f"Bearer {super_token}"},
+                json={"email": f"local_dev_{uuid.uuid4().hex[:6]}@example.com", "role": "candidate"}
+            )
+            self.assertEqual(res.status_code, 201)
+            data = res.json()
+            self.assertIn("invite_url", data, "Local dev should include invite_url for rapid verification")
+            self.assertTrue(data["invite_url"].startswith("http://localhost:8000/accept-invite?token="))
+
+
+
+    # 35. Preview Resolution Failure in API Returns HTTP 500 Configuration Error and Rolls Back
+    def test_preview_resolution_failure_in_api_returns_error_and_rolls_back(self):
+        super_token = self.super_admin_token
+
+        with patch.dict(os.environ, {
+            "VERCEL": "1",
+            "VERCEL_ENV": "preview",
+            "VERCEL_URL": "",
+            "PREVIEW_APP_URL": "",
+            "APP_URL": "https://ai-interviewgen.vercel.app"  # Should NOT be used for preview
+        }, clear=False):
+            test_email = f"fail_preview_{uuid.uuid4().hex[:6]}@example.com"
+            res = client.post(
+                "/api/admin/invitations",
+                headers={"Authorization": f"Bearer {super_token}"},
+                json={"email": test_email, "role": "candidate"}
+            )
+            self.assertEqual(res.status_code, 500)
+            data = res.json()
+            self.assertIn("Configuration error", data.get("detail", ""))
+            self.assertIn("Preview environment base URL could not be resolved", data.get("detail", ""))
+
+    # 36. Unconfigured Email Provider in Deployed Environment Explicitly Handled
+    def test_unconfigured_email_provider_in_deployed_environment(self):
+        from app.email_service import send_invitation_email
+
+        with patch.dict(os.environ, {
+            "VERCEL": "1",
+            "VERCEL_ENV": "production",
+            "RESEND_API_KEY": "",
+            "SMTP_HOST": ""
+        }, clear=False):
+            result = send_invitation_email(
+                to_email="candidate_unconfigured@example.com",
+                invite_url="https://ai-interviewgen.vercel.app/accept-invite?token=XYZ_SECURE_TOKEN",
+                role="candidate"
+            )
+            self.assertFalse(result["success"])
+            self.assertEqual(result["provider"], "unconfigured")
+            self.assertIn("Email delivery provider not configured", result["message"])
+
+    # 37. Token URL Encoding and Content Matching in Email Service
+    def test_token_url_encoding_and_email_content_matching(self):
+        from app.email_service import send_invitation_email
+        import urllib.parse
+
+        raw_token = "token+with/special=chars&more?test#123"
+        encoded_token = urllib.parse.quote(raw_token, safe="")
+        base_url = "https://ai-interviewgen.vercel.app"
+        invite_url = f"{base_url}/accept-invite?token={encoded_token}"
+
+        self.assertNotIn(" ", invite_url)
+        self.assertNotIn("+", encoded_token)
+        self.assertIn("%2B", encoded_token)
+        self.assertIn("%2F", encoded_token)
+        self.assertIn("%3D", encoded_token)
+
+        # In dev mode, send_invitation_email returns the invite_url
+        with patch.dict(os.environ, {
+            "VERCEL": "",
+            "VERCEL_ENV": "",
+            "ENVIRONMENT": "development",
+            "RESEND_API_KEY": "",
+            "SMTP_HOST": ""
+        }, clear=True):
+            res = send_invitation_email(
+                to_email="encode_test@example.com",
+                invite_url=invite_url,
+                role="candidate"
+            )
+            self.assertTrue(res["success"])
+            self.assertEqual(res["invite_url"], invite_url)
+
+    # 38. Request Header Detection in Active HTTP Preview Session
+    def test_request_header_host_resolution_in_preview_session(self):
+        from app.email_service import get_base_app_url
+
+        class MockRequest:
+            def __init__(self, headers):
+                self.headers = headers
+                self.url = type("URL", (), {"scheme": "https"})()
+
+        mock_req = MockRequest({
+            "x-forwarded-host": "pr-105-preview.vercel.app",
+            "x-forwarded-proto": "https"
+        })
+
+        with patch.dict(os.environ, {
+            "VERCEL": "1",
+            "VERCEL_ENV": "preview",
+            "VERCEL_URL": "fallback-deploy.vercel.app",
+            "PREVIEW_APP_URL": ""
+        }, clear=False):
+            resolved = get_base_app_url(mock_req)
+            self.assertEqual(resolved, "https://pr-105-preview.vercel.app")
+
+
 if __name__ == "__main__":
     unittest.main()
 

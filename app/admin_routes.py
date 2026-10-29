@@ -1,3 +1,4 @@
+import logging
 
 import secrets
 import hashlib
@@ -12,6 +13,7 @@ from typing import Optional, List
 import json
 import os
 import uuid
+import urllib.parse
 from datetime import timezone
 
 from app.database import get_db
@@ -52,6 +54,8 @@ from app.auth_deps import (
     record_failed_login_attempt,
     clear_failed_login_attempts
 )
+
+logger = logging.getLogger("ravi.admin")
 
 admin_router = APIRouter(tags=["Admin Portal"])
 candidate_router = APIRouter(tags=["Candidate Auth"])
@@ -907,8 +911,18 @@ def create_invitation(
     db.commit()
     db.refresh(invitation)
 
-    base_url = get_base_app_url()
-    invite_url = f"{base_url}/accept-invite?token={raw_token}"
+    try:
+        base_url = get_base_app_url(request)
+    except ValueError as e:
+        logger.error("[INVITE_CREATE] Base URL resolution failed: %s", str(e))
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Configuration error: {str(e)}"
+        )
+
+    encoded_token = urllib.parse.quote(raw_token, safe="")
+    invite_url = f"{base_url}/accept-invite?token={encoded_token}"
 
     email_result = send_invitation_email(
         to_email=email_clean,
@@ -927,10 +941,23 @@ def create_invitation(
         ip_address=get_client_ip(request)
     )
 
-    is_prod = bool(os.environ.get("VERCEL") or os.environ.get("ENV", "").lower() in ["production", "prod"])
+    is_prod = bool(
+        os.environ.get("VERCEL_ENV") == "production"
+        or os.environ.get("ENVIRONMENT", "").lower() in ["production", "prod"]
+        or os.environ.get("ENV", "").lower() in ["production", "prod"]
+    )
 
-    if email_result.get("provider") in ["resend", "smtp"]:
-        msg = f"Invitation successfully sent to '{email_clean}'."
+    delivery_success = bool(email_result.get("success"))
+    provider_name = email_result.get("provider")
+
+    if delivery_success:
+        if provider_name == "console_dev":
+            msg = f"Invitation created for '{email_clean}'. (Local development mode: email delivery logged to console)."
+        else:
+            msg = f"Invitation successfully sent to '{email_clean}'."
+    elif provider_name in ["resend", "smtp"]:
+        err_detail = email_result.get("error") or email_result.get("message") or "Provider dispatch error"
+        msg = f"Invitation created for '{email_clean}', but email delivery failed: {err_detail}."
     elif is_prod:
         msg = (
             f"Invitation created for '{email_clean}'. "
@@ -938,18 +965,22 @@ def create_invitation(
             "invitation email could not be dispatched."
         )
     else:
-        msg = f"Invitation successfully sent to '{email_clean}'."
+        msg = f"Invitation created for '{email_clean}'."
 
     serialized = serialize_invitation(invitation)
+
+    email_delivery_info = {
+        "dispatched": delivery_success,
+        "provider": provider_name
+    }
+    if not delivery_success and provider_name in ["resend", "smtp"]:
+        email_delivery_info["error"] = email_result.get("error") or email_result.get("message")
 
     response_data = {
         "success": True,
         "message": msg,
         "invitation": serialized,
-        "email_delivery": {
-            "dispatched": email_result.get("provider") in ["resend", "smtp"],
-            "provider": email_result.get("provider")
-        }
+        "email_delivery": email_delivery_info
     }
 
     # Only include invite_url in non-production environments for testing and local dev
@@ -1014,8 +1045,18 @@ def resend_invitation(
     db.commit()
     db.refresh(inv)
 
-    base_url = get_base_app_url()
-    invite_url = f"{base_url}/accept-invite?token={raw_token}"
+    try:
+        base_url = get_base_app_url(request)
+    except ValueError as e:
+        logger.error("[INVITE_RESEND] Base URL resolution failed: %s", str(e))
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Configuration error: {str(e)}"
+        )
+
+    encoded_token = urllib.parse.quote(raw_token, safe="")
+    invite_url = f"{base_url}/accept-invite?token={encoded_token}"
 
     email_result = send_invitation_email(
         to_email=inv.email,
@@ -1034,10 +1075,23 @@ def resend_invitation(
         ip_address=get_client_ip(request)
     )
 
-    is_prod = bool(os.environ.get("VERCEL") or os.environ.get("ENV", "").lower() in ["production", "prod"])
+    is_prod = bool(
+        os.environ.get("VERCEL_ENV") == "production"
+        or os.environ.get("ENVIRONMENT", "").lower() in ["production", "prod"]
+        or os.environ.get("ENV", "").lower() in ["production", "prod"]
+    )
 
-    if email_result.get("provider") in ["resend", "smtp"]:
-        msg = f"Invitation resent to '{inv.email}'."
+    delivery_success = bool(email_result.get("success"))
+    provider_name = email_result.get("provider")
+
+    if delivery_success:
+        if provider_name == "console_dev":
+            msg = f"Invitation resent to '{inv.email}'. (Local development mode: email delivery logged to console)."
+        else:
+            msg = f"Invitation resent to '{inv.email}'."
+    elif provider_name in ["resend", "smtp"]:
+        err_detail = email_result.get("error") or email_result.get("message") or "Provider dispatch error"
+        msg = f"Invitation refreshed for '{inv.email}', but email delivery failed: {err_detail}."
     elif is_prod:
         msg = (
             f"Invitation refreshed for '{inv.email}'. "
@@ -1049,14 +1103,18 @@ def resend_invitation(
 
     serialized = serialize_invitation(inv)
 
+    email_delivery_info = {
+        "dispatched": delivery_success,
+        "provider": provider_name
+    }
+    if not delivery_success and provider_name in ["resend", "smtp"]:
+        email_delivery_info["error"] = email_result.get("error") or email_result.get("message")
+
     response_data = {
         "success": True,
         "message": msg,
         "invitation": serialized,
-        "email_delivery": {
-            "dispatched": email_result.get("provider") in ["resend", "smtp"],
-            "provider": email_result.get("provider")
-        }
+        "email_delivery": email_delivery_info
     }
 
     if not is_prod:
