@@ -1,0 +1,481 @@
+﻿/**
+ * RAVI GenAI Studio — Standardized Candidate Shell Styles
+ * Single Source of Truth for Sidebar, Layout, Navigation & Identity
+ */
+
+:root {
+  --sidebar-w: 290px;
+  --sidebar-board: #0B0F19;
+  --sidebar-ink: #F8FAFC;
+  --sidebar-f-ui: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --sidebar-f-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* -------------------------------------------------------------
+   DESKTOP APP LAYOUT STANDARDIZATION
+------------------------------------------------------------- */
+.app {
+  box-sizing: border-box;
+  position: relative;
+  width: 100%;
+}
+
+/* Grid-based layout pages (e.g. Dashboard) */
+.app[style*="grid"],
+.app.grid-layout,
+body:not(.flex-layout) .app {
+  display: grid;
+  grid-template-columns: 290px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+/* Flex-based layout fallback */
+.app.flex-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Main content canvases must never squeeze or warp the sidebar */
+.main,
+.main-canvas,
+.main-content,
+main {
+  min-width: 0 !important;
+  box-sizing: border-box;
+}
+
+/* -------------------------------------------------------------
+   STANDARDIZED SIDEBAR (WIDTH 290px, FIXED VISUAL SOURCE OF TRUTH)
+------------------------------------------------------------- */
+aside.sidebar,
+.sidebar {
+  width: 290px !important;
+  min-width: 290px !important;
+  max-width: 290px !important;
+  flex: 0 0 290px !important;
+  box-sizing: border-box !important;
+  background: var(--sidebar-board) !important;
+  color: var(--sidebar-ink) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 24px 16px !important;
+  gap: 16px !important;
+  height: 100vh !important;
+  position: sticky !important;
+  top: 0 !important;
+  left: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  z-index: 50;
+  font-family: var(--sidebar-f-ui) !important;
+  transition: transform .3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Subtle scrollbar */
+aside.sidebar::-webkit-scrollbar,
+.sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+aside.sidebar::-webkit-scrollbar-thumb,
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+aside.sidebar::-webkit-scrollbar-track,
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* -------------------------------------------------------------
+   BRAND HEADER
+------------------------------------------------------------- */
+.sidebar .brand {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 4px 8px 12px !important;
+  text-decoration: none !important;
+  color: inherit !important;
+}
+
+.sidebar .brand-logo {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 50% !important;
+  flex: none !important;
+  object-fit: cover !important;
+  box-shadow: 0 0 18px rgba(56, 189, 248, 0.45), 0 0 10px rgba(129, 140, 248, 0.4) !important;
+  border: 1.5px solid rgba(56, 189, 248, 0.6) !important;
+  background: #0B0F19 !important;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.sidebar .brand-logo:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 24px rgba(56, 189, 248, 0.7) !important;
+}
+
+.sidebar .brand-title {
+  font-weight: 800 !important;
+  font-size: 20px !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.15 !important;
+  color: #FFFFFF !important;
+  white-space: nowrap !important;
+}
+
+.sidebar .brand-title .brand-name {
+  color: #38BDF8 !important;
+}
+
+.sidebar .brand-title .brand-ai {
+  background: linear-gradient(135deg, #818CF8 0%, #C084FC 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+.sidebar .brand-sub {
+  font-family: var(--sidebar-f-mono) !important;
+  font-size: 10.5px !important;
+  letter-spacing: 0.16em !important;
+  text-transform: uppercase !important;
+  color: #94A3B8 !important;
+  margin-top: 3px !important;
+  font-weight: 700 !important;
+  white-space: nowrap !important;
+}
+
+/* -------------------------------------------------------------
+   SECTION LABELS
+------------------------------------------------------------- */
+.sidebar .side-label {
+  font-family: var(--sidebar-f-mono) !important;
+  font-size: 10.5px !important;
+  letter-spacing: 0.16em !important;
+  text-transform: uppercase !important;
+  color: #64748B !important;
+  padding: 8px 10px 2px !important;
+  font-weight: 700 !important;
+  white-space: nowrap !important;
+  user-select: none;
+}
+
+/* -------------------------------------------------------------
+   NAVIGATION ITEMS
+------------------------------------------------------------- */
+.sidebar .nav {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  min-width: 0 !important;
+}
+
+.sidebar .nav-link {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 10px 14px !important;
+  border-radius: 12px !important;
+  color: #94A3B8 !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  position: relative !important;
+  transition: all 0.2s ease !important;
+  white-space: nowrap !important;
+  user-select: none !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  text-decoration: none !important;
+  border: 1px solid transparent !important;
+}
+
+.sidebar .nav-link svg {
+  width: 18px !important;
+  height: 18px !important;
+  flex-shrink: 0 !important;
+  stroke-width: 2 !important;
+  color: currentColor !important;
+}
+
+.sidebar .nav-link span:first-of-type {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  flex: 1 1 auto !important;
+}
+
+.sidebar .nav-link:hover {
+  background: rgba(255, 255, 255, 0.07) !important;
+  color: #F8FAFC !important;
+  transform: translateX(2px) !important;
+}
+
+/* Standardized Green Active State */
+.sidebar .nav-link.active {
+  background: linear-gradient(135deg, #059669 0%, #10B981 60%, #34D399 100%) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.45) !important;
+  font-weight: 700 !important;
+  border: 1px solid rgba(52, 211, 153, 0.4) !important;
+  transform: none !important;
+}
+.sidebar .nav-link.active svg {
+  color: #FFFFFF !important;
+}
+
+/* Badges */
+.sidebar .nav-badge {
+  margin-left: auto !important;
+  font-family: var(--sidebar-f-mono) !important;
+  font-size: 9px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.06em !important;
+  padding: 2.5px 6.5px !important;
+  border-radius: 6px !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #FFFFFF !important;
+  flex-shrink: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.sidebar .nav-badge.new {
+  background: #10B981 !important;
+}
+
+.sidebar .nav-badge.pro {
+  background: linear-gradient(135deg, #059669 0%, #10B981 100%) !important;
+}
+
+/* -------------------------------------------------------------
+   SIDEBAR FOOTER & UPGRADE CARD
+------------------------------------------------------------- */
+.sidebar .side-foot {
+  margin-top: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  padding-top: 16px !important;
+  flex-shrink: 0 !important;
+  min-width: 0 !important;
+}
+
+.sidebar .upgrade-card {
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.12) 0%, #0A1926 60%, #0D2A3D 100%) !important;
+  border: 1px solid rgba(52, 211, 153, 0.35) !important;
+  border-radius: 14px !important;
+  padding: 14px 16px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  text-decoration: none !important;
+  display: block !important;
+}
+
+.sidebar .upgrade-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, #10B981, #34D399, #6EE7B7);
+}
+
+.sidebar .upgrade-card:hover {
+  transform: translateY(-2px) !important;
+  border-color: rgba(52, 211, 153, 0.8) !important;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35) !important;
+}
+
+.sidebar .upgrade-top {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+  color: #FFFFFF !important;
+}
+
+.sidebar .upgrade-top .crown-icon {
+  color: #FBBF24 !important;
+  font-size: 15px !important;
+  filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.5));
+}
+
+.sidebar .upgrade-top .chevron {
+  margin-left: auto !important;
+  color: #34D399 !important;
+  display: flex !important;
+  align-items: center !important;
+  transition: transform 0.2s;
+}
+
+.sidebar .upgrade-card:hover .chevron {
+  transform: translateX(3px);
+}
+
+.sidebar .upgrade-desc {
+  margin: 6px 0 0 !important;
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+  color: #94A3B8 !important;
+}
+
+/* -------------------------------------------------------------
+   USER PROFILE SECTION
+------------------------------------------------------------- */
+.sidebar .user-profile {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 8px 10px !important;
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.sidebar .user-avatar {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 10px !important;
+  flex: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-family: var(--sidebar-f-mono) !important;
+  font-weight: 800 !important;
+  font-size: 13.5px !important;
+  background: linear-gradient(135deg, #059669 0%, #10B981 100%) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2) !important;
+  user-select: none !important;
+  object-fit: cover !important;
+}
+
+.sidebar .user-info {
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+  overflow: hidden !important;
+}
+
+.sidebar .user-name {
+  font-weight: 700 !important;
+  font-size: 13.5px !important;
+  color: #FFFFFF !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.sidebar .user-role {
+  font-family: var(--sidebar-f-mono) !important;
+  font-size: 10px !important;
+  letter-spacing: 0.05em !important;
+  color: #64748B !important;
+  text-transform: uppercase !important;
+  margin-top: 2px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.sidebar .logout-btn {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 8px !important;
+  display: grid !important;
+  place-items: center !important;
+  color: #94A3B8 !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  cursor: pointer !important;
+  transition: all 0.18s !important;
+  flex: none !important;
+  padding: 0 !important;
+}
+
+.sidebar .logout-btn:hover {
+  color: #EF4444 !important;
+  background: rgba(239, 68, 68, 0.18) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  transform: scale(1.05);
+}
+
+.sidebar .logout-btn svg {
+  width: 16px !important;
+  height: 16px !important;
+  stroke-width: 2 !important;
+  color: currentColor !important;
+}
+
+/* -------------------------------------------------------------
+   MOBILE DRAWER & SCRIM (RESPONSIVE BREAKPOINT <= 820px)
+------------------------------------------------------------- */
+.scrim {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(0, 0, 0, 0.65) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  z-index: 9998 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 0.25s ease !important;
+}
+
+.scrim.open,
+.scrim.show {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+@media (max-width: 820px) {
+  .app,
+  .app[style*="grid"],
+  .app.grid-layout,
+  body:not(.flex-layout) .app {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 100vh !important;
+    overflow: visible !important;
+  }
+
+  aside.sidebar,
+  .sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: min(84vw, 300px) !important;
+    min-width: 0 !important;
+    max-width: 320px !important;
+    height: 100vh !important;
+    transform: translateX(-100%) !important;
+    z-index: 9999 !important;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.7) !important;
+  }
+
+  aside.sidebar.open,
+  .sidebar.open {
+    transform: translateX(0) !important;
+  }
+
+  .main,
+  .main-canvas,
+  .main-content {
+    grid-column: auto !important;
+    height: auto !important;
+    overflow-y: visible !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+}
+

@@ -1,4 +1,4 @@
-import json
+﻿import json
 import os
 from pathlib import Path
 import unittest
@@ -32,7 +32,8 @@ class TestPublicHome(unittest.TestCase):
         include_files = config["functions"]["api/index.py"]["includeFiles"]
         self.assertIn("Public-home.html", include_files)
         self.assertIn("Accept-invite.html", include_files)
-        self.assertEqual(include_files, "{app/**,Public-home.html,Accept-invite.html}")
+        self.assertIn("shared/**", include_files)
+        self.assertIn("app/**", include_files)
 
     def test_vercel_entrypoint_routes_accept_invite_page(self):
         # 1. Direct path via Vercel override query param with token
