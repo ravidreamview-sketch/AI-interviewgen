@@ -7,7 +7,7 @@ import urllib.error
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from datetime import datetime, timezone
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Tuple
 
 logger = logging.getLogger("ravi.email_service")
 
@@ -142,22 +142,48 @@ def get_base_app_url(request: Optional[Any] = None) -> str:
     return "http://localhost:8000"
 
 
-def send_invitation_email(
+# Centralized default inviter display email address for invitation dispatches
+DEFAULT_INVITATION_DISPLAY_EMAIL = "admininstudio@gmail.com"
+DEFAULT_INVITATION_ADMIN_EMAIL = DEFAULT_INVITATION_DISPLAY_EMAIL
+
+
+def get_invitation_display_email(invited_by: Optional[str] = None) -> str:
+    """
+    Resolves the canonical display email address shown in the invitation's
+    'You have been invited by ...' text.
+
+    Precedence & Centralized Configuration:
+    1. INVITATION_DISPLAY_EMAIL environment variable (if explicitly configured and non-empty).
+    2. INVITATION_ADMIN_EMAIL environment variable (supported alias).
+    3. DEFAULT_INVITATION_DISPLAY_EMAIL ('admininstudio@gmail.com').
+    """
+    configured = (
+        os.environ.get("INVITATION_DISPLAY_EMAIL")
+        or os.environ.get("INVITATION_ADMIN_EMAIL")
+        or ""
+    ).strip()
+    if configured:
+        return configured
+
+    return DEFAULT_INVITATION_DISPLAY_EMAIL
+
+
+get_invitation_admin_email = get_invitation_display_email
+
+
+def render_invitation_email(
     to_email: str,
     invite_url: str,
     role: str = "candidate",
     expires_at: Optional[datetime] = None,
     invited_by: Optional[str] = None
-) -> Dict[str, Any]:
+) -> Tuple[str, str, str]:
     """
-    Sends an invitation email with a secure registration link.
-    Supports Resend HTTP API, SMTP, or safe local dev fallback.
-    Guarantees:
-    - Configured provider failures return explicit failure (never falsely reported success).
-    - Production and Preview environments do not log sensitive invitation tokens.
+    Renders the invitation email subject, HTML content, and plain text content.
+    The inviter displayed is resolved via get_invitation_admin_email(invited_by).
     """
     role_display = "Staff Administrator" if role == "admin" else ("Super Administrator" if role == "super_admin" else "Candidate")
-    sender_name = invited_by or "The Administrator"
+    sender_name = get_invitation_display_email(invited_by)
     expiry_text = "24 hours"
     if expires_at:
         try:
@@ -236,6 +262,30 @@ If you did not request this invitation, you can safely ignore this message.
 
 — RaviGen AI Team
 """
+    return subject, html_content, plain_content
+
+
+def send_invitation_email(
+    to_email: str,
+    invite_url: str,
+    role: str = "candidate",
+    expires_at: Optional[datetime] = None,
+    invited_by: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Sends an invitation email with a secure registration link.
+    Supports Resend HTTP API, SMTP, or safe local dev fallback.
+    Guarantees:
+    - Configured provider failures return explicit failure (never falsely reported success).
+    - Production and Preview environments do not log sensitive invitation tokens.
+    """
+    subject, html_content, plain_content = render_invitation_email(
+        to_email=to_email,
+        invite_url=invite_url,
+        role=role,
+        expires_at=expires_at,
+        invited_by=invited_by
+    )
 
     attempted_providers = []
     provider_errors = {}
