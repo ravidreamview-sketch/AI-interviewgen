@@ -6132,10 +6132,54 @@
         });
 
         if (!res.ok) {
-          throw new Error(`Server returned ${res.status}`);
+          let errDetail = "";
+          try {
+            const errData = await res.json();
+            if (errData && typeof errData.detail === "string") {
+              errDetail = errData.detail;
+            }
+          } catch (_) {}
+
+          console.warn(`[SampleAnswer] API request failed (${res.status}):`, errDetail || res.statusText);
+
+          let userMsg = "Sample answer is temporarily unavailable. Click Retry to try again.";
+          if (res.status === 401) {
+            userMsg = "Session expired or authentication required. Please log in to save sample answers.";
+          } else if (res.status === 403) {
+            userMsg = "Access restricted. You do not have permission to view or persist this sample answer.";
+          } else if (res.status === 422) {
+            userMsg = "Invalid question format or parameters. Please check question details and retry.";
+          } else if (res.status === 429) {
+            userMsg = "Rate limit reached. Please wait a moment before clicking Retry.";
+          } else if (res.status === 504) {
+            userMsg = "Answer synthesis timed out. Click Retry to generate a quick answer.";
+          } else if (res.status >= 500) {
+            userMsg = "Server encountered an error while synthesizing answer. Please click Retry.";
+          }
+
+          panel.dataset.loading = 'false';
+          panel.innerHTML = `
+            <div class="q-answer-error">
+              <span>${escapeHtml(userMsg)}</span>
+              <button class="q-answer-retry-btn" type="button">Retry</button>
+            </div>
+          `;
+          const retryBtn = panel.querySelector('.q-answer-retry-btn');
+          if (retryBtn) {
+            retryBtn.onclick = (e) => {
+              e.stopPropagation();
+              panel.dataset.loading = 'false';
+              fetchAndRenderSampleAnswer(panel, rawQ, i);
+            };
+          }
+          return;
         }
 
         const data = await res.json();
+
+        if (!data || !data.sample_answer) {
+          throw new Error("Invalid response format received from server.");
+        }
 
         if (typeof rawQ === 'object' && rawQ !== null) {
           rawQ.sample_answer = data.sample_answer;
@@ -6165,7 +6209,7 @@
         console.warn("Could not fetch sample answer from API:", err);
         panel.innerHTML = `
           <div class="q-answer-error">
-            <span>Sample answer is currently unavailable.</span>
+            <span>Sample answer is temporarily unavailable. Click Retry to try again.</span>
             <button class="q-answer-retry-btn" type="button">Retry</button>
           </div>
         `;
@@ -6173,6 +6217,7 @@
         if (retryBtn) {
           retryBtn.onclick = (e) => {
             e.stopPropagation();
+            panel.dataset.loading = 'false';
             fetchAndRenderSampleAnswer(panel, rawQ, i);
           };
         }

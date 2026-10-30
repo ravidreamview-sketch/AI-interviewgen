@@ -1,5 +1,6 @@
 import os
 import re
+import time
 import logging
 from pathlib import Path
 from typing import List, Optional
@@ -53,11 +54,22 @@ def get_ai_provider_status() -> tuple[str, bool]:
     return "Not configured", False
 
 
-def generate_ai_questions(prompt: str, temperature: Optional[float] = None) -> str:
+def generate_ai_questions(
+    prompt: str,
+    temperature: Optional[float] = None,
+    timeout: Optional[float] = None,
+) -> str:
     # Gemini is preferred; Groq remains the configured fallback.
     gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
+    groq_key = os.getenv("GROQ_API_KEY", "").strip()
+
+    t_start = time.perf_counter()
+    overall_timeout = timeout
+
     if gemini_key:
         try:
+            # When an overall timeout is specified, cap Gemini's wait time (e.g. 4.5s or overall_timeout)
+            gemini_timeout = min(overall_timeout, 4.5) if overall_timeout is not None else 12.0
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}"
             temp = temperature if temperature is not None else 0.65
             payload = {
@@ -69,11 +81,11 @@ def generate_ai_questions(prompt: str, temperature: Optional[float] = None) -> s
                 data=json.dumps(payload).encode("utf-8"),
                 headers={"Content-Type": "application/json"}
             )
-            with urllib.request.urlopen(req, timeout=20) as resp:
+            with urllib.request.urlopen(req, timeout=gemini_timeout) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
                 text = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
-                if text:
-                    return text
+                if text and text.strip():
+                    return text.strip()
             logger.warning("Gemini provider returned an empty response; trying Groq if configured")
         except Exception as gemini_err:
             logger.warning(
@@ -81,36 +93,59 @@ def generate_ai_questions(prompt: str, temperature: Optional[float] = None) -> s
                 type(gemini_err).__name__,
             )
 
-    groq_key = os.getenv("GROQ_API_KEY", "").strip()
     if groq_key:
-        try:
-            from groq import Groq
-            client = Groq(api_key=groq_key)
-            models_to_try = [
-                "openai/gpt-oss-120b",
-                "qwen/qwen3.8-27b",
-            ]
-            for model_name in models_to_try:
-                try:
-                    temp_groq = temperature if temperature is not None else 0.6
-                    response = client.chat.completions.create(
-                        model=model_name,
-                        messages=[{"role": "user", "content": prompt}],
-                        temperature=temp_groq,
-                        max_tokens=3000,
-                    )
-                    text = response.choices[0].message.content
-                    if text and text.strip():
-                        return text
-                    logger.warning("Groq model %s returned an empty response", model_name)
-                except Exception as groq_err:
-                    logger.warning(
-                        "Groq model %s request failed (%s)",
-                        model_name,
-                        type(groq_err).__name__,
-                    )
-        except Exception as groq_err:
-            logger.warning("Groq provider is unavailable (%s)", type(groq_err).__name__)
+        time_elapsed = time.perf_counter() - t_start
+        if overall_timeout is not None and (overall_timeout - time_elapsed) <= 1.5:
+            logger.warning(
+                "Time budget exhausted (%.2fs elapsed); skipping Groq fallback",
+                time_elapsed
+            )
+        else:
+            try:
+                from groq import Groq
+                groq_init_kwargs = {"api_key": groq_key}
+                if overall_timeout is not None:
+                    groq_init_kwargs["timeout"] = overall_timeout - time_elapsed
+                    groq_init_kwargs["max_retries"] = 1
+                client = Groq(**groq_init_kwargs)
+                models_to_try = [
+                    "openai/gpt-oss-120b",
+                    "qwen/qwen3.8-27b",
+                ]
+                for model_name in models_to_try:
+                    time_elapsed_model = time.perf_counter() - t_start
+                    if overall_timeout is not None:
+                        model_budget = overall_timeout - time_elapsed_model
+                        if model_budget <= 1.0:
+                            logger.warning(
+                                "Time budget exhausted before trying Groq model %s (%.2fs elapsed)",
+                                model_name,
+                                time_elapsed_model
+                            )
+                            break
+                    try:
+                        temp_groq = temperature if temperature is not None else 0.6
+                        create_kwargs = {
+                            "model": model_name,
+                            "messages": [{"role": "user", "content": prompt}],
+                            "temperature": temp_groq,
+                            "max_tokens": 3000,
+                        }
+                        if overall_timeout is not None:
+                            create_kwargs["timeout"] = model_budget
+                        response = client.chat.completions.create(**create_kwargs)
+                        text = response.choices[0].message.content
+                        if text and text.strip():
+                            return text.strip()
+                        logger.warning("Groq model %s returned an empty response", model_name)
+                    except Exception as groq_err:
+                        logger.warning(
+                            "Groq model %s request failed (%s)",
+                            model_name,
+                            type(groq_err).__name__,
+                        )
+            except Exception as groq_err:
+                logger.warning("Groq provider is unavailable (%s)", type(groq_err).__name__)
 
     if not gemini_key and not groq_key:
         logger.error(
@@ -921,16 +956,22 @@ def build_contextual_sample_answer(
         }
 
 
+DEFAULT_SAMPLE_ANSWER_TIMEOUT = 7.0
+
+
 def generate_sample_answer(
     question: str,
     role: str = "",
     skills: Optional[List[str]] = None,
-    difficulty: str = "Intermediate"
+    difficulty: str = "Intermediate",
+    time_budget: float = DEFAULT_SAMPLE_ANSWER_TIMEOUT,
 ) -> dict:
     """
     Generates a structured sample answer with key points and a practical example.
-    Uses configured AI provider (Gemini / Groq) if available; falls back seamlessly to
-    the domain-aware contextual generator if AI is unavailable or fails.
+    Uses configured AI provider (Gemini / Groq) if available within a strict time budget;
+    falls back seamlessly to the domain-aware contextual generator if AI is unavailable,
+    times out, fails, or returns malformed/insufficient content.
+    Guarantees a non-empty sample answer (length >= 30).
     """
     clean_q = (question or "").strip()
     if not clean_q:
@@ -945,23 +986,37 @@ def generate_sample_answer(
         try:
             from .prompts import sample_answer_prompt
             prompt = sample_answer_prompt(clean_q, role, skills, difficulty)
-            raw = generate_ai_questions(prompt, temperature=0.4)
+            raw = generate_ai_questions(prompt, temperature=0.4, timeout=time_budget)
             # Clean markdown code fences if present
             cleaned_raw = raw.strip()
             if cleaned_raw.startswith("```"):
                 cleaned_raw = re.sub(r"^```[a-zA-Z]*\n?", "", cleaned_raw)
                 cleaned_raw = re.sub(r"\n?```$", "", cleaned_raw)
             data = json.loads(cleaned_raw)
-            if isinstance(data, dict) and "sample_answer" in data:
-                return {
-                    "sample_answer": str(data.get("sample_answer", "")).strip(),
-                    "key_points": [str(p).strip() for p in data.get("key_points", []) if str(p).strip()],
-                    "practical_example": str(data.get("practical_example", "")).strip() or None
-                }
+            if isinstance(data, dict):
+                ans_text = str(data.get("sample_answer", "")).strip()
+                if len(ans_text) >= 30:
+                    key_pts = [str(p).strip() for p in data.get("key_points", []) if str(p).strip()]
+                    example = str(data.get("practical_example", "")).strip() or None
+                    return {
+                        "sample_answer": ans_text,
+                        "key_points": key_pts,
+                        "practical_example": example
+                    }
+                else:
+                    logger.warning("AI provider sample answer too short (%d chars); falling back to contextual generator", len(ans_text))
+            else:
+                logger.warning("AI provider returned non-dict JSON; falling back to contextual generator")
         except Exception as exc:
             logger.warning("AI provider sample answer generation failed (%s); using contextual engine", exc)
 
-    return build_contextual_sample_answer(clean_q, role, skills, difficulty)
+    fallback = build_contextual_sample_answer(clean_q, role, skills, difficulty)
+    if not fallback.get("sample_answer") or len(str(fallback["sample_answer"]).strip()) < 30:
+        fallback["sample_answer"] = (
+            f"When answering '{clean_q}', articulate your structured approach, trade-off analysis, "
+            f"and practical production experience as a {role or 'Software Engineer'}."
+        )
+    return fallback
 
 
 def build_contextual_evaluation_fallback(

@@ -3,7 +3,7 @@
   "functions": {
     "api/index.py": {
       "includeFiles": "{app/**,Public-home.html,Accept-invite.html}",
-      "maxDuration": 15
+      "maxDuration": 30
     }
   },
   "rewrites": [
