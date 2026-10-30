@@ -3,7 +3,7 @@ import logging
 import secrets
 import hashlib
 import re
-from app.email_service import send_invitation_email, get_base_app_url, get_invitation_admin_email
+from app.email_service import send_invitation_email, get_base_app_url, get_invitation_display_email, get_invitation_admin_email
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request, Query
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
@@ -924,7 +924,7 @@ def create_invitation(
     encoded_token = urllib.parse.quote(raw_token, safe="")
     invite_url = f"{base_url}/accept-invite?token={encoded_token}"
 
-    inviter_email = get_invitation_admin_email(current_admin.email)
+    inviter_email = get_invitation_display_email()
     email_result = send_invitation_email(
         to_email=email_clean,
         invite_url=invite_url,
@@ -1059,7 +1059,7 @@ def resend_invitation(
     encoded_token = urllib.parse.quote(raw_token, safe="")
     invite_url = f"{base_url}/accept-invite?token={encoded_token}"
 
-    inviter_email = get_invitation_admin_email(current_admin.email)
+    inviter_email = get_invitation_display_email()
     email_result = send_invitation_email(
         to_email=inv.email,
         invite_url=invite_url,

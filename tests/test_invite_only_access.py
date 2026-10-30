@@ -1204,23 +1204,40 @@ class TestInviteOnlyAccess(unittest.TestCase):
 
     # 39. Centralized Inviter Email Resolution Precedence
     def test_invitation_admin_email_resolution_precedence(self):
-        from app.email_service import get_invitation_admin_email, DEFAULT_INVITATION_ADMIN_EMAIL
+        from app.email_service import (
+            get_invitation_display_email,
+            get_invitation_admin_email,
+            DEFAULT_INVITATION_DISPLAY_EMAIL,
+            DEFAULT_INVITATION_ADMIN_EMAIL
+        )
 
+        self.assertEqual(DEFAULT_INVITATION_DISPLAY_EMAIL, "admininstudio@gmail.com")
         self.assertEqual(DEFAULT_INVITATION_ADMIN_EMAIL, "admininstudio@gmail.com")
 
-        # A. Default centralized fallback when INVITATION_ADMIN_EMAIL is unset
-        with patch.dict(os.environ, {"INVITATION_ADMIN_EMAIL": ""}, clear=False):
+        # A. Default centralized fallback when INVITATION_DISPLAY_EMAIL is unset
+        with patch.dict(os.environ, {"INVITATION_DISPLAY_EMAIL": "", "INVITATION_ADMIN_EMAIL": ""}, clear=False):
+            self.assertEqual(get_invitation_display_email(), "admininstudio@gmail.com")
+            self.assertEqual(get_invitation_display_email("admin@example.com"), "admininstudio@gmail.com")
+            self.assertEqual(get_invitation_display_email("superadmin@ravigenai.com"), "admininstudio@gmail.com")
+            self.assertEqual(get_invitation_display_email(None), "admininstudio@gmail.com")
+            # Alias parity
             self.assertEqual(get_invitation_admin_email(), "admininstudio@gmail.com")
-            self.assertEqual(get_invitation_admin_email("admin@example.com"), "admininstudio@gmail.com")
-            self.assertEqual(get_invitation_admin_email("superadmin@ravigenai.com"), "admininstudio@gmail.com")
-            self.assertEqual(get_invitation_admin_email(None), "admininstudio@gmail.com")
 
-        # B. Explicit INVITATION_ADMIN_EMAIL environment variable configuration
-        with patch.dict(os.environ, {"INVITATION_ADMIN_EMAIL": "custom_override@studio.ai"}, clear=False):
-            self.assertEqual(get_invitation_admin_email(), "custom_override@studio.ai")
-            self.assertEqual(get_invitation_admin_email("admin@example.com"), "custom_override@studio.ai")
-            self.assertEqual(get_invitation_admin_email("superadmin@ravigenai.com"), "custom_override@studio.ai")
-            self.assertEqual(get_invitation_admin_email(None), "custom_override@studio.ai")
+        # B. Explicit INVITATION_DISPLAY_EMAIL environment variable configuration
+        with patch.dict(os.environ, {"INVITATION_DISPLAY_EMAIL": "custom_override@studio.ai", "INVITATION_ADMIN_EMAIL": ""}, clear=False):
+            self.assertEqual(get_invitation_display_email(), "custom_override@studio.ai")
+            self.assertEqual(get_invitation_display_email("admin@example.com"), "custom_override@studio.ai")
+            self.assertEqual(get_invitation_display_email("superadmin@ravigenai.com"), "custom_override@studio.ai")
+            self.assertEqual(get_invitation_display_email(None), "custom_override@studio.ai")
+
+        # C. INVITATION_ADMIN_EMAIL supported as alias/fallback
+        with patch.dict(os.environ, {"INVITATION_DISPLAY_EMAIL": "", "INVITATION_ADMIN_EMAIL": "alias_override@studio.ai"}, clear=False):
+            self.assertEqual(get_invitation_display_email(), "alias_override@studio.ai")
+            self.assertEqual(get_invitation_admin_email(), "alias_override@studio.ai")
+
+        # D. INVITATION_DISPLAY_EMAIL takes precedence over INVITATION_ADMIN_EMAIL
+        with patch.dict(os.environ, {"INVITATION_DISPLAY_EMAIL": "primary@studio.ai", "INVITATION_ADMIN_EMAIL": "fallback@studio.ai"}, clear=False):
+            self.assertEqual(get_invitation_display_email(), "primary@studio.ai")
 
     # 40. Invitation Email Renders admininstudio@gmail.com and Preserves Layout & Branding
     def test_invitation_email_renders_admininstudio_and_preserves_layout(self):
@@ -1229,7 +1246,7 @@ class TestInviteOnlyAccess(unittest.TestCase):
         candidate_email = f"candidate_render_{uuid.uuid4().hex[:6]}@example.com"
         test_invite_url = "https://ai-interviewgen.vercel.app/accept-invite?token=SECURE_INVITATION_TOKEN_123"
 
-        with patch.dict(os.environ, {"INVITATION_ADMIN_EMAIL": ""}, clear=False):
+        with patch.dict(os.environ, {"INVITATION_DISPLAY_EMAIL": "", "INVITATION_ADMIN_EMAIL": ""}, clear=False):
             subject, html, plain = render_invitation_email(
                 to_email=candidate_email,
                 invite_url=test_invite_url,
@@ -1292,6 +1309,7 @@ class TestInviteOnlyAccess(unittest.TestCase):
         inv = db.query(UserInvitation).filter(UserInvitation.email == candidate_email).first()
         self.assertIsNotNone(inv)
         self.assertEqual(inv.invited_by_email, self.super_admin.email)
+        self.assertEqual(inv.invited_by_user_id, self.super_admin.id)
 
     # 42. Admin Invitation Resend API Uses Configured admininstudio@gmail.com
     def test_invitation_resend_api_uses_configured_inviter_email(self):
@@ -1337,7 +1355,7 @@ class TestInviteOnlyAccess(unittest.TestCase):
         invite_url = invite_data["invite_url"]
         token = invite_url.split("token=")[1]
 
-        # 2. Candidate validates invitation token via /candidate/auth/invitation
+        # 2. Candidate validates invitation token via /api/auth/invitation
         val_res = client.get(f"/api/auth/invitation?token={token}")
         self.assertEqual(val_res.status_code, 200)
         val_data = val_res.json()
@@ -1346,7 +1364,7 @@ class TestInviteOnlyAccess(unittest.TestCase):
         self.assertEqual(val_data.get("role"), "candidate")
         self.assertEqual(val_data.get("plan_tier"), "pro")
 
-        # 3. Candidate accepts invitation and sets password via /candidate/auth/accept-invite
+        # 3. Candidate accepts invitation and sets password via /api/auth/accept-invite
         accept_res = client.post(
             "/api/auth/accept-invite",
             json={

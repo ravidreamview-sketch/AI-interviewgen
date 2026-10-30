@@ -142,23 +142,33 @@ def get_base_app_url(request: Optional[Any] = None) -> str:
     return "http://localhost:8000"
 
 
-# Centralized default inviter email address for invitation dispatches
-DEFAULT_INVITATION_ADMIN_EMAIL = "admininstudio@gmail.com"
+# Centralized default inviter display email address for invitation dispatches
+DEFAULT_INVITATION_DISPLAY_EMAIL = "admininstudio@gmail.com"
+DEFAULT_INVITATION_ADMIN_EMAIL = DEFAULT_INVITATION_DISPLAY_EMAIL
 
 
-def get_invitation_admin_email(invited_by: Optional[str] = None) -> str:
+def get_invitation_display_email(invited_by: Optional[str] = None) -> str:
     """
-    Resolves the canonical inviter email address displayed in invitation emails.
+    Resolves the canonical display email address shown in the invitation's
+    'You have been invited by ...' text.
 
     Precedence & Centralized Configuration:
-    1. INVITATION_ADMIN_EMAIL environment variable (if explicitly configured and non-empty).
-    2. DEFAULT_INVITATION_ADMIN_EMAIL ('admininstudio@gmail.com').
+    1. INVITATION_DISPLAY_EMAIL environment variable (if explicitly configured and non-empty).
+    2. INVITATION_ADMIN_EMAIL environment variable (supported alias).
+    3. DEFAULT_INVITATION_DISPLAY_EMAIL ('admininstudio@gmail.com').
     """
-    configured = (os.environ.get("INVITATION_ADMIN_EMAIL") or "").strip()
+    configured = (
+        os.environ.get("INVITATION_DISPLAY_EMAIL")
+        or os.environ.get("INVITATION_ADMIN_EMAIL")
+        or ""
+    ).strip()
     if configured:
         return configured
 
-    return DEFAULT_INVITATION_ADMIN_EMAIL
+    return DEFAULT_INVITATION_DISPLAY_EMAIL
+
+
+get_invitation_admin_email = get_invitation_display_email
 
 
 def render_invitation_email(
@@ -173,7 +183,7 @@ def render_invitation_email(
     The inviter displayed is resolved via get_invitation_admin_email(invited_by).
     """
     role_display = "Staff Administrator" if role == "admin" else ("Super Administrator" if role == "super_admin" else "Candidate")
-    sender_name = get_invitation_admin_email(invited_by)
+    sender_name = get_invitation_display_email(invited_by)
     expiry_text = "24 hours"
     if expires_at:
         try:
