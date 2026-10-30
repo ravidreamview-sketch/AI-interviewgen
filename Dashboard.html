@@ -128,10 +128,11 @@
     .app {
       display: grid;
       grid-template-columns: 290px minmax(0, 1fr);
-      min-height: 100vh;
+      height: 100vh;
       width: 100%;
       box-sizing: border-box;
       position: relative;
+      overflow: hidden;
     }
 
     /* -------------------------------------------------------------
@@ -145,7 +146,7 @@
       flex-direction: column;
       padding: 24px 16px;
       gap: 16px;
-      position: sticky;
+      position: fixed;
       top: 0;
       height: 100vh;
       overflow-y: auto;
@@ -472,6 +473,7 @@
        MAIN CONTENT CANVAS
     ------------------------------------------------------------- */
     .main-canvas {
+      grid-column: 2;
       min-width: 0;
       width: 100%;
       max-width: 1600px;
@@ -480,6 +482,9 @@
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
+      overflow-y: auto;
+      height: 100vh;
+      min-height: 0;
     }
 
     /* Top Navigation Bar */
@@ -1512,6 +1517,9 @@
       .app {
         display: block;
         width: 100%;
+        height: auto;
+        min-height: 100vh;
+        overflow: visible;
       }
       .mob-menu-btn {
         display: grid;
@@ -1538,6 +1546,9 @@
         display: block;
       }
       .main-canvas {
+        grid-column: auto;
+        height: auto;
+        overflow-y: visible;
         padding: 0 20px 32px;
       }
       .dashboard-title {
@@ -1610,6 +1621,7 @@
     }
   </style>
 <link rel="stylesheet" href="/typography.css">
+  <link rel="stylesheet" href="/shared/candidate-shell.css">
 </head>
 <body>
 
@@ -1621,39 +1633,39 @@
     <!-- =============================================================
          LEFT SIDEBAR NAVIGATION
     ============================================================= -->
-    <aside class="sidebar" id="sidebar">
-      
+        <aside class="sidebar" id="sidebar">
+
       <!-- Brand Header -->
-      <div class="brand">
+      <a class="brand" href="/candidate/dashboard" aria-label="RaviGen AI Interview Studio">
         <img class="brand-logo" src="/logo.png" alt="RaviGen AI Logo" onerror="this.onerror=null;this.src='/logo.png';">
         <div>
           <div class="brand-title"><span class="brand-name">RaviGen</span> <span class="brand-ai">AI</span></div>
           <div class="brand-sub">INTERVIEW STUDIO</div>
         </div>
-      </div>
+      </a>
 
       <!-- Section: WORKSPACE -->
       <div class="side-label">WORKSPACE</div>
       <nav class="nav" aria-label="Workspace Navigation">
-        <a class="nav-link active" href="/candidate/dashboard" aria-current="page">
+        <a class="nav-link active" aria-current="page" href="/candidate/dashboard" data-nav="dashboard">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
           <span>Dashboard</span>
         </a>
-        <a class="nav-link" href="/candidate/interview-studio">
+        <a class="nav-link" href="/candidate/interview-studio" data-nav="interview-studio">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2.5l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg>
           <span>Generate Questions</span>
         </a>
-        <a class="nav-link" href="/candidate/mock-interview">
+        <a class="nav-link" href="/candidate/mock-interview" data-nav="mock-interview">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
           <span>AI Mock Interview</span>
           <span class="nav-badge new">VIDEO + VOICE</span>
         </a>
-        <a class="nav-link" href="/candidate/interview-coach">
+        <a class="nav-link" href="/candidate/interview-coach" data-nav="interview-coach">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 11.5a8.38 8.38 0 0 1-9 8.5 9.2 9.2 0 0 1-4-.9L3 21l1.9-4.2A8.5 8.5 0 1 1 21 11.5Z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>
           <span>Interview Coach</span>
           <span class="nav-badge">AI</span>
         </a>
-        <a class="nav-link" href="/candidate/resume-match">
+        <a class="nav-link" href="/candidate/resume-match" data-nav="resume-match">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
           <span>Resume &amp; JD Match</span>
           <span class="nav-badge pro">PRO</span>
@@ -1663,40 +1675,40 @@
       <!-- Section: LIBRARY -->
       <div class="side-label" style="margin-top: 10px;">LIBRARY</div>
       <nav class="nav" aria-label="Library Navigation">
-        <a class="nav-link" href="/candidate/history">
+        <a class="nav-link" href="/candidate/history" data-nav="history">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 16 14"/></svg>
           <span>Interview History</span>
         </a>
-        <a class="nav-link" href="/scorecard">
+        <a class="nav-link" href="/scorecard" data-nav="scorecard">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
           <span>Public Scorecards</span>
         </a>
-        <a class="nav-link" href="/candidate/company-playbooks">
+        <a class="nav-link" href="/candidate/company-playbooks" data-nav="company-playbooks">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
           <span>Company Playbooks</span>
         </a>
       </nav>
 
-      <!-- Sidebar Bottom: Go Pro & Profile -->
+      <!-- Sidebar Bottom: Upgrade Card & Profile -->
       <div class="side-foot">
-        <div class="upgrade-card" onclick="location.href='/candidate/upgrade-pro'" role="button" tabindex="0" aria-label="Go Pro Upgrade">
+        <div class="upgrade-card" id="sidebarUpgradeCard" onclick="location.href='/candidate/upgrade-pro'" role="button" tabindex="0" aria-label="Upgrade Subscription">
           <div class="upgrade-top">
-            <span class="crown-icon">👑</span>
-            <span>Go Pro Plan</span>
+            <span class="crown-icon">&#128081;</span>
+            <span id="sidebarUpgradeTitle">Go Pro Plan</span>
             <span class="chevron">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
             </span>
           </div>
-          <p class="upgrade-desc">Unlock unlimited Gemini 2.5 Flash generations &amp; live voice mock tests.</p>
+          <p class="upgrade-desc" id="sidebarUpgradeDesc">Unlock unlimited Gemini 2.5 Flash generations &amp; live voice mock tests.</p>
         </div>
 
         <div class="user-profile">
-          <img class="user-avatar" alt="Ravi Avatar" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><rect width='40' height='40' fill='%234F46E5'/><circle cx='20' cy='15' r='8' fill='%23FFFFFF'/><path d='M6 38c0-8 6-13 14-13s14 5 14 13z' fill='%23FFFFFF'/></svg>">
+          <div class="user-avatar" id="sidebarUserAvatar">CA</div>
           <div class="user-info">
-            <div class="user-name candidate-user-email">Ravi Chandran</div>
-            <div class="user-role candidate-plan-tier">Staff GenAI Lead</div>
+            <div class="user-name candidate-user-email" id="sidebarUserName">Candidate</div>
+            <div class="user-role candidate-plan-tier" id="sidebarUserPlan">FREE TIER</div>
           </div>
-          <button class="logout-btn" title="Sign Out / Logout" onclick="handleLogout(event)" aria-label="Sign Out">
+          <button class="logout-btn" id="sidebarLogoutBtn" title="Sign Out / Logout" type="button" aria-label="Sign Out">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
           </button>
         </div>
@@ -2160,7 +2172,11 @@
           userEmailEls.forEach(el => el.textContent = CURRENT_CANDIDATE.name || CURRENT_CANDIDATE.email.split('@')[0]);
 
           const planEls = document.querySelectorAll('.candidate-plan-tier');
-          planEls.forEach(el => el.textContent = (CURRENT_CANDIDATE.plan_tier || 'PRO').toUpperCase() + ' TIER');
+          const pTier = CURRENT_CANDIDATE.plan_tier || 'free';
+          const pLabel = (window.CandidateShell && window.CandidateShell.formatPlanLabel)
+            ? window.CandidateShell.formatPlanLabel(pTier)
+            : (pTier.toLowerCase() === 'enterprise' ? 'ENTERPRISE TIER' : (pTier.toLowerCase() === 'pro' ? 'PRO TIER' : 'FREE TIER'));
+          planEls.forEach(el => el.textContent = pLabel);
         }
       } catch (err) {
         console.warn("Candidate auth check:", err);
@@ -2248,7 +2264,7 @@
       if (d.user) {
         const name = d.user.name || (d.user.email ? d.user.email.split('@')[0] : 'Candidate');
         const welcomeTitle = document.getElementById('dashWelcomeTitle');
-        if (welcomeTitle) welcomeTitle.textContent = `Welcome back, ${name}.`;
+        if (welcomeTitle) welcomeTitle.textContent = `Welcome back.`;
 
         const userEmailEls = document.querySelectorAll('.candidate-user-email');
         userEmailEls.forEach(el => el.textContent = name);
@@ -2602,5 +2618,6 @@
       setTimeout(() => { btn.textContent = '📋 Copy All'; }, 1400);
     });
   </script>
+  <script src="/shared/candidate-shell.js" defer></script>
 </body>
 </html>

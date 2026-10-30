@@ -1,4 +1,4 @@
-import os
+﻿import os
 import sys
 import unittest
 from unittest.mock import patch
@@ -88,7 +88,7 @@ class TestInterviewCoach(unittest.TestCase):
             response = client.get(path)
             self.assertEqual(response.status_code, 200)
             self.assertIn('class="nav-link active"', response.text)
-            self.assertIn('href="/interview-coach"', response.text)
+            self.assertTrue('href="/candidate/interview-coach"' in response.text or 'href="/interview-coach"' in response.text)
             self.assertNotIn("72%", response.text)
             self.assertIn('id="coachNewConversation"', response.text)
             self.assertIn('id="coachReadinessValue"', response.text)

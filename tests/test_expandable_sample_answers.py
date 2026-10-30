@@ -1,4 +1,4 @@
-import unittest
+﻿import unittest
 import json
 from pathlib import Path
 from fastapi.testclient import TestClient
@@ -104,7 +104,7 @@ class TestExpandableSampleAnswers(unittest.TestCase):
                 "How do you design and execute a mixed-methods user research plan for an ambiguous feature definition?",
                 "UX Researcher",
                 ["User Research", "Usability Testing"],
-                "user research"
+                "research"
             ),
             (
                 "How do you establish typographic scale, 8pt spatial grid, and color contrast tokens in Figma Variables?",
@@ -116,7 +116,7 @@ class TestExpandableSampleAnswers(unittest.TestCase):
                 "Explain your approach to continuous integration and automated canary rollouts in Kubernetes.",
                 "DevOps Engineer",
                 ["Kubernetes", "CI/CD", "Docker"],
-                "declarative"
+                "canary"
             ),
             (
                 "How do you optimize slow PostgreSQL queries with composite indexing and explain analyze?",

@@ -1961,9 +1961,22 @@ def serve_tracker_script():
     return FileResponse(f, media_type="application/javascript") if f.exists() else HTTPException(404, "analytics-tracker.js not found")
 
 @app.get("/typography.css", include_in_schema=False)
+@app.get("/candidate/typography.css", include_in_schema=False)
 def serve_typography_stylesheet():
     f = BASE_DIR / "typography.css"
     return FileResponse(f, media_type="text/css") if f.exists() else HTTPException(404, "typography.css not found")
+
+@app.get("/shared/candidate-shell.css", include_in_schema=False)
+@app.get("/candidate/shared/candidate-shell.css", include_in_schema=False)
+def serve_candidate_shell_css():
+    f = BASE_DIR / "shared" / "candidate-shell.css"
+    return FileResponse(f, media_type="text/css") if f.exists() else HTTPException(404, "candidate-shell.css not found")
+
+@app.get("/shared/candidate-shell.js", include_in_schema=False)
+@app.get("/candidate/shared/candidate-shell.js", include_in_schema=False)
+def serve_candidate_shell_js():
+    f = BASE_DIR / "shared" / "candidate-shell.js"
+    return FileResponse(f, media_type="application/javascript") if f.exists() else HTTPException(404, "candidate-shell.js not found")
 
 def get_html_response(filename: str, db: Session = None):
     """
