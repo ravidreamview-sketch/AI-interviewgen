@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch, MagicMock
 import json
 from pathlib import Path
 from fastapi.testclient import TestClient
@@ -57,6 +58,26 @@ class TestExpandableSampleAnswers(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.db.close()
+
+    def setUp(self):
+        # Hermetic test execution: mock question generation so /api/generate is instant and deterministic
+        self.patcher_q = patch("app.main.generate_ai_questions", return_value=(
+            "1. How do you design systems for high availability?\n"
+            "2. Explain horizontal vs vertical scaling.\n"
+            "3. What is distributed consensus?\n"
+            "4. Describe container orchestration in production.\n"
+            "5. How do you manage secrets securely in cloud environments?"
+        ))
+        self.mock_q = self.patcher_q.start()
+
+        # Default AI provider status to unconfigured for hermetic domain/persistence tests
+        # Tests 18, 20, 21, 22 override this with nested patch() contexts
+        self.patcher_ai = patch("app.services.get_ai_provider_status", return_value=("Not configured", False))
+        self.mock_ai = self.patcher_ai.start()
+
+    def tearDown(self):
+        self.patcher_ai.stop()
+        self.patcher_q.stop()
 
     # 1. Test On-Demand Endpoint /api/sample-answer
     def test_01_sample_answer_endpoint_success(self):
@@ -138,16 +159,17 @@ class TestExpandableSampleAnswers(unittest.TestCase):
             )
         ]
 
-        for q, role, skills, expected_kw in domains:
-            ans = generate_sample_answer(q, role=role, skills=skills, difficulty="Hard")
-            self.assertIn("sample_answer", ans)
-            self.assertIn("key_points", ans)
-            self.assertGreaterEqual(len(ans["key_points"]), 3)
-            self.assertIsNotNone(ans["practical_example"])
-            self.assertTrue(
-                expected_kw.lower() in ans["sample_answer"].lower() or any(expected_kw.lower() in kp.lower() for kp in ans["key_points"]),
-                f"Expected keyword '{expected_kw}' not found in answer or key points for '{q}'"
-            )
+        with patch("app.services.get_ai_provider_status", return_value=("Not configured", False)):
+            for q, role, skills, expected_kw in domains:
+                ans = generate_sample_answer(q, role=role, skills=skills, difficulty="Hard")
+                self.assertIn("sample_answer", ans)
+                self.assertIn("key_points", ans)
+                self.assertGreaterEqual(len(ans["key_points"]), 3)
+                self.assertIsNotNone(ans["practical_example"])
+                self.assertTrue(
+                    expected_kw.lower() in ans["sample_answer"].lower() or any(expected_kw.lower() in kp.lower() for kp in ans["key_points"]),
+                    f"Expected keyword '{expected_kw}' not found in answer or key points for '{q}'"
+                )
 
     # 4. Test Answers Do Not Hallucinate Personal Employment History
     def test_04_no_personal_hallucination(self):
@@ -163,8 +185,9 @@ class TestExpandableSampleAnswers(unittest.TestCase):
             "when i worked at google",
             "in my 10 years at"
         ]
-        for q in questions:
-            ans = generate_sample_answer(q, role="Software Engineer", skills=["Python"], difficulty="Hard")
+        with patch("app.services.get_ai_provider_status", return_value=("Not configured", False)):
+            for q in questions:
+                ans = generate_sample_answer(q, role="Software Engineer", skills=["Python"], difficulty="Hard")
             answer_text = ans["sample_answer"].lower()
             for forbidden in forbidden_phrases:
                 self.assertNotIn(forbidden, answer_text, f"Forbidden personal claim '{forbidden}' found in sample answer")
@@ -263,18 +286,19 @@ class TestExpandableSampleAnswers(unittest.TestCase):
 
     # 7. Test Each Question's Answer is Unique to Its Domain
     def test_07_answers_differ_across_different_questions(self):
-        ans_a = generate_sample_answer(
-            "How do you ensure interaction design patterns meet WCAG 2.2 AA accessibility standards?",
-            role="Frontend Architect",
-            skills=["WCAG", "React"],
-            difficulty="Hard"
-        )
-        ans_b = generate_sample_answer(
-            "How do you design Kafka streaming pipelines with idempotent consumers?",
-            role="Data Engineer",
-            skills=["Kafka", "Streaming"],
-            difficulty="Hard"
-        )
+        with patch("app.services.get_ai_provider_status", return_value=("Not configured", False)):
+            ans_a = generate_sample_answer(
+                "How do you ensure interaction design patterns meet WCAG 2.2 AA accessibility standards?",
+                role="Frontend Architect",
+                skills=["WCAG", "React"],
+                difficulty="Hard"
+            )
+            ans_b = generate_sample_answer(
+                "How do you design Kafka streaming pipelines with idempotent consumers?",
+                role="Data Engineer",
+                skills=["Kafka", "Streaming"],
+                difficulty="Hard"
+            )
         self.assertNotEqual(ans_a["sample_answer"], ans_b["sample_answer"])
         self.assertIn("WCAG", ans_a["sample_answer"])
         self.assertIn("Kafka", ans_b["sample_answer"])
@@ -641,6 +665,271 @@ class TestExpandableSampleAnswers(unittest.TestCase):
         self.assertTrue(res2.json().get("persisted"))
         # Cache response must be fast (<20ms)
         self.assertLess(res2.json().get("timing_ms", 999), 20.0)
+
+
+    # 18. Scenario 1: Successful AI generation (mocked)
+    def test_18_scenario_01_successful_ai_generation_mocked(self):
+        ai_payload = json.dumps({
+            "sample_answer": "In production, I implement resilient distributed caching with Redis and write-through cache semantics to guarantee single-digit millisecond latency.",
+            "key_points": [
+                "Cache invalidation strategy",
+                "Circuit breakers on Redis connection failure",
+                "TTL expiration with jitter"
+            ],
+            "practical_example": "Setting a TTL of 300s +/- 30s jitter prevents thundering herd on backend DB."
+        })
+        with patch("app.services.get_ai_provider_status", return_value=("Gemini", True)):
+            with patch("app.services.generate_ai_questions", return_value=ai_payload):
+                res = client.post(
+                    "/api/sample-answer",
+                    json={
+                        "question": "How do you design high-throughput cache layers?",
+                        "role": "Backend Engineer",
+                        "skills": ["Redis", "Python"],
+                        "difficulty": "Hard"
+                    }
+                )
+                self.assertEqual(res.status_code, 200)
+                data = res.json()
+                self.assertIn("redis", data["sample_answer"].lower())
+                self.assertEqual(len(data["key_points"]), 3)
+                self.assertIn("TTL", data["practical_example"])
+
+    # 19. Scenario 2: Fallback when no AI provider configured
+    def test_19_scenario_02_fallback_when_no_ai_provider_configured(self):
+        with patch("app.services.get_ai_provider_status", return_value=("Not configured", False)):
+            ans = generate_sample_answer(
+                "How do you design Kafka streaming pipelines with idempotent consumers?",
+                role="Data Engineer",
+                skills=["Kafka", "Pipelines"],
+                difficulty="Hard"
+            )
+            self.assertIn("kafka", ans["sample_answer"].lower())
+            self.assertGreaterEqual(len(ans["key_points"]), 3)
+            self.assertIsNotNone(ans["practical_example"])
+
+    # 20. Scenario 3: Fallback when Gemini fails or times out
+    def test_20_scenario_03_fallback_when_gemini_fails_or_times_out(self):
+        with patch("app.services.get_ai_provider_status", return_value=("Gemini", True)):
+            with patch("app.services.generate_ai_questions", side_effect=TimeoutError("Gemini request timed out")):
+                ans = generate_sample_answer(
+                    "How do you optimize slow PostgreSQL queries with composite indexing and explain analyze?",
+                    role="Database Architect",
+                    skills=["PostgreSQL"],
+                    difficulty="Hard"
+                )
+                self.assertIn("index", ans["sample_answer"].lower())
+                self.assertGreaterEqual(len(ans["key_points"]), 3)
+                self.assertIsNotNone(ans["practical_example"])
+                self.assertGreaterEqual(len(ans["sample_answer"]), 30)
+
+    # 21. Scenario 4: Groq failure and fallback behavior
+    def test_21_scenario_04_groq_failure_and_fallback_behavior(self):
+        with patch("app.services.get_ai_provider_status", return_value=("Groq", True)):
+            with patch("app.services.generate_ai_questions", side_effect=RuntimeError("Groq model 429 RateLimitError")):
+                ans = generate_sample_answer(
+                    "Explain your approach to continuous integration and automated canary rollouts in Kubernetes.",
+                    role="DevOps Engineer",
+                    skills=["Kubernetes", "CI/CD"],
+                    difficulty="Hard"
+                )
+                self.assertIn("declarative", ans["sample_answer"].lower())
+                self.assertGreaterEqual(len(ans["key_points"]), 3)
+                self.assertGreaterEqual(len(ans["sample_answer"]), 30)
+
+    # 22. Scenario 5: Empty or malformed provider response
+    def test_22_scenario_05_empty_or_malformed_provider_response(self):
+        with patch("app.services.get_ai_provider_status", return_value=("Gemini", True)):
+            # Case A: empty response
+            with patch("app.services.generate_ai_questions", return_value=""):
+                ans_a = generate_sample_answer("How do you architect a hybrid RAG system?")
+                self.assertGreaterEqual(len(ans_a["sample_answer"]), 30)
+
+            # Case B: malformed JSON code fence
+            with patch("app.services.generate_ai_questions", return_value="```json\n{not valid json\n```"):
+                ans_b = generate_sample_answer("How do you architect a hybrid RAG system?")
+                self.assertGreaterEqual(len(ans_b["sample_answer"]), 30)
+
+            # Case C: JSON list instead of dict
+            with patch("app.services.generate_ai_questions", return_value='["item 1", "item 2"]'):
+                ans_c = generate_sample_answer("How do you architect a hybrid RAG system?")
+                self.assertGreaterEqual(len(ans_c["sample_answer"]), 30)
+
+            # Case D: JSON dict with too-short answer (< 30 chars)
+            with patch("app.services.generate_ai_questions", return_value=json.dumps({"sample_answer": "Short", "key_points": []})):
+                ans_d = generate_sample_answer("How do you architect a hybrid RAG system?")
+                self.assertGreaterEqual(len(ans_d["sample_answer"]), 30)
+
+    # 23. Scenario 6: Persistence and cache-hit behavior (<20ms)
+    def test_23_scenario_06_persistence_and_cache_hit_timing(self):
+        # Already verified in test_17, but this explicitly verifies persistence flag & latency
+        gen_res = client.post(
+            "/api/generate",
+            headers=self.auth_headers,
+            json={
+                "role": "Cloud Architect",
+                "experience": "8 Years",
+                "skills": ["AWS", "Networking"],
+                "difficulty": "Hard",
+                "number_of_questions": 1
+            }
+        )
+        self.assertEqual(gen_res.status_code, 200)
+        paper_id = gen_res.json()["id"]
+        q_text = gen_res.json()["questions_details"][0]["question"]
+
+        # Call 1: generates and persists
+        res1 = client.post(
+            "/api/sample-answer",
+            headers=self.auth_headers,
+            json={
+                "question": q_text,
+                "role": "Cloud Architect",
+                "skills": ["AWS"],
+                "difficulty": "Hard",
+                "interview_id": paper_id,
+                "question_index": 0
+            }
+        )
+        self.assertEqual(res1.status_code, 200)
+        self.assertTrue(res1.json().get("persisted"))
+
+        # Call 2: cache hit (<20ms)
+        res2 = client.post(
+            "/api/sample-answer",
+            headers=self.auth_headers,
+            json={
+                "question": q_text,
+                "role": "Cloud Architect",
+                "skills": ["AWS"],
+                "difficulty": "Hard",
+                "interview_id": paper_id,
+                "question_index": 0
+            }
+        )
+        self.assertEqual(res2.status_code, 200)
+        self.assertTrue(res2.json().get("persisted"))
+        self.assertEqual(res1.json()["sample_answer"], res2.json()["sample_answer"])
+        self.assertLess(res2.json().get("timing_ms", 999), 20.0)
+
+    # 24. Scenario 7: Invalid interview_id (404) and question_index (404 / 422)
+    def test_24_scenario_07_invalid_interview_id_and_question_index(self):
+        # Non-existent interview_id -> 404
+        res_404_id = client.post(
+            "/api/sample-answer",
+            headers=self.auth_headers,
+            json={
+                "question": "Explain idempotency keys in payment processing.",
+                "interview_id": 999999,
+                "question_index": 0
+            }
+        )
+        self.assertEqual(res_404_id.status_code, 404)
+        self.assertIn("not found", res_404_id.json()["detail"].lower())
+
+        # Negative question_index -> 422 (Pydantic validation error)
+        res_422 = client.post(
+            "/api/sample-answer",
+            headers=self.auth_headers,
+            json={
+                "question": "Explain idempotency keys in payment processing.",
+                "interview_id": 1,
+                "question_index": -1
+            }
+        )
+        self.assertEqual(res_422.status_code, 422)
+
+        # Out-of-bounds question_index on valid interview -> 404
+        gen_res = client.post(
+            "/api/generate",
+            headers=self.auth_headers,
+            json={
+                "role": "QA Engineer",
+                "skills": ["Playwright"],
+                "difficulty": "Medium",
+                "number_of_questions": 1
+            }
+        )
+        self.assertEqual(gen_res.status_code, 200)
+        paper_id = gen_res.json()["id"]
+
+        res_404_idx = client.post(
+            "/api/sample-answer",
+            headers=self.auth_headers,
+            json={
+                "question": "Explain test pyramid.",
+                "interview_id": paper_id,
+                "question_index": 99
+            }
+        )
+        self.assertEqual(res_404_idx.status_code, 404)
+        self.assertIn("out of range", res_404_idx.json()["detail"].lower())
+
+    # 25. Scenario 8: Unauthenticated (401) and unauthorized (403) requests
+    def test_25_scenario_08_unauthenticated_and_unauthorized_requests(self):
+        gen_res = client.post(
+            "/api/generate",
+            headers=self.auth_headers,
+            json={
+                "role": "Security Specialist",
+                "skills": ["Cryptography"],
+                "difficulty": "Hard",
+                "number_of_questions": 1
+            }
+        )
+        self.assertEqual(gen_res.status_code, 200)
+        paper_id = gen_res.json()["id"]
+
+        # 401 Unauthenticated
+        unauth_res = client.post(
+            "/api/sample-answer",
+            json={
+                "question": "Explain TLS 1.3 handshake.",
+                "interview_id": paper_id,
+                "question_index": 0
+            }
+        )
+        self.assertEqual(unauth_res.status_code, 401)
+
+        # 403 Forbidden cross-user access
+        cross_res = client.post(
+            "/api/sample-answer",
+            headers=self.auth_headers_cand2,
+            json={
+                "question": "Explain TLS 1.3 handshake.",
+                "interview_id": paper_id,
+                "question_index": 0
+            }
+        )
+        self.assertEqual(cross_res.status_code, 403)
+
+    # 26. Scenario 9: Frontend retry behavior and error-state handling
+    def test_26_scenario_09_frontend_retry_behavior_and_error_states(self):
+        html_path = Path("Interview-studio.html")
+        self.assertTrue(html_path.exists())
+        content = html_path.read_text(encoding="utf-8")
+
+        # Loading & spinner
+        self.assertIn("q-answer-loading", content)
+        self.assertIn("q-answer-spinner", content)
+        self.assertIn("Synthesizing sample answer...", content)
+
+        # Error panel & retry button
+        self.assertIn("q-answer-error", content)
+        self.assertIn("q-answer-retry-btn", content)
+
+        # Status code mappings
+        self.assertIn("Session expired or authentication required. Please log in to save sample answers.", content)
+        self.assertIn("Access restricted. You do not have permission to view or persist this sample answer.", content)
+        self.assertIn("Invalid question format or parameters. Please check question details and retry.", content)
+        self.assertIn("Rate limit reached. Please wait a moment before clicking Retry.", content)
+        self.assertIn("Answer synthesis timed out. Click Retry to generate a quick answer.", content)
+        self.assertIn("Server encountered an error while synthesizing answer. Please click Retry.", content)
+        self.assertIn("Sample answer is temporarily unavailable. Click Retry to try again.", content)
+
+        # Retry resets loading and re-fetches
+        self.assertIn("fetchAndRenderSampleAnswer(panel, rawQ, i)", content)
+        self.assertIn("panel.dataset.loading = 'false'", content)
 
 
 if __name__ == "__main__":

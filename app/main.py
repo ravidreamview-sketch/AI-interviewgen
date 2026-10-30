@@ -568,29 +568,36 @@ def get_sample_answer_endpoint(
 
             # Check if answer is already saved in questions_payload
             if interview.questions_payload and payload.question_index is not None:
+                payload_list = None
                 try:
                     payload_list = json.loads(interview.questions_payload)
-                    if isinstance(payload_list, list) and 0 <= payload.question_index < len(payload_list):
-                        existing_q = payload_list[payload.question_index]
-                        existing_ans = existing_q.get("sample_answer")
-                        if existing_ans and isinstance(existing_ans, str) and len(existing_ans.strip()) > 30 and not existing_ans.strip().startswith("Evaluates depth in"):
-                            elapsed_ms = (time.perf_counter() - t_start) * 1000
-                            logger.info(
-                                "[PERF /api/sample-answer] cache_hit interview_id=%s q_idx=%s elapsed=%.2fms",
-                                payload.interview_id, payload.question_index, elapsed_ms
-                            )
-                            return SampleAnswerResponse(
-                                question=payload.question,
-                                sample_answer=existing_ans.strip(),
-                                key_points=existing_q.get("key_points") or [],
-                                practical_example=existing_q.get("practical_example"),
-                                interview_id=payload.interview_id,
-                                question_index=payload.question_index,
-                                persisted=True,
-                                timing_ms=round(elapsed_ms, 2)
-                            )
                 except Exception as parse_err:
                     logger.warning("Could not read existing questions_payload: %s", parse_err)
+
+                if isinstance(payload_list, list):
+                    if payload.question_index >= len(payload_list):
+                        raise HTTPException(
+                            status_code=404,
+                            detail=f"Question index {payload.question_index} out of range for interview paper (total {len(payload_list)} questions)."
+                        )
+                    existing_q = payload_list[payload.question_index]
+                    existing_ans = existing_q.get("sample_answer")
+                    if existing_ans and isinstance(existing_ans, str) and len(existing_ans.strip()) > 30 and not existing_ans.strip().startswith("Evaluates depth in"):
+                        elapsed_ms = (time.perf_counter() - t_start) * 1000
+                        logger.info(
+                            "[PERF /api/sample-answer] cache_hit interview_id=%s q_idx=%s elapsed=%.2fms",
+                            payload.interview_id, payload.question_index, elapsed_ms
+                        )
+                        return SampleAnswerResponse(
+                            question=payload.question,
+                            sample_answer=existing_ans.strip(),
+                            key_points=existing_q.get("key_points") or [],
+                            practical_example=existing_q.get("practical_example"),
+                            interview_id=payload.interview_id,
+                            question_index=payload.question_index,
+                            persisted=True,
+                            timing_ms=round(elapsed_ms, 2)
+                        )
 
         # 2. Generate sample answer via domain engine
         role = (interview.role if interview else None) or payload.role or "Software Engineer"
