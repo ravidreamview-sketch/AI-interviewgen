@@ -1202,7 +1202,188 @@ class TestInviteOnlyAccess(unittest.TestCase):
             resolved = get_base_app_url(mock_req)
             self.assertEqual(resolved, "https://pr-105-preview.vercel.app")
 
+    # 39. Centralized Inviter Email Resolution Precedence
+    def test_invitation_admin_email_resolution_precedence(self):
+        from app.email_service import get_invitation_admin_email, DEFAULT_INVITATION_ADMIN_EMAIL
+
+        self.assertEqual(DEFAULT_INVITATION_ADMIN_EMAIL, "admininstudio@gmail.com")
+
+        # A. Default centralized fallback when INVITATION_ADMIN_EMAIL is unset
+        with patch.dict(os.environ, {"INVITATION_ADMIN_EMAIL": ""}, clear=False):
+            self.assertEqual(get_invitation_admin_email(), "admininstudio@gmail.com")
+            self.assertEqual(get_invitation_admin_email("admin@example.com"), "admininstudio@gmail.com")
+            self.assertEqual(get_invitation_admin_email("superadmin@ravigenai.com"), "admininstudio@gmail.com")
+            self.assertEqual(get_invitation_admin_email(None), "admininstudio@gmail.com")
+
+        # B. Explicit INVITATION_ADMIN_EMAIL environment variable configuration
+        with patch.dict(os.environ, {"INVITATION_ADMIN_EMAIL": "custom_override@studio.ai"}, clear=False):
+            self.assertEqual(get_invitation_admin_email(), "custom_override@studio.ai")
+            self.assertEqual(get_invitation_admin_email("admin@example.com"), "custom_override@studio.ai")
+            self.assertEqual(get_invitation_admin_email("superadmin@ravigenai.com"), "custom_override@studio.ai")
+            self.assertEqual(get_invitation_admin_email(None), "custom_override@studio.ai")
+
+    # 40. Invitation Email Renders admininstudio@gmail.com and Preserves Layout & Branding
+    def test_invitation_email_renders_admininstudio_and_preserves_layout(self):
+        from app.email_service import render_invitation_email
+
+        candidate_email = f"candidate_render_{uuid.uuid4().hex[:6]}@example.com"
+        test_invite_url = "https://ai-interviewgen.vercel.app/accept-invite?token=SECURE_INVITATION_TOKEN_123"
+
+        with patch.dict(os.environ, {"INVITATION_ADMIN_EMAIL": ""}, clear=False):
+            subject, html, plain = render_invitation_email(
+                to_email=candidate_email,
+                invite_url=test_invite_url,
+                role="candidate",
+                invited_by="admin@example.com"
+            )
+
+        # 1. Inviter email is admininstudio@gmail.com and NEVER placeholder admin@example.com
+        self.assertIn("admininstudio@gmail.com", html)
+        self.assertIn("admininstudio@gmail.com", plain)
+        self.assertNotIn("admin@example.com", html)
+        self.assertNotIn("admin@example.com", plain)
+
+        # 2. Greeting and role badge
+        self.assertIn("You have been invited by <b>admininstudio@gmail.com</b> to join <b>RaviGen AI Interview Studio</b>.", html)
+        self.assertIn("You have been invited by admininstudio@gmail.com to join RaviGen AI Interview Studio as a Candidate.", plain)
+        self.assertIn("Role: Candidate", html)
+
+        # 3. Candidate email preserved in security notice
+        self.assertIn(f"<code>{candidate_email}</code>", html)
+
+        # 4. Security notice copy preserved
+        self.assertIn("Security Notice:", html)
+        self.assertIn("cryptographically tied to", html)
+        self.assertIn("RaviGen AI will never ask for your password via email.", html)
+
+        # 5. Green CTA button styling preserved
+        self.assertIn("background: linear-gradient(135deg, #15803D 0%, #16A34A 100%)", html)
+        self.assertIn("Accept Invitation &amp; Set Password", html)
+        self.assertIn(f'href="{test_invite_url}"', html)
+
+        # 6. Fallback link preserved
+        self.assertIn("If the button above does not work, copy and paste this secure link directly into your browser:", html)
+        self.assertIn(f'<a href="{test_invite_url}" style="color: #38BDF8;">{test_invite_url}</a>', html)
+
+    # 41. Admin Invitation Creation API Uses Configured admininstudio@gmail.com
+    def test_invitation_creation_api_uses_configured_inviter_email(self):
+        super_token = self.super_admin_token
+        candidate_email = f"inv_api_test_{uuid.uuid4().hex[:6]}@example.com"
+
+        with patch("app.admin_routes.send_invitation_email") as mock_mail:
+            mock_mail.return_value = {"success": True, "provider": "resend"}
+
+            res = client.post(
+                "/api/admin/invitations",
+                headers={"Authorization": f"Bearer {super_token}"},
+                json={"email": candidate_email, "role": "candidate"}
+            )
+            self.assertEqual(res.status_code, 201)
+            self.assertTrue(mock_mail.called)
+            call_kwargs = mock_mail.call_args[1]
+
+            # Inviter passed to mailer must be admininstudio@gmail.com
+            self.assertEqual(call_kwargs["invited_by"], "admininstudio@gmail.com")
+            # Recipient must be the candidate
+            self.assertEqual(call_kwargs["to_email"], candidate_email)
+
+        # Database audit log preserves original admin user ID and email
+        db = TestingSessionLocal()
+        inv = db.query(UserInvitation).filter(UserInvitation.email == candidate_email).first()
+        self.assertIsNotNone(inv)
+        self.assertEqual(inv.invited_by_email, self.super_admin.email)
+
+    # 42. Admin Invitation Resend API Uses Configured admininstudio@gmail.com
+    def test_invitation_resend_api_uses_configured_inviter_email(self):
+        super_token = self.super_admin_token
+        candidate_email = f"resend_api_test_{uuid.uuid4().hex[:6]}@example.com"
+
+        create_res = client.post(
+            "/api/admin/invitations",
+            headers={"Authorization": f"Bearer {super_token}"},
+            json={"email": candidate_email, "role": "candidate"}
+        )
+        self.assertEqual(create_res.status_code, 201)
+        inv_id = create_res.json()["invitation"]["id"]
+
+        with patch("app.admin_routes.send_invitation_email") as mock_mail:
+            mock_mail.return_value = {"success": True, "provider": "resend"}
+
+            resend_res = client.post(
+                f"/api/admin/invitations/{inv_id}/resend",
+                headers={"Authorization": f"Bearer {super_token}"}
+            )
+            self.assertEqual(resend_res.status_code, 200)
+            self.assertTrue(mock_mail.called)
+            call_kwargs = mock_mail.call_args[1]
+            self.assertEqual(call_kwargs["invited_by"], "admininstudio@gmail.com")
+            self.assertEqual(call_kwargs["to_email"], candidate_email)
+
+    # 43. End-to-End Candidate Invitation, Token Validation, Password Setup, and Login Flow
+    def test_end_to_end_candidate_invitation_token_validation_and_password_setup(self):
+        super_token = self.super_admin_token
+        candidate_email = f"e2e_candidate_{uuid.uuid4().hex[:6]}@example.com"
+        candidate_password = "SecureCandidatePass123!"
+
+        # 1. Admin creates invitation in local dev mode
+        res_create = client.post(
+            "/api/admin/invitations",
+            headers={"Authorization": f"Bearer {super_token}"},
+            json={"email": candidate_email, "role": "candidate", "plan_tier": "pro"}
+        )
+        self.assertEqual(res_create.status_code, 201)
+        invite_data = res_create.json()
+        self.assertIn("invite_url", invite_data)
+        invite_url = invite_data["invite_url"]
+        token = invite_url.split("token=")[1]
+
+        # 2. Candidate validates invitation token via /candidate/auth/invitation
+        val_res = client.get(f"/api/auth/invitation?token={token}")
+        self.assertEqual(val_res.status_code, 200)
+        val_data = val_res.json()
+        self.assertTrue(val_data.get("valid"))
+        self.assertEqual(val_data.get("email"), candidate_email)
+        self.assertEqual(val_data.get("role"), "candidate")
+        self.assertEqual(val_data.get("plan_tier"), "pro")
+
+        # 3. Candidate accepts invitation and sets password via /candidate/auth/accept-invite
+        accept_res = client.post(
+            "/api/auth/accept-invite",
+            json={
+                "token": token,
+                "password": candidate_password,
+                "full_name": "E2E Candidate"
+            }
+        )
+        self.assertEqual(accept_res.status_code, 200)
+        accept_data = accept_res.json()
+        self.assertTrue(accept_data.get("success"))
+
+        # 4. Candidate logs in with newly set credentials via /api/candidate/login
+        login_res = client.post(
+            "/api/candidate/login",
+            json={
+                "email": candidate_email,
+                "password": candidate_password
+            }
+        )
+        self.assertEqual(login_res.status_code, 200)
+        login_data = login_res.json()
+        self.assertTrue(login_data.get("success"))
+        self.assertEqual(login_data["user"]["email"], candidate_email)
+        self.assertIn("candidate_session", login_res.cookies)
+
+        # 5. Single-use enforcement: Attempting to accept same token again fails
+        re_accept_res = client.post(
+            "/api/auth/accept-invite",
+            json={
+                "token": token,
+                "password": "AnotherPassword456!",
+                "full_name": "E2E Candidate"
+            }
+        )
+        self.assertEqual(re_accept_res.status_code, 400)
+
 
 if __name__ == "__main__":
     unittest.main()
-
