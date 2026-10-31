@@ -1,4 +1,5 @@
 import unittest
+import json
 import os
 import sys
 from unittest.mock import patch
@@ -273,28 +274,60 @@ class TestAdaptiveEvaluationAndNextQuestion(unittest.TestCase):
 
     def test_9_duplicate_mistake_prevention_on_resolved_flow(self):
         token = self.get_token_a()
+        poor_eval = json.dumps({
+            "overall_score": 30.0,
+            "skill_scores": [
+                {"skill": "Database Transactions", "score": 30.0, "evidence": "I don't know.", "confidence": "LOW"}
+            ],
+            "good_signals": [],
+            "missing_signals": ["ACID definition", "Isolation levels"],
+            "red_flags": ["No answer provided"],
+            "mistakes": [
+                {
+                    "skill": "Database Transactions",
+                    "category": "missing_knowledge",
+                    "severity": "high",
+                    "description": "Candidate does not know ACID",
+                    "recommendation": "Review ACID principles"
+                }
+            ],
+            "summary": "Incomplete answer."
+        })
+        strong_eval = json.dumps({
+            "overall_score": 90.0,
+            "skill_scores": [
+                {"skill": "Database Transactions", "score": 90.0, "evidence": "Detailed ACID explanation", "confidence": "HIGH"}
+            ],
+            "good_signals": ["Comprehensive ACID explanation with WAL"],
+            "missing_signals": [],
+            "red_flags": [],
+            "mistakes": [],
+            "summary": "Mastery of database transactions demonstrated."
+        })
         # First poor response
-        client.post(
-            "/api/adaptive/evaluate-response",
-            headers={"Authorization": f"Bearer {token}"},
-            json={
-                "question": "What is ACID in databases?",
-                "candidate_response": "I don't know.",
-                "target_skill": "Database Transactions",
-                "role": "Backend Engineer"
-            }
-        )
+        with patch("app.adaptive_service.generate_ai_questions", return_value=poor_eval):
+            client.post(
+                "/api/adaptive/evaluate-response",
+                headers={"Authorization": f"Bearer {token}"},
+                json={
+                    "question": "What is ACID in databases?",
+                    "candidate_response": "I don't know.",
+                    "target_skill": "Database Transactions",
+                    "role": "Backend Engineer"
+                }
+            )
         # Second strong response resolving the mistake
-        client.post(
-            "/api/adaptive/evaluate-response",
-            headers={"Authorization": f"Bearer {token}"},
-            json={
-                "question": "What is ACID in databases?",
-                "candidate_response": "ACID stands for Atomicity, Consistency, Isolation, and Durability. Atomicity ensures all-or-nothing execution, Consistency enforces database invariants, Isolation manages concurrent transaction visibility via isolation levels like Serializable or Repeatable Read, and Durability ensures committed data is safely persisted via WAL even during power crashes.",
-                "target_skill": "Database Transactions",
-                "role": "Backend Engineer"
-            }
-        )
+        with patch("app.adaptive_service.generate_ai_questions", return_value=strong_eval):
+            client.post(
+                "/api/adaptive/evaluate-response",
+                headers={"Authorization": f"Bearer {token}"},
+                json={
+                    "question": "What is ACID in databases?",
+                    "candidate_response": "ACID stands for Atomicity, Consistency, Isolation, and Durability. Atomicity ensures all-or-nothing execution, Consistency enforces database invariants, Isolation manages concurrent transaction visibility via isolation levels like Serializable or Repeatable Read, and Durability ensures committed data is safely persisted via WAL even during power crashes.",
+                    "target_skill": "Database Transactions",
+                    "role": "Backend Engineer"
+                }
+            )
 
         db = TestingSessionLocal()
         mistake = db.query(CandidateMistakesLedger).filter(
@@ -381,17 +414,34 @@ class TestAdaptiveEvaluationAndNextQuestion(unittest.TestCase):
         db.close()
 
         token = self.get_token_a()
+        mock_eval = json.dumps({
+            "overall_score": 85.0,
+            "skill_scores": [
+                {
+                    "skill": "GraphQL Subscriptions",
+                    "score": 85.0,
+                    "evidence": "GraphQL subscriptions use WebSockets with pub/sub architecture",
+                    "confidence": "HIGH"
+                }
+            ],
+            "good_signals": ["Concrete pub/sub architecture", "Real-time updates streaming"],
+            "missing_signals": [],
+            "red_flags": [],
+            "mistakes": [],
+            "summary": "Strong understanding of GraphQL subscriptions."
+        })
         # High scoring response boosts score > 5 points
-        client.post(
-            "/api/adaptive/evaluate-response",
-            headers={"Authorization": f"Bearer {token}"},
-            json={
-                "question": "How do GraphQL subscriptions work over WebSockets?",
-                "candidate_response": "GraphQL subscriptions use WebSockets with pub/sub architecture (e.g. Redis PubSub) to stream real-time updates when mutations occur.",
-                "target_skill": "GraphQL Subscriptions",
-                "role": "Frontend Developer"
-            }
-        )
+        with patch("app.adaptive_service.generate_ai_questions", return_value=mock_eval):
+            client.post(
+                "/api/adaptive/evaluate-response",
+                headers={"Authorization": f"Bearer {token}"},
+                json={
+                    "question": "How do GraphQL subscriptions work over WebSockets?",
+                    "candidate_response": "GraphQL subscriptions use WebSockets with pub/sub architecture (e.g. Redis PubSub) to stream real-time updates when mutations occur.",
+                    "target_skill": "GraphQL Subscriptions",
+                    "role": "Frontend Developer"
+                }
+            )
 
         db = TestingSessionLocal()
         updated = db.query(CandidateSkillAnalytics).filter(
