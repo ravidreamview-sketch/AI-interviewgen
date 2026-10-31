@@ -670,6 +670,10 @@ class ResumeJDMatchResult(BaseModel):
     skill_gaps: List[str] = Field(default_factory=list)
     critical_gaps: List[str] = Field(default_factory=list)
     recommendations: List[str] = Field(default_factory=list)
+    matching_engine_version: str = Field("match-v1.0.0", description="Algorithm version")
+    evaluation_fingerprint: Optional[str] = Field(None, description="SHA-256 evaluation fingerprint")
+    resume_fingerprint: Optional[str] = Field(None, description="SHA-256 normalized resume fingerprint")
+    jd_fingerprint: Optional[str] = Field(None, description="SHA-256 normalized JD fingerprint")
 
 
 # ==============================================================================
@@ -703,6 +707,8 @@ class ResumeJDMatchResponse(BaseModel):
     candidate_name: Optional[str] = None
     source_type: str = "paste"
     source_url: Optional[str] = None
+    evaluation_fingerprint: Optional[str] = Field(None, description="Deterministic SHA-256 fingerprint of normalized inputs")
+    is_cached: Optional[bool] = Field(False, description="True if evaluation was reused from previously persisted result")
     created_at: str
 
 

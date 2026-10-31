@@ -1339,13 +1339,36 @@ async def create_resume_jd_match(
         source_type = payload.source_type if payload.source_type and payload.source_type != "paste" else (normalized_jd.source_type or "paste")
         source_url = payload.source_url or normalized_jd.source_url
 
-    engine_version = "match-v1.0.0"
+    engine_version = getattr(match_result, "matching_engine_version", "match-v1.0.0")
+    eval_fingerprint = getattr(match_result, "evaluation_fingerprint", None)
+    res_fingerprint = getattr(match_result, "resume_fingerprint", None)
+    jd_fingerprint = getattr(match_result, "jd_fingerprint", None)
 
-    # 6. Generate Secure Unique Scan ID
+    # 6. Evaluation Reuse / Deduplication (Deterministic Cache Guarantee)
+    now = datetime.now(timezone.utc)
+    is_cached_eval = False
+    if eval_fingerprint:
+        existing_scan = (
+            db.query(ResumeScan)
+            .filter(
+                ResumeScan.user_id == current_user.id,
+                ResumeScan.evaluation_fingerprint == eval_fingerprint,
+                ResumeScan.matching_engine_version == engine_version
+            )
+            .order_by(ResumeScan.id.desc())
+            .first()
+        )
+        if existing_scan:
+            is_cached_eval = True
+            logger.info(
+                "Deterministic match cache hit: reusing persisted evaluation metrics",
+                extra={"user_id": current_user.id, "scan_id": existing_scan.scan_id, "fingerprint": eval_fingerprint}
+            )
+
+    # 7. Generate Secure Unique Scan ID
     scan_id = f"scan_{uuid.uuid4().hex}"
 
-    # 7. Persist to Database (Phase 5C)
-    now = datetime.now(timezone.utc)
+    # 8. Persist to Database (Phase 5C & Deterministic Versioning)
     try:
         matched_skills_str = ", ".join([item.skill for item in match_result.skill_matrix if item.gap_status == "matched"])
         missing_skills_str = ", ".join([item.skill for item in match_result.skill_matrix if item.gap_status == "gap"])
@@ -1354,6 +1377,9 @@ async def create_resume_jd_match(
             scan_id=scan_id,
             user_id=current_user.id,
             matching_engine_version=engine_version,
+            evaluation_fingerprint=eval_fingerprint,
+            resume_fingerprint=res_fingerprint,
+            jd_fingerprint=jd_fingerprint,
             candidate_name=candidate_name,
             target_role=target_role,
             match_score=match_result.overall_match_score,
@@ -1387,7 +1413,7 @@ async def create_resume_jd_match(
             detail=f"Failed to persist match result to database: {str(db_err)}"
         )
 
-    # 8. Return Validated Response
+    # 9. Return Validated Response
     return ResumeJDMatchResponse(
         scan_id=scan_id,
         matching_engine_version=engine_version,
@@ -1403,6 +1429,8 @@ async def create_resume_jd_match(
         candidate_name=candidate_name,
         source_type=source_type,
         source_url=source_url,
+        evaluation_fingerprint=eval_fingerprint,
+        is_cached=is_cached_eval,
         created_at=now.isoformat()
     )
 
@@ -1456,6 +1484,8 @@ def get_resume_jd_match(
         candidate_name=scan.candidate_name,
         source_type=scan.source_type or "paste",
         source_url=scan.source_url,
+        evaluation_fingerprint=scan.evaluation_fingerprint,
+        is_cached=False,
         created_at=scan.created_at.isoformat() if scan.created_at else datetime.now(timezone.utc).isoformat()
     )
 
@@ -1472,7 +1502,7 @@ def get_resume_jd_history(
     scans = (
         db.query(ResumeScan)
         .filter(ResumeScan.user_id == current_user.id, ResumeScan.scan_id.isnot(None))
-        .order_by(ResumeScan.created_at.desc())
+        .order_by(ResumeScan.created_at.desc(), ResumeScan.id.desc())
         .limit(50)
         .all()
     )

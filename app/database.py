@@ -432,6 +432,9 @@ def _run_migration_resume_scans(dialect: str, conn=None):
         columns_to_add = [
             ("scan_id", "VARCHAR"),
             ("matching_engine_version", "VARCHAR DEFAULT 'match-v1.0.0'"),
+            ("evaluation_fingerprint", "VARCHAR"),
+            ("resume_fingerprint", "VARCHAR"),
+            ("jd_fingerprint", "VARCHAR"),
             ("overall_match_score", "FLOAT"),
             ("match_confidence", "VARCHAR DEFAULT 'MEDIUM'"),
             ("sub_scores", "TEXT"),
@@ -461,6 +464,7 @@ def _run_migration_resume_scans(dialect: str, conn=None):
 
             _safe_execute_ddl("CREATE UNIQUE INDEX IF NOT EXISTS idx_resume_scans_scan_id ON resume_scans(scan_id)", conn=conn)
             _safe_execute_ddl("CREATE INDEX IF NOT EXISTS idx_resume_scans_user_created ON resume_scans(user_id, created_at)", conn=conn)
+            _safe_execute_ddl("CREATE INDEX IF NOT EXISTS idx_resume_scans_eval_fingerprint ON resume_scans(user_id, evaluation_fingerprint)", conn=conn)
         else:
             # PostgreSQL: native idempotent ALTER TABLE ADD COLUMN IF NOT EXISTS
             for col_name, col_def in columns_to_add:
@@ -468,6 +472,7 @@ def _run_migration_resume_scans(dialect: str, conn=None):
 
             _safe_execute_ddl("CREATE UNIQUE INDEX IF NOT EXISTS idx_resume_scans_scan_id ON resume_scans(scan_id)", conn=conn)
             _safe_execute_ddl("CREATE INDEX IF NOT EXISTS idx_resume_scans_user_created ON resume_scans(user_id, created_at)", conn=conn)
+            _safe_execute_ddl('CREATE INDEX IF NOT EXISTS idx_resume_scans_eval_fingerprint ON "resume_scans"("user_id", "evaluation_fingerprint")', conn=conn)
     except Exception as e:
         logger.warning(f"[DB Migration] resume_scans migration notice: {e}")
 
