@@ -511,7 +511,15 @@ def _run_account_bootstrap():
                     else:
                         logger.warning("Production mode: SUPER_ADMIN_EMAIL / SUPER_ADMIN_PASSWORD not set. Skipping initial Super Admin account creation.")
                 else:
-                    logger.info("Super Admin account already exists; preserving existing credentials in production.")
+                    if env_email and env_password:
+                        clean_email = env_email.strip().lower()
+                        clean_password = env_password.strip()
+                        if existing_super.email.lower() == clean_email:
+                            if not verify_password(clean_password, existing_super.password_hash):
+                                existing_super.password_hash = hash_password(clean_password)
+                                db.commit()
+                                logger.info("Synchronized Super Admin password from environment configuration")
+                    logger.info("Super Admin account verified in production.")
 
                 logger.info("Production mode: Demo candidate account provisioning is disabled.")
             else:

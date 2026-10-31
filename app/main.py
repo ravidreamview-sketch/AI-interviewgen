@@ -236,7 +236,8 @@ app.include_router(candidate_router, prefix="")
 
 from fastapi import Response
 from app.admin_routes import candidate_login, admin_login
-from app.models import CandidateLoginRequest, AdminLoginRequest
+from app.models import CandidateLoginRequest, AdminLoginRequest, AdminSetupRequest
+from app.admin_routes import get_admin_setup_status, initial_admin_setup
 
 @app.post("/candidate/login/action", include_in_schema=False)
 @app.post("/api/candidate/login", include_in_schema=False)
@@ -263,6 +264,22 @@ def direct_admin_login(
     db: Session = Depends(get_db)
 ):
     return admin_login(payload, request, response, db)
+
+@app.get("/api/admin/setup-status", include_in_schema=False)
+@app.get("/admin/setup-status", include_in_schema=False)
+@app.get("/api/setup-status", include_in_schema=False)
+def direct_admin_setup_status(db: Session = Depends(get_db)):
+    return get_admin_setup_status(db)
+
+@app.post("/api/admin/setup", status_code=status.HTTP_201_CREATED, include_in_schema=False)
+@app.post("/admin/setup", status_code=status.HTTP_201_CREATED, include_in_schema=False)
+def direct_admin_setup(
+    payload: AdminSetupRequest,
+    request: Request,
+    response: Response,
+    db: Session = Depends(get_db)
+):
+    return initial_admin_setup(payload, request, response, db)
 
 from app.admin_routes import candidate_logout, get_public_menus, is_candidate_menu_enabled, update_menu
 from app.auth_deps import get_current_user

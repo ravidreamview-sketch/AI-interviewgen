@@ -317,8 +317,8 @@ table.admin-table tr:hover td{background:var(--rule-soft)}
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
       <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg, #EF4444, #7C3AED);display:grid;place-items:center;font-size:22px;color:#fff">⚡</div>
       <div>
-        <h2 style="margin:0;font-size:19px;font-weight:800">Super Admin Gateway</h2>
-        <div style="font-size:11.5px;color:var(--ink-soft);font-family:var(--f-mono)">Ravi GenAI Studio — Restricted Workspace</div>
+        <h2 style="margin:0;font-size:19px;font-weight:800" id="gateTitle">Super Admin Gateway</h2>
+        <div style="font-size:11.5px;color:var(--ink-soft);font-family:var(--f-mono)" id="gateSubtitle">Ravi GenAI Studio — Restricted Workspace</div>
       </div>
     </div>
     
@@ -1469,6 +1469,53 @@ function showToast(message, type = 'success') {
 // =============================================================================
 // 1. AUTHENTICATION & ACCESS GATE
 // =============================================================================
+let IS_SETUP_MODE = false;
+
+async function checkAdminSetupStatus() {
+  try {
+    const res = await fetch('/api/admin/setup-status');
+    if (res.ok) {
+      const data = await res.json();
+      IS_SETUP_MODE = !!data.setup_required;
+      updateGateUI();
+    }
+  } catch (e) {
+    console.warn("Could not check admin setup status:", e);
+  }
+}
+
+function updateGateUI() {
+  const gateTitle = document.getElementById('gateTitle') || document.querySelector('#gateScreen h2');
+  const gateSubtitle = document.getElementById('gateSubtitle') || document.querySelector('#gateScreen .gate-card > div > div > div');
+  const btn = document.getElementById('gateSubmitBtn');
+  const alertBox = document.getElementById('gateAlert');
+
+  if (IS_SETUP_MODE) {
+    if (gateTitle) gateTitle.textContent = 'Initial Super Admin Setup';
+    if (gateSubtitle) gateSubtitle.textContent = 'One-Time Workspace Provisioning';
+    if (btn) btn.innerHTML = '<span>Initialize & Secure Workspace</span>';
+    if (alertBox) {
+      alertBox.className = 'gate-notice';
+      alertBox.style.background = 'rgba(124, 58, 237, 0.15)';
+      alertBox.style.color = '#a78bfa';
+      alertBox.style.border = '1px solid rgba(124, 58, 237, 0.3)';
+      alertBox.textContent = 'No Super Admin account exists in this deployment. Set your administrator credentials below to initialize and secure this workspace.';
+      alertBox.style.display = 'block';
+    }
+  } else {
+    if (gateTitle) gateTitle.textContent = 'Super Admin Gateway';
+    if (gateSubtitle) gateSubtitle.textContent = 'Ravi GenAI Studio — Restricted Workspace';
+    if (btn) btn.innerHTML = '<span>Authenticate Super Admin</span>';
+    if (alertBox && alertBox.classList.contains('gate-notice')) {
+      alertBox.style.display = 'none';
+      alertBox.className = '';
+      alertBox.style.background = 'var(--danger-wash)';
+      alertBox.style.color = 'var(--danger)';
+      alertBox.style.border = 'none';
+    }
+  }
+}
+
 async function initAdminAuth() {
   try {
     const res = await fetch('/api/admin/me', {
@@ -1478,10 +1525,11 @@ async function initAdminAuth() {
     });
 
     if (res.status === 401) {
-      // Unauthenticated -> Show login gatekeeper
+      // Unauthenticated -> Show login gatekeeper and check setup status
       document.getElementById('gateScreen').classList.add('show');
       document.getElementById('accessDeniedScreen').classList.remove('show');
       document.getElementById('adminApp').style.display = 'none';
+      await checkAdminSetupStatus();
       return;
     }
 
@@ -1525,7 +1573,7 @@ async function initAdminAuth() {
   }
 }
 
-// Handle Login in Gateway Screen
+// Handle Login or Initial Setup in Gateway Screen
 async function handleGateLogin(e) {
   e.preventDefault();
   const btn = document.getElementById('gateSubmitBtn');
@@ -1536,16 +1584,17 @@ async function handleGateLogin(e) {
     alertBox.textContent = 'Please enter your administrator email and password.';
     alertBox.style.display = 'block';
     btn.disabled = false;
-    btn.innerHTML = '<span>Enter Command Console</span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+    btn.innerHTML = IS_SETUP_MODE ? '<span>Initialize & Secure Workspace</span>' : '<span>Authenticate Super Admin</span>';
     return;
   }
 
   btn.disabled = true;
-  btn.innerHTML = '<span>Verifying Credentials...</span>';
+  btn.innerHTML = IS_SETUP_MODE ? '<span>Provisioning Super Admin...</span>' : '<span>Verifying Credentials...</span>';
   alertBox.style.display = 'none';
 
   try {
-    const res = await fetch('/api/admin/login', {
+    const endpoint = IS_SETUP_MODE ? '/api/admin/setup' : '/api/admin/login';
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: getAuthHeaders(),
       credentials: 'include',
@@ -1555,12 +1604,22 @@ async function handleGateLogin(e) {
     const data = await res.json();
 
     if (!res.ok) {
+      alertBox.className = '';
+      alertBox.style.background = 'var(--danger-wash)';
+      alertBox.style.color = 'var(--danger)';
+      alertBox.style.border = 'none';
       alertBox.textContent = data.detail || 'Authentication failed.';
       alertBox.style.display = 'block';
+
+      // If login failed, check if setup is actually required
+      if (!IS_SETUP_MODE && res.status === 401) {
+        await checkAdminSetupStatus();
+      }
       return;
     }
 
-    showToast('Super Admin authenticated successfully!', 'success');
+    showToast(IS_SETUP_MODE ? 'Super Admin provisioned and authenticated!' : 'Super Admin authenticated successfully!', 'success');
+    IS_SETUP_MODE = false;
     initAdminAuth();
 
   } catch (err) {
@@ -1568,7 +1627,7 @@ async function handleGateLogin(e) {
     alertBox.style.display = 'block';
   } finally {
     btn.disabled = false;
-    btn.innerHTML = '<span>Authenticate Super Admin</span>';
+    btn.innerHTML = IS_SETUP_MODE ? '<span>Initialize & Secure Workspace</span>' : '<span>Authenticate Super Admin</span>';
   }
 }
 
