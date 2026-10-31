@@ -1,4 +1,3 @@
-from __future__ import annotations
 """
 Resume ↔ Job Description (JD) Multi-Dimensional Matching Engine (Phase 5B)
 
@@ -20,6 +19,7 @@ Implements:
 - Independent Match Confidence Scoring (LOW / MEDIUM / HIGH)
 - Deterministic Fallback & Zero-Fabrication Guarantee
 """
+from __future__ import annotations
 
 import os
 import re
