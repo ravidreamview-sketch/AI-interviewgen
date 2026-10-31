@@ -1,4 +1,4 @@
-from datetime import timezone
+from __future__ import annotations
 """
 Resume ↔ Job Description (JD) Multi-Dimensional Matching Engine (Phase 5B)
 
@@ -27,7 +27,17 @@ import json
 import hashlib
 import logging
 from typing import List, Dict, Any, Optional, Tuple, Union, Set
-from datetime import datetime
+from datetime import datetime, timezone
+
+from app.models import (
+    NormalizedJobDescription,
+    NormalizedResume,
+    ResumeWorkExperience,
+    ResumeProject,
+    SkillMatrixItem,
+    SubScores,
+    ResumeJDMatchResult,
+)
 
 logger = logging.getLogger("ravi.matching_service")
 
@@ -205,15 +215,6 @@ def extract_semantic_evidence_with_ai(
         logger.debug("[MatchingService] AI semantic evidence extraction fell back to rule engine: %s", e)
     return None
 
-from app.models import (
-    NormalizedJobDescription,
-    NormalizedResume,
-    ResumeWorkExperience,
-    ResumeProject,
-    SkillMatrixItem,
-    SubScores,
-    ResumeJDMatchResult,
-)
 
 
 # ==============================================================================

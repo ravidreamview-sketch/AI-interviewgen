@@ -572,6 +572,18 @@ Experience:
         # Legacy 45.0 score was NOT reused
         self.assertGreater(data["overall_match_score"], 70.0)
 
+    # --------------------------------------------------------------------------
+    # 21. SubScores Import Order and Clean Module Loading Regression
+    # --------------------------------------------------------------------------
+    def test_21_subscores_import_order_and_clean_module_loading(self):
+        """Verifies SubScores is defined before calculate_deterministic_score annotation evaluation."""
+        from app.matching_service import calculate_deterministic_score, SubScores
+        scores = SubScores(required_skills=80.0)
+        computed = calculate_deterministic_score(scores)
+        self.assertEqual(computed, 80.0)
+        self.assertIn("sub_scores", calculate_deterministic_score.__annotations__)
+
+
 def classify_skill_evidence_test(skill, norm, raw):
     from app.matching_service import classify_skill_evidence
     return classify_skill_evidence(skill, norm, raw)
