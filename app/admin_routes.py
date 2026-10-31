@@ -24,6 +24,7 @@ from app.models import (
     ValidateInvitationResponse,
     AcceptInvitationRequest,
     AdminLoginRequest,
+    AdminSetupRequest,
     CandidateLoginRequest,
     UserCreateRequest,
     UserUpdateRequest,
@@ -477,6 +478,128 @@ def get_candidate_dashboard_endpoint(
 # ------------------------------------------------------------------------------
 # 1. AUTHENTICATION (LOGIN, LOGOUT, ME)
 # ------------------------------------------------------------------------------
+
+@admin_router.get("/setup-status")
+def get_admin_setup_status(db: Session = Depends(get_db)):
+    """
+    Public diagnostic: indicates if initial Super Admin setup is required.
+    Strictly returns a boolean flag; exposes no user details or credentials.
+    """
+    has_super = db.query(UserAccount).filter(
+        UserAccount.role == "super_admin",
+        UserAccount.is_active == True
+    ).first() is not None
+    return {
+        "setup_required": not has_super
+    }
+
+
+@admin_router.post("/setup", status_code=status.HTTP_201_CREATED)
+def initial_admin_setup(
+    payload: AdminSetupRequest,
+    request: Request,
+    response: Response,
+    db: Session = Depends(get_db)
+):
+    """
+    Secure one-time Super Admin provisioning.
+    Permanently locked once any active Super Admin account exists in the database.
+    """
+    # 1. Strict One-Time Lockout Guard
+    existing_super = db.query(UserAccount).filter(
+        UserAccount.role == "super_admin",
+        UserAccount.is_active == True
+    ).first()
+    if existing_super:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Super Admin setup is permanently locked. An administrator account already exists."
+        )
+
+    clean_email = (payload.email or "").strip().lower()
+    raw_pass = (payload.password or "").strip()
+
+    if not clean_email or "@" not in clean_email or "." not in clean_email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A valid administrator email address is required."
+        )
+
+    if len(raw_pass) < 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 8 characters long."
+        )
+
+    # 2. Check if a user account already exists with this email (e.g. created as candidate)
+    existing_user = db.query(UserAccount).filter(
+        func.lower(UserAccount.email) == clean_email
+    ).first()
+
+    if existing_user:
+        existing_user.role = "super_admin"
+        existing_user.plan_tier = "enterprise"
+        existing_user.is_active = True
+        existing_user.password_hash = hash_password(raw_pass)
+        if payload.full_name:
+            existing_user.full_name = payload.full_name.strip()
+        db.commit()
+        db.refresh(existing_user)
+        admin_user = existing_user
+    else:
+        admin_user = UserAccount(
+            email=clean_email,
+            full_name=(payload.full_name or "Super Administrator").strip(),
+            password_hash=hash_password(raw_pass),
+            role="super_admin",
+            plan_tier="enterprise",
+            is_active=True
+        )
+        db.add(admin_user)
+        db.commit()
+        db.refresh(admin_user)
+
+    # 3. Create secure JWT token and HttpOnly session cookie
+    token_payload = {
+        "sub": admin_user.id,
+        "email": admin_user.email,
+        "role": admin_user.role,
+        "plan_tier": admin_user.plan_tier
+    }
+    token = create_access_token(token_payload)
+    is_secure = is_request_https(request)
+
+    response.set_cookie(
+        key="admin_session",
+        value=token,
+        httponly=True,
+        secure=is_secure,
+        samesite="lax",
+        max_age=60 * 60 * 8,
+        path="/"
+    )
+
+    record_audit_log(
+        db=db,
+        admin_user=admin_user,
+        action="INITIAL_SUPER_ADMIN_PROVISIONED",
+        resource=f"user:{admin_user.id}",
+        new_value=admin_user.email,
+        ip_address=get_client_ip(request)
+    )
+
+    return {
+        "success": True,
+        "message": "Super Admin account provisioned successfully.",
+        "token": token,
+        "user": {
+            "id": admin_user.id,
+            "email": admin_user.email,
+            "role": admin_user.role,
+            "full_name": admin_user.full_name
+        }
+    }
+
 
 @admin_router.post("/login")
 def admin_login(

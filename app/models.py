@@ -407,6 +407,11 @@ class AdminLoginRequest(BaseModel):
     email: Optional[str] = None
     password: Optional[str] = None
 
+class AdminSetupRequest(BaseModel):
+    email: str = Field(..., description="Administrator email address")
+    password: str = Field(..., min_length=8, description="Administrator password min 8 chars")
+    full_name: Optional[str] = Field("Super Administrator", description="Administrator full name")
+
 
 class CandidateLoginRequest(BaseModel):
     email: Optional[str] = None
