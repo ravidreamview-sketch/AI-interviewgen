@@ -173,18 +173,10 @@ def debug_status(request: Request, db: Session = Depends(get_db)):
     headers = dict(request.headers)
     scope_path = request.scope.get("path")
     
-    user_roles = []
-    try:
-        users = db.query(UserAccount.email, UserAccount.role, UserAccount.is_active).all()
-        user_roles = [{"email": u.email, "role": u.role, "active": u.is_active} for u in users]
-    except Exception:
-        pass
-
     return {
         "status": "online",
         "db_ok": db_ok,
         "db_error": db_error,
-        "accounts": user_roles,
         "scope_path": scope_path,
         "x_matched_path": headers.get("x-matched-path"),
         "x_forwarded_path": headers.get("x-forwarded-path"),
