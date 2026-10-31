@@ -206,7 +206,10 @@ class ResumeScan(Base):
     id = Column(Integer, primary_key=True, index=True)
     scan_id = Column(String, unique=True, index=True, nullable=True)
     user_id = Column(Integer, ForeignKey("user_accounts.id", ondelete="CASCADE"), nullable=True, index=True)
-    matching_engine_version = Column(String, default="match-v1.0.0")
+    matching_engine_version = Column(String, default="match-v1.1.0")
+    evaluation_fingerprint = Column(String(64), index=True, nullable=True)
+    resume_fingerprint = Column(String(64), index=True, nullable=True)
+    jd_fingerprint = Column(String(64), index=True, nullable=True)
     candidate_name = Column(String, default="Candidate")
     target_role = Column(String, nullable=False, default="General Tech")
     match_score = Column(Float, default=80.0)
@@ -225,8 +228,8 @@ class ResumeScan(Base):
     source_type = Column(String, default="paste")
     source_url = Column(String, nullable=True)
     fetched_at = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.now(timezone.utc), index=True)
-    updated_at = Column(DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
 class CoachSession(Base):
     __tablename__ = "coach_sessions"

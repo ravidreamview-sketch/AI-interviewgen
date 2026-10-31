@@ -11,7 +11,7 @@ Tests all required scenarios:
 7. Scan_id uniqueness
 8. Database result persistence integrity
 9. Exact result retrieval (no recalculation on GET)
-10. Matching version persistence ("match-v1.0.0")
+10. Matching version persistence ("match-v1.1.0")
 11. Match creation with public JD URL
 12. Missing input validation (400)
 13. Candidate scan history endpoint and tenant isolation
@@ -162,7 +162,7 @@ class TestPhase5CMatchPersistenceAndAPI(unittest.TestCase):
 
         self.assertIn("scan_id", data)
         self.assertTrue(data["scan_id"].startswith("scan_"))
-        self.assertEqual(data["matching_engine_version"], "match-v1.0.0")
+        self.assertEqual(data["matching_engine_version"], "match-v1.1.0")
         self.assertGreater(data["overall_match_score"], 0.0)
         self.assertIn(data["match_confidence"], ["HIGH", "MEDIUM", "LOW"])
         self.assertIn("sub_scores", data)
@@ -203,7 +203,7 @@ class TestPhase5CMatchPersistenceAndAPI(unittest.TestCase):
 
         self.assertEqual(retrieved_data["scan_id"], scan_id)
         self.assertEqual(retrieved_data["overall_match_score"], create_resp.json()["overall_match_score"])
-        self.assertEqual(retrieved_data["matching_engine_version"], "match-v1.0.0")
+        self.assertEqual(retrieved_data["matching_engine_version"], "match-v1.1.0")
         self.assertEqual(len(retrieved_data["skill_matrix"]), len(create_resp.json()["skill_matrix"]))
 
     # --------------------------------------------------------------------------
@@ -287,7 +287,7 @@ class TestPhase5CMatchPersistenceAndAPI(unittest.TestCase):
         db = TestingSessionLocal()
         record = db.query(ResumeScan).filter(ResumeScan.scan_id == scan_id).first()
         self.assertIsNotNone(record)
-        self.assertEqual(record.matching_engine_version, "match-v1.0.0")
+        self.assertEqual(record.matching_engine_version, "match-v1.1.0")
         self.assertEqual(record.user_id, self.candidate_a_id)
         self.assertIsNotNone(record.sub_scores)
         self.assertIsNotNone(record.skill_matrix)
@@ -337,11 +337,11 @@ class TestPhase5CMatchPersistenceAndAPI(unittest.TestCase):
             "jd_text": self.sample_jd_text
         }
         resp = client.post("/api/candidate/resume-jd/match", json=payload, headers=self.auth_headers_a)
-        self.assertEqual(resp.json()["matching_engine_version"], "match-v1.0.0")
+        self.assertEqual(resp.json()["matching_engine_version"], "match-v1.1.0")
 
         scan_id = resp.json()["scan_id"]
         get_resp = client.get(f"/api/candidate/resume-jd/match/{scan_id}", headers=self.auth_headers_a)
-        self.assertEqual(get_resp.json()["matching_engine_version"], "match-v1.0.0")
+        self.assertEqual(get_resp.json()["matching_engine_version"], "match-v1.1.0")
 
     # --------------------------------------------------------------------------
     # 11. Match Creation with Public JD URL (Mocked Fetch)

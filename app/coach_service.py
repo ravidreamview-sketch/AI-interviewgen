@@ -140,7 +140,7 @@ def build_candidate_context(db: Session, candidate: UserAccount) -> dict:
     resume_scan = (
         db.query(ResumeScan)
         .filter(ResumeScan.user_id == user_id)
-        .order_by(ResumeScan.created_at.desc())
+        .order_by(ResumeScan.created_at.desc(), ResumeScan.id.desc())
         .first()
     )
 

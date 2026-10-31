@@ -270,7 +270,7 @@ def get_recent_activity(user_id: int, db: Session, limit: int = 10) -> List[Cand
     scans = (
         db.query(ResumeScan)
         .filter(ResumeScan.user_id == user_id)
-        .order_by(desc(ResumeScan.created_at))
+        .order_by(desc(ResumeScan.created_at), desc(ResumeScan.id))
         .limit(limit)
         .all()
     )
@@ -404,7 +404,7 @@ def compute_candidate_dashboard(user: UserAccount, db: Session) -> CandidateDash
         if m.created_at:
             active_dates.add(m.created_at.date() if isinstance(m.created_at, datetime) else m.created_at)
 
-    user_scans = db.query(ResumeScan).filter(ResumeScan.user_id == user_id).order_by(desc(ResumeScan.created_at)).all()
+    user_scans = db.query(ResumeScan).filter(ResumeScan.user_id == user_id).order_by(desc(ResumeScan.created_at), desc(ResumeScan.id)).all()
     for s in user_scans:
         if s.created_at:
             active_dates.add(s.created_at.date() if isinstance(s.created_at, datetime) else s.created_at)

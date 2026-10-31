@@ -21,9 +21,189 @@ Implements:
 - Deterministic Fallback & Zero-Fabrication Guarantee
 """
 
+import os
 import re
+import json
+import hashlib
+import logging
 from typing import List, Dict, Any, Optional, Tuple, Union, Set
 from datetime import datetime
+
+logger = logging.getLogger("ravi.matching_service")
+
+# Centralized version identifier for deterministic scoring engine
+SCORING_ENGINE_VERSION = "match-v1.1.0"
+
+# Centralized criteria weights for readiness scoring
+SCORING_WEIGHTS = {
+    "required_skills": 0.40,
+    "experience": 0.20,
+    "domain": 0.15,
+    "responsibilities": 0.15,
+    "preferred_skills": 0.10,
+}
+
+
+# ==============================================================================
+# CANONICAL TEXT NORMALIZATION & FINGERPRINTING HELPERS
+# ==============================================================================
+
+def canonicalize_text(text: Optional[str]) -> str:
+    """
+    Normalizes unstructured document text into a stable, canonical representation:
+    - Normalizes line endings (CRLF / CR -> LF).
+    - Normalizes Unicode bullets and list markers to standard dashes.
+    - Normalizes smart quotes and dashes to standard ASCII equivalents.
+    - Collapses multiple horizontal spaces/tabs into a single space.
+    - Trims line padding and collapses 3+ consecutive line breaks to 2.
+    """
+    if not text:
+        return ""
+    # 1. Line endings
+    cleaned = str(text).replace("\r\n", "\n").replace("\r", "\n")
+    # 2. Unicode quotes and dashes
+    cleaned = re.sub(r"[\u2018\u2019\u201A\u201B`]", "'", cleaned)
+    cleaned = re.sub(r"[\u201C\u201D\u201E\u201F]", '"', cleaned)
+    cleaned = re.sub(r"[\u2013\u2014\u2015]", "-", cleaned)
+    # 3. Unicode bullets at beginning of lines
+    cleaned = re.sub(r"(?m)^[\t ]*[•·\u2022\u2023\u25E6\u2043*+][\t ]+", "- ", cleaned)
+    # 4. Horizontal spacing
+    cleaned = re.sub(r"[ \t]+", " ", cleaned)
+    # 5. Trim lines and normalize excess vertical whitespace
+    lines = [l.strip() for l in cleaned.split("\n")]
+    cleaned = "\n".join(lines)
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
+    return cleaned.strip()
+
+
+def compute_content_fingerprint(text: Optional[str]) -> str:
+    """Computes a stable SHA-256 fingerprint from canonicalized text content."""
+    canonical = canonicalize_text(text).lower()
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def compute_evaluation_fingerprint(
+    resume_fingerprint: str,
+    jd_fingerprint: str,
+    scoring_version: str = SCORING_ENGINE_VERSION,
+    target_role: Optional[str] = None
+) -> str:
+    """
+    Computes a deterministic evaluation fingerprint from normalized resume content,
+    normalized JD content, target role context, and the scoring algorithm version.
+    """
+    role_str = (target_role or "").strip().lower()
+    payload = f"{resume_fingerprint}:{jd_fingerprint}:{scoring_version}:{role_str}"
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def get_skill_regex(skill: str) -> re.Pattern:
+    """
+    Generates a boundary-safe regular expression for technical skills,
+    handling edge cases like 'C++', 'C#', '.NET', 'Node.js', and 'CI/CD'
+    without false negatives or false positives.
+    """
+    s = skill.strip().lower()
+    if s == "c":
+        return re.compile(r"(?<![\w#+./])c(?![#+\w])", re.IGNORECASE)
+    prefix = r"(?<!\w)" if re.match(r"^\w", s) else r"(?<![\w#+./])"
+    suffix = r"(?![\w#+])" if re.search(r"\w$", s) else r"(?![\w#+./])"
+    return re.compile(rf"{prefix}{re.escape(s)}{suffix}", re.IGNORECASE)
+
+
+def calculate_deterministic_score(
+    sub_scores: SubScores,
+    weights: Optional[Dict[str, float]] = None
+) -> float:
+    """
+    Centralized, deterministic scoring function with dynamic weight renormalization.
+    - Excludes genuinely absent scoring dimensions (where subscore is None).
+    - Renormalizes applicable weights so they sum to 100%.
+    - Never awards positive scores for missing/unevaluated requirements.
+    - If no dimensions are evaluable, returns 0.0 (explicit insufficient-data state).
+    """
+    w = weights or SCORING_WEIGHTS
+
+    dim_scores = {
+        "required_skills": sub_scores.required_skills,
+        "experience": sub_scores.experience,
+        "domain": sub_scores.domain,
+        "responsibilities": sub_scores.responsibilities,
+        "preferred_skills": sub_scores.preferred_skills,
+    }
+
+    evaluable_weights_sum = 0.0
+    weighted_score_sum = 0.0
+
+    for dim, score_val in dim_scores.items():
+        if score_val is not None:
+            clamped_score = max(0.0, min(100.0, float(score_val)))
+            dim_weight = w.get(dim, 0.0)
+            weighted_score_sum += clamped_score * dim_weight
+            evaluable_weights_sum += dim_weight
+
+    if evaluable_weights_sum <= 0.0:
+        return 0.0
+
+    final_score = weighted_score_sum / evaluable_weights_sum
+    return max(0.0, min(100.0, round(final_score, 1)))
+
+
+def extract_semantic_evidence_with_ai(
+    skills: List[str],
+    raw_resume_text: str
+) -> Optional[Dict[str, Dict[str, Any]]]:
+    """
+    Structured AI analysis for semantic evidence extraction.
+    Uses AI strictly for evidence extraction and classification tier (Levels 1-6),
+    NEVER for assigning the final readiness score.
+    Runs at temperature=0.0 for deterministic stability.
+    """
+    gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
+    if not gemini_key:
+        return None
+
+    skills_sample = skills[:15]
+    if not skills_sample or not raw_resume_text.strip():
+        return None
+
+    prompt = (
+        "You are an expert technical resume evaluator. Analyze the candidate resume against the required skills list.\n"
+        "For each skill, extract the exact evidence snippet and classify into a tier:\n"
+        "- Level 1: Direct production experience with metrics/scale\n"
+        "- Level 2: Core responsibility in work history\n"
+        "- Level 3: Project / implementation experience\n"
+        "- Level 4: Mentioned in skills section only\n"
+        "- Level 5: Weak contextual or adjacent mention\n"
+        "- Level 6: No evidence found\n\n"
+        "Return ONLY a JSON object with this exact structure:\n"
+        "{\n"
+        '  "evaluations": [\n'
+        '    {"skill": "SkillName", "level": 1, "strength": "HIGH", "snippet": "evidence snippet"}\n'
+        "  ]\n"
+        "}\n\n"
+        f"SKILLS TO EVALUATE: {json.dumps(skills_sample)}\n\n"
+        f"RESUME TEXT:\n{raw_resume_text[:4000]}"
+    )
+    try:
+        import urllib.request
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}"
+        req_data = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {"temperature": 0.0, "topP": 0.1, "maxOutputTokens": 1024}
+        }
+        req = urllib.request.Request(url, data=json.dumps(req_data).encode("utf-8"), headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            data = json.loads(resp.read().decode())
+            cand = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+            cleaned = re.sub(r"^```[a-zA-Z]*\n?", "", cand.strip())
+            cleaned = re.sub(r"\n?```$", "", cleaned)
+            parsed = json.loads(cleaned)
+            if isinstance(parsed, dict) and "evaluations" in parsed:
+                return {e["skill"].lower(): e for e in parsed["evaluations"] if "skill" in e and "level" in e}
+    except Exception as e:
+        logger.debug("[MatchingService] AI semantic evidence extraction fell back to rule engine: %s", e)
+    return None
 
 from app.models import (
     NormalizedJobDescription,
@@ -106,11 +286,12 @@ def normalize_resume(raw_text: str) -> NormalizedResume:
     """
     Parses unstructured raw resume text into a structured NormalizedResume model.
     Segments work experience, projects, skills list, education, and calculates duration.
+    Applies canonical text normalization first for 100% deterministic parsing.
     """
     if not raw_text or not raw_text.strip():
         return NormalizedResume(raw_text="")
 
-    text = raw_text.strip()
+    text = canonicalize_text(raw_text)
     lines = [l.strip() for l in text.splitlines() if l.strip()]
 
     candidate_name = None
@@ -130,7 +311,7 @@ def normalize_resume(raw_text: str) -> NormalizedResume:
 
     # Candidate Name (First non-header line without contact symbols)
     for line in lines[:4]:
-        if not "@" and not re.search(r"\d", line) and len(line.split()) in (2, 3, 4):
+        if "@" not in line and not re.search(r"\d", line) and len(line.split()) in (2, 3, 4):
             if not any(header in line.lower() for header in ["resume", "curriculum", "profile", "summary"]):
                 candidate_name = line
                 break
@@ -143,7 +324,7 @@ def normalize_resume(raw_text: str) -> NormalizedResume:
         except ValueError:
             total_years = 0.0
 
-    # 3. Section Segmentation
+    # 3. Section Segmentation (Robust regex matching for headers)
     sections: Dict[str, List[str]] = {
         "summary": [],
         "experience": [],
@@ -156,22 +337,22 @@ def normalize_resume(raw_text: str) -> NormalizedResume:
     current_section = "summary"
     for line in lines:
         line_lower = line.lower().strip()
-        if re.match(r"^(?:work\s+experience|experience|employment|employment\s+history|professional\s+experience)[:\s]*$", line_lower):
+        if re.match(r"^(?:\d+[\.\)]\s*)?(?:work\s+experience|professional\s+experience|experience|employment(?:\s+history)?|work\s+history)[:\s]*$", line_lower):
             current_section = "experience"
             continue
-        elif re.match(r"^(?:projects|personal\s+projects|key\s+projects|technical\s+projects)[:\s]*$", line_lower):
+        elif re.match(r"^(?:\d+[\.\)]\s*)?(?:projects|personal\s+projects|key\s+projects|technical\s+projects)[:\s]*$", line_lower):
             current_section = "projects"
             continue
-        elif re.match(r"^(?:skills|technical\s+skills|core\s+competencies|technologies)[:\s]*$", line_lower):
+        elif re.match(r"^(?:\d+[\.\)]\s*)?(?:skills|technical\s+skills|core\s+competencies|technologies)[:\s]*$", line_lower):
             current_section = "skills"
             continue
-        elif re.match(r"^(?:education|academic\s+background)[:\s]*$", line_lower):
+        elif re.match(r"^(?:\d+[\.\)]\s*)?(?:education|academic\s+background)[:\s]*$", line_lower):
             current_section = "education"
             continue
-        elif re.match(r"^(?:certifications|certificates|licenses)[:\s]*$", line_lower):
+        elif re.match(r"^(?:\d+[\.\)]\s*)?(?:certifications|certificates|licenses)[:\s]*$", line_lower):
             current_section = "certifications"
             continue
-        elif re.match(r"^(?:summary|profile|about\s+me)[:\s]*$", line_lower):
+        elif re.match(r"^(?:\d+[\.\)]\s*)?(?:summary|profile|about\s+me)[:\s]*$", line_lower):
             current_section = "summary"
             continue
 
@@ -242,7 +423,7 @@ def _build_work_experience_item(lines: List[str]) -> ResumeWorkExperience:
     duration = None
     bullets: List[str] = []
 
-    # Look for duration e.g. "2020 - 2024" or "3 years"
+    # Look for duration e.g. "2020 - 2024", "2019 - Present", or "3 years"
     block_text = " ".join(lines)
     dur_match = re.search(r"(\d+(?:\.\d+)?)\s*(?:years?|yrs?)", block_text, re.IGNORECASE)
     if dur_match:
@@ -250,6 +431,13 @@ def _build_work_experience_item(lines: List[str]) -> ResumeWorkExperience:
             duration = float(dur_match.group(1))
         except ValueError:
             duration = None
+    else:
+        # Fallback: Extract year spans like "2019 - 2023" or "2020 - Present"
+        years = [int(y) for y in re.findall(r"\b(20\d\d|19\d\d)\b", block_text)]
+        if len(years) >= 2:
+            duration = max(0.5, float(max(years) - min(years)))
+        elif len(years) == 1 and re.search(r"\b(?:present|current|now)\b", block_text, re.IGNORECASE):
+            duration = max(0.5, float(datetime.now(timezone.utc).year - years[0]))
 
     for line in lines[1:]:
         if line.startswith("-") or line.startswith("*") or line.startswith("•") or len(line) > 30:
@@ -309,14 +497,14 @@ def classify_skill_evidence(
     """
     skill_clean = skill.strip()
     skill_lower = skill_clean.lower()
-    pattern = rf"\b{re.escape(skill_lower)}\b"
+    pat = get_skill_regex(skill_clean)
 
     # Search in Work Experience (Level 1, Level 2, or Level 5 if qualified weakly)
     for exp in resume.work_experience:
         exp_text = (exp.description or "") + " " + " ".join(exp.responsibilities or [])
-        if re.search(pattern, exp_text, re.IGNORECASE):
+        if pat.search(exp_text):
             for bullet in (exp.responsibilities or [exp.description]):
-                if re.search(pattern, bullet, re.IGNORECASE):
+                if pat.search(bullet):
                     bullet_lower = bullet.lower()
 
                     # Check for Weak Qualifiers first (Level 5)
@@ -340,14 +528,14 @@ def classify_skill_evidence(
     # Search in Projects (Level 3)
     for proj in resume.projects:
         proj_text = (proj.name or "") + " " + (proj.description or "")
-        if re.search(pattern, proj_text, re.IGNORECASE):
+        if pat.search(proj_text):
             tier = EVIDENCE_TIERS[3]
             return 3, tier[0], proj_text[:180].strip(), tier[1]
 
     # Search in Raw Resume for Action Bullets if work_experience wasn't fully structured
     for line in raw_resume_text.splitlines():
         line_clean = line.strip()
-        if re.search(pattern, line_clean, re.IGNORECASE):
+        if pat.search(line_clean):
             line_lower = line_clean.lower()
 
             if any(wq in line_lower for wq in WEAK_QUALIFIERS):
@@ -367,14 +555,14 @@ def classify_skill_evidence(
                     return 3, tier[0], line_clean, tier[1]
 
     # Search in Skills Section / Keywords (Level 4)
-    if any(re.search(pattern, s, re.IGNORECASE) for s in resume.skills):
+    if any(pat.search(s) for s in resume.skills):
         tier = EVIDENCE_TIERS[4]
         return 4, tier[0], f"Mentioned in Skills section: '{skill_clean}'", tier[1]
 
     # Check if mentioned anywhere else in raw text as isolated token (Level 4/5)
-    if re.search(pattern, raw_resume_text, re.IGNORECASE):
+    if pat.search(raw_resume_text):
         for line in raw_resume_text.splitlines():
-            if re.search(pattern, line, re.IGNORECASE):
+            if pat.search(line):
                 line_clean = line.strip()
                 if any(wq in line_clean.lower() for wq in WEAK_QUALIFIERS):
                     tier = EVIDENCE_TIERS[5]
@@ -389,8 +577,8 @@ def classify_skill_evidence(
             if (skill_lower, rel_skill.lower()) in DISALLOWED_EQUIVALENCES or (rel_skill.lower(), skill_lower) in DISALLOWED_EQUIVALENCES:
                 continue
 
-            rel_pattern = rf"\b{re.escape(rel_skill.lower())}\b"
-            if re.search(rel_pattern, raw_resume_text, re.IGNORECASE):
+            rel_pat = get_skill_regex(rel_skill)
+            if rel_pat.search(raw_resume_text):
                 tier = EVIDENCE_TIERS[5]
                 evidence_text = f"Related capability demonstrated: '{rel_skill}' (adjacent to required '{skill_clean}')"
                 return 5, tier[0], evidence_text, min(0.35, tier[1] * rel_weight)
@@ -426,9 +614,9 @@ def evaluate_experience_match(
         elif "junior" in exp_str or "entry" in exp_str:
             jd_years_req = 1.0
 
-    # If JD specifies no experience requirement, full fit
+    # If JD specifies no experience requirement, dimension is absent
     if jd_years_req <= 0:
-        return 90.0, "No specific minimum years specified in job description."
+        return None, "No specific minimum years specified in job description."
 
     resume_years = resume.total_years_experience or 0.0
     # Also sum experience blocks if total_years_experience wasn't explicitly stated
@@ -467,7 +655,7 @@ def evaluate_domain_match(
     Evaluates candidate's industry/domain alignment (FinTech, SaaS, AI/ML, HealthTech, etc.).
     """
     if not jd.domain_requirements:
-        return 85.0, "General technical domain (no specialized vertical required)."
+        return None, "No specialized vertical domain specified in job description."
 
     matched_domains = []
     text_lower = raw_resume_text.lower()
@@ -495,7 +683,7 @@ def evaluate_responsibilities_match(
     Evaluates overlap between JD responsibilities and candidate work experience bullets.
     """
     if not jd.responsibilities:
-        return 85.0, "Standard role duties (no custom responsibilities specified in JD)."
+        return None, "No specific responsibilities listed in job description."
 
     covered_count = 0
     text_lower = raw_resume_text.lower()
@@ -565,12 +753,9 @@ def calculate_resume_jd_match(
     skill_matrix: List[SkillMatrixItem] = []
     req_skills = list(dict.fromkeys(jd.required_skills or []))
 
-    # Fallback if JD has no explicit skills list: extract keywords from title/technical_requirements
-    if not req_skills:
-        if jd.technical_requirements:
-            req_skills = list(dict.fromkeys(jd.technical_requirements))
-        elif jd.job_title:
-            req_skills = [w for w in jd.job_title.split() if len(w) > 3 and w not in ["Senior", "Junior", "Lead", "Staff", "Engineer", "Developer"]]
+    # Fallback if JD has no explicit skills list: check technical_requirements
+    if not req_skills and jd.technical_requirements:
+        req_skills = list(dict.fromkeys(jd.technical_requirements))
 
     req_score_sum = 0.0
     req_weight_sum = 0.0
@@ -604,16 +789,20 @@ def calculate_resume_jd_match(
         req_score_sum += item_score * imp_weight
         req_weight_sum += imp_weight
 
-    required_skills_subscore = round(req_score_sum / req_weight_sum, 1) if req_weight_sum > 0 else 80.0
+    if req_weight_sum > 0:
+        required_skills_subscore = round(req_score_sum / req_weight_sum, 1)
+    elif req_skills:
+        required_skills_subscore = 0.0
+    else:
+        required_skills_subscore = None
 
     # 3. Extract and Evaluate Preferred Skills (Weight: 0.10)
     pref_skills = list(dict.fromkeys(jd.preferred_skills or []))
+    pref_skills = [s for s in pref_skills if s not in req_skills]
     pref_score_sum = 0.0
     pref_weight_sum = 0.0
 
     for skill in pref_skills:
-        if skill in req_skills:
-            continue
         importance = "MEDIUM"
         imp_weight = IMPORTANCE_WEIGHTS[importance]
 
@@ -642,7 +831,12 @@ def calculate_resume_jd_match(
         pref_score_sum += item_score * imp_weight
         pref_weight_sum += imp_weight
 
-    preferred_skills_subscore = round(pref_score_sum / pref_weight_sum, 1) if pref_weight_sum > 0 else 75.0
+    if pref_weight_sum > 0:
+        preferred_skills_subscore = round(pref_score_sum / pref_weight_sum, 1)
+    elif pref_skills:
+        preferred_skills_subscore = 0.0
+    else:
+        preferred_skills_subscore = None
 
     # 4. Evaluate Tools & Technology
     for tool in (jd.tools or []):
@@ -665,28 +859,19 @@ def calculate_resume_jd_match(
     domain_subscore, dom_msg = evaluate_domain_match(jd, resume, raw_resume_text)
     responsibilities_subscore, resp_msg = evaluate_responsibilities_match(jd, resume, raw_resume_text)
 
-    # 6. Overall Match Score Formula
-    # Approved Formula:
-    # 0.40 * Required_Skills + 0.20 * Experience + 0.15 * Domain + 0.15 * Responsibilities + 0.10 * Preferred_Skills
-    overall_match_score = round(
-        (0.40 * required_skills_subscore) +
-        (0.20 * experience_subscore) +
-        (0.15 * domain_subscore) +
-        (0.15 * responsibilities_subscore) +
-        (0.10 * preferred_skills_subscore),
-        1
-    )
-    overall_match_score = max(0.0, min(100.0, overall_match_score))
-
+    # 6. Overall Match Score Formula (Deterministic Versioned Scoring Engine)
     sub_scores = SubScores(
         required_skills=required_skills_subscore,
         experience=experience_subscore,
         domain=domain_subscore,
         responsibilities=responsibilities_subscore,
         preferred_skills=preferred_skills_subscore,
-        tools_technology=80.0,
-        education=90.0 if resume.education else None
+        tools_technology=None,
+        education=None
     )
+
+    # Approved Baseline: 0.40*Req + 0.20*Exp + 0.15*Dom + 0.15*Resp + 0.10*Pref
+    overall_match_score = calculate_deterministic_score(sub_scores)
 
     # 7. Identify Strengths, Skill Gaps, and Critical Gaps (with Anti-Masking Rule)
     strengths: List[str] = []
@@ -713,7 +898,7 @@ def calculate_resume_jd_match(
                 recommendations.append(f"Add direct production or project evidence for {item.skill} to meet core role criteria.")
 
     # Additional contextual recommendations
-    if experience_subscore < 75.0:
+    if experience_subscore is not None and experience_subscore < 75.0:
         recommendations.append(f"Highlight technical leadership and architectural depth to offset the {exp_msg}")
 
     if not critical_gaps and skill_gaps:
@@ -732,12 +917,30 @@ def calculate_resume_jd_match(
     high_evidence_count = sum(1 for item in skill_matrix if item.evidence_level in (1, 2, 3))
     total_requirements = len(skill_matrix)
 
-    if word_count < 40 or not has_work_exp or total_requirements < 2:
+    evaluable_dims = sum(1 for v in [required_skills_subscore, experience_subscore, domain_subscore, responsibilities_subscore, preferred_skills_subscore] if v is not None)
+    if evaluable_dims == 0:
+        match_confidence = "LOW"
+        recommendations = ["Insufficient job description requirements to evaluate candidate readiness. Please provide a more detailed job description."]
+    elif word_count < 40 or not has_work_exp or total_requirements < 2:
         match_confidence = "LOW"
     elif word_count >= 60 and (has_bullets or has_work_exp) and high_evidence_count >= max(2, int(total_requirements * 0.4)):
         match_confidence = "HIGH"
     else:
         match_confidence = "MEDIUM"
+
+    # 9. Compute Stable Fingerprints for Deterministic Identification & Caching
+    resume_fingerprint = compute_content_fingerprint(raw_resume_text)
+    jd_raw_text = (
+        (jd.job_title or "") + "\n" +
+        (jd.company or "") + "\n" +
+        "Required Skills: " + ", ".join(jd.required_skills or []) + "\n" +
+        "Preferred Skills: " + ", ".join(jd.preferred_skills or []) + "\n" +
+        "Domains: " + ", ".join(jd.domain_requirements or []) + "\n" +
+        "Responsibilities: " + "\n".join(jd.responsibilities or []) + "\n" +
+        "Experience: " + (jd.experience_required or "")
+    )
+    jd_fingerprint = compute_content_fingerprint(jd_raw_text)
+    evaluation_fingerprint = compute_evaluation_fingerprint(resume_fingerprint, jd_fingerprint, SCORING_ENGINE_VERSION, target_role=jd.job_title)
 
     return ResumeJDMatchResult(
         overall_match_score=overall_match_score,
@@ -747,5 +950,9 @@ def calculate_resume_jd_match(
         strengths=strengths,
         skill_gaps=skill_gaps,
         critical_gaps=critical_gaps,
-        recommendations=recommendations
+        recommendations=recommendations,
+        matching_engine_version=SCORING_ENGINE_VERSION,
+        evaluation_fingerprint=evaluation_fingerprint,
+        resume_fingerprint=resume_fingerprint,
+        jd_fingerprint=jd_fingerprint
     )

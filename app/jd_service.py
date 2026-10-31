@@ -560,6 +560,7 @@ def normalize_job_description(
     """
     Extracts and normalizes raw JD text into a standardized schema without fabricating missing information.
     Uses intelligent pattern extraction with zero external hallucinations.
+    Applies canonical text normalization first for stable, deterministic parsing.
     """
     now_iso = datetime.now(timezone.utc).isoformat()
     if not raw_text or not raw_text.strip():
@@ -569,7 +570,8 @@ def normalize_job_description(
             fetched_at=now_iso
         )
     
-    text = raw_text.strip()
+    from app.matching_service import canonicalize_text, get_skill_regex
+    text = canonicalize_text(raw_text)
     lines = [l.strip() for l in text.splitlines() if l.strip()]
     
     job_title = None
@@ -640,11 +642,11 @@ def normalize_job_description(
     pref_section = pref_split[1] if len(pref_split) > 1 else ""
     
     for skill in COMMON_TECH_SKILLS:
-        pattern = rf"\b{re.escape(skill)}\b"
-        if re.search(pattern, main_section, re.IGNORECASE):
+        pat = get_skill_regex(skill)
+        if pat.search(main_section):
             if skill not in required_skills:
                 required_skills.append(skill)
-        elif pref_section and re.search(pattern, pref_section, re.IGNORECASE):
+        elif pref_section and pat.search(pref_section):
             if skill not in preferred_skills:
                 preferred_skills.append(skill)
                 
