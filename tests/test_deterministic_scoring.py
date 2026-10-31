@@ -277,22 +277,22 @@ Skills: Python, HTML, CSS
     # 8. Different JDs -> Appropriate Differences in Scores
     # --------------------------------------------------------------------------
     def test_08_different_jds_produce_differentiated_scores(self):
-        embedded_jd = """
-Job Title: Embedded Firmware Engineer
-Company: Hardware Solutions
+        frontend_jd = """
+Job Title: Senior Frontend React Engineer
+Company: WebApps Inc
 Requirements:
-- 5+ years of C and Assembly programming.
-- Microcontrollers, RTOS (FreeRTOS, Zephyr).
-- SPI, I2C, UART hardware debugging with oscilloscopes.
+- 5+ years of React, TypeScript, and Next.js frontend development.
+- Deep expertise in Vue, Angular, and GraphQL.
+- Responsive UI design and client-side state management.
         """.strip()
 
         backend_match = calculate_resume_jd_match(self.sample_jd, self.sample_resume)
-        embedded_match = calculate_resume_jd_match(embedded_jd, self.sample_resume)
+        frontend_match = calculate_resume_jd_match(frontend_jd, self.sample_resume)
 
         self.assertGreater(
             backend_match.overall_match_score,
-            embedded_match.overall_match_score + 20.0,
-            f"Python backend resume must score higher on Backend JD ({backend_match.overall_match_score}) than Embedded JD ({embedded_match.overall_match_score})"
+            frontend_match.overall_match_score + 20.0,
+            f"Python backend resume must score higher on Backend JD ({backend_match.overall_match_score}) than Frontend JD ({frontend_match.overall_match_score})"
         )
 
     # --------------------------------------------------------------------------
@@ -407,6 +407,170 @@ Experience:
         score_min = calculate_deterministic_score(sub_min)
         self.assertEqual(score_min, 0.0)
 
+
+
+    # --------------------------------------------------------------------------
+    # 13. JD with No Required Skills -> Denominator Excludes Required Skills
+    # --------------------------------------------------------------------------
+    def test_13_jd_with_no_required_skills(self):
+        jd_no_req = NormalizedJobDescription(
+            job_title="Engineering Consultant",
+            experience_required="5+ years",
+            responsibilities=["Lead team architectural design reviews.", "Coordinate multi-team delivery."]
+        )
+        res = calculate_resume_jd_match(jd_no_req, self.sample_resume)
+        # Required skills subscore must be None (genuinely absent)
+        self.assertIsNone(res.sub_scores.required_skills)
+        # Final score must be > 0 (evaluated on experience & responsibilities) without arbitrary 80% fallback
+        self.assertGreater(res.overall_match_score, 0.0)
+        self.assertLessEqual(res.overall_match_score, 100.0)
+
+    # --------------------------------------------------------------------------
+    # 14. JD with No Preferred Skills -> Denominator Excludes Preferred Skills
+    # --------------------------------------------------------------------------
+    def test_14_jd_with_no_preferred_skills(self):
+        jd_no_pref = NormalizedJobDescription(
+            job_title="Software Developer",
+            required_skills=["Python", "FastAPI"],
+            experience_required="3+ years"
+        )
+        res = calculate_resume_jd_match(jd_no_pref, self.sample_resume)
+        # Preferred skills subscore must be None
+        self.assertIsNone(res.sub_scores.preferred_skills)
+        # Required skills subscore must be evaluated
+        self.assertIsNotNone(res.sub_scores.required_skills)
+        self.assertGreaterEqual(res.sub_scores.required_skills, 70.0)
+        # Final score must not have 75% positive score from preferred skills
+        self.assertGreater(res.overall_match_score, 0.0)
+
+    # --------------------------------------------------------------------------
+    # 15. JD with Neither Required nor Preferred Skills
+    # --------------------------------------------------------------------------
+    def test_15_jd_with_neither_required_nor_preferred_skills(self):
+        jd_only_exp = NormalizedJobDescription(
+            job_title="Team Lead",
+            experience_required="5+ years"
+        )
+        res = calculate_resume_jd_match(jd_only_exp, self.sample_resume)
+        self.assertIsNone(res.sub_scores.required_skills)
+        self.assertIsNone(res.sub_scores.preferred_skills)
+        self.assertIsNotNone(res.sub_scores.experience)
+        # Score is purely based on the applicable experience dimension (100.0%)
+        self.assertEqual(res.overall_match_score, 100.0)
+
+    # --------------------------------------------------------------------------
+    # 16. JD with No Evaluable Dimensions -> Explicit 0.0 & Insufficient Data State
+    # --------------------------------------------------------------------------
+    def test_16_jd_with_no_evaluable_dimensions(self):
+        empty_jd = NormalizedJobDescription(job_title="")
+        res = calculate_resume_jd_match(empty_jd, self.sample_resume)
+        self.assertEqual(res.overall_match_score, 0.0)
+        self.assertEqual(res.match_confidence, "LOW")
+        self.assertTrue(any("insufficient" in r.lower() for r in res.recommendations))
+
+    # --------------------------------------------------------------------------
+    # 17. Candidate with Zero Relevant Skills -> Score Penalized (0.0 for Required)
+    # --------------------------------------------------------------------------
+    def test_17_candidate_with_zero_relevant_skills(self):
+        jd_backend = NormalizedJobDescription(
+            job_title="Senior Rust Developer",
+            required_skills=["Rust", "Actix", "Tokio"]
+        )
+        # Candidate has only design skills
+        designer_resume = normalize_resume("Product Designer with 6 years experience in Figma and wireframing.")
+        res = calculate_resume_jd_match(jd_backend, designer_resume)
+        # Required skills subscore must be 0.0 (applicable dimension, candidate has 0)
+        self.assertEqual(res.sub_scores.required_skills, 0.0)
+        # Overall score must be 0.0
+        self.assertEqual(res.overall_match_score, 0.0)
+        # All required skills must be marked as gap
+        self.assertTrue(all(item.gap_status == "gap" for item in res.skill_matrix))
+
+    # --------------------------------------------------------------------------
+    # 18. Candidate with Partial Evidence -> Intermediate Score
+    # --------------------------------------------------------------------------
+    def test_18_candidate_with_partial_evidence(self):
+        jd_backend = NormalizedJobDescription(
+            job_title="Backend Developer",
+            required_skills=["Python", "FastAPI", "PostgreSQL", "Kafka"]
+        )
+        # Resume has Python and FastAPI with strong evidence, but missing PostgreSQL and Kafka
+        partial_resume = normalize_resume("""
+        Developer with 3 years experience.
+        Experience:
+        - Built production services using Python and FastAPI.
+        """)
+        res = calculate_resume_jd_match(jd_backend, partial_resume)
+        # Score must be strictly between 20% and 60%
+        self.assertGreater(res.sub_scores.required_skills, 20.0)
+        self.assertLess(res.sub_scores.required_skills, 60.0)
+        self.assertGreater(res.overall_match_score, 0.0)
+        self.assertLess(res.overall_match_score, 100.0)
+
+    # --------------------------------------------------------------------------
+    # 19. Cross-User Cache Isolation (Candidate B cannot hit Candidate A's cache)
+    # --------------------------------------------------------------------------
+    def test_19_cross_user_cache_isolation(self):
+        # Candidate A submits
+        payload = {"resume_text": self.sample_resume, "jd_text": self.sample_jd, "source_type": "paste"}
+        resp_a = client.post("/api/candidate/resume-jd/match", json=payload, headers=self.auth_headers)
+        self.assertEqual(resp_a.status_code, 200)
+        self.assertFalse(resp_a.json()["is_cached"])
+
+        # Create Candidate B
+        db = TestingSessionLocal()
+        cand_b = UserAccount(
+            email="candidate_b_eval@example.com",
+            full_name="Bob Cross",
+            password_hash=hash_password("BobSecure123!"),
+            role="candidate",
+            plan_tier="pro",
+            is_active=True
+        )
+        db.add(cand_b)
+        db.commit()
+        db.refresh(cand_b)
+        cand_b_id = cand_b.id
+        db.close()
+
+        auth_token_b = create_access_token(data={"sub": str(cand_b_id), "email": "candidate_b_eval@example.com", "role": "candidate", "type": "access"})
+        headers_b = {"Authorization": f"Bearer {auth_token_b}"}
+
+        # Candidate B submits identical payload -> MUST NOT reuse Candidate A's cache (is_cached=False)
+        resp_b = client.post("/api/candidate/resume-jd/match", json=payload, headers=headers_b)
+        self.assertEqual(resp_b.status_code, 200)
+        self.assertFalse(resp_b.json()["is_cached"], "Candidate B should not hit Candidate A's evaluation cache")
+
+    # --------------------------------------------------------------------------
+    # 20. Old Engine Version (match-v1.0.0) Not Reused by New Engine (match-v1.1.0)
+    # --------------------------------------------------------------------------
+    def test_20_old_version_cache_invalidation(self):
+        # Seed an old scan record under match-v1.0.0
+        db = TestingSessionLocal()
+        old_scan = ResumeScan(
+            scan_id="scan_legacy_v1_0_0",
+            user_id=self.candidate_id,
+            matching_engine_version="match-v1.0.0",
+            evaluation_fingerprint="legacy_fingerprint_v1_0_0",
+            match_score=45.0,
+            overall_match_score=45.0,
+            match_confidence="LOW",
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc)
+        )
+        db.add(old_scan)
+        db.commit()
+        db.close()
+
+        # Submit new evaluation with current engine (match-v1.1.0)
+        payload = {"resume_text": self.sample_resume, "jd_text": self.sample_jd, "source_type": "paste"}
+        resp = client.post("/api/candidate/resume-jd/match", json=payload, headers=self.auth_headers)
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertEqual(data["matching_engine_version"], "match-v1.1.0")
+        self.assertNotEqual(data["scan_id"], "scan_legacy_v1_0_0")
+        # Legacy 45.0 score was NOT reused
+        self.assertGreater(data["overall_match_score"], 70.0)
 
 def classify_skill_evidence_test(skill, norm, raw):
     from app.matching_service import classify_skill_evidence

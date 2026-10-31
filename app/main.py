@@ -1339,14 +1339,15 @@ async def create_resume_jd_match(
         source_type = payload.source_type if payload.source_type and payload.source_type != "paste" else (normalized_jd.source_type or "paste")
         source_url = payload.source_url or normalized_jd.source_url
 
-    engine_version = getattr(match_result, "matching_engine_version", "match-v1.0.0")
+    engine_version = getattr(match_result, "matching_engine_version", "match-v1.1.0")
     eval_fingerprint = getattr(match_result, "evaluation_fingerprint", None)
     res_fingerprint = getattr(match_result, "resume_fingerprint", None)
     jd_fingerprint = getattr(match_result, "jd_fingerprint", None)
 
-    # 6. Evaluation Reuse / Deduplication (Deterministic Cache Guarantee)
+    # 6. Evaluation Reuse / Deduplication (Genuine Deterministic Cache Guarantee)
     now = datetime.now(timezone.utc)
     is_cached_eval = False
+    existing_scan = None
     if eval_fingerprint:
         existing_scan = (
             db.query(ResumeScan)
@@ -1358,21 +1359,57 @@ async def create_resume_jd_match(
             .order_by(ResumeScan.id.desc())
             .first()
         )
-        if existing_scan:
-            is_cached_eval = True
-            logger.info(
-                "Deterministic match cache hit: reusing persisted evaluation metrics",
-                extra={"user_id": current_user.id, "scan_id": existing_scan.scan_id, "fingerprint": eval_fingerprint}
-            )
 
-    # 7. Generate Secure Unique Scan ID
+    if existing_scan and existing_scan.overall_match_score is not None:
+        # Genuine Persisted Cache Reuse
+        is_cached_eval = True
+        logger.info(
+            "Deterministic match cache hit: genuinely reusing persisted evaluation metrics",
+            extra={"user_id": current_user.id, "scan_id": existing_scan.scan_id, "fingerprint": eval_fingerprint}
+        )
+        reused_score = float(existing_scan.overall_match_score if existing_scan.overall_match_score is not None else existing_scan.match_score)
+        reused_confidence = existing_scan.match_confidence or match_result.match_confidence
+        sub_scores_raw = existing_scan.sub_scores or json.dumps(match_result.sub_scores.model_dump())
+        skill_matrix_raw = existing_scan.skill_matrix or json.dumps([item.model_dump() for item in match_result.skill_matrix])
+        strengths_raw = existing_scan.strengths or json.dumps(match_result.strengths)
+        skill_gaps_raw = existing_scan.skill_gaps or json.dumps(match_result.skill_gaps)
+        critical_gaps_raw = existing_scan.critical_gaps or json.dumps(match_result.critical_gaps)
+        recommendations_raw = existing_scan.recommendations or json.dumps(match_result.recommendations)
+
+        resp_sub_scores = SubScores(**json.loads(sub_scores_raw)) if sub_scores_raw else match_result.sub_scores
+        resp_skill_matrix = [SkillMatrixItem(**item) for item in json.loads(skill_matrix_raw)] if skill_matrix_raw else match_result.skill_matrix
+        resp_strengths = json.loads(strengths_raw) if strengths_raw else match_result.strengths
+        resp_skill_gaps = json.loads(skill_gaps_raw) if skill_gaps_raw else match_result.skill_gaps
+        resp_critical_gaps = json.loads(critical_gaps_raw) if critical_gaps_raw else match_result.critical_gaps
+        resp_recommendations = json.loads(recommendations_raw) if recommendations_raw else match_result.recommendations
+        matched_skills_str = existing_scan.matched_skills or ""
+        missing_skills_str = existing_scan.missing_skills or ""
+    else:
+        # Cache Miss: Fresh calculation persisted
+        is_cached_eval = False
+        reused_score = match_result.overall_match_score
+        reused_confidence = match_result.match_confidence
+        resp_sub_scores = match_result.sub_scores
+        resp_skill_matrix = match_result.skill_matrix
+        resp_strengths = match_result.strengths
+        resp_skill_gaps = match_result.skill_gaps
+        resp_critical_gaps = match_result.critical_gaps
+        resp_recommendations = match_result.recommendations
+
+        sub_scores_raw = json.dumps(resp_sub_scores.model_dump())
+        skill_matrix_raw = json.dumps([item.model_dump() for item in resp_skill_matrix])
+        strengths_raw = json.dumps(resp_strengths)
+        skill_gaps_raw = json.dumps(resp_skill_gaps)
+        critical_gaps_raw = json.dumps(resp_critical_gaps)
+        recommendations_raw = json.dumps(resp_recommendations)
+        matched_skills_str = ", ".join([item.skill for item in resp_skill_matrix if item.gap_status == "matched"])
+        missing_skills_str = ", ".join([item.skill for item in resp_skill_matrix if item.gap_status == "gap"])
+
+    # 7. Generate Secure Unique Scan ID for this candidate submission
     scan_id = f"scan_{uuid.uuid4().hex}"
 
-    # 8. Persist to Database (Phase 5C & Deterministic Versioning)
+    # 8. Persist to Database (Preserves historical candidate scan entries)
     try:
-        matched_skills_str = ", ".join([item.skill for item in match_result.skill_matrix if item.gap_status == "matched"])
-        missing_skills_str = ", ".join([item.skill for item in match_result.skill_matrix if item.gap_status == "gap"])
-
         scan_record = ResumeScan(
             scan_id=scan_id,
             user_id=current_user.id,
@@ -1382,15 +1419,15 @@ async def create_resume_jd_match(
             jd_fingerprint=jd_fingerprint,
             candidate_name=candidate_name,
             target_role=target_role,
-            match_score=match_result.overall_match_score,
-            overall_match_score=match_result.overall_match_score,
-            match_confidence=match_result.match_confidence,
-            sub_scores=json.dumps(match_result.sub_scores.model_dump()),
-            skill_matrix=json.dumps([item.model_dump() for item in match_result.skill_matrix]),
-            strengths=json.dumps(match_result.strengths),
-            skill_gaps=json.dumps(match_result.skill_gaps),
-            critical_gaps=json.dumps(match_result.critical_gaps),
-            recommendations=json.dumps(match_result.recommendations),
+            match_score=reused_score,
+            overall_match_score=reused_score,
+            match_confidence=reused_confidence,
+            sub_scores=sub_scores_raw,
+            skill_matrix=skill_matrix_raw,
+            strengths=strengths_raw,
+            skill_gaps=skill_gaps_raw,
+            critical_gaps=critical_gaps_raw,
+            recommendations=recommendations_raw,
             normalized_jd=json.dumps(normalized_jd.model_dump()),
             normalized_resume=json.dumps(normalized_resume.model_dump()),
             matched_skills=matched_skills_str,
@@ -1417,14 +1454,14 @@ async def create_resume_jd_match(
     return ResumeJDMatchResponse(
         scan_id=scan_id,
         matching_engine_version=engine_version,
-        overall_match_score=match_result.overall_match_score,
-        match_confidence=match_result.match_confidence,
-        sub_scores=match_result.sub_scores,
-        skill_matrix=match_result.skill_matrix,
-        strengths=match_result.strengths,
-        skill_gaps=match_result.skill_gaps,
-        critical_gaps=match_result.critical_gaps,
-        recommendations=match_result.recommendations,
+        overall_match_score=reused_score,
+        match_confidence=reused_confidence,
+        sub_scores=resp_sub_scores,
+        skill_matrix=resp_skill_matrix,
+        strengths=resp_strengths,
+        skill_gaps=resp_skill_gaps,
+        critical_gaps=resp_critical_gaps,
+        recommendations=resp_recommendations,
         target_role=target_role,
         candidate_name=candidate_name,
         source_type=source_type,

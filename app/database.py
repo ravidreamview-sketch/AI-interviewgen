@@ -431,7 +431,7 @@ def _run_migration_resume_scans(dialect: str, conn=None):
     try:
         columns_to_add = [
             ("scan_id", "VARCHAR"),
-            ("matching_engine_version", "VARCHAR DEFAULT 'match-v1.0.0'"),
+            ("matching_engine_version", "VARCHAR DEFAULT 'match-v1.1.0'"),
             ("evaluation_fingerprint", "VARCHAR"),
             ("resume_fingerprint", "VARCHAR"),
             ("jd_fingerprint", "VARCHAR"),

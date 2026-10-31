@@ -32,7 +32,7 @@ from datetime import datetime
 logger = logging.getLogger("ravi.matching_service")
 
 # Centralized version identifier for deterministic scoring engine
-SCORING_ENGINE_VERSION = "match-v1.0.0"
+SCORING_ENGINE_VERSION = "match-v1.1.0"
 
 # Centralized criteria weights for readiness scoring
 SCORING_WEIGHTS = {
@@ -116,30 +116,37 @@ def calculate_deterministic_score(
     weights: Optional[Dict[str, float]] = None
 ) -> float:
     """
-    Centralized, deterministic scoring function.
-    Formula: Sum of (Criterion Score * Criterion Weight)
-    Validates all category scores in [0.0, 100.0] and returns a clamped, consistently rounded score.
+    Centralized, deterministic scoring function with dynamic weight renormalization.
+    - Excludes genuinely absent scoring dimensions (where subscore is None).
+    - Renormalizes applicable weights so they sum to 100%.
+    - Never awards positive scores for missing/unevaluated requirements.
+    - If no dimensions are evaluable, returns 0.0 (explicit insufficient-data state).
     """
     w = weights or SCORING_WEIGHTS
-    total_w = sum(w.values())
-    if total_w <= 0:
-        total_w = 1.0
 
-    req = max(0.0, min(100.0, float(sub_scores.required_skills or 0.0)))
-    exp = max(0.0, min(100.0, float(sub_scores.experience or 0.0)))
-    dom = max(0.0, min(100.0, float(sub_scores.domain or 0.0)))
-    resp = max(0.0, min(100.0, float(sub_scores.responsibilities or 0.0)))
-    pref = max(0.0, min(100.0, float(sub_scores.preferred_skills or 0.0)))
+    dim_scores = {
+        "required_skills": sub_scores.required_skills,
+        "experience": sub_scores.experience,
+        "domain": sub_scores.domain,
+        "responsibilities": sub_scores.responsibilities,
+        "preferred_skills": sub_scores.preferred_skills,
+    }
 
-    score = (
-        (w.get("required_skills", 0.40) * req) +
-        (w.get("experience", 0.20) * exp) +
-        (w.get("domain", 0.15) * dom) +
-        (w.get("responsibilities", 0.15) * resp) +
-        (w.get("preferred_skills", 0.10) * pref)
-    ) / total_w
+    evaluable_weights_sum = 0.0
+    weighted_score_sum = 0.0
 
-    return max(0.0, min(100.0, round(score, 1)))
+    for dim, score_val in dim_scores.items():
+        if score_val is not None:
+            clamped_score = max(0.0, min(100.0, float(score_val)))
+            dim_weight = w.get(dim, 0.0)
+            weighted_score_sum += clamped_score * dim_weight
+            evaluable_weights_sum += dim_weight
+
+    if evaluable_weights_sum <= 0.0:
+        return 0.0
+
+    final_score = weighted_score_sum / evaluable_weights_sum
+    return max(0.0, min(100.0, round(final_score, 1)))
 
 
 def extract_semantic_evidence_with_ai(
@@ -607,9 +614,9 @@ def evaluate_experience_match(
         elif "junior" in exp_str or "entry" in exp_str:
             jd_years_req = 1.0
 
-    # If JD specifies no experience requirement, full fit
+    # If JD specifies no experience requirement, dimension is absent
     if jd_years_req <= 0:
-        return 90.0, "No specific minimum years specified in job description."
+        return None, "No specific minimum years specified in job description."
 
     resume_years = resume.total_years_experience or 0.0
     # Also sum experience blocks if total_years_experience wasn't explicitly stated
@@ -648,7 +655,7 @@ def evaluate_domain_match(
     Evaluates candidate's industry/domain alignment (FinTech, SaaS, AI/ML, HealthTech, etc.).
     """
     if not jd.domain_requirements:
-        return 85.0, "General technical domain (no specialized vertical required)."
+        return None, "No specialized vertical domain specified in job description."
 
     matched_domains = []
     text_lower = raw_resume_text.lower()
@@ -676,7 +683,7 @@ def evaluate_responsibilities_match(
     Evaluates overlap between JD responsibilities and candidate work experience bullets.
     """
     if not jd.responsibilities:
-        return 85.0, "Standard role duties (no custom responsibilities specified in JD)."
+        return None, "No specific responsibilities listed in job description."
 
     covered_count = 0
     text_lower = raw_resume_text.lower()
@@ -746,12 +753,9 @@ def calculate_resume_jd_match(
     skill_matrix: List[SkillMatrixItem] = []
     req_skills = list(dict.fromkeys(jd.required_skills or []))
 
-    # Fallback if JD has no explicit skills list: extract keywords from title/technical_requirements
-    if not req_skills:
-        if jd.technical_requirements:
-            req_skills = list(dict.fromkeys(jd.technical_requirements))
-        elif jd.job_title:
-            req_skills = [w for w in jd.job_title.split() if len(w) > 3 and w not in ["Senior", "Junior", "Lead", "Staff", "Engineer", "Developer"]]
+    # Fallback if JD has no explicit skills list: check technical_requirements
+    if not req_skills and jd.technical_requirements:
+        req_skills = list(dict.fromkeys(jd.technical_requirements))
 
     req_score_sum = 0.0
     req_weight_sum = 0.0
@@ -785,16 +789,20 @@ def calculate_resume_jd_match(
         req_score_sum += item_score * imp_weight
         req_weight_sum += imp_weight
 
-    required_skills_subscore = round(req_score_sum / req_weight_sum, 1) if req_weight_sum > 0 else 80.0
+    if req_weight_sum > 0:
+        required_skills_subscore = round(req_score_sum / req_weight_sum, 1)
+    elif req_skills:
+        required_skills_subscore = 0.0
+    else:
+        required_skills_subscore = None
 
     # 3. Extract and Evaluate Preferred Skills (Weight: 0.10)
     pref_skills = list(dict.fromkeys(jd.preferred_skills or []))
+    pref_skills = [s for s in pref_skills if s not in req_skills]
     pref_score_sum = 0.0
     pref_weight_sum = 0.0
 
     for skill in pref_skills:
-        if skill in req_skills:
-            continue
         importance = "MEDIUM"
         imp_weight = IMPORTANCE_WEIGHTS[importance]
 
@@ -823,7 +831,12 @@ def calculate_resume_jd_match(
         pref_score_sum += item_score * imp_weight
         pref_weight_sum += imp_weight
 
-    preferred_skills_subscore = round(pref_score_sum / pref_weight_sum, 1) if pref_weight_sum > 0 else 75.0
+    if pref_weight_sum > 0:
+        preferred_skills_subscore = round(pref_score_sum / pref_weight_sum, 1)
+    elif pref_skills:
+        preferred_skills_subscore = 0.0
+    else:
+        preferred_skills_subscore = None
 
     # 4. Evaluate Tools & Technology
     for tool in (jd.tools or []):
@@ -853,8 +866,8 @@ def calculate_resume_jd_match(
         domain=domain_subscore,
         responsibilities=responsibilities_subscore,
         preferred_skills=preferred_skills_subscore,
-        tools_technology=80.0,
-        education=90.0 if resume.education else None
+        tools_technology=None,
+        education=None
     )
 
     # Approved Baseline: 0.40*Req + 0.20*Exp + 0.15*Dom + 0.15*Resp + 0.10*Pref
@@ -885,7 +898,7 @@ def calculate_resume_jd_match(
                 recommendations.append(f"Add direct production or project evidence for {item.skill} to meet core role criteria.")
 
     # Additional contextual recommendations
-    if experience_subscore < 75.0:
+    if experience_subscore is not None and experience_subscore < 75.0:
         recommendations.append(f"Highlight technical leadership and architectural depth to offset the {exp_msg}")
 
     if not critical_gaps and skill_gaps:
@@ -904,7 +917,11 @@ def calculate_resume_jd_match(
     high_evidence_count = sum(1 for item in skill_matrix if item.evidence_level in (1, 2, 3))
     total_requirements = len(skill_matrix)
 
-    if word_count < 40 or not has_work_exp or total_requirements < 2:
+    evaluable_dims = sum(1 for v in [required_skills_subscore, experience_subscore, domain_subscore, responsibilities_subscore, preferred_skills_subscore] if v is not None)
+    if evaluable_dims == 0:
+        match_confidence = "LOW"
+        recommendations = ["Insufficient job description requirements to evaluate candidate readiness. Please provide a more detailed job description."]
+    elif word_count < 40 or not has_work_exp or total_requirements < 2:
         match_confidence = "LOW"
     elif word_count >= 60 and (has_bullets or has_work_exp) and high_evidence_count >= max(2, int(total_requirements * 0.4)):
         match_confidence = "HIGH"

@@ -652,11 +652,11 @@ class SkillMatrixItem(BaseModel):
 
 
 class SubScores(BaseModel):
-    required_skills: float = Field(0.0, ge=0.0, le=100.0)
-    experience: float = Field(0.0, ge=0.0, le=100.0)
-    domain: float = Field(0.0, ge=0.0, le=100.0)
-    responsibilities: float = Field(0.0, ge=0.0, le=100.0)
-    preferred_skills: float = Field(0.0, ge=0.0, le=100.0)
+    required_skills: Optional[float] = Field(None, ge=0.0, le=100.0)
+    experience: Optional[float] = Field(None, ge=0.0, le=100.0)
+    domain: Optional[float] = Field(None, ge=0.0, le=100.0)
+    responsibilities: Optional[float] = Field(None, ge=0.0, le=100.0)
+    preferred_skills: Optional[float] = Field(None, ge=0.0, le=100.0)
     tools_technology: Optional[float] = Field(None, ge=0.0, le=100.0)
     education: Optional[float] = Field(None, ge=0.0, le=100.0)
 
@@ -670,7 +670,7 @@ class ResumeJDMatchResult(BaseModel):
     skill_gaps: List[str] = Field(default_factory=list)
     critical_gaps: List[str] = Field(default_factory=list)
     recommendations: List[str] = Field(default_factory=list)
-    matching_engine_version: str = Field("match-v1.0.0", description="Algorithm version")
+    matching_engine_version: str = Field("match-v1.1.0", description="Algorithm version")
     evaluation_fingerprint: Optional[str] = Field(None, description="SHA-256 evaluation fingerprint")
     resume_fingerprint: Optional[str] = Field(None, description="SHA-256 normalized resume fingerprint")
     jd_fingerprint: Optional[str] = Field(None, description="SHA-256 normalized JD fingerprint")
@@ -694,7 +694,7 @@ class ResumeJDMatchRequest(BaseModel):
 
 class ResumeJDMatchResponse(BaseModel):
     scan_id: str = Field(..., description="Secure unique server-generated scan identifier")
-    matching_engine_version: str = Field("match-v1.0.0", description="Algorithm version")
+    matching_engine_version: str = Field("match-v1.1.0", description="Algorithm version")
     overall_match_score: float = Field(..., ge=0.0, le=100.0)
     match_confidence: str = Field(..., description="HIGH | MEDIUM | LOW")
     sub_scores: SubScores
