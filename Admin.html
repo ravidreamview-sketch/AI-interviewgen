@@ -514,8 +514,8 @@ table.admin-table tr:hover td{background:var(--rule-soft)}
               <span>Refresh Metrics</span>
             </button>
             <button class="btn-primary" onclick="openAddUserDrawer()">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              <span>+ Invite User</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>Invite User</span>
             </button>
           </div>
         </div>
@@ -716,8 +716,8 @@ table.admin-table tr:hover td{background:var(--rule-soft)}
           </div>
           <div class="page-actions">
             <button class="btn-primary" onclick="openMenuDrawer()">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              <span>+ Add Menu Item</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>Add Menu Item</span>
             </button>
           </div>
         </div>
@@ -781,8 +781,8 @@ table.admin-table tr:hover td{background:var(--rule-soft)}
               <span>Refresh</span>
             </button>
             <button class="btn-primary" onclick="openAddUserDrawer()">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              <span>+ Invite User</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>Invite User</span>
             </button>
           </div>
         </div>
@@ -1002,7 +1002,8 @@ table.admin-table tr:hover td{background:var(--rule-soft)}
             <div style="font-size:13px;color:var(--ink-soft)">Create, manage, test, and version AI prompts used throughout Ravi GenAI Studio.</div>
           </div>
           <button class="btn-primary" onclick="openPromptEditorDrawer()">
-            <span>+ Create Prompt</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Create Prompt</span>
           </button>
         </div>
 
@@ -2257,7 +2258,7 @@ async function loadInvitationsList() {
 function renderInvitationsTable(invites) {
   const tbody = document.getElementById('invitationsTableBody');
   if (!invites.length) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--ink-soft)">No invitations found. Click "+ Invite User" to issue one.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--ink-soft)">No invitations found. Click "Invite User" to issue one.</td></tr>`;
     return;
   }
 
