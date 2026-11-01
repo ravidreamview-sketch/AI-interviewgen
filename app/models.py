@@ -714,6 +714,7 @@ class ResumeJDMatchResponse(BaseModel):
     source_url: Optional[str] = None
     evaluation_fingerprint: Optional[str] = Field(None, description="Deterministic SHA-256 fingerprint of normalized inputs")
     is_cached: Optional[bool] = Field(False, description="True if evaluation was reused from previously persisted result")
+    career_improvement_plan: Optional[Dict[str, Any]] = Field(None, description="Personalized Contextual Career Improvement and Learning Plan")
     created_at: str
 
 
@@ -973,3 +974,30 @@ class AcceptInvitationRequest(BaseModel):
     token: str = Field(..., min_length=16, description="Invitation token from email link")
     password: str = Field(..., min_length=6, description="Candidate-chosen password")
     full_name: Optional[str] = Field(None, description="Optional full name")
+
+
+# ==============================================================================
+# CONTEXTUAL PERSONALIZED LEARNING PLAN SCHEMAS
+# ==============================================================================
+
+class LearningPlanGenerateRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    scan_id: Optional[str] = Field(None, description="Persisted resume scan identifier")
+    target_role: Optional[str] = Field(None, description="Target job title / role")
+
+
+class LearningPlanBuildRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    scan_id: Optional[str] = Field(None, description="Persisted resume scan identifier")
+    target_role: Optional[str] = Field("Software Engineer", description="Target job title / role")
+    selected_skills: List[str] = Field(default_factory=list, description="Candidate-selected skills to include in learning roadmap")
+    candidate_verified_skills: List[str] = Field(default_factory=list, description="Skills self-attested by candidate")
+    hours_per_week: Optional[int] = Field(10, ge=1, le=60, description="Candidate dedicated study hours per week")
+
+
+class LearningPlanReassessRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    scan_id: Optional[str] = Field(None, description="Persisted resume scan identifier")
+    target_role: Optional[str] = Field("Software Engineer", description="Target job title / role")
+    completed_skills: List[str] = Field(default_factory=list, description="Skills candidate completed via learning plan")
+    candidate_verified_skills: List[str] = Field(default_factory=list, description="Skills candidate self-attested")
