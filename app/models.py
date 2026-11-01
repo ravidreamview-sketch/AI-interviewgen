@@ -1,7 +1,7 @@
 from __future__ import annotations
 from enum import Enum
 from pydantic import BaseModel, ConfigDict, Field, model_validator
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Annotated
 from datetime import datetime, timezone
 
 # ==============================================================================
@@ -980,24 +980,27 @@ class AcceptInvitationRequest(BaseModel):
 # CONTEXTUAL PERSONALIZED LEARNING PLAN SCHEMAS
 # ==============================================================================
 
+SkillNameStr = Annotated[str, Field(max_length=100, description="Skill name string (max 100 characters)")]
+
+
 class LearningPlanGenerateRequest(BaseModel):
     model_config = ConfigDict(extra="ignore")
-    scan_id: Optional[str] = Field(None, description="Persisted resume scan identifier")
-    target_role: Optional[str] = Field(None, description="Target job title / role")
+    scan_id: Optional[str] = Field(None, max_length=64, description="Persisted resume scan identifier")
+    target_role: Optional[str] = Field(None, max_length=120, description="Target job title / role")
 
 
 class LearningPlanBuildRequest(BaseModel):
     model_config = ConfigDict(extra="ignore")
-    scan_id: Optional[str] = Field(None, description="Persisted resume scan identifier")
-    target_role: Optional[str] = Field("Software Engineer", description="Target job title / role")
-    selected_skills: List[str] = Field(default_factory=list, description="Candidate-selected skills to include in learning roadmap")
-    candidate_verified_skills: List[str] = Field(default_factory=list, description="Skills self-attested by candidate")
+    scan_id: Optional[str] = Field(None, max_length=64, description="Persisted resume scan identifier")
+    target_role: Optional[str] = Field("Software Engineer", max_length=120, description="Target job title / role")
+    selected_skills: List[SkillNameStr] = Field(default_factory=list, max_length=50, description="Candidate-selected skills to include in learning roadmap")
+    candidate_verified_skills: List[SkillNameStr] = Field(default_factory=list, max_length=50, description="Skills self-attested by candidate")
     hours_per_week: Optional[int] = Field(10, ge=1, le=60, description="Candidate dedicated study hours per week")
 
 
 class LearningPlanReassessRequest(BaseModel):
     model_config = ConfigDict(extra="ignore")
-    scan_id: Optional[str] = Field(None, description="Persisted resume scan identifier")
-    target_role: Optional[str] = Field("Software Engineer", description="Target job title / role")
-    completed_skills: List[str] = Field(default_factory=list, description="Skills candidate completed via learning plan")
-    candidate_verified_skills: List[str] = Field(default_factory=list, description="Skills candidate self-attested")
+    scan_id: Optional[str] = Field(None, max_length=64, description="Persisted resume scan identifier")
+    target_role: Optional[str] = Field("Software Engineer", max_length=120, description="Target job title / role")
+    completed_skills: List[SkillNameStr] = Field(default_factory=list, max_length=50, description="Skills candidate completed via learning plan")
+    candidate_verified_skills: List[SkillNameStr] = Field(default_factory=list, max_length=50, description="Skills candidate self-attested")

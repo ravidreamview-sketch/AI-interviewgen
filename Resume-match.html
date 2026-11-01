@@ -903,6 +903,15 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
           </div>
         </div>
 
+        <!-- FIX 3 (SCR-03): Separate Provisional / Projected Fit Display -->
+        <div class="score-circle" id="recalculatedFitCircle" style="display:none;border-color:rgba(16,185,129,0.4);background:rgba(16,185,129,0.06);text-align:center">
+          <div style="font-family:var(--f-mono);font-size:11px;font-weight:700;color:#059669;text-transform:uppercase">Provisional Fit</div>
+          <div class="score-num" id="recalculatedFitScore" style="color:#10B981">—</div>
+          <div style="margin-top:4px;font-size:10px;color:var(--ink-soft);line-height:1.2;max-width:130px">
+            Self-Attested &amp; Learning Plan
+          </div>
+        </div>
+
         <div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap">
             <span style="font-size:20px;font-weight:800;color:var(--ink)" id="resTargetRole">Target Role</span>
@@ -1273,6 +1282,7 @@ async function initCandidateAuth() {
     if (res.ok) {
       const data = await res.json();
       if (data && data.user) {
+        currentCandidateId = String(data.user.id || data.user.user_id || '');
         document.getElementById('userDisplayName').textContent = data.user.full_name || data.user.name || data.user.email.split('@')[0];
         document.getElementById('userPlanDisplay').textContent = (data.user.plan_tier || 'pro').toUpperCase() + ' TIER';
       }
@@ -1285,6 +1295,29 @@ async function initCandidateAuth() {
 }
 initCandidateAuth();
 
+// FIX 4 (PRST-01): Candidate-scoped storage key resolver
+let currentCandidateId = null;
+function getActiveCandidateId() {
+  if (currentCandidateId) return String(currentCandidateId);
+  try {
+    const raw = localStorage.getItem('candidate_user');
+    if (raw) {
+      const u = JSON.parse(raw);
+      if (u && (u.id || u.user_id)) {
+        currentCandidateId = String(u.id || u.user_id);
+        return currentCandidateId;
+      }
+    }
+  } catch (e) {}
+  return 'default';
+}
+
+function getLearningPlanStorageKey(prefix, scanId) {
+  const cId = getActiveCandidateId();
+  const sId = scanId || 'latest';
+  return `learning_plan_${prefix}_${cId}_${sId}`;
+}
+
 // Sign Out
 async function handleLogout(e) {
   if (e) e.stopPropagation();
@@ -1296,6 +1329,19 @@ async function handleLogout(e) {
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
       });
     } catch (err) {}
+    // FIX 4 (PRST-01): Purge only learning plan specific keys to prevent data exposure between candidates on shared workstations
+    try {
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('learning_plan_')) {
+          keysToRemove.push(k);
+        }
+      }
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+    } catch (e) {}
+    localStorage.removeItem('candidate_token');
+    localStorage.removeItem('candidate_user');
     window.location.replace('/candidate/login');
   }
 }
@@ -1618,6 +1664,10 @@ async function executeResumeJdMatch(thisRequestId) {
 function renderMatchResults(data) {
   if (!data) return;
 
+  // Reset separate provisional fit display
+  const provCircleReset = document.getElementById('recalculatedFitCircle');
+  if (provCircleReset) provCircleReset.style.display = 'none';
+
   // 1. Overall Match Score
   const scoreNumEl = document.getElementById('resOverallScore');
   if (typeof data.overall_match_score === 'number') {
@@ -1930,7 +1980,7 @@ function renderCareerImprovementPlan(planData) {
   section.style.display = 'block';
 
   // Restore candidate verified skills from localStorage
-  const storageKeyVer = `learning_plan_verified_${currentScanId || 'latest'}`;
+  const storageKeyVer = getLearningPlanStorageKey('verified', currentScanId);
   try {
     const savedVer = JSON.parse(localStorage.getItem(storageKeyVer) || '[]');
     savedVer.forEach(s => candidateVerifiedSkills.add(s));
@@ -2022,7 +2072,7 @@ function renderCareerImprovementPlan(planData) {
   updateSelectedCount();
 
   // If roadmap was already saved in localStorage for this scan, restore it
-  const storageKeyRoadmap = `learning_plan_roadmap_${currentScanId || 'latest'}`;
+  const storageKeyRoadmap = getLearningPlanStorageKey('roadmap', currentScanId);
   try {
     const savedRoadmap = JSON.parse(localStorage.getItem(storageKeyRoadmap));
     if (savedRoadmap) {
@@ -2150,7 +2200,7 @@ function toggleCandidateVerification(skillName) {
   }
 
   // Persist to localStorage
-  const storageKeyVer = `learning_plan_verified_${currentScanId || 'latest'}`;
+  const storageKeyVer = getLearningPlanStorageKey('verified', currentScanId);
   localStorage.setItem(storageKeyVer, JSON.stringify(Array.from(candidateVerifiedSkills)));
 
   // Update verified metric
@@ -2205,7 +2255,7 @@ async function buildLearningPlanCTA() {
     currentRoadmap = roadmapData;
 
     // Persist roadmap to localStorage
-    const storageKeyRoadmap = `learning_plan_roadmap_${currentScanId || 'latest'}`;
+    const storageKeyRoadmap = getLearningPlanStorageKey('roadmap', currentScanId);
     localStorage.setItem(storageKeyRoadmap, JSON.stringify(roadmapData));
 
     renderRoadmapView(roadmapData);
@@ -2226,7 +2276,7 @@ function renderRoadmapView(roadmap) {
   viewer.style.display = 'block';
 
   // Restore checked milestones
-  const storageKeyMilestones = `learning_plan_milestones_${currentScanId || 'latest'}`;
+  const storageKeyMilestones = getLearningPlanStorageKey('milestones', currentScanId);
   try {
     const saved = JSON.parse(localStorage.getItem(storageKeyMilestones) || '[]');
     completedMilestoneIds = new Set(saved);
@@ -2374,7 +2424,7 @@ function toggleMilestoneCheck(milestoneId) {
   }
 
   // Save to localStorage
-  const storageKeyMilestones = `learning_plan_milestones_${currentScanId || 'latest'}`;
+  const storageKeyMilestones = getLearningPlanStorageKey('milestones', currentScanId);
   localStorage.setItem(storageKeyMilestones, JSON.stringify(Array.from(completedMilestoneIds)));
 
   // Recalculate progress bar
@@ -2419,11 +2469,12 @@ async function requestSkillReassessmentCTA() {
 
     const result = await resp.json();
 
-    // 1. Update Match Score Display
-    const scoreNumEl = document.getElementById('resOverallScore');
-    if (scoreNumEl && typeof result.recalculated_match_score === 'number') {
-      scoreNumEl.textContent = `${Math.round(result.recalculated_match_score)}%`;
-      scoreNumEl.style.color = '#10B981';
+    // FIX 3 (SCR-03): Preserve original ATS score (#resOverallScore) and render separate Provisional Fit display
+    const provCircle = document.getElementById('recalculatedFitCircle');
+    const provScore = document.getElementById('recalculatedFitScore');
+    if (provCircle && provScore && typeof result.recalculated_match_score === 'number') {
+      provScore.textContent = `${Math.round(result.recalculated_match_score)}%`;
+      provCircle.style.display = 'block';
     }
 
     // 2. Update Matrix Table with Acquired / Verified Badges

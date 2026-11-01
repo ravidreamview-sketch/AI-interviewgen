@@ -12,9 +12,19 @@ Validates:
 7. API Endpoints & ResumeJDMatchResponse Integration
 """
 
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+import json
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+
 from app.main import app
+from app.database import Base
 from app.db_models import UserAccount, ResumeScan
 from app.database import get_db
 from app.auth_deps import get_current_user
@@ -43,10 +53,50 @@ def mock_candidate():
 
 @pytest.fixture
 def client_with_candidate(mock_candidate):
+    engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    Base.metadata.create_all(bind=engine)
+
+    db = TestingSessionLocal()
+    test_user = UserAccount(
+        id=9999,
+        email="candidate.learning@test.com",
+        password_hash="hashed_pw",
+        role="candidate",
+        plan_tier="pro",
+        is_active=True
+    )
+    db.add(test_user)
+    db.commit()
+
+    test_scan = ResumeScan(
+        scan_id="test_scan_api_123",
+        user_id=9999,
+        target_role="Backend Specialist",
+        overall_match_score=60.0,
+        skill_matrix=json.dumps([
+            {"skill": "Python", "importance": "HIGH", "match_score": 90.0, "gap_status": "matched"},
+            {"skill": "FastAPI", "importance": "HIGH", "match_score": 40.0, "gap_status": "gap"},
+            {"skill": "PostgreSQL", "importance": "HIGH", "match_score": 30.0, "gap_status": "gap"}
+        ])
+    )
+    db.add(test_scan)
+    db.commit()
+    db.close()
+
+    def override_db():
+        try:
+            db_session = TestingSessionLocal()
+            yield db_session
+        finally:
+            db_session.close()
+
     app.dependency_overrides[get_current_user] = lambda: mock_candidate
+    app.dependency_overrides[get_db] = override_db
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.pop(get_current_user, None)
+    app.dependency_overrides.pop(get_db, None)
 
 
 def test_knowledge_base_integrity():
@@ -240,10 +290,10 @@ def test_skill_reassessment_calculation():
 
 def test_learning_plan_api_routes(client_with_candidate):
     """Verify HTTP endpoints /api/candidate/learning-plan/generate, /build, and /reassess."""
-    # 1. Generate endpoint
+    # 1. Generate endpoint with valid scan_id
     gen_resp = client_with_candidate.post(
         "/api/candidate/learning-plan/generate",
-        json={"target_role": "Backend Specialist"}
+        json={"scan_id": "test_scan_api_123", "target_role": "Backend Specialist"}
     )
     assert gen_resp.status_code == 200
     gen_data = gen_resp.json()
@@ -254,8 +304,9 @@ def test_learning_plan_api_routes(client_with_candidate):
     build_resp = client_with_candidate.post(
         "/api/candidate/learning-plan/build",
         json={
+            "scan_id": "test_scan_api_123",
             "target_role": "Backend Specialist",
-            "selected_skills": ["Python", "FastAPI"],
+            "selected_skills": ["FastAPI", "PostgreSQL"],
             "candidate_verified_skills": []
         }
     )
@@ -263,21 +314,61 @@ def test_learning_plan_api_routes(client_with_candidate):
     build_data = build_resp.json()
     assert build_data["success"] is True
     assert "phases" in build_data
-    assert build_data["projected_match_score"] > 65.0
+    assert build_data["projected_match_score"] > 60.0
 
-    # 3. Reassess endpoint
+    # 3. Reassess endpoint with genuine skill gaps (FastAPI is a gap -> score increases)
     reassess_resp = client_with_candidate.post(
         "/api/candidate/learning-plan/reassess",
         json={
+            "scan_id": "test_scan_api_123",
             "target_role": "Backend Specialist",
-            "completed_skills": ["Python"],
-            "candidate_verified_skills": ["FastAPI"]
+            "completed_skills": ["FastAPI"],
+            "candidate_verified_skills": []
         }
     )
     assert reassess_resp.status_code == 200
     reassess_data = reassess_resp.json()
     assert reassess_data["success"] is True
-    assert reassess_data["recalculated_match_score"] > 65.0
+    assert reassess_data["recalculated_match_score"] == 67.5
+    assert reassess_data["score_improvement"] == 7.5
+
+    # 4. FIX 1 (SCR-01): Reassess with arbitrary skills produces zero score boost
+    arb_resp = client_with_candidate.post(
+        "/api/candidate/learning-plan/reassess",
+        json={
+            "scan_id": "test_scan_api_123",
+            "target_role": "Backend Specialist",
+            "completed_skills": ["Origami", "Skydiving"],
+            "candidate_verified_skills": ["Juggling"]
+        }
+    )
+    assert arb_resp.status_code == 200
+    arb_data = arb_resp.json()
+    assert arb_data["score_improvement"] == 0.0
+    assert arb_data["recalculated_match_score"] == 60.0
+
+    # 5. FIX 2 (SCR-02): Reassess with already-matched skill produces zero score boost
+    matched_resp = client_with_candidate.post(
+        "/api/candidate/learning-plan/reassess",
+        json={
+            "scan_id": "test_scan_api_123",
+            "target_role": "Backend Specialist",
+            "completed_skills": ["Python"],
+            "candidate_verified_skills": []
+        }
+    )
+    assert matched_resp.status_code == 200
+    matched_data = matched_resp.json()
+    assert matched_data["score_improvement"] == 0.0
+    assert matched_data["recalculated_match_score"] == 60.0
+
+    # 6. FIX 5 (SEC-01): Non-existent or unauthorized scan_id returns HTTP 404
+    err_gen = client_with_candidate.post("/api/candidate/learning-plan/generate", json={"scan_id": "non_existent_scan"})
+    assert err_gen.status_code == 404
+    err_build = client_with_candidate.post("/api/candidate/learning-plan/build", json={"scan_id": "non_existent_scan"})
+    assert err_build.status_code == 404
+    err_reassess = client_with_candidate.post("/api/candidate/learning-plan/reassess", json={"scan_id": "non_existent_scan"})
+    assert err_reassess.status_code == 404
 
 
 
@@ -430,3 +521,214 @@ def test_supervisor_menu_management_integration():
 
     finally:
         app.dependency_overrides.pop(get_db, None)
+
+
+def test_candidate_idor_scan_isolation():
+    """
+    FIX 7 (TST-01) & FIX 5 (SEC-01): Cross-Tenant IDOR Protection
+    Validates that Candidate A cannot generate, build, or reassess against Candidate B's scan.
+    Returns HTTP 404 with access denied, and Candidate B's data is never exposed.
+    """
+    engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    Base.metadata.create_all(bind=engine)
+
+    class CandidateA:
+        id = 1001
+        email = "cand_a@test.com"
+        role = "candidate"
+        plan_tier = "pro"
+        is_active = True
+
+    class CandidateB:
+        id = 1002
+        email = "cand_b@test.com"
+        role = "candidate"
+        plan_tier = "pro"
+        is_active = True
+
+    db = TestingSessionLocal()
+    scan_a = ResumeScan(
+        scan_id="scan_a_1001",
+        user_id=1001,
+        target_role="Fullstack Engineer",
+        overall_match_score=70.0,
+        skill_matrix=json.dumps([{"skill": "React", "gap_status": "gap", "importance": "HIGH"}])
+    )
+    scan_b = ResumeScan(
+        scan_id="scan_b_1002",
+        user_id=1002,
+        target_role="Security Architect",
+        overall_match_score=85.0,
+        skill_matrix=json.dumps([{"skill": "Cryptography", "gap_status": "gap", "importance": "HIGH"}])
+    )
+    db.add(scan_a)
+    db.add(scan_b)
+    db.commit()
+    db.close()
+
+    def override_db():
+        try:
+            db_s = TestingSessionLocal()
+            yield db_s
+        finally:
+            db_s.close()
+
+    # Simulate Candidate A logged in
+    mock_cand_a = CandidateA()
+    app.dependency_overrides[get_current_user] = lambda: mock_cand_a
+    app.dependency_overrides[get_db] = override_db
+
+    try:
+        with TestClient(app) as client:
+            # 1. Candidate A accessing Candidate A's own scan -> Success 200
+            res_own_gen = client.post("/api/candidate/learning-plan/generate", json={"scan_id": "scan_a_1001"})
+            assert res_own_gen.status_code == 200
+            assert res_own_gen.json()["target_role"] == "Fullstack Engineer"
+
+            res_own_build = client.post("/api/candidate/learning-plan/build", json={"scan_id": "scan_a_1001", "selected_skills": ["React"]})
+            assert res_own_build.status_code == 200
+
+            res_own_reassess = client.post("/api/candidate/learning-plan/reassess", json={"scan_id": "scan_a_1001", "completed_skills": ["React"]})
+            assert res_own_reassess.status_code == 200
+
+            # 2. Candidate A attempting IDOR access to Candidate B's scan -> HTTP 404
+            idor_gen = client.post("/api/candidate/learning-plan/generate", json={"scan_id": "scan_b_1002"})
+            assert idor_gen.status_code == 404
+            assert "Scan result not found or access denied" in idor_gen.json()["detail"]
+
+            idor_build = client.post("/api/candidate/learning-plan/build", json={"scan_id": "scan_b_1002", "selected_skills": ["Cryptography"]})
+            assert idor_build.status_code == 404
+            assert "Scan result not found or access denied" in idor_build.json()["detail"]
+
+            idor_reassess = client.post("/api/candidate/learning-plan/reassess", json={"scan_id": "scan_b_1002", "completed_skills": ["Cryptography"]})
+            assert idor_reassess.status_code == 404
+            assert "Scan result not found or access denied" in idor_reassess.json()["detail"]
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+        app.dependency_overrides.pop(get_db, None)
+
+
+def test_api_input_constraints_422(client_with_candidate):
+    """
+    FIX 6 (INP-01): API Input Validation & Bound Constraints
+    Verifies that oversized strings, oversized arrays, and invalid payloads return HTTP 422.
+    """
+    # 1. scan_id > 64 chars
+    res1 = client_with_candidate.post("/api/candidate/learning-plan/generate", json={"scan_id": "s" * 65})
+    assert res1.status_code == 422
+
+    # 2. target_role > 120 chars
+    res2 = client_with_candidate.post("/api/candidate/learning-plan/build", json={"target_role": "r" * 121, "selected_skills": []})
+    assert res2.status_code == 422
+
+    # 3. selected_skills > 50 items
+    res3 = client_with_candidate.post("/api/candidate/learning-plan/build", json={"selected_skills": ["Python"] * 51})
+    assert res3.status_code == 422
+
+    # 4. Individual skill string > 100 chars
+    res4 = client_with_candidate.post("/api/candidate/learning-plan/build", json={"selected_skills": ["k" * 101]})
+    assert res4.status_code == 422
+
+    # 5. completed_skills > 50 items in reassess
+    res5 = client_with_candidate.post("/api/candidate/learning-plan/reassess", json={"completed_skills": ["Python"] * 51})
+    assert res5.status_code == 422
+
+
+def test_reassessment_scoring_integrity_unit():
+    """
+    Unit validation of FIX 1 (SCR-01), FIX 2 (SCR-02), duplicate handling, and score caps.
+    """
+    matrix = [
+        {"skill": "Python", "importance": "HIGH", "match_score": 95.0, "gap_status": "matched"},
+        {"skill": "FastAPI", "importance": "HIGH", "match_score": 45.0, "gap_status": "partial"},
+        {"skill": "PostgreSQL", "importance": "HIGH", "match_score": 10.0, "gap_status": "gap"}
+    ]
+
+    # A. Arbitrary skills produce zero boost
+    r_arb = reassess_candidate_progress(
+        target_role="Backend Engineer",
+        original_match_score=65.0,
+        skill_matrix=matrix,
+        completed_skills=["NonExistentSkill1", "NonExistentSkill2"],
+        candidate_verified_skills=["FakeSkill"]
+    )
+    assert r_arb["gaps_closed_count"] == 0
+    assert r_arb["skills_verified_count"] == 0
+    assert r_arb["score_improvement"] == 0.0
+    assert r_arb["recalculated_match_score"] == 65.0
+
+    # B. Already-matched skills produce zero additional credit
+    r_matched = reassess_candidate_progress(
+        target_role="Backend Engineer",
+        original_match_score=65.0,
+        skill_matrix=matrix,
+        completed_skills=["Python"],
+        candidate_verified_skills=[]
+    )
+    assert r_matched["gaps_closed_count"] == 0
+    assert r_matched["score_improvement"] == 0.0
+    assert r_matched["recalculated_match_score"] == 65.0
+    py_item = next(i for i in r_matched["updated_skill_matrix"] if i["skill"] == "Python")
+    assert py_item["gap_status"] == "matched"
+    assert py_item["status_label"] == "Matched"
+
+    # C. Duplicate submissions deduplicate and do not multiply credit
+    r_dup = reassess_candidate_progress(
+        target_role="Backend Engineer",
+        original_match_score=65.0,
+        skill_matrix=matrix,
+        completed_skills=["PostgreSQL", "PostgreSQL", "postgresql"],
+        candidate_verified_skills=[]
+    )
+    assert r_dup["gaps_closed_count"] == 1
+    assert r_dup["score_improvement"] == 7.5
+    assert r_dup["recalculated_match_score"] == 72.5
+
+    # D. Deterministic: repeated requests produce identical results
+    r_dup2 = reassess_candidate_progress(
+        target_role="Backend Engineer",
+        original_match_score=65.0,
+        skill_matrix=matrix,
+        completed_skills=["PostgreSQL", "PostgreSQL"],
+        candidate_verified_skills=[]
+    )
+    # Compare deterministic business fields (excluding execution timestamp)
+    fields_to_check = ["success", "target_role", "original_match_score", "recalculated_match_score",
+                       "score_improvement", "gaps_closed_count", "skills_verified_count",
+                       "readiness_level", "readiness_badge", "updated_skill_matrix"]
+    for f in fields_to_check:
+        assert r_dup[f] == r_dup2[f], f"Mismatch in deterministic field {f}"
+
+    # E. Score cap enforced at 98.5
+    r_cap = reassess_candidate_progress(
+        target_role="Backend Engineer",
+        original_match_score=95.0,
+        skill_matrix=matrix,
+        completed_skills=["FastAPI", "PostgreSQL"],
+        candidate_verified_skills=[]
+    )
+    assert r_cap["recalculated_match_score"] == 98.5
+    assert r_cap["score_improvement"] == 3.5
+
+
+def test_resume_match_html_provisional_score_and_storage_scoping():
+    """
+    Verifies FIX 3 (SCR-03) and FIX 4 (PRST-01) frontend implementation in Resume-match.html:
+    1. Original ATS score element (#resOverallScore) is preserved and not overwritten.
+    2. Separate Provisional Fit display (#recalculatedFitCircle and #recalculatedFitScore) exists.
+    3. Storage keys are candidate-scoped (getLearningPlanStorageKey).
+    4. Logout cleans only learning_plan_* keys.
+    """
+    with open("Resume-match.html", "r", encoding="utf-8") as f:
+        html = f.read()
+
+    # FIX 3: Separate provisional score display
+    assert 'id="recalculatedFitCircle"' in html
+    assert 'id="recalculatedFitScore"' in html
+    assert 'Provisional Fit' in html
+
+    # FIX 4: Candidate-scoped localStorage keys
+    assert 'getLearningPlanStorageKey' in html
+    assert 'learning_plan_${prefix}_${cId}_${sId}' in html
+    assert 'k.startsWith(\'learning_plan_\')' in html

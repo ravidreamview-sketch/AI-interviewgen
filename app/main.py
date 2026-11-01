@@ -1713,14 +1713,20 @@ def api_build_candidate_learning_roadmap(
             status_code=403,
             detail="Personalized Learning Plan is currently disabled by administrator."
         )
-    score = 65.0
-    role = payload.target_role or "Software Engineer"
+    scan = None
     if payload.scan_id:
         scan = db.query(ResumeScan).filter(ResumeScan.scan_id == payload.scan_id, ResumeScan.user_id == current_user.id).first()
-        if scan:
-            score = float(scan.overall_match_score if scan.overall_match_score is not None else (scan.match_score or 65.0))
-            if scan.target_role:
-                role = scan.target_role
+        if not scan:
+            raise HTTPException(status_code=404, detail="Scan result not found or access denied.")
+    else:
+        scan = db.query(ResumeScan).filter(ResumeScan.user_id == current_user.id).order_by(ResumeScan.id.desc()).first()
+
+    if scan:
+        score = float(scan.overall_match_score if scan.overall_match_score is not None else (scan.match_score or 65.0))
+        role = scan.target_role or payload.target_role or "Software Engineer"
+    else:
+        score = 65.0
+        role = payload.target_role or "Software Engineer"
 
     roadmap = build_personalized_learning_roadmap(
         selected_skill_names=payload.selected_skills,
@@ -1747,20 +1753,26 @@ def api_reassess_candidate_learning_progress(
             status_code=403,
             detail="Personalized Learning Plan is currently disabled by administrator."
         )
-    score = 65.0
-    role = payload.target_role or "Software Engineer"
-    matrix = []
+    scan = None
     if payload.scan_id:
         scan = db.query(ResumeScan).filter(ResumeScan.scan_id == payload.scan_id, ResumeScan.user_id == current_user.id).first()
-        if scan:
-            score = float(scan.overall_match_score if scan.overall_match_score is not None else (scan.match_score or 65.0))
-            if scan.target_role:
-                role = scan.target_role
-            if scan.skill_matrix:
-                try:
-                    matrix = json.loads(scan.skill_matrix)
-                except Exception:
-                    matrix = []
+        if not scan:
+            raise HTTPException(status_code=404, detail="Scan result not found or access denied.")
+    else:
+        scan = db.query(ResumeScan).filter(ResumeScan.user_id == current_user.id).order_by(ResumeScan.id.desc()).first()
+
+    matrix = []
+    if scan:
+        score = float(scan.overall_match_score if scan.overall_match_score is not None else (scan.match_score or 65.0))
+        role = scan.target_role or payload.target_role or "Software Engineer"
+        if scan.skill_matrix:
+            try:
+                matrix = json.loads(scan.skill_matrix)
+            except Exception:
+                matrix = []
+    else:
+        score = 65.0
+        role = payload.target_role or "Software Engineer"
 
     reassessment = reassess_candidate_progress(
         target_role=role,

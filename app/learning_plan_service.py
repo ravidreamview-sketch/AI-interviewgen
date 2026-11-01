@@ -662,18 +662,25 @@ def reassess_candidate_progress(
     for item in skill_matrix:
         s_name = item.get("skill", "")
         s_lower = s_name.strip().lower()
-        curr_status = item.get("gap_status", "gap")
+        curr_status = str(item.get("gap_status", "gap")).strip().lower()
         new_status = curr_status
         status_label = "Missing Evidence" if curr_status == "gap" else ("Partially Evidenced" if curr_status == "partial" else "Matched")
 
-        if s_lower in comp_set:
-            new_status = "acquired"
-            status_label = "Acquired (Learning Plan)"
-            gaps_closed += 1
-        elif s_lower in ver_set:
-            new_status = "verified"
-            status_label = "Verified (Self-Attested)"
-            skills_verified += 1
+        # FIX 2 (SCR-02): Only award gap-closure or verification credit if the skill was genuinely a gap or partial match.
+        # Already-matched skills do not receive additional score boost.
+        if curr_status in ["gap", "partial"]:
+            if s_lower in comp_set:
+                new_status = "acquired"
+                status_label = "Acquired (Learning Plan)"
+                gaps_closed += 1
+            elif s_lower in ver_set:
+                new_status = "verified"
+                status_label = "Verified (Self-Attested)"
+                skills_verified += 1
+        elif curr_status == "matched":
+            # Preserve original matched status and evidence classification
+            new_status = "matched"
+            status_label = "Matched"
 
         updated_matrix.append({
             "skill": s_name,
@@ -685,10 +692,9 @@ def reassess_candidate_progress(
             "confidence": item.get("confidence", "HIGH")
         })
 
-    # Calculate recalculated score boost
-    effective_gaps = max(gaps_closed, len(comp_set))
-    effective_verified = max(skills_verified, len(ver_set))
-    total_boost = (effective_gaps * 7.5) + (effective_verified * 4.5)
+    # FIX 1 (SCR-01): Score boost is strictly computed from verified JD skill gaps closed.
+    # Arbitrary / non-JD candidate submitted skills are ignored and cannot inflate the score.
+    total_boost = (gaps_closed * 7.5) + (skills_verified * 4.5)
     recalculated_score = min(98.5, round(original_match_score + total_boost, 1))
     score_delta = round(recalculated_score - original_match_score, 1)
 
