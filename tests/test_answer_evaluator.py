@@ -10,6 +10,7 @@ Tests:
 """
 
 import unittest
+from unittest.mock import patch
 import json
 from datetime import datetime
 from fastapi.testclient import TestClient
@@ -86,8 +87,41 @@ class TestAnswerEvaluator(unittest.TestCase):
         self.assertIn("Backend & Distributed Systems", data["presets"])
         self.assertTrue(len(data["presets"]["Backend & Distributed Systems"]) >= 2)
 
-    def test_evaluate_strong_answer(self):
+    @patch("app.evaluator_service.generate_ai_questions")
+    def test_evaluate_strong_answer(self, mock_ai_gen):
         """Verify POST /api/evaluator/evaluate on a high-fidelity STAR answer."""
+        mock_ai_gen.return_value = json.dumps({
+            "overall_score": 88,
+            "hiring_verdict": "Strong Hire",
+            "verdict_summary": "Exceptional STAR answer demonstrating deep technical expertise in distributed systems and idempotency.",
+            "star_breakdown": {
+                "situation_score": 22,
+                "situation_feedback": "Clearly established high-scale 35,000 RPS context.",
+                "task_score": 21,
+                "task_feedback": "Well-defined sub-50ms SLA and zero-duplicate requirement.",
+                "action_score": 23,
+                "action_feedback": "Clear architectural execution using Redis Redlock and idempotency protocol.",
+                "result_score": 22,
+                "result_feedback": "Quantifiable outcomes: 100% elimination of chargebacks."
+            },
+            "dimensions": {
+                "technical_accuracy": 90,
+                "communication_clarity": 88,
+                "trade_off_analysis": 85,
+                "business_impact": 88
+            },
+            "strengths": [
+                "Used exact architectural primitives: Redis Redlock, Idempotency-Key headers, atomic upserts.",
+                "Provided clear quantitative business outcomes and SLAs."
+            ],
+            "weaknesses": [],
+            "model_answer": "In my previous role at a fintech platform handling 35,000 RPS, we faced duplicate payment risks during client network timeouts. To resolve this, I designed an end-to-end idempotency pipeline using Redis distributed locks and a 120-second TTL. If a duplicate key arrived in-flight, our gateway returned HTTP 409 Conflict. Once validated, records were atomically committed to PostgreSQL. As a result, duplicate chargebacks dropped by 100%, incident tickets fell by 45%, and we saved $150K in customer refunds.",
+            "actionable_improvements": [
+                "Mention fallback strategies if the Redis cache tier experiences split-brain network partitions."
+            ],
+            "word_count": 120
+        })
+
         payload = {
             "question": "How do you design an idempotent payment processing API to prevent double-charging during network timeouts?",
             "answer": (
