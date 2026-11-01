@@ -1884,6 +1884,21 @@ DEFAULT_NAVIGATION_MENUS = [
         "allowed_roles": "candidate,admin,super_admin"
     },
     {
+        "id": "menu-learning-plan",
+        "name": "Personalized Learning Plan",
+        "label": "Personalized Learning Plan",
+        "type": "Intelligence",
+        "section": "WORKSPACE",
+        "icon": "🎯",
+        "route": "learning-plan",
+        "badge": "AI",
+        "parent": "None (Root)",
+        "order": 9,
+        "status": "active",
+        "visibility": "Public Candidate",
+        "allowed_roles": "candidate,admin,super_admin"
+    },
+    {
         "id": "menu-10",
         "name": "Model & Settings",
         "label": "Model & Settings",
@@ -1940,6 +1955,21 @@ def _get_stored_menus(db: Session) -> List[dict]:
             ))
             config_entry.config_value = json.dumps(stored_menus)
             db.commit()
+
+        if not any(
+            (menu.get("name") or "").strip().lower() == "personalized learning plan"
+            or (menu.get("route") or "").strip().lower().rstrip("/") == "learning-plan"
+            or menu.get("id") == "menu-learning-plan"
+            for menu in stored_menus
+        ):
+            learning_plan_default = next(
+                (menu for menu in DEFAULT_NAVIGATION_MENUS if menu["id"] == "menu-learning-plan"),
+                None
+            )
+            if learning_plan_default:
+                stored_menus.append(learning_plan_default)
+                config_entry.config_value = json.dumps(stored_menus)
+                db.commit()
         return stored_menus
     except Exception as e:
         print(f"[Menu Warning] _get_stored_menus fallback: {e}")
