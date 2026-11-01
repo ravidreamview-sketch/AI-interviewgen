@@ -4,7 +4,13 @@ import secrets
 import hashlib
 import re
 from app.email_service import send_invitation_email, get_base_app_url, get_invitation_display_email, get_invitation_admin_email
-from fastapi import APIRouter, Depends, HTTPException, status, Response, Request, Query
+import csv
+import io
+try:
+    import openpyxl
+except ImportError:
+    openpyxl = None
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Request, Query, UploadFile, File, Form
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, func
@@ -1113,6 +1119,338 @@ def create_invitation(
         response_data["invite_url"] = invite_url
 
     return response_data
+
+
+
+def parse_candidate_upload_file(file_bytes: bytes, filename: str) -> List[dict]:
+    """
+    Parses candidate records from uploaded Excel (.xlsx, .xls) or CSV files.
+    Returns list of dicts with keys: email, name, role, plan.
+    """
+    filename_lower = (filename or "").lower()
+    raw_rows: List[List[str]] = []
+
+    if filename_lower.endswith((".xlsx", ".xls")):
+        if openpyxl is None:
+            raise ValueError("Excel file parser is not available. Please upload a CSV file or install openpyxl.")
+        try:
+            wb = openpyxl.load_workbook(io.BytesIO(file_bytes), data_only=True)
+            ws = wb.active
+            for row in ws.iter_rows(values_only=True):
+                if any(cell is not None and str(cell).strip() for cell in row):
+                    raw_rows.append([str(cell).strip() if cell is not None else "" for cell in row])
+        except Exception as e:
+            raise ValueError(f"Failed to parse Excel file: {str(e)}")
+    elif filename_lower.endswith(".csv") or not filename_lower:
+        try:
+            text = file_bytes.decode("utf-8-sig")
+        except UnicodeDecodeError:
+            try:
+                text = file_bytes.decode("latin-1")
+            except Exception as e:
+                raise ValueError(f"Failed to decode CSV file: {str(e)}")
+
+        delimiter = ","
+        sample = text[:2048]
+        try:
+            dialect = csv.Sniffer().sniff(sample, delimiters=",	;|")
+            delimiter = dialect.delimiter
+        except Exception:
+            pass
+
+        reader = csv.reader(io.StringIO(text), delimiter=delimiter)
+        for r in reader:
+            if any(cell.strip() for cell in r):
+                raw_rows.append([cell.strip() for cell in r])
+    else:
+        raise ValueError("Unsupported file format. Please upload a CSV (.csv) or Excel (.xlsx, .xls) file.")
+
+    if not raw_rows:
+        return []
+
+    email_regex = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
+    header_indices = {"email": -1, "name": -1, "role": -1, "plan": -1}
+    first_row = [str(c).strip().lower() for c in raw_rows[0]]
+
+    has_header = False
+    for i, col_name in enumerate(first_row):
+        if any(k in col_name for k in ["email", "mail", "e-mail"]):
+            header_indices["email"] = i
+            has_header = True
+        elif any(k in col_name for k in ["name", "candidate", "full_name"]):
+            header_indices["name"] = i
+            has_header = True
+        elif any(k in col_name for k in ["role"]):
+            header_indices["role"] = i
+        elif any(k in col_name for k in ["plan", "tier"]):
+            header_indices["plan"] = i
+
+    start_row = 1 if has_header else 0
+    candidates = []
+
+    for r in raw_rows[start_row:]:
+        if not r or not any(str(c).strip() for c in r):
+            continue
+
+        email = ""
+        name = ""
+        role_val = ""
+        plan_val = ""
+
+        if has_header and header_indices["email"] != -1 and header_indices["email"] < len(r):
+            email = str(r[header_indices["email"]]).strip()
+            if header_indices["name"] != -1 and header_indices["name"] < len(r):
+                name = str(r[header_indices["name"]]).strip()
+            if header_indices["role"] != -1 and header_indices["role"] < len(r):
+                role_val = str(r[header_indices["role"]]).strip()
+            if header_indices["plan"] != -1 and header_indices["plan"] < len(r):
+                plan_val = str(r[header_indices["plan"]]).strip()
+        else:
+            # Auto-detect: find column with '@'
+            for cell in r:
+                c_str = str(cell).strip()
+                if "@" in c_str and email_regex.match(c_str):
+                    email = c_str
+                elif not name and c_str:
+                    name = c_str
+
+        if email:
+            candidates.append({
+                "email": email.strip().lower(),
+                "name": name.strip(),
+                "role": role_val.strip().lower(),
+                "plan": plan_val.strip().lower()
+            })
+
+    return candidates
+
+
+@admin_router.post("/invitations/bulk", status_code=status.HTTP_200_OK)
+async def bulk_invite_candidates(
+    request: Request,
+    file: UploadFile = File(...),
+    role: Optional[str] = Form("candidate"),
+    plan_tier: Optional[str] = Form("free"),
+    current_admin: UserAccount = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Bulk invites multiple candidates from an uploaded Excel (.xlsx, .xls) or CSV file.
+    Validates each candidate record, prevents duplicates, dispatches secure single-use
+    invitation tokens valid for 24 hours, records audit logs, and returns summary metrics.
+    """
+    filename = file.filename or "upload"
+    filename_lower = filename.lower()
+    if not (filename_lower.endswith((".csv", ".xlsx", ".xls"))):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Unsupported file format. Please upload an Excel (.xlsx, .xls) or CSV (.csv) file."
+        )
+
+    file_bytes = await file.read()
+    if not file_bytes or len(file_bytes) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="The uploaded file is empty."
+        )
+
+    if len(file_bytes) > 5 * 1024 * 1024:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File size exceeds the 5 MB limit."
+        )
+
+    try:
+        candidates = parse_candidate_upload_file(file_bytes, filename)
+    except ValueError as val_err:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(val_err)
+        )
+
+    if not candidates:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No candidate records found in file. Please ensure the file contains valid candidate email addresses."
+        )
+
+    ALLOWED_ROLES = {"candidate", "admin", "super_admin"}
+    ALLOWED_PLANS = {"free", "pro", "enterprise"}
+
+    default_role = (role or "candidate").strip().lower()
+    if default_role not in ALLOWED_ROLES:
+        default_role = "candidate"
+
+    default_plan = (plan_tier or "free").strip().lower()
+    if default_plan not in ALLOWED_PLANS:
+        default_plan = "free"
+
+    # Only Super Admin can invite staff admin or super admin
+    if current_admin.role != "super_admin" and default_role in ["super_admin", "admin"]:
+        default_role = "candidate"
+
+    email_regex = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
+    now_utc = datetime.now(timezone.utc)
+
+    try:
+        base_url = get_base_app_url(request)
+    except ValueError as e:
+        raise HTTPException(status_code=500, detail=f"Configuration error: {str(e)}")
+
+    inviter_email = get_invitation_display_email()
+
+    processed = []
+    skipped = []
+    seen_in_batch = set()
+
+    for item in candidates:
+        raw_email = item.get("email", "").strip()
+        email_clean = raw_email.lower()
+
+        # 1. Format validation
+        if not email_clean or not email_regex.match(email_clean) or len(email_clean) > 255:
+            skipped.append({
+                "email": raw_email or "unknown",
+                "name": item.get("name", ""),
+                "reason": "Invalid email address format"
+            })
+            continue
+
+        # 2. Batch deduplication
+        if email_clean in seen_in_batch:
+            skipped.append({
+                "email": email_clean,
+                "name": item.get("name", ""),
+                "reason": "Duplicate entry within uploaded file"
+            })
+            continue
+        seen_in_batch.add(email_clean)
+
+        # 3. Check if user is already registered
+        existing_user = db.query(UserAccount).filter(func.lower(UserAccount.email) == email_clean).first()
+        if existing_user:
+            skipped.append({
+                "email": email_clean,
+                "name": item.get("name", ""),
+                "reason": f"Already registered as {existing_user.role}"
+            })
+            continue
+
+        # 4. Check if active pending invitation already exists
+        existing_active_invite = db.query(UserInvitation).filter(
+            func.lower(UserInvitation.email) == email_clean,
+            UserInvitation.is_revoked == False,
+            UserInvitation.accepted_at == None,
+            UserInvitation.expires_at > now_utc
+        ).first()
+        if existing_active_invite:
+            skipped.append({
+                "email": email_clean,
+                "name": item.get("name", ""),
+                "reason": "Active unexpired pending invitation already exists"
+            })
+            continue
+
+        # Invalidate any prior revoked or expired pending invites
+        prior_invites = db.query(UserInvitation).filter(
+            func.lower(UserInvitation.email) == email_clean,
+            UserInvitation.is_revoked == False,
+            UserInvitation.accepted_at == None
+        ).all()
+        for prior in prior_invites:
+            prior.is_revoked = True
+
+        # Resolve role and plan tier
+        row_role = item.get("role", "").strip().lower()
+        target_role = row_role if row_role in ALLOWED_ROLES else default_role
+        if current_admin.role != "super_admin" and target_role in ["super_admin", "admin"]:
+            target_role = "candidate"
+
+        row_plan = item.get("plan", "").strip().lower()
+        target_plan = row_plan if row_plan in ALLOWED_PLANS else default_plan
+
+        raw_token = secrets.token_urlsafe(32)
+        token_hash = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
+        expires_at = now_utc + timedelta(hours=24)
+
+        invitation = UserInvitation(
+            email=email_clean,
+            role=target_role,
+            plan_tier=target_plan,
+            token_hash=token_hash,
+            invited_by_user_id=current_admin.id,
+            invited_by_email=current_admin.email,
+            created_at=now_utc,
+            expires_at=expires_at,
+            is_revoked=False
+        )
+        db.add(invitation)
+        db.commit()
+        db.refresh(invitation)
+
+        encoded_token = urllib.parse.quote(raw_token, safe="")
+        invite_url = f"{base_url}/accept-invite?token={encoded_token}"
+
+        email_result = send_invitation_email(
+            to_email=email_clean,
+            invite_url=invite_url,
+            role=target_role,
+            expires_at=expires_at,
+            invited_by=inviter_email
+        )
+
+        record_audit_log(
+            db=db,
+            admin_user=current_admin,
+            action="USER_INVITED",
+            resource=f"invitation:{invitation.id}",
+            new_value=json.dumps({
+                "email": email_clean,
+                "role": target_role,
+                "plan": target_plan,
+                "name": item.get("name", ""),
+                "source": "bulk_upload",
+                "filename": filename
+            }),
+            ip_address=get_client_ip(request)
+        )
+
+        processed.append({
+            "id": invitation.id,
+            "email": email_clean,
+            "name": item.get("name", ""),
+            "role": target_role,
+            "plan_tier": target_plan,
+            "email_sent": bool(email_result.get("success", False))
+        })
+
+    # Summary audit log
+    record_audit_log(
+        db=db,
+        admin_user=current_admin,
+        action="BULK_USERS_INVITED",
+        resource=f"bulk_upload:{filename}",
+        new_value=json.dumps({
+            "filename": filename,
+            "total_records": len(candidates),
+            "processed_count": len(processed),
+            "skipped_count": len(skipped)
+        }),
+        ip_address=get_client_ip(request)
+    )
+
+    return {
+        "success": True,
+        "filename": filename,
+        "total_records": len(candidates),
+        "processed_count": len(processed),
+        "skipped_count": len(skipped),
+        "details": {
+            "processed": processed,
+            "skipped": skipped
+        },
+        "message": f"Bulk upload completed: {len(processed)} invitation(s) created, {len(skipped)} skipped."
+    }
 
 
 @admin_router.get("/invitations")

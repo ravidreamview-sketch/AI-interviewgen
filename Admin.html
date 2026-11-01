@@ -1220,6 +1220,18 @@ table.admin-table tr:hover td{background:var(--rule-soft)}
           Passwords are never generated or transmitted through email. The recipient receives a single-use token valid for 24 hours to set their own credentials.
         </div>
       </div>
+
+      <div class="f-group" style="margin-top:14px">
+        <label class="f-label" for="bulkUploadFile">Bulk Upload (Excel / CSV)</label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="file" id="bulkUploadFile" accept=".csv, .xlsx, .xls" style="font-size:12px;color:var(--ink-soft);background:var(--bg-elevated);border:1px dashed var(--border-subtle);border-radius:6px;padding:8px 10px;width:100%;box-sizing:border-box;cursor:pointer">
+          <button type="button" id="clearBulkFileBtn" onclick="clearBulkFile()" style="display:none;background:rgba(239, 68, 68, 0.1);color:#EF4444;border:1px solid rgba(239, 68, 68, 0.3);border-radius:6px;padding:8px 12px;font-size:12px;cursor:pointer;white-space:nowrap">Clear</button>
+        </div>
+        <div id="bulkUploadHelp" style="font-size:11px;color:var(--ink-muted);margin-top:4px">
+          Upload an Excel (.xlsx) or CSV file with candidate names & email addresses to invite multiple users at once.
+        </div>
+        <div id="bulkUploadNotice" style="display:none;margin-top:6px;font-size:11.5px;color:#38BDF8;background:rgba(56, 189, 248, 0.08);padding:6px 10px;border-radius:6px"></div>
+      </div>
     </div>
     <div class="drawer-foot">
       <button type="button" class="btn-secondary" onclick="closeAddUserDrawer()">Cancel</button>
@@ -2086,6 +2098,7 @@ async function handleSaveUser(e) {
 }
 
 function openAddUserDrawer() {
+  clearBulkFile();
   if (document.getElementById('newEmail')) document.getElementById('newEmail').value = '';
   if (document.getElementById('newPassword')) document.getElementById('newPassword').value = '';
   if (document.getElementById('newPlan')) document.getElementById('newPlan').value = 'free';
@@ -2288,17 +2301,118 @@ function revokeInvitation(id, email) {
   document.getElementById('confirmModal').classList.add('open');
 }
 
+function clearBulkFile() {
+  const bulkFileInput = document.getElementById('bulkUploadFile');
+  if (bulkFileInput) bulkFileInput.value = '';
+  const emailInput = document.getElementById('newEmail');
+  if (emailInput) {
+    emailInput.setAttribute('required', 'true');
+    emailInput.placeholder = 'candidate@example.com';
+  }
+  const clearBtn = document.getElementById('clearBulkFileBtn');
+  if (clearBtn) clearBtn.style.display = 'none';
+  const notice = document.getElementById('bulkUploadNotice');
+  if (notice) {
+    notice.style.display = 'none';
+    notice.textContent = '';
+  }
+  const submitBtn = document.getElementById('createUserBtn');
+  if (submitBtn) submitBtn.textContent = 'Send Invitation';
+}
+
+// Setup bulk upload listener once DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+  const bulkFileInput = document.getElementById('bulkUploadFile');
+  if (bulkFileInput) {
+    bulkFileInput.addEventListener('change', function() {
+      const file = this.files && this.files[0];
+      const emailInput = document.getElementById('newEmail');
+      const clearBtn = document.getElementById('clearBulkFileBtn');
+      const notice = document.getElementById('bulkUploadNotice');
+      const submitBtn = document.getElementById('createUserBtn');
+
+      if (file) {
+        if (emailInput) {
+          emailInput.removeAttribute('required');
+          emailInput.placeholder = 'Optional when bulk file is selected';
+        }
+        if (clearBtn) clearBtn.style.display = 'block';
+        if (notice) {
+          notice.style.display = 'block';
+          notice.textContent = `File ready: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+        }
+        if (submitBtn) submitBtn.textContent = 'Upload & Send Invitations';
+      } else {
+        clearBulkFile();
+      }
+    });
+  }
+});
+
 async function handleSendInvitation(e) {
   e.preventDefault();
+  const bulkFileInput = document.getElementById('bulkUploadFile');
+  const hasBulkFile = bulkFileInput && bulkFileInput.files && bulkFileInput.files.length > 0;
+
+  const btn = document.getElementById('createUserBtn');
+  btn.disabled = true;
+
+  if (hasBulkFile) {
+    btn.textContent = 'Uploading & Processing...';
+    const formData = new FormData();
+    formData.append('file', bulkFileInput.files[0]);
+    formData.append('role', document.getElementById('newRole').value);
+    formData.append('plan_tier', document.getElementById('newPlan').value);
+
+    // Omit Content-Type header so browser sets multipart/form-data boundary
+    const headers = getAuthHeaders();
+    delete headers['Content-Type'];
+
+    try {
+      const res = await fetch('/api/admin/invitations/bulk', {
+        method: 'POST',
+        headers: headers,
+        credentials: 'include',
+        body: formData
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.detail || 'Failed to process bulk upload.', 'error');
+        return;
+      }
+
+      const msg = data.message || `Bulk upload completed: ${data.processed_count} invitation(s) sent.`;
+      showToast(msg, 'success');
+
+      if (data.skipped_count > 0 && data.details && data.details.skipped) {
+        const skippedPreview = data.details.skipped.map(s => `${s.email} (${s.reason})`).slice(0, 3).join(', ');
+        const extra = data.skipped_count > 3 ? ` and ${data.skipped_count - 3} more` : '';
+        setTimeout(() => {
+          showToast(`Skipped ${data.skipped_count} record(s): ${skippedPreview}${extra}`, 'info');
+        }, 1200);
+      }
+
+      closeAddUserDrawer();
+      loadUsersList();
+      loadInvitationsList();
+
+    } catch (err) {
+      showToast('Error connecting to server for bulk upload.', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Upload & Send Invitations';
+    }
+    return;
+  }
+
+  // Single-user invitation
+  btn.textContent = 'Sending...';
   const payload = {
     email: document.getElementById('newEmail').value.trim(),
     role: document.getElementById('newRole').value,
     plan_tier: document.getElementById('newPlan').value
   };
-
-  const btn = document.getElementById('createUserBtn');
-  btn.disabled = true;
-  btn.textContent = 'Sending...';
 
   try {
     const res = await fetch('/api/admin/invitations', {
