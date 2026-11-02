@@ -305,6 +305,317 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
   .main{padding:0 16px 24px}
   .split-grid,.score-banner{grid-template-columns:1fr}
 }
+
+/* ==========================================================================
+   CONTEXTUAL PERSONALIZED LEARNING PLAN STYLES
+   ========================================================================== */
+.career-plan-container {
+  background: var(--paper-2);
+  border: 1.5px solid rgba(79, 70, 229, 0.25);
+  border-radius: 16px;
+  padding: 26px;
+  margin-top: 28px;
+  box-shadow: 0 6px 24px rgba(79, 70, 229, 0.08);
+  position: relative;
+}
+.career-plan-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--rule-soft);
+}
+.career-plan-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  background: rgba(79, 70, 229, 0.12);
+  color: #4F46E5;
+  border: 1px solid rgba(79, 70, 229, 0.3);
+}
+[data-theme="dark"] .career-plan-badge {
+  background: rgba(99, 102, 241, 0.2);
+  color: #A5B4FC;
+  border-color: rgba(99, 102, 241, 0.4);
+}
+.plan-summary-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+.plan-metric-pill {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.plan-metric-label {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.plan-metric-count {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.gap-taxonomy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+  margin: 18px 0;
+}
+.gap-taxonomy-card {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 13px;
+}
+.gap-taxonomy-card h4 {
+  margin: 0 0 6px;
+  font-size: 13.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tier-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 24px 0 12px;
+  padding-bottom: 6px;
+  border-bottom: 1.5px solid var(--rule);
+}
+.tier-title {
+  font-size: 15px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+}
+.tier-badge {
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+.tier-badge.p1 { background: rgba(239, 68, 68, 0.15); color: #DC2626; border: 1px solid rgba(239, 68, 68, 0.3); }
+.tier-badge.p2 { background: rgba(245, 158, 11, 0.15); color: #D97706; border: 1px solid rgba(245, 158, 11, 0.3); }
+.tier-badge.p3 { background: rgba(59, 130, 246, 0.15); color: #2563EB; border: 1px solid rgba(59, 130, 246, 0.3); }
+
+.skill-plan-card {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  transition: all .2s ease;
+}
+.skill-plan-card:hover {
+  border-color: rgba(79, 70, 229, 0.4);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+}
+.skill-plan-card.selected {
+  border-color: #4F46E5;
+  background: linear-gradient(180deg, var(--paper) 0%, rgba(79, 70, 229, 0.02) 100%);
+}
+.skill-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.skill-card-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.skill-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: #4F46E5;
+  cursor: pointer;
+}
+.skill-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.proficiency-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--rule-soft);
+  color: var(--ink-soft);
+}
+.self-assess-btn {
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all .15s ease;
+}
+.self-assess-btn:hover {
+  background: rgba(79, 70, 229, 0.08);
+  border-color: #4F46E5;
+  color: #4F46E5;
+}
+.self-assess-btn.verified {
+  background: #ECFDF5;
+  border-color: #10B981;
+  color: #059669;
+}
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 14px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+@media (max-width: 768px) {
+  .field-grid { grid-template-columns: 1fr; }
+}
+.field-item {
+  background: var(--paper-2);
+  border: 1px solid var(--rule-soft);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.field-label {
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.field-value {
+  color: var(--ink);
+}
+.resource-link {
+  color: #4F46E5;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 12px;
+  margin-top: 4px;
+}
+.resource-link:hover {
+  color: #3730A3;
+}
+.build-plan-cta-btn {
+  background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-size: 14.5px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(79, 70, 229, 0.35);
+  transition: all .2s ease;
+}
+.build-plan-cta-btn:hover {
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px rgba(79, 70, 229, 0.45);
+}
+.build-plan-cta-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+.roadmap-viewer {
+  margin-top: 28px;
+  border-top: 2px dashed var(--rule);
+  padding-top: 24px;
+}
+.roadmap-header-card {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.progress-track {
+  width: 100%;
+  height: 10px;
+  background: var(--rule);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+.progress-track-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10B981, #3B82F6);
+  border-radius: 6px;
+  transition: width .3s ease;
+}
+.phase-box {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+.milestone-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rule-soft);
+  font-size: 13.5px;
+}
+.milestone-item:last-child { border-bottom: none; }
+.milestone-item.done span { text-decoration: line-through; opacity: 0.7; }
+
 </style>
 <link rel="stylesheet" href="/typography.css">
 </head>
@@ -592,6 +903,15 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
           </div>
         </div>
 
+        <!-- FIX 3 (SCR-03): Separate Provisional / Projected Fit Display -->
+        <div class="score-circle" id="recalculatedFitCircle" style="display:none;border-color:rgba(16,185,129,0.4);background:rgba(16,185,129,0.06);text-align:center">
+          <div style="font-family:var(--f-mono);font-size:11px;font-weight:700;color:#059669;text-transform:uppercase">Provisional Fit</div>
+          <div class="score-num" id="recalculatedFitScore" style="color:#10B981">—</div>
+          <div style="margin-top:4px;font-size:10px;color:var(--ink-soft);line-height:1.2;max-width:130px">
+            Self-Attested &amp; Learning Plan
+          </div>
+        </div>
+
         <div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap">
             <span style="font-size:20px;font-weight:800;color:var(--ink)" id="resTargetRole">Target Role</span>
@@ -687,6 +1007,86 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+
+      <!-- CONTEXTUAL PERSONALIZED LEARNING PLAN SECTION -->
+      <div id="careerImprovementPlanSection" class="career-plan-container" style="display:none">
+        <div class="career-plan-header">
+          <div>
+            <div style="font-size:20px;font-weight:800;color:var(--ink);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <span>🎯 Your Career Improvement Plan</span>
+              <span class="career-plan-badge">PERSONALIZED ROADMAP</span>
+            </div>
+            <div style="font-size:13.5px;color:var(--ink-soft);margin-top:6px;max-width:760px;line-height:1.5">
+              Evidence-based, candidate-controlled learning journey synthesized directly from your resume and target JD match results. Review gaps, self-verify competencies, and build your customized study roadmap.
+            </div>
+          </div>
+          <button id="buildPlanTopBtn" onclick="buildLearningPlanCTA()" class="build-plan-cta-btn" style="padding:10px 18px;font-size:13px">
+            <span>⚡ Build My Learning Plan</span>
+          </button>
+        </div>
+
+        <!-- 4-METRIC EVIDENCE CLASSIFICATION SUMMARY -->
+        <div class="plan-summary-metrics">
+          <div class="plan-metric-pill" style="border-left:4px solid #10B981">
+            <span class="plan-metric-label">Matched Skills</span>
+            <div class="plan-metric-count" id="planMatchedCount" style="color:#10B981">0</div>
+            <span style="font-size:11.5px;color:var(--ink-soft)">Verified in Resume</span>
+          </div>
+          <div class="plan-metric-pill" style="border-left:4px solid #F59E0B">
+            <span class="plan-metric-label">Skills to Improve</span>
+            <div class="plan-metric-count" id="planImproveCount" style="color:#F59E0B">0</div>
+            <span style="font-size:11.5px;color:var(--ink-soft)">Partially Evidenced</span>
+          </div>
+          <div class="plan-metric-pill" style="border-left:4px solid #EF4444">
+            <span class="plan-metric-label">Missing Evidence</span>
+            <div class="plan-metric-count" id="planGapCount" style="color:#EF4444">0</div>
+            <span style="font-size:11.5px;color:var(--ink-soft)">No Resume Evidence</span>
+          </div>
+          <div class="plan-metric-pill" style="border-left:4px solid #3B82F6">
+            <span class="plan-metric-label">Candidate Verified</span>
+            <div class="plan-metric-count" id="planVerifiedCount" style="color:#3B82F6">0</div>
+            <span style="font-size:11.5px;color:var(--ink-soft)">Self-Attested by You</span>
+          </div>
+        </div>
+
+        <!-- DISTINCT GAP TAXONOMY BREAKDOWN -->
+        <div class="gap-taxonomy-grid">
+          <div class="gap-taxonomy-card" style="border-top:3px solid #EF4444">
+            <h4 style="color:#DC2626">🛠️ Skill Gaps (<span id="skillGapsCountBadge">0</span>)</h4>
+            <div id="skillGapsTaxonomyList" style="color:var(--ink-soft);font-size:12.5px;margin-top:6px">Analyzing missing technical skills...</div>
+          </div>
+          <div class="gap-taxonomy-card" style="border-top:3px solid #F59E0B">
+            <h4 style="color:#D97706">⏳ Experience Gaps (<span id="expGapsCountBadge">0</span>)</h4>
+            <div id="expGapsTaxonomyList" style="color:var(--ink-soft);font-size:12.5px;margin-top:6px">Evaluating required years and scope...</div>
+          </div>
+          <div class="gap-taxonomy-card" style="border-top:3px solid #8B5CF6">
+            <h4 style="color:#7C3AED">🚀 Career &amp; Domain Gaps (<span id="careerGapsCountBadge">0</span>)</h4>
+            <div id="careerGapsTaxonomyList" style="color:var(--ink-soft);font-size:12.5px;margin-top:6px">Assessing target role domain ownership...</div>
+          </div>
+        </div>
+
+        <!-- PRIORITY TIERS & RECOMMENDATION CARDS -->
+        <div id="planTiersContainer" style="margin-top:20px">
+          <!-- Populated by JavaScript -->
+        </div>
+
+        <!-- BOTTOM CTA BAR -->
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-top:24px;padding-top:18px;border-top:1px solid var(--rule-soft)">
+          <div style="font-size:13.5px;color:var(--ink-soft)">
+            <b id="selectedSkillsCountBadge" style="color:var(--ink);font-size:15px">0</b> skills selected for your personalized learning roadmap.
+          </div>
+          <button id="buildPlanBottomBtn" onclick="buildLearningPlanCTA()" class="build-plan-cta-btn">
+            <span>🚀 Build My Learning Plan</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+
+        <!-- GENERATED ROADMAP & PROGRESS SECTION -->
+        <div id="roadmapViewerSection" class="roadmap-viewer" style="display:none">
+          <!-- Rendered dynamically upon clicking 'Build My Learning Plan' -->
         </div>
       </div>
 
@@ -882,6 +1282,7 @@ async function initCandidateAuth() {
     if (res.ok) {
       const data = await res.json();
       if (data && data.user) {
+        currentCandidateId = String(data.user.id || data.user.user_id || '');
         document.getElementById('userDisplayName').textContent = data.user.full_name || data.user.name || data.user.email.split('@')[0];
         document.getElementById('userPlanDisplay').textContent = (data.user.plan_tier || 'pro').toUpperCase() + ' TIER';
       }
@@ -894,6 +1295,29 @@ async function initCandidateAuth() {
 }
 initCandidateAuth();
 
+// FIX 4 (PRST-01): Candidate-scoped storage key resolver
+let currentCandidateId = null;
+function getActiveCandidateId() {
+  if (currentCandidateId) return String(currentCandidateId);
+  try {
+    const raw = localStorage.getItem('candidate_user');
+    if (raw) {
+      const u = JSON.parse(raw);
+      if (u && (u.id || u.user_id)) {
+        currentCandidateId = String(u.id || u.user_id);
+        return currentCandidateId;
+      }
+    }
+  } catch (e) {}
+  return 'default';
+}
+
+function getLearningPlanStorageKey(prefix, scanId) {
+  const cId = getActiveCandidateId();
+  const sId = scanId || 'latest';
+  return `learning_plan_${prefix}_${cId}_${sId}`;
+}
+
 // Sign Out
 async function handleLogout(e) {
   if (e) e.stopPropagation();
@@ -905,6 +1329,19 @@ async function handleLogout(e) {
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
       });
     } catch (err) {}
+    // FIX 4 (PRST-01): Purge only learning plan specific keys to prevent data exposure between candidates on shared workstations
+    try {
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('learning_plan_')) {
+          keysToRemove.push(k);
+        }
+      }
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+    } catch (e) {}
+    localStorage.removeItem('candidate_token');
+    localStorage.removeItem('candidate_user');
     window.location.replace('/candidate/login');
   }
 }
@@ -1227,6 +1664,10 @@ async function executeResumeJdMatch(thisRequestId) {
 function renderMatchResults(data) {
   if (!data) return;
 
+  // Reset separate provisional fit display
+  const provCircleReset = document.getElementById('recalculatedFitCircle');
+  if (provCircleReset) provCircleReset.style.display = 'none';
+
   // 1. Overall Match Score
   const scoreNumEl = document.getElementById('resOverallScore');
   if (typeof data.overall_match_score === 'number') {
@@ -1415,6 +1856,13 @@ function renderMatchResults(data) {
   } else {
     tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--ink-faint)">Run the analysis to see the skill matrix.</td></tr>`;
   }
+
+  // 10. Render Contextual Career Improvement Plan (Supervisor Menu Controlled)
+  if (data.career_improvement_plan) {
+    renderCareerImprovementPlan(data.career_improvement_plan);
+  } else {
+    renderCareerImprovementPlan(null);
+  }
 }
 
 // Launch Deep Practice directly from verified server scan
@@ -1508,6 +1956,627 @@ const scrim = document.getElementById('scrim');
 if (menuBtn && sidebar && scrim) {
   menuBtn.onclick = () => { sidebar.classList.add('open'); scrim.classList.add('show'); };
   scrim.onclick = () => { sidebar.classList.remove('open'); scrim.classList.remove('show'); };
+}
+
+
+// ==============================================================================
+// CONTEXTUAL PERSONALIZED LEARNING PLAN CONTROLLER
+// ==============================================================================
+let currentCareerPlan = null;
+let selectedSkillNames = new Set();
+let candidateVerifiedSkills = new Set();
+let currentRoadmap = null;
+let completedMilestoneIds = new Set();
+
+function renderCareerImprovementPlan(planData) {
+  const section = document.getElementById('careerImprovementPlanSection');
+  if (!planData) {
+    if (section) section.style.display = 'none';
+    currentCareerPlan = null;
+    return;
+  }
+  currentCareerPlan = planData;
+  if (!section) return;
+  section.style.display = 'block';
+
+  // Restore candidate verified skills from localStorage
+  const storageKeyVer = getLearningPlanStorageKey('verified', currentScanId);
+  try {
+    const savedVer = JSON.parse(localStorage.getItem(storageKeyVer) || '[]');
+    savedVer.forEach(s => candidateVerifiedSkills.add(s));
+  } catch (e) {}
+
+  // 1. Summary Metrics
+  const matched = planData.matched_skills || [];
+  const improve = planData.skills_requiring_improvement || [];
+  const missing = planData.missing_evidence_skills || [];
+
+  document.getElementById('planMatchedCount').textContent = matched.length;
+  document.getElementById('planImproveCount').textContent = improve.length;
+  document.getElementById('planGapCount').textContent = missing.length;
+  document.getElementById('planVerifiedCount').textContent = candidateVerifiedSkills.size;
+
+  // 2. Distinct Gap Taxonomy Breakdown
+  const skillTaxEl = document.getElementById('skillGapsTaxonomyList');
+  document.getElementById('skillGapsCountBadge').textContent = missing.length;
+  if (missing.length > 0) {
+    skillTaxEl.innerHTML = missing.map(s => `<span class="stag gap" style="margin:2px 4px 2px 0;font-size:11px">✗ ${escapeHtml(s)}</span>`).join('');
+  } else {
+    skillTaxEl.innerHTML = '<span style="color:#10B981">✓ All core technical skills evidenced in resume.</span>';
+  }
+
+  const expGaps = planData.experience_gaps || [];
+  const expTaxEl = document.getElementById('expGapsTaxonomyList');
+  document.getElementById('expGapsCountBadge').textContent = expGaps.length;
+  if (expGaps.length > 0) {
+    expTaxEl.innerHTML = expGaps.map(eg => `
+      <div style="margin-bottom:6px;line-height:1.4">
+        <b>${escapeHtml(eg.title || eg.requirement || 'Experience Gap')}:</b> ${escapeHtml(eg.remediation || eg.description || 'Target hands-on project complexity.')}
+      </div>
+    `).join('');
+  } else {
+    expTaxEl.innerHTML = '<span style="color:#10B981">✓ Experience duration and scope align well with target role.</span>';
+  }
+
+  const carGaps = planData.career_gaps || [];
+  const carTaxEl = document.getElementById('careerGapsTaxonomyList');
+  document.getElementById('careerGapsCountBadge').textContent = carGaps.length;
+  if (carGaps.length > 0) {
+    carTaxEl.innerHTML = carGaps.map(cg => `
+      <div style="margin-bottom:6px;line-height:1.4">
+        <b>${escapeHtml(cg.title || 'Domain Specialization')}:</b> ${escapeHtml(cg.growth_path || 'Focus on architectural patterns and system design.')}
+      </div>
+    `).join('');
+  } else {
+    carTaxEl.innerHTML = '<span style="color:#10B981">✓ Strong domain and architectural ownership alignment.</span>';
+  }
+
+  // 3. Populate Recommendation Cards across 3 Priority Tiers
+  const recs = planData.recommendations || [];
+  const p1Recs = recs.filter(r => r.priority === 'CRITICAL');
+  const p2Recs = recs.filter(r => r.priority === 'IMPROVEMENT');
+  const p3Recs = recs.filter(r => r.priority === 'CAREER_GROWTH' || !['CRITICAL', 'IMPROVEMENT'].includes(r.priority));
+
+  // Initialize selected skills default: select P1 and P2 by default
+  selectedSkillNames.clear();
+  recs.forEach(r => {
+    if (r.priority === 'CRITICAL' || r.priority === 'IMPROVEMENT') {
+      selectedSkillNames.add(r.skill);
+    }
+  });
+
+  const tiersContainer = document.getElementById('planTiersContainer');
+  tiersContainer.innerHTML = '';
+
+  const renderTierGroup = (title, badgeClass, badgeLabel, items, desc) => {
+    if (items.length === 0) return '';
+    let cardsHtml = items.map(item => renderSkillPlanCard(item)).join('');
+    return `
+      <div class="tier-header">
+        <div class="tier-title">
+          <span>${title}</span>
+          <span class="tier-badge ${badgeClass}">${badgeLabel} (${items.length})</span>
+        </div>
+        <div style="font-size:12.5px;color:var(--ink-soft)">${desc}</div>
+      </div>
+      <div class="tier-cards-list">${cardsHtml}</div>
+    `;
+  };
+
+  let fullHtml = '';
+  fullHtml += renderTierGroup('Tier 1: Critical Skills', 'p1', 'CRITICAL', p1Recs, 'Mandatory prerequisite competencies missing verified evidence.');
+  fullHtml += renderTierGroup('Tier 2: Skills to Improve', 'p2', 'IMPROVEMENT', p2Recs, 'Competencies requiring reinforcement to achieve production depth.');
+  fullHtml += renderTierGroup('Tier 3: Optional Career Growth Skills', 'p3', 'CAREER GROWTH', p3Recs, 'Advanced architectural competencies providing competitive edge.');
+
+  tiersContainer.innerHTML = fullHtml;
+  updateSelectedCount();
+
+  // If roadmap was already saved in localStorage for this scan, restore it
+  const storageKeyRoadmap = getLearningPlanStorageKey('roadmap', currentScanId);
+  try {
+    const savedRoadmap = JSON.parse(localStorage.getItem(storageKeyRoadmap));
+    if (savedRoadmap) {
+      renderRoadmapView(savedRoadmap);
+    }
+  } catch (e) {}
+}
+
+function renderSkillPlanCard(item) {
+  const isSelected = selectedSkillNames.has(item.skill);
+  const isVerified = candidateVerifiedSkills.has(item.skill);
+  const safeSkill = escapeHtml(item.skill);
+  const cardId = `skill_card_${item.skill.replace(/[^a-zA-Z0-9]/g, '_')}`;
+
+  const objectivesHtml = (item.learning_objectives || []).map(o => `<li>${escapeHtml(o)}</li>`).join('');
+  const exercisesHtml = (item.practical_exercises || []).map(e => `<li>${escapeHtml(e)}</li>`).join('');
+  const criteriaHtml = (item.completion_criteria || []).map(c => `<li>${escapeHtml(c)}</li>`).join('');
+  const resourcesHtml = (item.resources || []).map(res => `
+    <a href="${escapeHtml(res.url)}" target="_blank" rel="noopener noreferrer" class="resource-link">
+      <span>📖 ${escapeHtml(res.title)}</span>
+      <span style="font-size:10.5px;opacity:0.7">(${escapeHtml(res.type || 'Doc')})</span>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+    </a>
+  `).join('');
+
+  return `
+    <div class="skill-plan-card ${isSelected ? 'selected' : ''}" id="${cardId}">
+      <div class="skill-card-top">
+        <div class="skill-card-select-wrap">
+          <input type="checkbox" class="skill-checkbox" ${isSelected ? 'checked' : ''} onchange="toggleSkillSelection('${escapeJs(item.skill)}')">
+          <div>
+            <div class="skill-card-title">${safeSkill}</div>
+            <div style="font-size:12px;color:var(--ink-soft);margin-top:2px">${escapeHtml(item.category || 'Engineering Competency')}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span class="proficiency-tag">
+            <span>${escapeHtml(item.current_proficiency)}</span>
+            <span>➔</span>
+            <b style="color:var(--primary)">${escapeHtml(item.target_proficiency)}</b>
+          </span>
+          <button class="self-assess-btn ${isVerified ? 'verified' : ''}" onclick="toggleCandidateVerification('${escapeJs(item.skill)}')">
+            <span>${isVerified ? '✓ Candidate Verified' : '✓ I already know this (Verify)'}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 10 MANDATORY RECOMMENDATION FIELDS -->
+      <div class="field-grid">
+        <div class="field-item">
+          <div class="field-label">1. What to Learn</div>
+          <div class="field-value">${escapeHtml(item.what_to_learn)}</div>
+        </div>
+        <div class="field-item">
+          <div class="field-label">2. Why It Matters for JD</div>
+          <div class="field-value">${escapeHtml(item.why_it_matters)}</div>
+        </div>
+        <div class="field-item">
+          <div class="field-label">3. Related JD Requirement</div>
+          <div class="field-value" style="font-style:italic">"${escapeHtml(item.related_jd_requirement)}"</div>
+        </div>
+        <div class="field-item">
+          <div class="field-label">4 &amp; 5. Proficiency Trajectory</div>
+          <div class="field-value">
+            Current: <b>${escapeHtml(item.current_proficiency)}</b> &nbsp;|&nbsp; Target: <b style="color:#10B981">${escapeHtml(item.target_proficiency)}</b>
+          </div>
+        </div>
+        <div class="field-item">
+          <div class="field-label">6. Learning Objectives</div>
+          <ul style="margin:0;padding-left:18px;color:var(--ink)">${objectivesHtml || '<li>Master core architectural patterns.</li>'}</ul>
+        </div>
+        <div class="field-item">
+          <div class="field-label">7. Recommended Resources (Canonical)</div>
+          <div class="field-value">${resourcesHtml || '<span>Official language &amp; framework documentation</span>'}</div>
+        </div>
+        <div class="field-item">
+          <div class="field-label">8. Practical Exercises</div>
+          <ul style="margin:0;padding-left:18px;color:var(--ink)">${exercisesHtml || '<li>Implement sandbox unit tests and validation suites.</li>'}</ul>
+        </div>
+        <div class="field-item">
+          <div class="field-label">9. Suggested Portfolio Project</div>
+          <div class="field-value"><b>${escapeHtml(item.suggested_project)}</b></div>
+        </div>
+        <div class="field-item" style="grid-column:1 / -1">
+          <div class="field-label">10. Completion Criteria &amp; Estimated Effort</div>
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <ul style="margin:0;padding-left:18px;flex:1">${criteriaHtml || '<li>Pass automated test suite with zero linting warnings.</li>'}</ul>
+            <span style="font-family:var(--f-mono);font-size:12px;font-weight:700;padding:4px 10px;border-radius:8px;background:var(--paper);border:1px solid var(--rule);color:var(--ink)">
+              ⏱️ ${escapeHtml(item.estimated_effort)}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function toggleSkillSelection(skillName) {
+  if (selectedSkillNames.has(skillName)) {
+    selectedSkillNames.delete(skillName);
+  } else {
+    selectedSkillNames.add(skillName);
+  }
+  const cardId = `skill_card_${skillName.replace(/[^a-zA-Z0-9]/g, '_')}`;
+  const card = document.getElementById(cardId);
+  if (card) {
+    card.classList.toggle('selected', selectedSkillNames.has(skillName));
+  }
+  updateSelectedCount();
+}
+
+function updateSelectedCount() {
+  const badge = document.getElementById('selectedSkillsCountBadge');
+  if (badge) badge.textContent = selectedSkillNames.size;
+}
+
+function toggleCandidateVerification(skillName) {
+  const isCurrentlyVerified = candidateVerifiedSkills.has(skillName);
+  if (!isCurrentlyVerified) {
+    candidateVerifiedSkills.add(skillName);
+    showToast(`✓ "${skillName}" marked as Candidate Verified!`, 'success');
+  } else {
+    candidateVerifiedSkills.delete(skillName);
+    showToast(`"${skillName}" returned to gap status.`, 'info');
+  }
+
+  // Persist to localStorage
+  const storageKeyVer = getLearningPlanStorageKey('verified', currentScanId);
+  localStorage.setItem(storageKeyVer, JSON.stringify(Array.from(candidateVerifiedSkills)));
+
+  // Update verified metric
+  const countEl = document.getElementById('planVerifiedCount');
+  if (countEl) countEl.textContent = candidateVerifiedSkills.size;
+
+  // Refresh card button visual state
+  const cardId = `skill_card_${skillName.replace(/[^a-zA-Z0-9]/g, '_')}`;
+  const card = document.getElementById(cardId);
+  if (card) {
+    const btn = card.querySelector('.self-assess-btn');
+    if (btn) {
+      btn.classList.toggle('verified', candidateVerifiedSkills.has(skillName));
+      btn.querySelector('span').textContent = candidateVerifiedSkills.has(skillName) ? '✓ Candidate Verified' : '✓ I already know this (Verify)';
+    }
+  }
+}
+
+async function buildLearningPlanCTA() {
+  if (selectedSkillNames.size === 0) {
+    showToast('Please select at least one skill to build your personalized roadmap.', 'error');
+    return;
+  }
+
+  const topBtn = document.getElementById('buildPlanTopBtn');
+  const botBtn = document.getElementById('buildPlanBottomBtn');
+  if (topBtn) { topBtn.disabled = true; topBtn.innerHTML = '<span>⏳ Building Roadmap...</span>'; }
+  if (botBtn) { botBtn.disabled = true; botBtn.innerHTML = '<span>⏳ Building Roadmap...</span>'; }
+
+  try {
+    const payload = {
+      scan_id: currentScanId,
+      target_role: (currentCareerPlan && currentCareerPlan.target_role) || 'Software Engineer',
+      selected_skills: Array.from(selectedSkillNames),
+      candidate_verified_skills: Array.from(candidateVerifiedSkills),
+      hours_per_week: 10
+    };
+
+    const resp = await fetch('/api/candidate/learning-plan/build', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!resp.ok) {
+      showToast('Could not build learning plan. Please try again.', 'error');
+      return;
+    }
+
+    const roadmapData = await resp.json();
+    currentRoadmap = roadmapData;
+
+    // Persist roadmap to localStorage
+    const storageKeyRoadmap = getLearningPlanStorageKey('roadmap', currentScanId);
+    localStorage.setItem(storageKeyRoadmap, JSON.stringify(roadmapData));
+
+    renderRoadmapView(roadmapData);
+    document.getElementById('roadmapViewerSection').scrollIntoView({ behavior: 'smooth' });
+    showToast('🚀 Personalized Learning Roadmap built successfully!', 'success');
+  } catch (err) {
+    console.error('Roadmap build error:', err);
+    showToast('Network error building learning roadmap.', 'error');
+  } finally {
+    if (topBtn) { topBtn.disabled = false; topBtn.innerHTML = '<span>⚡ Build My Learning Plan</span>'; }
+    if (botBtn) { botBtn.disabled = false; botBtn.innerHTML = '<span>🚀 Build My Learning Plan</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>'; }
+  }
+}
+
+function renderRoadmapView(roadmap) {
+  const viewer = document.getElementById('roadmapViewerSection');
+  if (!viewer) return;
+  viewer.style.display = 'block';
+
+  // Restore checked milestones
+  const storageKeyMilestones = getLearningPlanStorageKey('milestones', currentScanId);
+  try {
+    const saved = JSON.parse(localStorage.getItem(storageKeyMilestones) || '[]');
+    completedMilestoneIds = new Set(saved);
+  } catch (e) {
+    completedMilestoneIds = new Set();
+  }
+
+  // Count total milestones
+  let totalMilestones = 0;
+  (roadmap.phases || []).forEach(phase => {
+    totalMilestones += (phase.milestones || []).length;
+  });
+
+  const completedCount = completedMilestoneIds.size;
+  const progressPct = totalMilestones > 0 ? Math.round((completedCount / totalMilestones) * 100) : 0;
+
+  let phasesHtml = (roadmap.phases || []).map(phase => {
+    let mHtml = (phase.milestones || []).map(m => {
+      const isDone = completedMilestoneIds.has(m.id);
+      return `
+        <div class="milestone-item ${isDone ? 'done' : ''}" id="m_item_${m.id}">
+          <input type="checkbox" style="width:16px;height:16px;margin-top:2px;accent-color:#10B981;cursor:pointer" ${isDone ? 'checked' : ''} onchange="toggleMilestoneCheck('${m.id}')">
+          <div style="flex:1">
+            <div style="font-weight:600;color:var(--ink)">${escapeHtml(m.title)}</div>
+            <div style="font-size:12.5px;color:var(--ink-soft);margin-top:2px">${escapeHtml(m.description)}</div>
+          </div>
+          <span style="font-family:var(--f-mono);font-size:11px;color:var(--ink-faint)">⏱️ ${m.estimated_hours || 4}h</span>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="phase-box">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;border-bottom:1px solid var(--rule-soft);padding-bottom:8px">
+          <div>
+            <div style="font-size:16px;font-weight:700;color:var(--ink)">${escapeHtml(phase.phase_name)}</div>
+            <div style="font-size:12.5px;color:var(--ink-soft)">Duration: <b>${escapeHtml(phase.duration)}</b> &nbsp;|&nbsp; Focus: ${escapeHtml((phase.focus_skills || []).join(', '))}</div>
+          </div>
+          <span class="nav-badge pro">DELIVERABLE</span>
+        </div>
+        <div style="font-size:13px;color:var(--ink);margin-bottom:10px">
+          <b>Phase Goal:</b> ${escapeHtml(phase.phase_deliverable || 'Verified working implementation with unit tests.')}
+        </div>
+        <div class="milestones-list">${mHtml}</div>
+      </div>
+    `;
+  }).join('');
+
+  const capstone = roadmap.capstone_project || {};
+  const deliverablesHtml = (capstone.deliverables || []).map(d => `<li>${escapeHtml(d)}</li>`).join('');
+
+  const rubric = roadmap.assessment_rubric || [];
+  const rubricHtml = rubric.map(r => `
+    <div style="padding:8px 0;border-bottom:1px solid var(--rule-soft);font-size:12.5px">
+      <b style="color:var(--ink)">${escapeHtml(r.criterion)}:</b> <span style="color:var(--ink-soft)">${escapeHtml(r.standard)}</span>
+    </div>
+  `).join('');
+
+  viewer.innerHTML = `
+    <div class="roadmap-header-card">
+      <div>
+        <div style="font-size:18px;font-weight:800;color:var(--ink);display:flex;align-items:center;gap:10px">
+          <span>🗺️ Your Personalized Learning Roadmap</span>
+          <span class="confidence-badge HIGH">ACTIVE PLAN</span>
+        </div>
+        <div style="font-size:13px;color:var(--ink-soft);margin-top:4px">
+          Target Role: <b>${escapeHtml(roadmap.target_role)}</b> &nbsp;|&nbsp; Total Study Effort: <b>${roadmap.total_estimated_hours} hours</b> across <b>${(roadmap.phases || []).length} phases</b>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:18px">
+        <div style="text-align:right">
+          <div style="font-family:var(--f-mono);font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase">Match Fit Projection</div>
+          <div style="font-size:20px;font-weight:800;color:var(--ink);margin-top:2px">
+            <span>${roadmap.current_match_score}%</span>
+            <span style="color:#10B981">➔ ${roadmap.projected_match_score}%</span>
+          </div>
+        </div>
+        <button onclick="exportLearningPlanMarkdown()" style="padding:8px 14px;border-radius:8px;border:1px solid var(--rule);background:var(--paper);font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+          <span>📥 Export (.md)</span>
+        </button>
+      </div>
+
+      <div style="width:100%;margin-top:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;font-size:12.5px">
+          <span style="font-weight:600;color:var(--ink)">Roadmap Completion Progress: <b id="roadmapProgressPctText">${progressPct}%</b> (<span id="roadmapCompletedCountText">${completedCount}</span> / ${totalMilestones} Milestones)</span>
+          <span style="font-family:var(--f-mono);font-size:11.5px;color:var(--primary)">CANDIDATE TRACKER</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-track-fill" id="roadmapProgressBarFill" style="width:${progressPct}%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASES -->
+    <div>${phasesHtml}</div>
+
+    <!-- CAPSTONE PROJECT BLUEPRINT -->
+    <div style="background:var(--paper);border:1.5px solid rgba(16,185,129,0.3);border-radius:14px;padding:20px;margin-top:20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:16px;font-weight:800;color:var(--ink)">🏆 Portfolio Capstone Project: ${escapeHtml(capstone.title || 'Production Service')}</div>
+        <span class="nav-badge" style="background:#ECFDF5;color:#059669;border:1px solid #A7F3D0">PORTFOLIO READY</span>
+      </div>
+      <div style="font-size:13px;color:var(--ink-soft);line-height:1.5">
+        ${escapeHtml(capstone.description || 'Build an end-to-end service demonstrating target JD skills.')}
+      </div>
+      <div style="margin-top:12px;font-size:13px">
+        <b>Deliverables Required:</b>
+        <ul style="margin:6px 0 0;padding-left:20px;color:var(--ink)">${deliverablesHtml}</ul>
+      </div>
+    </div>
+
+    <!-- ASSESSMENT RUBRIC -->
+    <div style="background:var(--paper);border:1px solid var(--rule);border-radius:14px;padding:20px;margin-top:16px">
+      <div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:8px">⚖️ Skill Assessment &amp; Verification Rubric</div>
+      <div>${rubricHtml}</div>
+    </div>
+
+    <!-- SKILL REASSESSMENT CTA (STEP 9) -->
+    <div style="background:linear-gradient(135deg, rgba(79,70,229,0.06) 0%, rgba(16,185,129,0.06) 100%);border:1.5px solid rgba(79,70,229,0.25);border-radius:14px;padding:22px;margin-top:22px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px">
+      <div>
+        <div style="font-size:16px;font-weight:800;color:var(--ink)">Step 9: Request Skill Reassessment</div>
+        <div style="font-size:13px;color:var(--ink-soft);margin-top:3px;max-width:600px">
+          Finished study modules or self-verified competencies? Request reassessment to recalculate your live match score and update your Skill Matrix with verified badges.
+        </div>
+      </div>
+      <button id="reassessBtn" onclick="requestSkillReassessmentCTA()" class="build-plan-cta-btn" style="background:linear-gradient(135deg, #059669 0%, #10B981 100%);box-shadow:0 4px 16px rgba(16,185,129,0.35)">
+        <span>⚡ Recalculate Match Fit</span>
+      </button>
+    </div>
+  `;
+}
+
+function toggleMilestoneCheck(milestoneId) {
+  if (completedMilestoneIds.has(milestoneId)) {
+    completedMilestoneIds.delete(milestoneId);
+  } else {
+    completedMilestoneIds.add(milestoneId);
+  }
+
+  // Update item style
+  const item = document.getElementById(`m_item_${milestoneId}`);
+  if (item) {
+    item.classList.toggle('done', completedMilestoneIds.has(milestoneId));
+  }
+
+  // Save to localStorage
+  const storageKeyMilestones = getLearningPlanStorageKey('milestones', currentScanId);
+  localStorage.setItem(storageKeyMilestones, JSON.stringify(Array.from(completedMilestoneIds)));
+
+  // Recalculate progress bar
+  let total = 0;
+  if (currentRoadmap && currentRoadmap.phases) {
+    currentRoadmap.phases.forEach(p => { total += (p.milestones || []).length; });
+  }
+  if (total > 0) {
+    const pct = Math.round((completedMilestoneIds.size / total) * 100);
+    const fill = document.getElementById('roadmapProgressBarFill');
+    const txt = document.getElementById('roadmapProgressPctText');
+    const countTxt = document.getElementById('roadmapCompletedCountText');
+    if (fill) fill.style.width = `${pct}%`;
+    if (txt) txt.textContent = `${pct}%`;
+    if (countTxt) countTxt.textContent = completedMilestoneIds.size;
+  }
+}
+
+async function requestSkillReassessmentCTA() {
+  const btn = document.getElementById('reassessBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span>⏳ Recalculating Live Fit...</span>'; }
+
+  try {
+    const payload = {
+      scan_id: currentScanId,
+      target_role: (currentCareerPlan && currentCareerPlan.target_role) || 'Software Engineer',
+      completed_skills: Array.from(selectedSkillNames),
+      candidate_verified_skills: Array.from(candidateVerifiedSkills)
+    };
+
+    const resp = await fetch('/api/candidate/learning-plan/reassess', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!resp.ok) {
+      showToast('Skill reassessment failed. Please try again.', 'error');
+      return;
+    }
+
+    const result = await resp.json();
+
+    // FIX 3 (SCR-03): Preserve original ATS score (#resOverallScore) and render separate Provisional Fit display
+    const provCircle = document.getElementById('recalculatedFitCircle');
+    const provScore = document.getElementById('recalculatedFitScore');
+    if (provCircle && provScore && typeof result.recalculated_match_score === 'number') {
+      provScore.textContent = `${Math.round(result.recalculated_match_score)}%`;
+      provCircle.style.display = 'block';
+    }
+
+    // 2. Update Matrix Table with Acquired / Verified Badges
+    const tableBody = document.getElementById('matrixTableBody');
+    if (tableBody && Array.isArray(result.updated_skill_matrix) && result.updated_skill_matrix.length > 0) {
+      tableBody.innerHTML = '';
+      result.updated_skill_matrix.forEach(item => {
+        const tr = document.createElement('tr');
+        let statusClass = 'match';
+        let statusLabel = item.status_label || '✓ Matched';
+        if (item.gap_status === 'gap') {
+          statusClass = 'gap';
+        } else if (item.gap_status === 'partial') {
+          statusClass = 'partial';
+        } else if (item.gap_status === 'acquired' || item.gap_status === 'verified') {
+          statusClass = 'match';
+        }
+
+        tr.innerHTML = `
+          <td style="font-weight:600">${escapeHtml(item.skill)}</td>
+          <td><span style="font-family:var(--f-mono);font-weight:700;font-size:12px">${escapeHtml(item.importance || 'HIGH')}</span></td>
+          <td><b style="color:var(--primary)">${item.gap_status === 'acquired' ? '95%' : (item.gap_status === 'verified' ? '88%' : '75%')}</b></td>
+          <td style="font-size:12px;color:var(--ink-soft)">${item.gap_status === 'acquired' ? 'Learning Plan Completed' : (item.gap_status === 'verified' ? 'Candidate Attested' : 'Resume Evidence')}</td>
+          <td><span class="stag ${statusClass}">${escapeHtml(statusLabel)}</span></td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    }
+
+    showToast(`🎉 Reassessment complete: Match fit improved to ${result.recalculated_match_score}% (+${result.score_improvement}%)!`, 'success');
+  } catch (err) {
+    console.error('Reassessment error:', err);
+    showToast('Network error during reassessment.', 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<span>⚡ Recalculate Match Fit</span>'; }
+  }
+}
+
+function exportLearningPlanMarkdown() {
+  if (!currentRoadmap) {
+    showToast('Please build your learning plan first.', 'error');
+    return;
+  }
+  const r = currentRoadmap;
+  let md = `# Personalized Learning Plan: ${r.target_role}\n\n`;
+  md += `**Generated for:** AI Interview Studio Candidate\n`;
+  md += `**Current Match Score:** ${r.current_match_score}%  \n`;
+  md += `**Projected Match Score:** ${r.projected_match_score}%  \n`;
+  md += `**Total Estimated Hours:** ${r.total_estimated_hours} hours\n\n`;
+
+  md += `## Target Competencies Selected\n`;
+  (r.selected_skills || []).forEach(s => {
+    md += `- [x] ${s}\n`;
+  });
+  md += `\n`;
+
+  md += `## Phased Learning Roadmap\n\n`;
+  (r.phases || []).forEach(p => {
+    md += `### ${p.phase_name} (${p.duration})\n`;
+    md += `**Deliverable:** ${p.phase_deliverable || ''}\n\n`;
+    (p.milestones || []).forEach(m => {
+      const isDone = completedMilestoneIds.has(m.id);
+      md += `- [${isDone ? 'x' : ' '}] **${m.title}** (${m.estimated_hours}h) - ${m.description}\n`;
+    });
+    md += `\n`;
+  });
+
+  if (r.capstone_project) {
+    md += `## Portfolio Capstone Project: ${r.capstone_project.title}\n`;
+    md += `${r.capstone_project.description}\n\n`;
+    md += `### Key Deliverables\n`;
+    (r.capstone_project.deliverables || []).forEach(d => {
+      md += `- [ ] ${d}\n`;
+    });
+    md += `\n`;
+  }
+
+  const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${(r.target_role || 'Career').replace(/\s+/g, '_')}_Learning_Plan.md`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('✓ Learning plan exported as Markdown!', 'success');
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function escapeJs(str) {
+  if (!str) return '';
+  return String(str).replace(/'/g, "\\'");
 }
 
 </script>

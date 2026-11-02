@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 import json
 from pathlib import Path
 from fastapi.testclient import TestClient
@@ -98,7 +99,77 @@ class TestExpandableSampleAnswers(unittest.TestCase):
         self.assertIsNotNone(data["practical_example"])
 
     # 3. Test Domain Relevance Across Distinct Engineering Disciplines
-    def test_03_domain_specific_sample_answers(self):
+    @patch("app.services.generate_ai_questions")
+    def test_03_domain_specific_sample_answers(self, mock_ai_gen):
+        def fake_ai_response(prompt, **kwargs):
+            p = prompt.lower()
+            if "mixed-methods user research" in p or "ux researcher" in p or "user research" in p:
+                return json.dumps({
+                    "sample_answer": "In conducting mixed-methods user research, I combine quantitative analytics with qualitative contextual inquiries to validate hypotheses.",
+                    "key_points": [
+                        "Triangulate survey metrics with in-depth user research sessions.",
+                        "Synthesize usability testing into actionable journey maps.",
+                        "Establish continuous validation loops with cross-functional product stakeholders."
+                    ],
+                    "practical_example": "Conducted 15 contextual interviews combined with telemetry funnel analysis to disambiguate enterprise onboarding."
+                })
+            elif "figma" in p or "design systems lead" in p or "token" in p:
+                return json.dumps({
+                    "sample_answer": "I establish typographic scale and 8pt spatial grid rhythm using design token architecture in Figma Variables.",
+                    "key_points": [
+                        "Define global primitive token values mapped to semantic alias tokens.",
+                        "Configure Figma Variables for light and dark themes with automated style dictionary sync.",
+                        "Enforce automated WCAG AA color contrast token validation."
+                    ],
+                    "practical_example": "Built a multi-brand token system in Figma Variables driving cross-platform consistency for web and mobile."
+                })
+            elif "canary" in p or "kubernetes" in p or "devops" in p or "declarative" in p:
+                return json.dumps({
+                    "sample_answer": "I utilize declarative Kubernetes manifests and ArgoCD or Flagger for automated canary rollouts.",
+                    "key_points": [
+                        "Configure declarative custom resources defining traffic step percentages.",
+                        "Implement automated rollbacks triggered by Prometheus latency and error metrics.",
+                        "Manage environments using declarative GitOps repository structures."
+                    ],
+                    "practical_example": "Implemented declarative canary deployments with automated metric analysis reducing bad rollouts to zero."
+                })
+            elif "postgresql" in p or "indexing" in p or "database architect" in p or "index" in p:
+                return json.dumps({
+                    "sample_answer": "To optimize slow PostgreSQL queries, I inspect the execution plan using EXPLAIN (ANALYZE, BUFFERS) and design composite index strategies.",
+                    "key_points": [
+                        "Evaluate query plan nodes to eliminate Sequential Scans in favor of B-tree or GIN index scans.",
+                        "Apply covering index strategies with INCLUDE clauses to enable index-only scans.",
+                        "Tune PostgreSQL work_mem and vacuum parameters to prevent disk spills."
+                    ],
+                    "practical_example": "Reduced a 4-second reporting query to 12ms using a composite index matching WHERE and ORDER BY clauses."
+                })
+            elif "rag" in p or "retrieval" in p or "ai engineer" in p:
+                return json.dumps({
+                    "sample_answer": "I architect hybrid RAG pipelines coupling dense vector retrieval with sparse keyword BM25 retrieval and reciprocal rank fusion.",
+                    "key_points": [
+                        "Combine dense vector embeddings with sparse BM25 retrieval for high recall.",
+                        "Pass fused retrieval candidates through a cross-encoder reranker.",
+                        "Implement metadata filtering and dynamic chunking strategies."
+                    ],
+                    "practical_example": "Deployed an enterprise hybrid retrieval pipeline delivering 94% answer accuracy on domain documentation."
+                })
+            elif "kafka" in p or "streaming" in p or "data engineer" in p:
+                return json.dumps({
+                    "sample_answer": "I design event-driven streaming pipelines with Apache Kafka utilizing consumer groups and idempotent processing.",
+                    "key_points": [
+                        "Configure topic partitions and consumer group concurrency for high throughput in Kafka.",
+                        "Enforce at-least-once delivery with deduplication via Redis or unique DB constraints.",
+                        "Structure Avro or Protobuf schema validation with Schema Registry."
+                    ],
+                    "practical_example": "Engineered a Kafka streaming pipeline handling 50,000 events/sec with guaranteed idempotent database upserts."
+                })
+            return json.dumps({
+                "sample_answer": "Structured engineering response.",
+                "key_points": ["Point 1", "Point 2", "Point 3"],
+                "practical_example": "Practical production scenario."
+            })
+
+        mock_ai_gen.side_effect = fake_ai_response
         domains = [
             (
                 "How do you design and execute a mixed-methods user research plan for an ambiguous feature definition?",

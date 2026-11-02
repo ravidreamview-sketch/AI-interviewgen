@@ -205,36 +205,50 @@ class TestVercelProductionCompatibility(unittest.TestCase):
 
     def test_13_postgresql_configuration_logic(self):
         """Verifies PostgreSQL DATABASE_URL handling and engine argument isolation."""
-        # Production guard tests
-        # 1. Missing DATABASE_URL should raise RuntimeError
-        with patch.dict(os.environ, {"VERCEL": "1", "ENV": "production"}):
-            with self.assertRaises(RuntimeError):
-                import importlib
-                import app.database as db_mod
+        import importlib
+        import app.database as db_mod
+
+        # Isolate environment from local .env configuration
+        base_env = os.environ.copy()
+        base_env.pop("DATABASE_URL", None)
+        base_env["VERCEL"] = "1"
+        base_env["ENV"] = "production"
+
+        try:
+            # 1. Missing DATABASE_URL should raise RuntimeError
+            with patch.dict(os.environ, base_env, clear=True):
+                with self.assertRaises(RuntimeError):
+                    importlib.reload(db_mod)
+
+            # 2. SQLite URL in production should raise RuntimeError
+            sqlite_env = base_env.copy()
+            sqlite_env["DATABASE_URL"] = "sqlite:///./test.db"
+            with patch.dict(os.environ, sqlite_env, clear=True):
+                with self.assertRaises(RuntimeError):
+                    importlib.reload(db_mod)
+
+            # 3. Malformed URL should raise RuntimeError (fails validation)
+            malformed_env = base_env.copy()
+            malformed_env["DATABASE_URL"] = "not-a-url"
+            with patch.dict(os.environ, malformed_env, clear=True):
+                with self.assertRaises(RuntimeError):
+                    importlib.reload(db_mod)
+
+            # 4. Valid PostgreSQL URL passes without error
+            valid_env = base_env.copy()
+            valid_env["DATABASE_URL"] = "postgres://user:pass@localhost:5432/postgres"
+            with patch.dict(os.environ, valid_env, clear=True):
                 importlib.reload(db_mod)
-        # 2. SQLite URL in production should raise RuntimeError
-        with patch.dict(os.environ, {"VERCEL": "1", "ENV": "production", "DATABASE_URL": "sqlite:///./test.db"}):
-            with self.assertRaises(RuntimeError):
-                import importlib
-                import app.database as db_mod
-                importlib.reload(db_mod)
-        # 3. Malformed URL should raise RuntimeError (fails validation)
-        with patch.dict(os.environ, {"VERCEL": "1", "ENV": "production", "DATABASE_URL": "not-a-url"}):
-            with self.assertRaises(RuntimeError):
-                import importlib
-                import app.database as db_mod
-                importlib.reload(db_mod)
-        # 4. Valid PostgreSQL URL passes without error
-        with patch.dict(os.environ, {"VERCEL": "1", "ENV": "production", "DATABASE_URL": "postgres://user:pass@localhost:5432/postgres"}):
-            import importlib
-            import app.database as db_mod
+
+            # Existing test for engine creation logic remains unchanged
+            with patch("app.database.create_engine") as mock_create_engine:
+                test_pg_url = "postgres://user:pass@db.supabase.co:5432/postgres"
+                with patch.dict(os.environ, {"DATABASE_URL": test_pg_url, "VERCEL": "1"}):
+                    normalized_url = test_pg_url.replace("postgres://", "postgresql://", 1)
+                    self.assertTrue(normalized_url.startswith("postgresql://"))
+        finally:
+            # Restore db_mod back to standard test environment
             importlib.reload(db_mod)
-        # Existing test for engine creation logic remains unchanged
-        with patch("app.database.create_engine") as mock_create_engine:
-            test_pg_url = "postgres://user:pass@db.supabase.co:5432/postgres"
-            with patch.dict(os.environ, {"DATABASE_URL": test_pg_url, "VERCEL": "1"}):
-                normalized_url = test_pg_url.replace("postgres://", "postgresql://", 1)
-                self.assertTrue(normalized_url.startswith("postgresql://"))
 
     def test_14_safe_execute_ddl_recovers_from_error(self):
         """Verifies _safe_execute_ddl handles invalid DDL gracefully without raising exceptions."""

@@ -58,6 +58,9 @@ from app.models import (
     EvaluateCandidateAnswerRequest,
     EvaluateCandidateAnswerResponse,
     CandidateSavedEvaluationsResponse,
+    LearningPlanGenerateRequest,
+    LearningPlanBuildRequest,
+    LearningPlanReassessRequest,
 )
 from app.interview_engine import (
     start_interview_session,
@@ -93,6 +96,11 @@ from app.jd_service import (
 from app.matching_service import (
     calculate_resume_jd_match,
     normalize_resume
+)
+from app.learning_plan_service import (
+    generate_career_improvement_plan,
+    build_personalized_learning_roadmap,
+    reassess_candidate_progress
 )
 from app.database import get_db, init_db
 from app.db_models import (
@@ -1467,6 +1475,27 @@ async def create_resume_jd_match(
             detail=f"Failed to persist match result to database: {str(db_err)}"
         )
 
+    # 8.5 Generate Contextual Personalized Career Improvement Plan (Guarded by Supervisor Menu Management)
+    if is_candidate_menu_enabled("Personalized Learning Plan", db):
+        try:
+            career_plan = generate_career_improvement_plan({
+                "scan_id": scan_id,
+                "target_role": target_role,
+                "overall_match_score": reused_score,
+                "sub_scores": resp_sub_scores.model_dump() if hasattr(resp_sub_scores, "model_dump") else resp_sub_scores,
+                "skill_matrix": [item.model_dump() if hasattr(item, "model_dump") else item for item in resp_skill_matrix],
+                "strengths": resp_strengths,
+                "skill_gaps": resp_skill_gaps,
+                "critical_gaps": resp_critical_gaps,
+                "normalized_jd": normalized_jd.model_dump() if hasattr(normalized_jd, "model_dump") else {},
+                "normalized_resume": normalized_resume.model_dump() if hasattr(normalized_resume, "model_dump") else {}
+            })
+        except Exception as plan_err:
+            logger.warning(f"Career plan generation failed softly: {plan_err}")
+            career_plan = None
+    else:
+        career_plan = None
+
     # 9. Return Validated Response
     return ResumeJDMatchResponse(
         scan_id=scan_id,
@@ -1485,6 +1514,7 @@ async def create_resume_jd_match(
         source_url=source_url,
         evaluation_fingerprint=eval_fingerprint,
         is_cached=is_cached_eval,
+        career_improvement_plan=career_plan,
         created_at=now.isoformat()
     )
 
@@ -1523,6 +1553,27 @@ def get_resume_jd_match(
     sub_scores = SubScores(**sub_scores_data) if sub_scores_data else SubScores()
     skill_matrix = [SkillMatrixItem(**item) for item in skill_matrix_data]
 
+    # Generate Contextual Personalized Career Improvement Plan (Guarded by Supervisor Menu Management)
+    if is_candidate_menu_enabled("Personalized Learning Plan", db):
+        try:
+            career_plan = generate_career_improvement_plan({
+                "scan_id": scan.scan_id,
+                "target_role": scan.target_role,
+                "overall_match_score": scan.overall_match_score if scan.overall_match_score is not None else scan.match_score,
+                "sub_scores": sub_scores_data,
+                "skill_matrix": skill_matrix_data,
+                "strengths": strengths_data,
+                "skill_gaps": skill_gaps_data,
+                "critical_gaps": critical_gaps_data,
+                "normalized_jd": json.loads(scan.normalized_jd) if scan.normalized_jd else {},
+                "normalized_resume": json.loads(scan.normalized_resume) if scan.normalized_resume else {}
+            })
+        except Exception as plan_err:
+            logger.warning(f"Career plan retrieval generation failed softly: {plan_err}")
+            career_plan = None
+    else:
+        career_plan = None
+
     return ResumeJDMatchResponse(
         scan_id=scan.scan_id,
         matching_engine_version=scan.matching_engine_version or "match-v1.0.0",
@@ -1540,6 +1591,7 @@ def get_resume_jd_match(
         source_url=scan.source_url,
         evaluation_fingerprint=scan.evaluation_fingerprint,
         is_cached=False,
+        career_improvement_plan=career_plan,
         created_at=scan.created_at.isoformat() if scan.created_at else datetime.now(timezone.utc).isoformat()
     )
 
@@ -1573,6 +1625,163 @@ def get_resume_jd_history(
             created_at=s.created_at.isoformat() if s.created_at else ""
         ))
     return history
+
+
+# ==============================================================================
+# CONTEXTUAL PERSONALIZED LEARNING PLAN ENDPOINTS
+# ==============================================================================
+
+@app.post("/api/candidate/learning-plan/generate")
+@app.post("/candidate/learning-plan/generate")
+def api_generate_candidate_learning_plan(
+    payload: LearningPlanGenerateRequest,
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Generates a personalized career improvement plan analyzing skill, experience,
+    and career gaps against target JD requirements.
+    """
+    if not is_candidate_menu_enabled("Personalized Learning Plan", db):
+        raise HTTPException(
+            status_code=403,
+            detail="Personalized Learning Plan is currently disabled by administrator."
+        )
+    scan_id = payload.scan_id
+    if scan_id:
+        scan = db.query(ResumeScan).filter(ResumeScan.scan_id == scan_id, ResumeScan.user_id == current_user.id).first()
+        if not scan:
+            raise HTTPException(status_code=404, detail="Scan result not found or access denied.")
+        scan_data = {
+            "scan_id": scan.scan_id,
+            "target_role": scan.target_role,
+            "overall_match_score": scan.overall_match_score if scan.overall_match_score is not None else scan.match_score,
+            "sub_scores": json.loads(scan.sub_scores) if scan.sub_scores else {},
+            "skill_matrix": json.loads(scan.skill_matrix) if scan.skill_matrix else [],
+            "strengths": json.loads(scan.strengths) if scan.strengths else [],
+            "skill_gaps": json.loads(scan.skill_gaps) if scan.skill_gaps else [],
+            "critical_gaps": json.loads(scan.critical_gaps) if scan.critical_gaps else [],
+            "normalized_jd": json.loads(scan.normalized_jd) if scan.normalized_jd else {},
+            "normalized_resume": json.loads(scan.normalized_resume) if scan.normalized_resume else {}
+        }
+    else:
+        latest_scan = db.query(ResumeScan).filter(ResumeScan.user_id == current_user.id).order_by(ResumeScan.id.desc()).first()
+        if latest_scan:
+            scan_data = {
+                "scan_id": latest_scan.scan_id,
+                "target_role": latest_scan.target_role,
+                "overall_match_score": latest_scan.overall_match_score if latest_scan.overall_match_score is not None else latest_scan.match_score,
+                "sub_scores": json.loads(latest_scan.sub_scores) if latest_scan.sub_scores else {},
+                "skill_matrix": json.loads(latest_scan.skill_matrix) if latest_scan.skill_matrix else [],
+                "strengths": json.loads(latest_scan.strengths) if latest_scan.strengths else [],
+                "skill_gaps": json.loads(latest_scan.skill_gaps) if latest_scan.skill_gaps else [],
+                "critical_gaps": json.loads(latest_scan.critical_gaps) if latest_scan.critical_gaps else [],
+                "normalized_jd": json.loads(latest_scan.normalized_jd) if latest_scan.normalized_jd else {},
+                "normalized_resume": json.loads(latest_scan.normalized_resume) if latest_scan.normalized_resume else {}
+            }
+        else:
+            scan_data = {
+                "scan_id": "default",
+                "target_role": payload.target_role or "Software Engineer",
+                "overall_match_score": 65.0,
+                "sub_scores": {},
+                "skill_matrix": [],
+                "strengths": [],
+                "skill_gaps": [],
+                "critical_gaps": [],
+                "normalized_jd": {},
+                "normalized_resume": {}
+            }
+
+    plan = generate_career_improvement_plan(scan_data)
+    return plan
+
+
+@app.post("/api/candidate/learning-plan/build")
+@app.post("/candidate/learning-plan/build")
+def api_build_candidate_learning_roadmap(
+    payload: LearningPlanBuildRequest,
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Builds a candidate-approved learning roadmap based on explicitly selected skills.
+    Never auto-enrolls; constructed strictly from candidate selection.
+    """
+    if not is_candidate_menu_enabled("Personalized Learning Plan", db):
+        raise HTTPException(
+            status_code=403,
+            detail="Personalized Learning Plan is currently disabled by administrator."
+        )
+    scan = None
+    if payload.scan_id:
+        scan = db.query(ResumeScan).filter(ResumeScan.scan_id == payload.scan_id, ResumeScan.user_id == current_user.id).first()
+        if not scan:
+            raise HTTPException(status_code=404, detail="Scan result not found or access denied.")
+    else:
+        scan = db.query(ResumeScan).filter(ResumeScan.user_id == current_user.id).order_by(ResumeScan.id.desc()).first()
+
+    if scan:
+        score = float(scan.overall_match_score if scan.overall_match_score is not None else (scan.match_score or 65.0))
+        role = scan.target_role or payload.target_role or "Software Engineer"
+    else:
+        score = 65.0
+        role = payload.target_role or "Software Engineer"
+
+    roadmap = build_personalized_learning_roadmap(
+        selected_skill_names=payload.selected_skills,
+        target_role=role,
+        overall_match_score=score
+    )
+    return roadmap
+
+
+@app.post("/api/candidate/learning-plan/reassess")
+@app.post("/candidate/learning-plan/reassess")
+def api_reassess_candidate_learning_progress(
+    payload: LearningPlanReassessRequest,
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Step 9: Skill Reassessment
+    Recalculates projected ATS match score and updates skill matrix statuses
+    based on completed learning modules and self-attested verified skills.
+    """
+    if not is_candidate_menu_enabled("Personalized Learning Plan", db):
+        raise HTTPException(
+            status_code=403,
+            detail="Personalized Learning Plan is currently disabled by administrator."
+        )
+    scan = None
+    if payload.scan_id:
+        scan = db.query(ResumeScan).filter(ResumeScan.scan_id == payload.scan_id, ResumeScan.user_id == current_user.id).first()
+        if not scan:
+            raise HTTPException(status_code=404, detail="Scan result not found or access denied.")
+    else:
+        scan = db.query(ResumeScan).filter(ResumeScan.user_id == current_user.id).order_by(ResumeScan.id.desc()).first()
+
+    matrix = []
+    if scan:
+        score = float(scan.overall_match_score if scan.overall_match_score is not None else (scan.match_score or 65.0))
+        role = scan.target_role or payload.target_role or "Software Engineer"
+        if scan.skill_matrix:
+            try:
+                matrix = json.loads(scan.skill_matrix)
+            except Exception:
+                matrix = []
+    else:
+        score = 65.0
+        role = payload.target_role or "Software Engineer"
+
+    reassessment = reassess_candidate_progress(
+        target_role=role,
+        original_match_score=score,
+        skill_matrix=matrix,
+        completed_skills=payload.completed_skills,
+        candidate_verified_skills=payload.candidate_verified_skills
+    )
+    return reassessment
 
 
 # ---------- REAL-TIME VIDEO + VOICE CONVERSATIONAL INTERVIEW API ----------
@@ -2262,6 +2471,16 @@ def serve_scorecard(score_id: str = None, db: Session = Depends(get_db)):
     block_res = check_menu_access_or_block("Public Scorecards", db)
     if block_res: return block_res
     return get_html_response("scorecard.html")
+
+@app.get("/candidate/learning-plan", include_in_schema=False)
+@app.get("/candidate/learning-plan.html", include_in_schema=False)
+@app.get("/learning-plan", include_in_schema=False)
+@app.get("/learning-plan.html", include_in_schema=False)
+def serve_candidate_learning_plan(db: Session = Depends(get_db)):
+    block_res = check_menu_access_or_block("Personalized Learning Plan", db)
+    if block_res:
+        return block_res
+    return get_html_response("Resume-match.html", db)
 
 @app.get("/analytics-tracker.js", include_in_schema=False)
 @app.get("/candidate/analytics-tracker.js", include_in_schema=False)
