@@ -1004,3 +1004,69 @@ class LearningPlanReassessRequest(BaseModel):
     target_role: Optional[str] = Field("Software Engineer", max_length=120, description="Target job title / role")
     completed_skills: List[SkillNameStr] = Field(default_factory=list, max_length=50, description="Skills candidate completed via learning plan")
     candidate_verified_skills: List[SkillNameStr] = Field(default_factory=list, max_length=50, description="Skills candidate self-attested")
+
+
+# ==============================================================================
+# PHASE 2: AI RESUME REBUILDER SCHEMAS
+# ==============================================================================
+
+class ResumeRebuildRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    scan_id: Optional[str] = Field(None, max_length=64, description="Persisted resume scan identifier")
+    resume_text: Optional[str] = Field(None, description="Raw plain text resume if not referencing a scan")
+    target_role: Optional[str] = Field(None, max_length=150, description="Target job title / role")
+    target_jd: Optional[str] = Field(None, description="Target job description text")
+    focus_areas: List[str] = Field(default_factory=list, description="Specific skills or areas to emphasize")
+    tone: Optional[str] = Field("executive", description="executive | technical | impact_driven | modern")
+    custom_instructions: Optional[str] = Field(None, max_length=2000, description="Candidate-provided specific instructions")
+
+
+class ResumeRebuildResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    success: bool = True
+    rebuild_id: str
+    scan_id: Optional[str] = None
+    version_number: int = 1
+    target_role: str
+    original_resume_snippet: Optional[str] = None
+    rebuilt_resume_text: str
+    rebuilt_structured: Optional[Dict[str, Any]] = None
+    tailored_skills: List[str] = Field(default_factory=list)
+    improvements_summary: List[str] = Field(default_factory=list)
+    ats_projected_score: float = Field(..., ge=0.0, le=100.0)
+    baseline_match_score: Optional[float] = None
+    status: str = "active"
+    created_at: str
+    message: Optional[str] = None
+
+
+class ResumeRebuildUpdateRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    rebuilt_resume_text: str = Field(..., min_length=20, description="Updated candidate resume draft")
+    target_role: Optional[str] = Field(None, max_length=150)
+    rebuilt_structured: Optional[Dict[str, Any]] = None
+
+
+class ResumeRebuildVersionItem(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    rebuild_id: str
+    scan_id: Optional[str] = None
+    version_number: int
+    target_role: str
+    ats_projected_score: Optional[float] = None
+    status: str
+    created_at: str
+    updated_at: str
+
+
+class ResumeRebuildVersionListResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    success: bool = True
+    total_versions: int
+    versions: List[ResumeRebuildVersionItem] = Field(default_factory=list)
+
+
+class ResumeExportRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    format: str = Field("pdf", description="pdf | docx | markdown | txt")
+    styling_theme: Optional[str] = Field("modern", description="modern | classic | minimalist | technical")

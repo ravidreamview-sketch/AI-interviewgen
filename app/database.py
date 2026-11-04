@@ -326,6 +326,7 @@ def init_db():
                     _run_migration_resume_scans(dialect, conn=conn)
                     _run_migration_candidate_answer_attempts(dialect, conn=conn)
                     _run_migration_user_invitations(dialect, conn=conn)
+                    _run_migration_rebuilt_resumes(dialect, conn=conn)
 
                     # Step 3d: Bootstrap accounts
                     logger.info("Bootstrapping administrative and candidate accounts")
@@ -345,6 +346,7 @@ def init_db():
             _run_migration_resume_scans(dialect)
             _run_migration_candidate_answer_attempts(dialect)
             _run_migration_user_invitations(dialect)
+            _run_migration_rebuilt_resumes(dialect)
 
             logger.info("Bootstrapping administrative and candidate accounts")
             _run_account_bootstrap()
@@ -668,7 +670,7 @@ def _run_migration_candidate_answer_attempts(dialect: str, conn=None):
                 _safe_execute_ddl("""
                 CREATE TABLE IF NOT EXISTS candidate_answer_attempts (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id INTEGER NOT NULL REFERENCES user_accounts(id) ON DELETE CASCADE,
+                    user_id INTEGER NOT NULL REFERENCES user_accounts(id) ON DELETE RESTRICT,
                     interview_id INTEGER NOT NULL REFERENCES interview_history(id) ON DELETE CASCADE,
                     question_index INTEGER NOT NULL,
                     question_text TEXT NOT NULL,
@@ -706,7 +708,7 @@ def _run_migration_candidate_answer_attempts(dialect: str, conn=None):
                 _safe_execute_ddl("""
                 CREATE TABLE IF NOT EXISTS "candidate_answer_attempts" (
                     "id" SERIAL PRIMARY KEY,
-                    "user_id" INTEGER NOT NULL REFERENCES "user_accounts"("id") ON DELETE CASCADE,
+                    "user_id" INTEGER NOT NULL REFERENCES "user_accounts"("id") ON DELETE RESTRICT,
                     "interview_id" INTEGER NOT NULL REFERENCES "interview_history"("id") ON DELETE CASCADE,
                     "question_index" INTEGER NOT NULL,
                     "question_text" TEXT NOT NULL,
@@ -790,3 +792,79 @@ def _run_migration_user_invitations(dialect: str, conn=None):
             _safe_execute_ddl('CREATE UNIQUE INDEX IF NOT EXISTS idx_invitation_token_hash ON "user_invitations"(token_hash)', conn=conn)
     except Exception as e:
         logger.warning(f"[DB Migration] user_invitations migration notice: {e}")
+
+
+def _run_migration_rebuilt_resumes(dialect: str, conn=None):
+    """Migration: rebuilt_resumes table and indexes for Phase 2 AI Resume Rebuilder."""
+    try:
+        has_table = _table_exists("rebuilt_resumes", conn=conn)
+
+        if dialect == "sqlite":
+            if not has_table:
+                _safe_execute_ddl("""
+                CREATE TABLE IF NOT EXISTS rebuilt_resumes (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    rebuild_id TEXT NOT NULL UNIQUE,
+                    scan_id TEXT,
+                    user_id INTEGER NOT NULL REFERENCES user_accounts(id) ON DELETE RESTRICT,
+                    version_number INTEGER NOT NULL DEFAULT 1,
+                    target_role TEXT NOT NULL DEFAULT 'General Tech',
+                    original_resume_snippet TEXT,
+                    rebuilt_resume_text TEXT NOT NULL,
+                    rebuilt_structured_json TEXT,
+                    tailored_skills TEXT,
+                    improvements_summary TEXT,
+                    ats_projected_score REAL,
+                    status TEXT NOT NULL DEFAULT 'active',
+                    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """, conn=conn)
+            _safe_execute_ddl("CREATE INDEX IF NOT EXISTS ix_rebuilt_resumes_rebuild_id ON rebuilt_resumes(rebuild_id)", conn=conn)
+            _safe_execute_ddl("CREATE INDEX IF NOT EXISTS ix_rebuilt_resumes_scan_id ON rebuilt_resumes(scan_id)", conn=conn)
+            _safe_execute_ddl("CREATE INDEX IF NOT EXISTS ix_rebuilt_resumes_user_id ON rebuilt_resumes(user_id)", conn=conn)
+            _safe_execute_ddl("CREATE INDEX IF NOT EXISTS ix_rebuilt_resumes_created_at ON rebuilt_resumes(created_at)", conn=conn)
+        else:
+            # PostgreSQL
+            if not has_table:
+                _safe_execute_ddl("""
+                CREATE TABLE IF NOT EXISTS "rebuilt_resumes" (
+                    "id" SERIAL PRIMARY KEY,
+                    "rebuild_id" VARCHAR(64) NOT NULL UNIQUE,
+                    "scan_id" VARCHAR(64),
+                    "user_id" INTEGER NOT NULL REFERENCES "user_accounts"("id") ON DELETE RESTRICT,
+                    "version_number" INTEGER NOT NULL DEFAULT 1,
+                    "target_role" VARCHAR(255) NOT NULL DEFAULT 'General Tech',
+                    "original_resume_snippet" TEXT,
+                    "rebuilt_resume_text" TEXT NOT NULL,
+                    "rebuilt_structured_json" TEXT,
+                    "tailored_skills" TEXT,
+                    "improvements_summary" TEXT,
+                    "ats_projected_score" REAL,
+                    "status" VARCHAR(50) NOT NULL DEFAULT 'active',
+                    "created_at" TIMESTAMP WITHOUT TIME ZONE DEFAULT (NOW() AT TIME ZONE 'utc'),
+                    "updated_at" TIMESTAMP WITHOUT TIME ZONE DEFAULT (NOW() AT TIME ZONE 'utc')
+                )
+                """, conn=conn)
+            _safe_execute_ddl('CREATE INDEX IF NOT EXISTS ix_rebuilt_resumes_rebuild_id ON "rebuilt_resumes"(rebuild_id)', conn=conn)
+            _safe_execute_ddl('CREATE INDEX IF NOT EXISTS ix_rebuilt_resumes_scan_id ON "rebuilt_resumes"(scan_id)', conn=conn)
+            _safe_execute_ddl('CREATE INDEX IF NOT EXISTS ix_rebuilt_resumes_user_id ON "rebuilt_resumes"(user_id)', conn=conn)
+            _safe_execute_ddl('CREATE INDEX IF NOT EXISTS ix_rebuilt_resumes_created_at ON "rebuilt_resumes"(created_at)', conn=conn)
+            
+            # Idempotently upgrade foreign key constraint from CASCADE to RESTRICT to enforce Zero Data Loss
+            _safe_execute_ddl('''
+                DO $$
+                BEGIN
+                    IF EXISTS (
+                        SELECT 1 FROM information_schema.referential_constraints
+                        WHERE constraint_name = 'rebuilt_resumes_user_id_fkey'
+                        AND delete_rule != 'RESTRICT'
+                    ) THEN
+                        ALTER TABLE "rebuilt_resumes" DROP CONSTRAINT IF EXISTS "rebuilt_resumes_user_id_fkey";
+                        ALTER TABLE "rebuilt_resumes" ADD CONSTRAINT "rebuilt_resumes_user_id_fkey"
+                            FOREIGN KEY ("user_id") REFERENCES "user_accounts"("id") ON DELETE RESTRICT;
+                    END IF;
+                END $$;
+            ''', conn=conn)
+    except Exception as e:
+        logger.warning(f"[DB Migration] rebuilt_resumes migration notice: {e}")
