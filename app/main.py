@@ -1,5 +1,6 @@
 import time
 import os
+import re
 import uuid
 import json
 import logging
@@ -61,6 +62,12 @@ from app.models import (
     LearningPlanGenerateRequest,
     LearningPlanBuildRequest,
     LearningPlanReassessRequest,
+    ResumeRebuildRequest,
+    ResumeRebuildResponse,
+    ResumeRebuildUpdateRequest,
+    ResumeRebuildVersionItem,
+    ResumeRebuildVersionListResponse,
+    ResumeExportRequest,
 )
 from app.interview_engine import (
     start_interview_session,
@@ -97,6 +104,16 @@ from app.matching_service import (
     calculate_resume_jd_match,
     normalize_resume
 )
+
+from app.resume_rebuilder_service import (
+    rebuild_resume_content,
+    generate_rebuild_id,
+    export_as_docx,
+    export_as_html_printable,
+    export_as_markdown,
+    export_as_txt,
+)
+
 from app.learning_plan_service import (
     generate_career_improvement_plan,
     build_personalized_learning_roadmap,
@@ -109,6 +126,8 @@ from app.db_models import (
     PageViewEvent,
     ClickEvent,
     ResumeScan,
+    RebuiltResume,
+    AuditLog,
     MockInterview,
     CoachSession,
     CoachMessage,
@@ -1782,6 +1801,338 @@ def api_reassess_candidate_learning_progress(
         candidate_verified_skills=payload.candidate_verified_skills
     )
     return reassessment
+
+
+# ==============================================================================
+# PHASE 2: AI RESUME REBUILDER API ROUTES
+# ==============================================================================
+
+@app.post("/api/candidate/resume-rebuild/generate", response_model=ResumeRebuildResponse)
+@app.post("/candidate/resume-rebuild/generate", response_model=ResumeRebuildResponse)
+def api_generate_rebuilt_resume(
+    payload: ResumeRebuildRequest,
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Synthesizes an ATS-optimized, high-impact rewritten resume tailored specifically
+    for the candidate's target role and JD. Permanently preserves original resume in resume_scans.
+    """
+    _require_candidate_account(current_user)
+    
+    scan = None
+    original_text = ""
+    target_role = payload.target_role or "Senior Software Engineer"
+    matrix = []
+    critical_gaps = []
+    baseline_ats = 50.0
+
+    if payload.scan_id:
+        scan = db.query(ResumeScan).filter(
+            ResumeScan.scan_id == payload.scan_id,
+            ResumeScan.user_id == current_user.id
+        ).first()
+        if not scan:
+            raise HTTPException(status_code=404, detail="Original resume scan not found or access denied.")
+        original_text = scan.normalized_resume or ""
+        target_role = payload.target_role or scan.target_role or "Senior Software Engineer"
+        baseline_ats = float(scan.overall_match_score or scan.match_score or 50.0)
+        try:
+            if scan.skill_matrix:
+                matrix = json.loads(scan.skill_matrix) if isinstance(scan.skill_matrix, str) else scan.skill_matrix
+            if scan.critical_gaps:
+                critical_gaps = json.loads(scan.critical_gaps) if isinstance(scan.critical_gaps, str) else scan.critical_gaps
+        except Exception:
+            pass
+    elif payload.resume_text:
+        original_text = payload.resume_text
+    else:
+        scan = db.query(ResumeScan).filter(ResumeScan.user_id == current_user.id).order_by(ResumeScan.id.desc()).first()
+        if scan:
+            original_text = scan.normalized_resume or ""
+            target_role = payload.target_role or scan.target_role or "Senior Software Engineer"
+            baseline_ats = float(scan.overall_match_score or scan.match_score or 50.0)
+        else:
+            original_text = f"{current_user.full_name or 'Candidate'}\n{current_user.email}\nSoftware Engineer with experience in cloud and backend systems."
+
+    # Call synthesis service
+    result = rebuild_resume_content(
+        original_resume_text=original_text,
+        target_role=target_role,
+        target_jd=payload.target_jd,
+        skill_matrix=matrix,
+        critical_gaps=critical_gaps,
+        focus_areas=payload.focus_areas,
+        tone=payload.tone or "executive",
+        custom_instructions=payload.custom_instructions,
+        baseline_ats_score=baseline_ats
+    )
+
+    existing_count = db.query(RebuiltResume).filter(
+        RebuiltResume.user_id == current_user.id
+    ).count()
+    version_number = existing_count + 1
+
+    rebuild_id = generate_rebuild_id()
+    now_utc = datetime.now(timezone.utc)
+
+    # Additive record creation: never replaces or overwrites existing records!
+    new_record = RebuiltResume(
+        rebuild_id=rebuild_id,
+        scan_id=scan.scan_id if scan else None,
+        user_id=current_user.id,
+        version_number=version_number,
+        target_role=target_role,
+        original_resume_snippet=original_text[:500] if original_text else None,
+        rebuilt_resume_text=result["rebuilt_resume_text"],
+        rebuilt_structured_json=json.dumps(result["rebuilt_structured"]),
+        tailored_skills=json.dumps(result["tailored_skills"]),
+        improvements_summary=json.dumps(result["improvements_summary"]),
+        ats_projected_score=result["ats_projected_score"],
+        status="active",
+        created_at=now_utc,
+        updated_at=now_utc
+    )
+    db.add(new_record)
+
+    try:
+        audit = AuditLog(
+            user_id=current_user.id,
+            admin_email=current_user.email,
+            action="RESUME_REBUILD_GENERATED",
+            resource=rebuild_id,
+            new_value=json.dumps({"version": version_number, "target_role": target_role, "ats_projected": result["ats_projected_score"]}),
+            timestamp=now_utc
+        )
+        db.add(audit)
+    except Exception as ae:
+        logger.warning(f"Audit log recording error: {ae}")
+
+    db.commit()
+    db.refresh(new_record)
+
+    return ResumeRebuildResponse(
+        success=True,
+        rebuild_id=rebuild_id,
+        scan_id=scan.scan_id if scan else None,
+        version_number=version_number,
+        target_role=target_role,
+        original_resume_snippet=original_text[:500] if original_text else None,
+        rebuilt_resume_text=result["rebuilt_resume_text"],
+        rebuilt_structured=result["rebuilt_structured"],
+        tailored_skills=result["tailored_skills"],
+        improvements_summary=result["improvements_summary"],
+        ats_projected_score=result["ats_projected_score"],
+        baseline_match_score=baseline_ats,
+        status="active",
+        created_at=now_utc.isoformat(),
+        message="AI Resume successfully rebuilt and optimized for ATS matching."
+    )
+
+
+@app.get("/api/candidate/resume-rebuild/versions", response_model=ResumeRebuildVersionListResponse)
+@app.get("/candidate/resume-rebuild/versions", response_model=ResumeRebuildVersionListResponse)
+def api_list_rebuilt_resume_versions(
+    scan_id: Optional[str] = None,
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Lists all rebuilt resume versions for the authenticated candidate.
+    Enforces strict candidate-level ownership isolation.
+    """
+    _require_candidate_account(current_user)
+    query = db.query(RebuiltResume).filter(RebuiltResume.user_id == current_user.id)
+    if scan_id:
+        query = query.filter(RebuiltResume.scan_id == scan_id)
+    records = query.order_by(RebuiltResume.version_number.desc()).all()
+
+    items = [
+        ResumeRebuildVersionItem(
+            rebuild_id=r.rebuild_id,
+            scan_id=r.scan_id,
+            version_number=r.version_number,
+            target_role=r.target_role,
+            ats_projected_score=r.ats_projected_score,
+            status=r.status,
+            created_at=r.created_at.isoformat() if r.created_at else "",
+            updated_at=r.updated_at.isoformat() if r.updated_at else ""
+        )
+        for r in records
+    ]
+    return ResumeRebuildVersionListResponse(
+        success=True,
+        total_versions=len(items),
+        versions=items
+    )
+
+
+@app.get("/api/candidate/resume-rebuild/{rebuild_id}", response_model=ResumeRebuildResponse)
+@app.get("/candidate/resume-rebuild/{rebuild_id}", response_model=ResumeRebuildResponse)
+def api_get_rebuilt_resume_version(
+    rebuild_id: str,
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Retrieves a specific rebuilt resume version. Enforces strict IDOR protection.
+    """
+    _require_candidate_account(current_user)
+    record = db.query(RebuiltResume).filter(RebuiltResume.rebuild_id == rebuild_id).first()
+    if not record or record.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Rebuilt resume version not found or access denied.")
+
+    structured = json.loads(record.rebuilt_structured_json) if record.rebuilt_structured_json else None
+    skills = json.loads(record.tailored_skills) if record.tailored_skills else []
+    improvements = json.loads(record.improvements_summary) if record.improvements_summary else []
+
+    return ResumeRebuildResponse(
+        success=True,
+        rebuild_id=record.rebuild_id,
+        scan_id=record.scan_id,
+        version_number=record.version_number,
+        target_role=record.target_role,
+        original_resume_snippet=record.original_resume_snippet,
+        rebuilt_resume_text=record.rebuilt_resume_text,
+        rebuilt_structured=structured,
+        tailored_skills=skills,
+        improvements_summary=improvements,
+        ats_projected_score=record.ats_projected_score or 85.0,
+        status=record.status,
+        created_at=record.created_at.isoformat() if record.created_at else "",
+        message="Rebuilt resume version retrieved successfully."
+    )
+
+
+@app.put("/api/candidate/resume-rebuild/{rebuild_id}", response_model=ResumeRebuildResponse)
+@app.put("/candidate/resume-rebuild/{rebuild_id}", response_model=ResumeRebuildResponse)
+def api_update_rebuilt_resume_version(
+    rebuild_id: str,
+    payload: ResumeRebuildUpdateRequest,
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Updates the text or structured content of a candidate's rebuilt resume draft.
+    """
+    _require_candidate_account(current_user)
+    record = db.query(RebuiltResume).filter(RebuiltResume.rebuild_id == rebuild_id).first()
+    if not record or record.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Rebuilt resume version not found or access denied.")
+
+    record.rebuilt_resume_text = payload.rebuilt_resume_text
+    if payload.target_role:
+        record.target_role = payload.target_role
+    if payload.rebuilt_structured:
+        record.rebuilt_structured_json = json.dumps(payload.rebuilt_structured)
+    now_utc = datetime.now(timezone.utc)
+    record.updated_at = now_utc
+
+    try:
+        audit = AuditLog(
+            user_id=current_user.id,
+            admin_email=current_user.email,
+            action="RESUME_REBUILD_UPDATED",
+            resource=rebuild_id,
+            new_value=json.dumps({"updated_at": now_utc.isoformat(), "length": len(payload.rebuilt_resume_text)}),
+            timestamp=now_utc
+        )
+        db.add(audit)
+    except Exception as ae:
+        logger.warning(f"Audit log recording error: {ae}")
+
+    db.commit()
+    db.refresh(record)
+
+    structured = json.loads(record.rebuilt_structured_json) if record.rebuilt_structured_json else None
+    skills = json.loads(record.tailored_skills) if record.tailored_skills else []
+    improvements = json.loads(record.improvements_summary) if record.improvements_summary else []
+
+    return ResumeRebuildResponse(
+        success=True,
+        rebuild_id=record.rebuild_id,
+        scan_id=record.scan_id,
+        version_number=record.version_number,
+        target_role=record.target_role,
+        original_resume_snippet=record.original_resume_snippet,
+        rebuilt_resume_text=record.rebuilt_resume_text,
+        rebuilt_structured=structured,
+        tailored_skills=skills,
+        improvements_summary=improvements,
+        ats_projected_score=record.ats_projected_score or 85.0,
+        status=record.status,
+        created_at=record.created_at.isoformat() if record.created_at else "",
+        message="Rebuilt resume draft updated successfully."
+    )
+
+
+@app.post("/api/candidate/resume-rebuild/{rebuild_id}/export")
+@app.post("/candidate/resume-rebuild/{rebuild_id}/export")
+def api_export_rebuilt_resume(
+    rebuild_id: str,
+    payload: ResumeExportRequest,
+    current_user: UserAccount = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Exports the rebuilt resume in the requested format (DOCX, PDF/HTML, Markdown, TXT).
+    """
+    _require_candidate_account(current_user)
+    record = db.query(RebuiltResume).filter(RebuiltResume.rebuild_id == rebuild_id).first()
+    if not record or record.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Rebuilt resume version not found or access denied.")
+
+    clean_name = re.sub(r'[^a-zA-Z0-9_-]', '_', current_user.full_name or "Candidate")
+    clean_role = re.sub(r'[^a-zA-Z0-9_-]', '_', record.target_role or "Resume")
+    fmt = (payload.format or "docx").lower().strip()
+
+    try:
+        audit = AuditLog(
+            user_id=current_user.id,
+            admin_email=current_user.email,
+            action="RESUME_REBUILD_EXPORTED",
+            resource=rebuild_id,
+            new_value=json.dumps({"format": fmt, "version": record.version_number}),
+            timestamp=datetime.now(timezone.utc)
+        )
+        db.add(audit)
+        db.commit()
+    except Exception as ae:
+        logger.warning(f"Audit log recording error: {ae}")
+
+    if fmt == "docx":
+        docx_bytes = export_as_docx(record.rebuilt_resume_text, current_user.full_name or "Candidate", record.target_role)
+        filename = f"{clean_name}_{clean_role}_v{record.version_number}.docx"
+        return Response(
+            content=docx_bytes,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+        )
+    elif fmt == "markdown" or fmt == "md":
+        md_bytes = export_as_markdown(record.rebuilt_resume_text)
+        filename = f"{clean_name}_{clean_role}_v{record.version_number}.md"
+        return Response(
+            content=md_bytes,
+            media_type="text/markdown; charset=utf-8",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+        )
+    elif fmt == "txt":
+        txt_bytes = export_as_txt(record.rebuilt_resume_text)
+        filename = f"{clean_name}_{clean_role}_v{record.version_number}.txt"
+        return Response(
+            content=txt_bytes,
+            media_type="text/plain; charset=utf-8",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+        )
+    elif fmt == "pdf" or fmt == "html":
+        html_str = export_as_html_printable(record.rebuilt_resume_text, current_user.full_name or "Candidate", record.target_role)
+        filename = f"{clean_name}_{clean_role}_v{record.version_number}.html"
+        return HTMLResponse(
+            content=html_str,
+            headers={"Content-Disposition": f'inline; filename="{filename}"'}
+        )
+    else:
+        raise HTTPException(status_code=400, detail=f"Unsupported export format: {fmt}. Supported formats: docx, pdf, markdown, txt")
 
 
 # ---------- REAL-TIME VIDEO + VOICE CONVERSATIONAL INTERVIEW API ----------

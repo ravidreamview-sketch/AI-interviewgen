@@ -309,3 +309,24 @@ class UserInvitation(Base):
     expires_at = Column(DateTime, nullable=False)
     accepted_at = Column(DateTime, nullable=True)
     is_revoked = Column(Boolean, default=False, nullable=False)
+
+
+class RebuiltResume(Base):
+    __tablename__ = "rebuilt_resumes"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    rebuild_id = Column(String(64), unique=True, index=True, nullable=False)
+    scan_id = Column(String(64), index=True, nullable=True)
+    user_id = Column(Integer, ForeignKey("user_accounts.id", ondelete="CASCADE"), nullable=False, index=True)
+    version_number = Column(Integer, default=1, nullable=False)
+    target_role = Column(String(255), nullable=False, default="General Tech")
+    original_resume_snippet = Column(Text, nullable=True)
+    rebuilt_resume_text = Column(Text, nullable=False)
+    rebuilt_structured_json = Column(Text, nullable=True)
+    tailored_skills = Column(Text, nullable=True)
+    improvements_summary = Column(Text, nullable=True)
+    ats_projected_score = Column(Float, nullable=True)
+    status = Column(String(50), default="active", nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))

@@ -1120,6 +1120,108 @@ button{font-family:inherit;cursor:pointer;color:inherit;background:none;border:n
 
     </div>
 
+  
+      <!-- PHASE 2: AI RESUME REBUILDER SECTION -->
+      <div id="resumeRebuilderSection" class="career-plan-container" style="display:none;margin-top:28px">
+        <div class="career-plan-header">
+          <div>
+            <div style="font-size:20px;font-weight:800;color:var(--ink);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <span>✨ AI Resume Rebuilder</span>
+              <span class="career-plan-badge" style="background:rgba(99,102,241,0.15);color:#6366F1;border:1px solid rgba(99,102,241,0.3)">ATS OPTIMIZED</span>
+            </div>
+            <div style="font-size:13.5px;color:var(--ink-soft);margin-top:6px;max-width:760px;line-height:1.5">
+              Transform your resume into a high-impact, role-tailored professional narrative. Quantifies achievements, highlights target competencies, and boosts projected ATS score without touching your original file.
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <button id="rebuildResumeCTA" onclick="rebuildResumeAction()" class="build-plan-cta-btn" style="background:linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);box-shadow:0 4px 16px rgba(79,70,229,0.35);padding:10px 20px;font-size:13px">
+              <span>⚡ Rebuild Resume with AI</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- REBUILDER WORKSPACE -->
+        <div id="rebuilderWorkspace" style="display:none;margin-top:20px">
+          <!-- METRICS & CONTROLS BANNER -->
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;background:var(--paper);padding:14px 18px;border-radius:12px;border:1px solid var(--rule);margin-bottom:18px">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+              <div style="font-size:13px;font-weight:700;color:var(--ink-soft)">PROJECTED ATS MATCH:</div>
+              <div id="rebuildAtsBadge" style="padding:4px 12px;border-radius:20px;background:#10B981;color:#fff;font-weight:800;font-size:13px">92.0% Projected</div>
+              <div id="rebuildBaselineDiff" style="font-size:12px;color:#10B981;font-weight:700">(+35.0% boost from baseline)</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <label for="rebuildVersionSelect" style="font-size:12.5px;font-weight:600;color:var(--ink-soft)">Version:</label>
+              <select id="rebuildVersionSelect" onchange="switchRebuiltVersion(this.value)" style="padding:6px 12px;border-radius:8px;border:1px solid var(--rule);background:var(--sheet);color:var(--ink);font-size:13px;font-weight:600">
+                <option value="">v1 (Current)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- APPLIED IMPROVEMENTS PILLS -->
+          <div style="margin-bottom:18px">
+            <div style="font-size:12.5px;font-weight:700;color:var(--ink);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">Key Enhancements Applied:</div>
+            <div id="rebuilderImprovementsList" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+          </div>
+
+          <!-- SIDE-BY-SIDE COMPARISON: ORIGINAL VS REBUILT -->
+          <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:20px;margin-bottom:20px" class="rebuilder-grid">
+            <!-- ORIGINAL RESUME READ-ONLY PANEL -->
+            <div style="background:var(--paper);border:1px solid var(--rule);border-radius:12px;padding:16px;display:flex;flex-direction:column">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                <div style="font-size:13.5px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:6px">
+                  <span>📄 Original Resume</span>
+                  <span style="font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(100,116,139,0.15);color:var(--ink-soft)">IMMUTABLE</span>
+                </div>
+              </div>
+              <div id="originalResumePreview" style="font-size:12.5px;color:var(--ink-soft);line-height:1.6;white-space:pre-wrap;background:var(--sheet);border:1px solid var(--rule);border-radius:8px;padding:12px;flex:1;overflow-y:auto;max-height:480px;font-family:monospace"></div>
+            </div>
+
+            <!-- REBUILT RESUME INTERACTIVE EDITOR & PREVIEW -->
+            <div style="background:var(--paper);border:1px solid var(--rule);border-radius:12px;padding:16px;display:flex;flex-direction:column">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+                <div style="font-size:13.5px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:6px">
+                  <span>✨ Rebuilt Resume (ATS Optimized)</span>
+                  <span style="font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(16,185,129,0.15);color:#059669;font-weight:700">TAILORED</span>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <button id="togglePreviewBtn" onclick="toggleRebuilderViewMode()" style="padding:5px 12px;font-size:12px;border-radius:6px;border:1px solid var(--rule);background:var(--sheet);color:var(--ink);cursor:pointer;font-weight:600">
+                    Preview Mode
+                  </button>
+                  <button id="saveRebuiltDraftBtn" onclick="saveRebuiltDraftAction()" style="padding:5px 12px;font-size:12px;border-radius:6px;border:none;background:#4F46E5;color:#fff;cursor:pointer;font-weight:600">
+                    💾 Save Draft
+                  </button>
+                </div>
+              </div>
+              
+              <textarea id="rebuiltResumeEditor" style="width:100%;height:440px;padding:12px;font-size:12.5px;line-height:1.6;border:1px solid var(--rule);border-radius:8px;background:var(--sheet);color:var(--ink);font-family:inherit;resize:vertical"></textarea>
+              <div id="rebuiltResumePreview" style="display:none;width:100%;height:440px;padding:16px;font-size:13px;line-height:1.6;border:1px solid var(--rule);border-radius:8px;background:#fff;color:#1e293b;overflow-y:auto"></div>
+            </div>
+          </div>
+
+          <!-- MULTI-FORMAT EXPORT ACTIONS -->
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;background:var(--paper);padding:14px 18px;border-radius:12px;border:1px solid var(--rule)">
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--ink)">Download Rebuilt Resume:</div>
+              <div style="font-size:12px;color:var(--ink-soft)">Select your preferred ATS-compliant document format:</div>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button onclick="exportRebuiltResumeAction('docx')" style="padding:8px 16px;border-radius:8px;border:1px solid #3B82F6;background:rgba(59,130,246,0.08);color:#2563EB;font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+                <span>📄 Word (.docx)</span>
+              </button>
+              <button onclick="exportRebuiltResumeAction('pdf')" style="padding:8px 16px;border-radius:8px;border:1px solid #EF4444;background:rgba(239,68,68,0.08);color:#DC2626;font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+                <span>🖨️ PDF / Print</span>
+              </button>
+              <button onclick="exportRebuiltResumeAction('markdown')" style="padding:8px 16px;border-radius:8px;border:1px solid var(--rule);background:var(--sheet);color:var(--ink);font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+                <span>📝 Markdown (.md)</span>
+              </button>
+              <button onclick="exportRebuiltResumeAction('txt')" style="padding:8px 16px;border-radius:8px;border:1px solid var(--rule);background:var(--sheet);color:var(--ink-soft);font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+                <span>📄 Plain Text (.txt)</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
   </main>
 </div>
 
@@ -1860,6 +1962,9 @@ function renderMatchResults(data) {
   // 10. Render Contextual Career Improvement Plan (Supervisor Menu Controlled)
   if (data.career_improvement_plan) {
     renderCareerImprovementPlan(data.career_improvement_plan);
+    const rebuilderSec = document.getElementById('resumeRebuilderSection');
+    if (rebuilderSec) rebuilderSec.style.display = 'block';
+    loadRebuiltVersionsList();
   } else {
     renderCareerImprovementPlan(null);
   }
@@ -2577,6 +2682,234 @@ function escapeHtml(str) {
 function escapeJs(str) {
   if (!str) return '';
   return String(str).replace(/'/g, "\\'");
+}
+
+
+// ==============================================================================
+// PHASE 2: AI RESUME REBUILDER CLIENT CONTROLLER
+// ==============================================================================
+let currentRebuildId = null;
+let currentRebuildData = null;
+let isRebuilderPreviewMode = false;
+
+async function rebuildResumeAction() {
+  const btn = document.getElementById('rebuildResumeCTA');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span>⏳ Synthesizing ATS Resume...</span>';
+  }
+  
+  try {
+    const payload = {
+      scan_id: currentScanId || null,
+      resume_text: (!currentScanId && resumeTextEl) ? resumeTextEl.value : null,
+      target_role: lastMatchResult?.target_role || (extractedJdData?.role_title || "Senior Software Engineer"),
+      target_jd: (!currentScanId && jdTextEl) ? jdTextEl.value : null
+    };
+
+    const res = await fetch('/api/candidate/resume-rebuild/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to synthesize rebuilt resume.');
+    }
+
+    const data = await res.json();
+    currentRebuildId = data.rebuild_id;
+    currentRebuildData = data;
+    renderRebuiltResumeWorkspace(data);
+    showToast('✨ AI Resume successfully rebuilt and optimized for ATS matching!', 'success');
+    await loadRebuiltVersionsList();
+  } catch (e) {
+    showToast('Error rebuilding resume: ' + e.message, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<span>⚡ Rebuild Resume with AI</span>';
+    }
+  }
+}
+
+function renderRebuiltResumeWorkspace(data) {
+  const ws = document.getElementById('rebuilderWorkspace');
+  if (!ws) return;
+  ws.style.display = 'block';
+
+  const atsBadge = document.getElementById('rebuildAtsBadge');
+  if (atsBadge) {
+    atsBadge.textContent = (data.ats_projected_score || 88.0) + '% Projected';
+  }
+
+  const diffEl = document.getElementById('rebuildBaselineDiff');
+  if (diffEl && data.baseline_match_score) {
+    const boost = ((data.ats_projected_score || 88.0) - data.baseline_match_score).toFixed(1);
+    diffEl.textContent = `(+${boost}% boost from baseline)`;
+  }
+
+  const impList = document.getElementById('rebuilderImprovementsList');
+  if (impList && data.improvements_summary) {
+    impList.innerHTML = data.improvements_summary.map(imp => `
+      <span style="font-size:12px;padding:4px 10px;border-radius:14px;background:rgba(99,102,241,0.1);color:#4F46E5;border:1px solid rgba(99,102,241,0.25);display:inline-flex;align-items:center;gap:4px">
+        <span>✓</span> ${escapeHtml(imp)}
+      </span>
+    `).join('');
+  }
+
+  const origEl = document.getElementById('originalResumePreview');
+  if (origEl) {
+    origEl.textContent = data.original_resume_snippet || (resumeTextEl ? resumeTextEl.value : 'Original resume snippet');
+  }
+
+  const editor = document.getElementById('rebuiltResumeEditor');
+  if (editor) {
+    editor.value = data.rebuilt_resume_text || '';
+  }
+
+  const prevEl = document.getElementById('rebuiltResumePreview');
+  if (prevEl) {
+    prevEl.innerHTML = renderMarkdownToHtml(data.rebuilt_resume_text || '');
+  }
+}
+
+function toggleRebuilderViewMode() {
+  isRebuilderPreviewMode = !isRebuilderPreviewMode;
+  const editor = document.getElementById('rebuiltResumeEditor');
+  const preview = document.getElementById('rebuiltResumePreview');
+  const btn = document.getElementById('togglePreviewBtn');
+
+  if (isRebuilderPreviewMode) {
+    if (editor && preview) {
+      preview.innerHTML = renderMarkdownToHtml(editor.value);
+      editor.style.display = 'none';
+      preview.style.display = 'block';
+    }
+    if (btn) btn.textContent = 'Edit Mode';
+  } else {
+    if (editor && preview) {
+      editor.style.display = 'block';
+      preview.style.display = 'none';
+    }
+    if (btn) btn.textContent = 'Preview Mode';
+  }
+}
+
+function renderMarkdownToHtml(mdText) {
+  let html = escapeHtml(mdText);
+  html = html.replace(/^# (.*$)/gim, '<h2 style="margin:4px 0 8px;font-size:22px;color:var(--ink)">$1</h2>');
+  html = html.replace(/^### (.*$)/gim, '<h3 style="margin:16px 0 6px;font-size:14px;color:#1E3A8A;text-transform:uppercase;border-bottom:1px solid var(--rule);padding-bottom:3px">$1</h3>');
+  html = html.replace(/^---/gim, '<hr style="border:0;border-top:1px solid var(--rule);margin:12px 0"/>');
+  html = html.replace(/^\- (.*$)/gim, '<li style="margin-left:18px;margin-bottom:4px">$1</li>');
+  html = html.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>');
+  html = html.replace(/\n/gim, '<br/>');
+  return html;
+}
+
+async function saveRebuiltDraftAction() {
+  if (!currentRebuildId) {
+    showToast('No active rebuilt resume version to save.', 'error');
+    return;
+  }
+  const editor = document.getElementById('rebuiltResumeEditor');
+  if (!editor || !editor.value.trim()) {
+    showToast('Resume draft cannot be empty.', 'error');
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/candidate/resume-rebuild/${currentRebuildId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rebuilt_resume_text: editor.value })
+    });
+    if (!res.ok) throw new Error('Failed to update rebuilt resume draft.');
+    showToast('💾 Rebuilt resume draft saved successfully!', 'success');
+  } catch (e) {
+    showToast('Error saving draft: ' + e.message, 'error');
+  }
+}
+
+async function loadRebuiltVersionsList() {
+  try {
+    const url = currentScanId 
+      ? `/api/candidate/resume-rebuild/versions?scan_id=${encodeURIComponent(currentScanId)}`
+      : '/api/candidate/resume-rebuild/versions';
+    const res = await fetch(url);
+    if (!res.ok) return;
+    const data = await res.json();
+    const sel = document.getElementById('rebuildVersionSelect');
+    if (!sel || !data.versions || data.versions.length === 0) return;
+
+    sel.innerHTML = data.versions.map(v => `
+      <option value="${v.rebuild_id}" ${v.rebuild_id === currentRebuildId ? 'selected' : ''}>
+        v${v.version_number} (${v.ats_projected_score || 88}%) - ${v.target_role}
+      </option>
+    `).join('');
+  } catch (e) {
+    console.warn('Could not load versions:', e);
+  }
+}
+
+async function switchRebuiltVersion(rebuildId) {
+  if (!rebuildId) return;
+  try {
+    const res = await fetch(`/api/candidate/resume-rebuild/${encodeURIComponent(rebuildId)}`);
+    if (!res.ok) throw new Error('Could not load version details.');
+    const data = await res.json();
+    currentRebuildId = data.rebuild_id;
+    currentRebuildData = data;
+    renderRebuiltResumeWorkspace(data);
+    showToast(`Loaded version v${data.version_number}`, 'info');
+  } catch (e) {
+    showToast('Error loading version: ' + e.message, 'error');
+  }
+}
+
+async function exportRebuiltResumeAction(format) {
+  if (!currentRebuildId) {
+    showToast('Please generate or select a rebuilt resume version first.', 'error');
+    return;
+  }
+
+  try {
+    showToast(`Generating ${format.toUpperCase()} export...`, 'info');
+    const res = await fetch(`/api/candidate/resume-rebuild/${currentRebuildId}/export`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ format: format })
+    });
+
+    if (!res.ok) throw new Error('Failed to generate export file.');
+
+    if (format === 'pdf') {
+      const htmlText = await res.text();
+      const printWin = window.open('', '_blank');
+      if (printWin) {
+        printWin.document.write(htmlText);
+        printWin.document.close();
+        printWin.focus();
+        setTimeout(() => printWin.print(), 350);
+      }
+      return;
+    }
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    const ext = format === 'docx' ? 'docx' : (format === 'markdown' ? 'md' : 'txt');
+    a.download = `Rebuilt_Resume_${lastMatchResult?.target_role || 'Optimized'}.${ext}`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    showToast(`✓ ${format.toUpperCase()} exported successfully!`, 'success');
+  } catch (e) {
+    showToast('Export error: ' + e.message, 'error');
+  }
 }
 
 </script>
