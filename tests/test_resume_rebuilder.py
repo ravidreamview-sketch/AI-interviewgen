@@ -11,6 +11,7 @@ from fastapi.testclient import TestClient
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from app.main import app
+from sqlalchemy import text
 from app.database import get_db, SessionLocal, Base, engine
 from app.db_models import UserAccount, ResumeScan, RebuiltResume, AuditLog
 from app.security import hash_password, create_access_token
@@ -283,4 +284,119 @@ def test_audit_logging_compliance(setup_test_users):
     ).order_by(AuditLog.id.desc()).first()
     assert recent_audit is not None
     assert recent_audit.resource.startswith("rebuild_")
+    db.close()
+
+
+def test_factual_integrity_no_hallucinated_metrics():
+    """Verifies that the synthesis engine never invents fabricated percentages or statistics."""
+    source_resume = "Jane Candidate\njane@test.com\nSoftware engineer writing Python microservices and backend databases."
+    res = rebuild_resume_content(
+        original_resume_text=source_resume,
+        target_role="Lead Software Engineer"
+    )
+    rebuilt_text = res["rebuilt_resume_text"]
+    
+    # Assert no invented statistics
+    assert "38%" not in rebuilt_text
+    assert "25,000+" not in rebuilt_text
+    assert "45%" not in rebuilt_text
+    assert "60%" not in rebuilt_text
+    
+    # Assert missing metrics are cleanly flagged with candidate confirmation placeholders
+    assert "[insert metric:" in rebuilt_text
+
+
+def test_factual_integrity_no_invented_employers_or_certifications():
+    """Verifies that fictional companies and unearned certifications are never fabricated."""
+    source_resume = "Developer Candidate\ndev@test.com\nExperience with Python and Docker."
+    res = rebuild_resume_content(
+        original_resume_text=source_resume,
+        target_role="Full Stack Engineer"
+    )
+    rebuilt_text = res["rebuilt_resume_text"]
+    
+    # Assert fictional employers are never present
+    assert "Horizon Tech Solutions" not in rebuilt_text
+    assert "Nexus Cloud Systems" not in rebuilt_text
+    
+    # Assert unearned certifications are never present
+    assert "AWS Certified Solutions Architect" not in rebuilt_text
+    assert "AWS Certified" not in rebuilt_text
+
+
+def test_factual_integrity_preserves_provided_data():
+    """Verifies that candidate-provided companies, metrics, and degrees are accurately preserved."""
+    source_resume = """Alex Morgan
+alex.morgan@example.com | (555) 234-5678
+Software Engineer at Acme Corp developing scalable distributed cloud services.
+Optimized distributed cache queries reducing p99 latency by 42%.
+B.S. in Computer Science — State University"""
+
+    res = rebuild_resume_content(
+        original_resume_text=source_resume,
+        target_role="Staff Systems Engineer"
+    )
+    rebuilt_text = res["rebuilt_resume_text"]
+    
+    assert "Alex Morgan" in rebuilt_text
+    assert "Acme Corp" in rebuilt_text
+    assert "42%" in rebuilt_text
+    assert "B.S. in Computer Science" in rebuilt_text
+
+
+def test_candidate_account_deletion_cascades_safely():
+    """Tests referential integrity: deleting a candidate account cascades safely to rebuilt resumes."""
+    db = SessionLocal()
+    if engine.dialect.name == "sqlite":
+        db.execute(text("PRAGMA foreign_keys = ON;"))
+    import uuid
+    u_suffix = uuid.uuid4().hex[:8]
+    
+    # Create isolated test user
+    del_user = UserAccount(
+        email=f"cascade_user_{u_suffix}@example.com",
+        full_name="Cascade Test User",
+        password_hash=hash_password("Password123!"),
+        role="candidate",
+        plan_tier="free",
+        is_active=True
+    )
+    db.add(del_user)
+    db.commit()
+    db.refresh(del_user)
+    
+    uid = del_user.id
+    
+    # Add dependent resume scan
+    scan = ResumeScan(
+        scan_id=f"scan_cascade_{u_suffix}",
+        user_id=uid,
+        target_role="Test Role",
+        match_score=60.0
+    )
+    db.add(scan)
+    
+    # Add dependent rebuilt resume
+    rebuilt = RebuiltResume(
+        rebuild_id=f"rebuild_cascade_{u_suffix}",
+        user_id=uid,
+        scan_id=f"scan_cascade_{u_suffix}",
+        version_number=1,
+        target_role="Test Role",
+        rebuilt_resume_text="Sample text for cascade test"
+    )
+    db.add(rebuilt)
+    db.commit()
+    
+    # Verify rows exist
+    assert db.query(ResumeScan).filter(ResumeScan.user_id == uid).count() == 1
+    assert db.query(RebuiltResume).filter(RebuiltResume.user_id == uid).count() == 1
+    
+    # Delete user account: cascade removes dependent records
+    db.delete(del_user)
+    db.commit()
+    
+    # Verify cascade cleaned up dependent rows
+    assert db.query(ResumeScan).filter(ResumeScan.user_id == uid).count() == 0
+    assert db.query(RebuiltResume).filter(RebuiltResume.user_id == uid).count() == 0
     db.close()

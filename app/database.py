@@ -670,7 +670,7 @@ def _run_migration_candidate_answer_attempts(dialect: str, conn=None):
                 _safe_execute_ddl("""
                 CREATE TABLE IF NOT EXISTS candidate_answer_attempts (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id INTEGER NOT NULL REFERENCES user_accounts(id) ON DELETE RESTRICT,
+                    user_id INTEGER NOT NULL REFERENCES user_accounts(id) ON DELETE CASCADE,
                     interview_id INTEGER NOT NULL REFERENCES interview_history(id) ON DELETE CASCADE,
                     question_index INTEGER NOT NULL,
                     question_text TEXT NOT NULL,
@@ -708,7 +708,7 @@ def _run_migration_candidate_answer_attempts(dialect: str, conn=None):
                 _safe_execute_ddl("""
                 CREATE TABLE IF NOT EXISTS "candidate_answer_attempts" (
                     "id" SERIAL PRIMARY KEY,
-                    "user_id" INTEGER NOT NULL REFERENCES "user_accounts"("id") ON DELETE RESTRICT,
+                    "user_id" INTEGER NOT NULL REFERENCES "user_accounts"("id") ON DELETE CASCADE,
                     "interview_id" INTEGER NOT NULL REFERENCES "interview_history"("id") ON DELETE CASCADE,
                     "question_index" INTEGER NOT NULL,
                     "question_text" TEXT NOT NULL,
@@ -806,7 +806,7 @@ def _run_migration_rebuilt_resumes(dialect: str, conn=None):
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     rebuild_id TEXT NOT NULL UNIQUE,
                     scan_id TEXT,
-                    user_id INTEGER NOT NULL REFERENCES user_accounts(id) ON DELETE RESTRICT,
+                    user_id INTEGER NOT NULL REFERENCES user_accounts(id) ON DELETE CASCADE,
                     version_number INTEGER NOT NULL DEFAULT 1,
                     target_role TEXT NOT NULL DEFAULT 'General Tech',
                     original_resume_snippet TEXT,
@@ -832,7 +832,7 @@ def _run_migration_rebuilt_resumes(dialect: str, conn=None):
                     "id" SERIAL PRIMARY KEY,
                     "rebuild_id" VARCHAR(64) NOT NULL UNIQUE,
                     "scan_id" VARCHAR(64),
-                    "user_id" INTEGER NOT NULL REFERENCES "user_accounts"("id") ON DELETE RESTRICT,
+                    "user_id" INTEGER NOT NULL REFERENCES "user_accounts"("id") ON DELETE CASCADE,
                     "version_number" INTEGER NOT NULL DEFAULT 1,
                     "target_role" VARCHAR(255) NOT NULL DEFAULT 'General Tech',
                     "original_resume_snippet" TEXT,
@@ -851,18 +851,18 @@ def _run_migration_rebuilt_resumes(dialect: str, conn=None):
             _safe_execute_ddl('CREATE INDEX IF NOT EXISTS ix_rebuilt_resumes_user_id ON "rebuilt_resumes"(user_id)', conn=conn)
             _safe_execute_ddl('CREATE INDEX IF NOT EXISTS ix_rebuilt_resumes_created_at ON "rebuilt_resumes"(created_at)', conn=conn)
             
-            # Idempotently upgrade foreign key constraint from CASCADE to RESTRICT to enforce Zero Data Loss
+            # Idempotently ensure foreign key constraint uses ON DELETE CASCADE for clean multi-tenant cleanup
             _safe_execute_ddl('''
                 DO $$
                 BEGIN
                     IF EXISTS (
                         SELECT 1 FROM information_schema.referential_constraints
                         WHERE constraint_name = 'rebuilt_resumes_user_id_fkey'
-                        AND delete_rule != 'RESTRICT'
+                        AND delete_rule != 'CASCADE'
                     ) THEN
                         ALTER TABLE "rebuilt_resumes" DROP CONSTRAINT IF EXISTS "rebuilt_resumes_user_id_fkey";
                         ALTER TABLE "rebuilt_resumes" ADD CONSTRAINT "rebuilt_resumes_user_id_fkey"
-                            FOREIGN KEY ("user_id") REFERENCES "user_accounts"("id") ON DELETE RESTRICT;
+                            FOREIGN KEY ("user_id") REFERENCES "user_accounts"("id") ON DELETE CASCADE;
                     END IF;
                 END $$;
             ''', conn=conn)

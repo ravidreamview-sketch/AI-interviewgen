@@ -63,7 +63,7 @@ class CandidateSkillAnalytics(Base):
     __tablename__ = "candidate_skill_analytics"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user_accounts.id", ondelete="RESTRICT"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("user_accounts.id", ondelete="CASCADE"), nullable=False, index=True)
     skill = Column(String, nullable=False, index=True)
     score = Column(Float, nullable=False, default=70.0, index=True)
     trend = Column(String, nullable=False, default="flat")           # improving | flat | declining
@@ -80,7 +80,7 @@ class CandidateMistakesLedger(Base):
     __tablename__ = "candidate_mistakes_ledger"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user_accounts.id", ondelete="RESTRICT"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("user_accounts.id", ondelete="CASCADE"), nullable=False, index=True)
     interview_id = Column(Integer, ForeignKey("interview_history.id", ondelete="SET NULL"), nullable=True, index=True)
     adaptive_session_id = Column(String, nullable=False, index=True)
     skill = Column(String, nullable=False, index=True)
@@ -184,7 +184,7 @@ class MockInterview(Base):
     __tablename__ = "mock_interviews"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user_accounts.id", ondelete="RESTRICT"), nullable=True, index=True)
+    user_id = Column(Integer, ForeignKey("user_accounts.id", ondelete="CASCADE"), nullable=True, index=True)
     role = Column(String, nullable=False)
     company_target = Column(String, default="FAANG Tier")
     interviewer_persona = Column(String, default="Alex (Tech Lead)")
@@ -205,7 +205,7 @@ class ResumeScan(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     scan_id = Column(String, unique=True, index=True, nullable=True)
-    user_id = Column(Integer, ForeignKey("user_accounts.id", ondelete="RESTRICT"), nullable=True, index=True)
+    user_id = Column(Integer, ForeignKey("user_accounts.id", ondelete="CASCADE"), nullable=True, index=True)
     matching_engine_version = Column(String, default="match-v1.1.0")
     evaluation_fingerprint = Column(String(64), index=True, nullable=True)
     resume_fingerprint = Column(String(64), index=True, nullable=True)
@@ -238,7 +238,7 @@ class CoachSession(Base):
 
     user_id = Column(
         Integer,
-        ForeignKey("user_accounts.id", ondelete="RESTRICT"),
+        ForeignKey("user_accounts.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
@@ -283,7 +283,7 @@ class CandidateAnswerAttempt(Base):
     __tablename__ = "candidate_answer_attempts"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user_accounts.id", ondelete="RESTRICT"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("user_accounts.id", ondelete="CASCADE"), nullable=False, index=True)
     interview_id = Column(Integer, ForeignKey("interview_history.id", ondelete="CASCADE"), nullable=False, index=True)
     question_index = Column(Integer, nullable=False, index=True)
     question_text = Column(Text, nullable=False)
@@ -318,7 +318,7 @@ class RebuiltResume(Base):
     id = Column(Integer, primary_key=True, index=True)
     rebuild_id = Column(String(64), unique=True, index=True, nullable=False)
     scan_id = Column(String(64), index=True, nullable=True)
-    user_id = Column(Integer, ForeignKey("user_accounts.id", ondelete="RESTRICT"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("user_accounts.id", ondelete="CASCADE"), nullable=False, index=True)
     version_number = Column(Integer, default=1, nullable=False)
     target_role = Column(String(255), nullable=False, default="General Tech")
     original_resume_snippet = Column(Text, nullable=True)
