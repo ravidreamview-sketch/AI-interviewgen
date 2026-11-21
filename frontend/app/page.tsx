@@ -93,7 +93,7 @@ export default function HomePage() {
                 <ArrowRight size={14} strokeWidth={1.75} />
               </Button>
             </Link>
-            <a href="http://127.0.0.1:8000/docs" target="_blank" rel="noreferrer">
+            <a href="/docs" target="_blank" rel="noreferrer">
               <Button variant="secondary" size="sm">
                 <span>API documentation</span>
                 <ExternalLink size={13} strokeWidth={1.75} />

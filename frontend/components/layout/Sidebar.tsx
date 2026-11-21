@@ -52,6 +52,33 @@ export const Sidebar: React.FC = () => {
           const Icon = item.icon;
           const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
 
+          if (item.href === "/admin") {
+            return (
+              <a
+                key={item.href}
+                href={item.href}
+                className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm leading-5 transition-colors duration-100 ${isActive
+                  ? "bg-[#EEEEEE] text-[#111827] font-semibold shadow-2xs"
+                  : "text-[#4B5563] hover:bg-[#F3F3F3] hover:text-[#111827] font-medium"
+                  }`}
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <Icon
+                    size={16}
+                    strokeWidth={isActive ? 2 : 1.75}
+                    className={isActive ? "text-[#111827]" : "text-[#6B7280]"}
+                  />
+                  <span className="truncate">{item.name}</span>
+                </div>
+                {item.tag && (
+                  <span className="text-[11px] font-medium leading-4 px-2 py-0.5 rounded-full bg-white text-[#4B5563] border border-[#E5E5E5] shrink-0">
+                    {item.tag}
+                  </span>
+                )}
+              </a>
+            );
+          }
+
           return (
             <Link
               key={item.href}

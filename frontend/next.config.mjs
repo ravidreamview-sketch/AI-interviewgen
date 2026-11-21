@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: "standalone",
+  output: "export",
+  images: {
+    unoptimized: true,
+  },
   reactStrictMode: true,
   poweredByHeader: false,
   eslint: {
@@ -8,19 +11,6 @@ const nextConfig = {
   },
   typescript: {
     ignoreBuildErrors: false,
-  },
-  async rewrites() {
-    const backendUrl =
-      process.env.BACKEND_API_URL || process.env.NEXT_PUBLIC_API_URL;
-    if (backendUrl) {
-      return [
-        {
-          source: "/api/:path*",
-          destination: `${backendUrl.replace(/\/$/, "")}/api/:path*`,
-        },
-      ];
-    }
-    return [];
   },
 };
 

@@ -17,6 +17,8 @@ htmlcov/
 # Frontend dependencies & build artifacts
 frontend/node_modules/
 frontend/.next/
+frontend/out/
+out/
 frontend/.turbo/
 frontend/build/
 frontend/dist/

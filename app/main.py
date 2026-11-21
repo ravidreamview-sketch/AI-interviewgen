@@ -190,10 +190,18 @@ app.add_middleware(
 
 from app.core.middleware import SecurityHeadersMiddleware, RequestTracingMiddleware
 from app.api.v1.api_router import api_v1_router
+from fastapi.staticfiles import StaticFiles
 
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RequestTracingMiddleware)
 app.include_router(api_v1_router, prefix="/api/v1")
+
+# Mount Next.js static asset bundle (/_next/*)
+next_out_dir = (BASE_DIR / "frontend" / "out").resolve()
+next_static_dir = next_out_dir / "_next"
+if not next_static_dir.exists():
+    next_static_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/_next", StaticFiles(directory=str(next_static_dir)), name="next_static")
 
 @app.get("/health")
 @app.get("/api/health")
@@ -2681,7 +2689,7 @@ def get_html_response(filename: str, db: Session = None):
 def serve_root():
     next_out = BASE_DIR / "frontend" / "out" / "index.html"
     if next_out.exists():
-        return FileResponse(next_out)
+        return FileResponse(next_out, media_type="text/html")
     root_idx = BASE_DIR / "index.html"
     if root_idx.exists():
         return get_html_response("index.html")
@@ -3314,13 +3322,63 @@ def spa_fallback(full_path: str):
     ):
         raise HTTPException(status_code=404, detail="Not Found")
 
-    # 3. Direct static file match (must be in ALLOWED_STATIC_EXTENSIONS)
+    # 3. Direct static file match in BASE_DIR (must be in ALLOWED_STATIC_EXTENSIONS)
     if target_path.exists() and target_path.is_file():
         if target_suffix_lower not in ALLOWED_STATIC_EXTENSIONS:
             raise HTTPException(status_code=404, detail="Not Found")
         return FileResponse(target_path)
 
-    # 4. Direct HTML match (e.g. /Dashboard -> Dashboard.html)
+    next_out = (BASE_DIR / "frontend" / "out").resolve()
+
+    alias_map = {
+        "mock-interviews": "interviews",
+        "mock-interview": "interviews",
+        "learning-paths": "paths",
+        "learning-path": "paths",
+        "real-scenarios": "scenarios",
+        "candidate-onboarding": "onboarding",
+    }
+    clean_segment = alias_map.get(decoded_path.lower(), decoded_path)
+
+    # 4. Check frontend/out for matching clean routes and direct static assets:
+    # a. Exact static file match in frontend/out (must be in ALLOWED_STATIC_EXTENSIONS)
+    try:
+        next_direct = (next_out / decoded_path).resolve()
+        if (
+            next_direct.is_relative_to(next_out)
+            and next_direct.exists()
+            and next_direct.is_file()
+            and next_direct.suffix.lower() in ALLOWED_STATIC_EXTENSIONS
+        ):
+            return FileResponse(next_direct)
+    except Exception:
+        pass
+
+    # b. Clean HTML route in frontend/out (e.g. /onboarding -> onboarding.html, /mock-interviews -> interviews.html)
+    try:
+        next_html = (next_out / f"{clean_segment}.html").resolve()
+        if (
+            next_html.is_relative_to(next_out)
+            and next_html.exists()
+            and next_html.is_file()
+        ):
+            return FileResponse(next_html, media_type="text/html")
+    except Exception:
+        pass
+
+    # c. Subfolder index in frontend/out (e.g. /route/ -> frontend/out/route/index.html)
+    try:
+        next_folder_idx = (next_out / clean_segment / "index.html").resolve()
+        if (
+            next_folder_idx.is_relative_to(next_out)
+            and next_folder_idx.exists()
+            and next_folder_idx.is_file()
+        ):
+            return FileResponse(next_folder_idx, media_type="text/html")
+    except Exception:
+        pass
+
+    # 5. Direct HTML match in BASE_DIR (e.g. /Dashboard -> Dashboard.html)
     try:
         html_candidate = (BASE_DIR / f"{decoded_path}.html").resolve()
         if (
@@ -3332,24 +3390,14 @@ def spa_fallback(full_path: str):
     except Exception:
         pass
 
-    # 5. Check Next.js static export files if present in frontend/out
-    try:
-        next_out_file = (BASE_DIR / "frontend" / "out" / decoded_path).resolve()
-        if (
-            next_out_file.is_relative_to(base_resolved)
-            and next_out_file.exists()
-            and next_out_file.is_file()
-            and next_out_file.suffix.lower() in ALLOWED_STATIC_EXTENSIONS
-        ):
-            return FileResponse(next_out_file)
-    except Exception:
-        pass
-
     # 6. If requested path looks like a file (has an extension), DO NOT fall back to index.html -> return 404
     if target_path.suffix:
         raise HTTPException(status_code=404, detail="Not Found")
 
-    # 7. Fallback to index.html for genuine client-side SPA routing (e.g. /resumes, /paths, /onboarding)
+    # 7. Fallback to index.html for genuine client-side SPA routing
+    next_index = next_out / "index.html"
+    if next_index.exists():
+        return FileResponse(next_index, media_type="text/html")
     root_idx = BASE_DIR / "index.html"
     if root_idx.exists():
         return get_html_response("index.html")

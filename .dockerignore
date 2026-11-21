@@ -1,3 +1,7 @@
+node_modules
+frontend/node_modules
+frontend/.next
+frontend/out
 .env
 .env.*
 .git
@@ -8,6 +12,5 @@ __pycache__
 *.pyc
 *.pem
 *.key
-node_modules
 .vscode
 .idea

@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+const API_BASE = (process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
 
 function getAuthHeader(): Record<string, string> {
   if (typeof window !== "undefined") {
@@ -24,8 +24,11 @@ export async function apiClient<T>(
     headers["Content-Type"] = "application/json";
   }
 
+  const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  const url = API_BASE ? `${API_BASE}${cleanEndpoint}` : cleanEndpoint;
+
   try {
-    const response = await fetch(`${API_BASE}${endpoint}`, {
+    const response = await fetch(url, {
       credentials: "include",
       ...options,
       headers,
@@ -39,7 +42,7 @@ export async function apiClient<T>(
     return response.json();
   } catch (err: any) {
     if (err.name === "TypeError" && (err.message === "Failed to fetch" || err.message?.includes("fetch"))) {
-      throw new Error(`Unable to reach the backend API at ${API_BASE}. Please ensure the server is active.`);
+      throw new Error(`Unable to reach the backend API at ${url}. Please ensure the server is active.`);
     }
     throw err;
   }
