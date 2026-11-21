@@ -1,0 +1,96 @@
+name: Deploy to Google Cloud Run
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch to deploy
+        required: true
+        default: main
+        type: choice
+        options:
+          - main
+
+permissions:
+  contents: read
+
+env:
+  PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+  REGION: ${{ vars.GCP_REGION }}
+  GAR_REPOSITORY: ${{ vars.GAR_REPOSITORY }}
+  IMAGE_NAME: idea-interview-studio
+
+jobs:
+  build-test-push-deploy:
+    name: Build, test, push, and deploy
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Build Docker image
+        run: >-
+          docker build
+          --tag "${IMAGE_NAME}:v${GITHUB_RUN_NUMBER}"
+          --tag "${REGION}-docker.pkg.dev/${PROJECT_ID}/${GAR_REPOSITORY}/${IMAGE_NAME}:v${GITHUB_RUN_NUMBER}"
+          .
+
+      - name: Run tests inside the Docker image
+        run: >-
+          docker run --rm
+          --env ENV=development
+          --env DEV_AUTH_BYPASS=false
+          "${IMAGE_NAME}:v${GITHUB_RUN_NUMBER}"
+          pytest -q
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+
+      - name: Log in to Artifact Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ vars.GCP_REGION }}-docker.pkg.dev
+          username: _json_key
+          password: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Push Docker image
+        run: docker push "${REGION}-docker.pkg.dev/${PROJECT_ID}/${GAR_REPOSITORY}/${IMAGE_NAME}:v${GITHUB_RUN_NUMBER}"
+
+      - name: Deploy to Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v3
+        with:
+          service: idea-interview-studio
+          image: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY }}/idea-interview-studio:v${{ github.run_number }}
+          region: ${{ vars.GCP_REGION }}
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          env_vars: |
+            ENV=${{ vars.ENV }}
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            ADMIN_JWT_SECRET=${{ secrets.ADMIN_JWT_SECRET }}
+            SUPER_ADMIN_EMAIL=${{ secrets.SUPER_ADMIN_EMAIL }}
+            SUPER_ADMIN_PASSWORD=${{ secrets.SUPER_ADMIN_PASSWORD }}
+            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+            GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}
+            ADMIN_ALLOWED_ORIGINS=${{ vars.ADMIN_ALLOWED_ORIGINS }}
+            APP_URL=${{ vars.APP_URL }}
+            ADMIN_TOKEN_EXPIRE_MINUTES=${{ vars.ADMIN_TOKEN_EXPIRE_MINUTES }}
+            INVITATION_DISPLAY_EMAIL=${{ vars.INVITATION_DISPLAY_EMAIL }}
+          flags: >-
+            --port=8000
+            --allow-unauthenticated
+
+      - name: Verify Cloud Run health endpoint
+        env:
+          SERVICE_URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          set -euo pipefail
+          test -n "${SERVICE_URL}"
+          curl --fail --silent --show-error --retry 10 --retry-delay 5 "${SERVICE_URL}/health"
