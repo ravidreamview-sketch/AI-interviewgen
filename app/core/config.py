@@ -45,6 +45,7 @@ class Settings(BaseSettings):
     
     # AI Provider API Keys
     GEMINI_API_KEY: Optional[str] = None
+    GOOGLE_API_KEY: Optional[str] = None
     GROQ_API_KEY: Optional[str] = None
     
     # Development auth bypass (Strictly disabled in production)

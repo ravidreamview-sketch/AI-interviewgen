@@ -1,5 +1,5 @@
-# Python 3.12 slim image
-FROM python:3.12-slim
+# Python 3.12 slim image for linux/amd64
+FROM --platform=linux/amd64 python:3.12-slim
 
 WORKDIR /app
 

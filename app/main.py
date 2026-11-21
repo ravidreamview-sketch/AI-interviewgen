@@ -195,6 +195,7 @@ app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RequestTracingMiddleware)
 app.include_router(api_v1_router, prefix="/api/v1")
 
+@app.get("/")
 @app.get("/api/health")
 @app.get("/health")
 @app.get("/api/index.py/api/health", include_in_schema=False)
@@ -3229,3 +3230,10 @@ def chat_with_coach(
 # 2. The get_db() dependency (on first request)
 # Module-level DB init was REMOVED to prevent FUNCTION_INVOCATION_FAILED on Vercel.
 # See: https://vercel.com/docs/functions/runtimes/python — import must be side-effect free.
+
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8080))
+    uvicorn.run("app.main:app", host="0.0.0.0", port=port, reload=False)
+

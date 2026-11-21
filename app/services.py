@@ -46,7 +46,7 @@ logger = logging.getLogger("ravi.ai_provider")
 
 def get_ai_provider_status() -> tuple[str, bool]:
     """Return the preferred configured provider without exposing its key."""
-    if os.getenv("GEMINI_API_KEY", "").strip():
+    if os.getenv("GEMINI_API_KEY", "").strip() or os.getenv("GOOGLE_API_KEY", "").strip():
         return "Gemini", True
     if os.getenv("GROQ_API_KEY", "").strip():
         return "Groq", True
@@ -55,7 +55,7 @@ def get_ai_provider_status() -> tuple[str, bool]:
 
 def generate_ai_questions(prompt: str, temperature: Optional[float] = None) -> str:
     # Gemini is preferred; Groq remains the configured fallback.
-    gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
+    gemini_key = os.getenv("GEMINI_API_KEY", "").strip() or os.getenv("GOOGLE_API_KEY", "").strip()
     if gemini_key:
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}"
