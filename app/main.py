@@ -195,9 +195,8 @@ app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RequestTracingMiddleware)
 app.include_router(api_v1_router, prefix="/api/v1")
 
-@app.get("/")
-@app.get("/api/health")
 @app.get("/health")
+@app.get("/api/health")
 @app.get("/api/index.py/api/health", include_in_schema=False)
 @app.get("/api/index.py/health", include_in_schema=False)
 def health_check():
@@ -2678,7 +2677,14 @@ def get_html_response(filename: str, db: Session = None):
 
 
 @app.get("/", include_in_schema=False)
-def serve_public_home():
+@app.get("/index.html", include_in_schema=False)
+def serve_root():
+    next_out = BASE_DIR / "frontend" / "out" / "index.html"
+    if next_out.exists():
+        return FileResponse(next_out)
+    root_idx = BASE_DIR / "index.html"
+    if root_idx.exists():
+        return get_html_response("index.html")
     return get_html_response("Public-home.html")
 
 
@@ -3230,6 +3236,46 @@ def chat_with_coach(
 # 2. The get_db() dependency (on first request)
 # Module-level DB init was REMOVED to prevent FUNCTION_INVOCATION_FAILED on Vercel.
 # See: https://vercel.com/docs/functions/runtimes/python — import must be side-effect free.
+
+
+@app.get("/{full_path:path}", include_in_schema=False)
+def spa_fallback(full_path: str):
+    """
+    SPA Fallback Route: Serves static files and returns index.html for all non-API paths.
+    """
+    # Never intercept API endpoints, health probes, documentation, or OpenAPI schema
+    if (
+        full_path.startswith("api/")
+        or full_path.startswith("health")
+        or full_path.startswith("admin/api/")
+        or full_path in ("health", "docs", "redoc", "openapi.json")
+    ):
+        raise HTTPException(status_code=404, detail="Not Found")
+
+    # 1. Direct static file match (e.g. typography.css, logo.png, analytics-tracker.js)
+    candidate_file = BASE_DIR / full_path
+    if candidate_file.exists() and candidate_file.is_file():
+        return FileResponse(candidate_file)
+
+    # 2. Direct HTML match (e.g. /candidate/dashboard -> Candidate-dashboard.html)
+    html_candidate = BASE_DIR / f"{full_path}.html"
+    if html_candidate.exists() and html_candidate.is_file():
+        return get_html_response(f"{full_path}.html")
+
+    # 3. Next.js static export files if present in frontend/out
+    next_out_file = BASE_DIR / "frontend" / "out" / full_path
+    if next_out_file.exists() and next_out_file.is_file():
+        return FileResponse(next_out_file)
+
+    next_out_index = BASE_DIR / "frontend" / "out" / "index.html"
+    if next_out_index.exists():
+        return FileResponse(next_out_index)
+
+    # 4. Fallback to root index.html for client-side SPA routing
+    root_idx = BASE_DIR / "index.html"
+    if root_idx.exists():
+        return get_html_response("index.html")
+    return get_html_response("Public-home.html")
 
 
 if __name__ == "__main__":
