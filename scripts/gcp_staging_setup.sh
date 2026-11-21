@@ -2,7 +2,7 @@
 # ==============================================================================
 # AI INTERVIEW STUDIO — GOOGLE CLOUD STAGING PROVISIONING SCRIPT
 # Environment: STAGING ONLY
-# Region: us-central1
+# Region: asia-south1
 # ==============================================================================
 
 set -euo pipefail
@@ -15,7 +15,7 @@ if [ -z "$PROJECT_ID" ]; then
   exit 1
 fi
 
-REGION="${2:-us-central1}"
+REGION="${2:-asia-south1}"
 REPO_NAME="ai-interview-staging-repo"
 DB_INSTANCE="ai-interview-staging-db"
 DB_NAME="ai_interview_staging"

@@ -42,7 +42,7 @@ fi
 
 echo "Proceeding with staging teardown..."
 
-REGION="${2:-us-central1}"
+REGION="${2:-asia-south1}"
 DB_INSTANCE="ai-interview-staging-db"
 REPO_NAME="ai-interview-staging-repo"
 

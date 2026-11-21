@@ -96,6 +96,31 @@ python -m unittest tests/test_ai_provider_config.py tests/test_subscores_import.
 
 ---
 
+## 🚀 Deployment to Google Cloud Run
+
+To deploy RaviGen AI Interview Studio to Google Cloud Run in the `asia-south1` region:
+
+```bash
+gcloud run deploy idea-interview-studio \
+  --source . \
+  --region asia-south1 \
+  --port 8080 \
+  --memory 1Gi \
+  --cpu 1 \
+  --timeout 300 \
+  --cpu-boost \
+  --allow-unauthenticated \
+  --startup-probe=httpGet.path=/health
+```
+
+### Deployment Configuration Guidelines
+- **Port:** The container listens on `0.0.0.0` and reads the `$PORT` environment variable assigned by Cloud Run (default: `8080`). Do **not** set `PORT` in `--set-env-vars` as Cloud Run sets and manages this variable automatically.
+- **Region:** Deployments are standardized on `asia-south1`.
+- **Health Probes:** Cloud Run startup and liveness probes target `--startup-probe=httpGet.path=/health`.
+- **Secrets Management:** Sensitive keys and secrets (`DATABASE_URL`, `ADMIN_JWT_SECRET`, `GEMINI_API_KEY`, `GROQ_API_KEY`) must always be configured through Google Secret Manager using `--set-secrets`, never committed to source or hardcoded.
+
+---
+
 ## 🔒 Security & Governance
 
 1. **Production Guardrails:** `app/core/config.py` enforces that in production (`ENV=production`), `ADMIN_JWT_SECRET` must be set and >= 32 characters. Fallback salts are strictly rejected.

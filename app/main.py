@@ -3238,40 +3238,118 @@ def chat_with_coach(
 # See: https://vercel.com/docs/functions/runtimes/python — import must be side-effect free.
 
 
+ALLOWED_STATIC_EXTENSIONS = {
+    ".css", ".js", ".png", ".jpg", ".jpeg", ".svg", ".ico", ".webp", ".gif", ".woff", ".woff2", ".html"
+}
+FORBIDDEN_FILES = {
+    "dockerfile", "requirements.txt", "alembic.ini", "pyproject.toml",
+    "procfile", "vercel.json", ".env", ".gitignore", "readme.md"
+}
+FORBIDDEN_EXTENSIONS = {
+    ".py", ".env", ".json", ".md", ".txt", ".yml", ".yaml", ".ini",
+    ".toml", ".sh", ".sql", ".cfg", ".log", ".bak", ".pem", ".key"
+}
+
+
 @app.get("/{full_path:path}", include_in_schema=False)
 def spa_fallback(full_path: str):
     """
-    SPA Fallback Route: Serves static files and returns index.html for all non-API paths.
+    Hardened SPA Fallback Route:
+    - Never serves source code (.py), secrets (.env, keys), requirements.txt, or Dockerfile.
+    - Strictly validates extensions against ALLOWED_STATIC_EXTENSIONS.
+    - Enforces path containment within BASE_DIR (blocks traversal like ../ and %2e%2e).
+    - Blocks hidden files and directories (starting with .).
+    - Preserves direct HTML mapping (/Dashboard -> Dashboard.html).
+    - Falls back to index.html ONLY for clean client-side routes (no file extension).
+    - Returns 404 for unhandled API/health routes and forbidden or missing file extensions.
     """
-    # Never intercept API endpoints, health probes, documentation, or OpenAPI schema
+    from urllib.parse import unquote
+
+    # 1. Never intercept API endpoints, health probes, documentation, or OpenAPI schema
+    clean_raw = full_path.strip().lstrip("/").lower()
     if (
-        full_path.startswith("api/")
-        or full_path.startswith("health")
-        or full_path.startswith("admin/api/")
-        or full_path in ("health", "docs", "redoc", "openapi.json")
+        clean_raw.startswith("api/")
+        or clean_raw.startswith("health")
+        or clean_raw.startswith("admin/api/")
+        or clean_raw in ("health", "docs", "redoc", "openapi.json")
     ):
         raise HTTPException(status_code=404, detail="Not Found")
 
-    # 1. Direct static file match (e.g. typography.css, logo.png, analytics-tracker.js)
-    candidate_file = BASE_DIR / full_path
-    if candidate_file.exists() and candidate_file.is_file():
-        return FileResponse(candidate_file)
+    # 2. Decode URL iteratively to catch multi-encoded traversal (e.g., %252e%252e)
+    decoded_path = full_path
+    prev = None
+    while prev != decoded_path:
+        prev = decoded_path
+        decoded_path = unquote(decoded_path)
 
-    # 2. Direct HTML match (e.g. /candidate/dashboard -> Candidate-dashboard.html)
-    html_candidate = BASE_DIR / f"{full_path}.html"
-    if html_candidate.exists() and html_candidate.is_file():
-        return get_html_response(f"{full_path}.html")
+    decoded_path = decoded_path.strip().lstrip("/")
 
-    # 3. Next.js static export files if present in frontend/out
-    next_out_file = BASE_DIR / "frontend" / "out" / full_path
-    if next_out_file.exists() and next_out_file.is_file():
-        return FileResponse(next_out_file)
+    # Check for path traversal or hidden path segments
+    path_obj = Path(decoded_path)
+    parts = path_obj.parts
+    if (
+        ".." in decoded_path
+        or any(part.startswith(".") for part in parts)
+        or any(".." in part for part in parts)
+    ):
+        raise HTTPException(status_code=404, detail="Not Found")
 
-    next_out_index = BASE_DIR / "frontend" / "out" / "index.html"
-    if next_out_index.exists():
-        return FileResponse(next_out_index)
+    # Safe path resolution and base boundary check
+    base_resolved = BASE_DIR.resolve()
+    try:
+        target_path = (BASE_DIR / decoded_path).resolve()
+        if not target_path.is_relative_to(base_resolved):
+            raise HTTPException(status_code=404, detail="Not Found")
+    except Exception:
+        raise HTTPException(status_code=404, detail="Not Found")
 
-    # 4. Fallback to root index.html for client-side SPA routing
+    target_name_lower = target_path.name.lower()
+    target_suffix_lower = target_path.suffix.lower()
+
+    # Block explicitly forbidden filenames, forbidden extensions, or hidden files
+    if (
+        target_name_lower in FORBIDDEN_FILES
+        or target_suffix_lower in FORBIDDEN_EXTENSIONS
+        or target_name_lower.startswith(".")
+    ):
+        raise HTTPException(status_code=404, detail="Not Found")
+
+    # 3. Direct static file match (must be in ALLOWED_STATIC_EXTENSIONS)
+    if target_path.exists() and target_path.is_file():
+        if target_suffix_lower not in ALLOWED_STATIC_EXTENSIONS:
+            raise HTTPException(status_code=404, detail="Not Found")
+        return FileResponse(target_path)
+
+    # 4. Direct HTML match (e.g. /Dashboard -> Dashboard.html)
+    try:
+        html_candidate = (BASE_DIR / f"{decoded_path}.html").resolve()
+        if (
+            html_candidate.is_relative_to(base_resolved)
+            and html_candidate.exists()
+            and html_candidate.is_file()
+        ):
+            return get_html_response(f"{decoded_path}.html")
+    except Exception:
+        pass
+
+    # 5. Check Next.js static export files if present in frontend/out
+    try:
+        next_out_file = (BASE_DIR / "frontend" / "out" / decoded_path).resolve()
+        if (
+            next_out_file.is_relative_to(base_resolved)
+            and next_out_file.exists()
+            and next_out_file.is_file()
+            and next_out_file.suffix.lower() in ALLOWED_STATIC_EXTENSIONS
+        ):
+            return FileResponse(next_out_file)
+    except Exception:
+        pass
+
+    # 6. If requested path looks like a file (has an extension), DO NOT fall back to index.html -> return 404
+    if target_path.suffix:
+        raise HTTPException(status_code=404, detail="Not Found")
+
+    # 7. Fallback to index.html for genuine client-side SPA routing (e.g. /resumes, /paths, /onboarding)
     root_idx = BASE_DIR / "index.html"
     if root_idx.exists():
         return get_html_response("index.html")

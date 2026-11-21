@@ -84,8 +84,13 @@ jobs:
             ADMIN_TOKEN_EXPIRE_MINUTES=${{ vars.ADMIN_TOKEN_EXPIRE_MINUTES }}
             INVITATION_DISPLAY_EMAIL=${{ vars.INVITATION_DISPLAY_EMAIL }}
           flags: >-
-            --port=8000
+            --port=8080
+            --memory=1Gi
+            --cpu=1
+            --timeout=300
+            --cpu-boost
             --allow-unauthenticated
+            --startup-probe=httpGet.path=/health
 
       - name: Verify Cloud Run health endpoint
         env:
