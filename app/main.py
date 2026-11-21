@@ -162,9 +162,21 @@ if env_origins:
 else:
     ALLOWED_ORIGINS = DEFAULT_ALLOWED_ORIGINS
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Safe startup initialization: ensure database tables & default accounts are created
+    try:
+        init_db()
+        logger.info("FastAPI lifespan: database initialized successfully")
+    except Exception as e:
+        logger.warning(f"FastAPI lifespan init_db notice: {e}")
+    yield
+
+
 app = FastAPI(
     title="Ravi — AI Interview Question Generator API",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -175,6 +187,13 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
+
+from app.core.middleware import SecurityHeadersMiddleware, RequestTracingMiddleware
+from app.api.v1.api_router import api_v1_router
+
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RequestTracingMiddleware)
+app.include_router(api_v1_router, prefix="/api/v1")
 
 @app.get("/api/health")
 @app.get("/health")
@@ -249,9 +268,19 @@ async def global_production_exception_handler(request: Request, exc: Exception):
         f"class={exc_type} message={exc_msg}\nTraceback:\n{tb_str}"
     )
     
+    origin = request.headers.get("origin")
+    allowed_origin = origin if origin in ALLOWED_ORIGINS else (ALLOWED_ORIGINS[0] if ALLOWED_ORIGINS else "*")
+    cors_headers = {
+        "Access-Control-Allow-Origin": allowed_origin,
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "*",
+    }
+    
     return JSONResponse(
         status_code=500,
-        content={"detail": "Internal server error"}
+        content={"detail": "Internal server error"},
+        headers=cors_headers,
     )
 
 # Mount Super Admin & Candidate API routers with dual prefix support for Vercel serverless compatibility

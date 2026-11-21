@@ -2,8 +2,28 @@ venv/
 .venv/
 .venv*/
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
 .env
 .env.*
 !.env.example
-*.pyc
-*.db
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Frontend dependencies & build artifacts
+frontend/node_modules/
+frontend/.next/
+frontend/.turbo/
+frontend/build/
+frontend/dist/
+frontend/*.tsbuildinfo
+node_modules/
+.next/
+
+# OS artifacts
+.DS_Store
+Thumbs.db

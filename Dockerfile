@@ -7,6 +7,11 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
+# Install system dependencies if required
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
@@ -14,8 +19,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy all application files
 COPY . .
 
-# Expose FastAPI port
-EXPOSE 8000
+# Expose default port (Cloud Run will inject $PORT)
+ENV PORT=8080
+EXPOSE 8080
 
-# Run Uvicorn production server
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run Uvicorn server dynamically binding to $PORT
+CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
