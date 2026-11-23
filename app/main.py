@@ -2621,7 +2621,8 @@ def clear_analytics(db: Session = Depends(get_db)):
 @app.get("/Admin.html", include_in_schema=False)
 @app.get("/admin/{subpath:path}", include_in_schema=False)
 def serve_admin_portal(subpath: str = ""):
-    return get_html_response("Admin.html")
+    f = BASE_DIR / "Admin.html"
+    return FileResponse(f) if f.exists() else HTTPException(404, "Admin.html not found")
 
 
 # ---------- FRONTEND PAGES & ASSETS ----------
@@ -2632,21 +2633,18 @@ def serve_admin_portal(subpath: str = ""):
 @app.get("/candidate/analytics", include_in_schema=False)
 @app.get("/candidate/Analytics.html", include_in_schema=False)
 def serve_analytics():
-    return get_html_response("Analytics.html")
+    f = BASE_DIR / "Analytics.html"
+    return FileResponse(f) if f.exists() else HTTPException(404, "Analytics.html not found")
 
 @app.get("/analytics-tracker.js", include_in_schema=False)
 def serve_tracker_script():
     f = BASE_DIR / "analytics-tracker.js"
-    if f.exists():
-        return FileResponse(f, media_type="application/javascript")
-    raise HTTPException(404, "analytics-tracker.js not found")
+    return FileResponse(f, media_type="application/javascript") if f.exists() else HTTPException(404, "analytics-tracker.js not found")
 
 @app.get("/typography.css", include_in_schema=False)
 def serve_typography_stylesheet():
     f = BASE_DIR / "typography.css"
-    if f.exists():
-        return FileResponse(f, media_type="text/css")
-    raise HTTPException(404, "typography.css not found")
+    return FileResponse(f, media_type="text/css") if f.exists() else HTTPException(404, "typography.css not found")
 
 def get_html_response(filename: str, db: Session = None):
     """
@@ -2883,17 +2881,13 @@ def serve_candidate_learning_plan(db: Session = Depends(get_db)):
 @app.get("/candidate/analytics-tracker.js", include_in_schema=False)
 def serve_analytics_tracker():
     f = BASE_DIR / "analytics-tracker.js"
-    if f.exists():
-        return FileResponse(f, media_type="application/javascript")
-    raise HTTPException(404, "analytics-tracker.js not found")
+    return FileResponse(f) if f.exists() else HTTPException(404, "analytics-tracker.js not found")
 
 @app.get("/logo.png", include_in_schema=False)
 @app.get("/candidate/logo.png", include_in_schema=False)
 def serve_logo():
     f = BASE_DIR / "logo.png"
-    if f.exists():
-        return FileResponse(f)
-    raise HTTPException(404, "logo.png not found")
+    return FileResponse(f) if f.exists() else HTTPException(404, "logo.png not found")
 
 COACH_RATE_LIMIT = 12
 COACH_RATE_WINDOW = timedelta(minutes=1)

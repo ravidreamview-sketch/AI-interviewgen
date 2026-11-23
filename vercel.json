@@ -2,7 +2,7 @@
   "version": 2,
   "functions": {
     "api/index.py": {
-      "includeFiles": "{app/**,*.html,*.js,*.css,logo.png}",
+      "includeFiles": "{app/**,Public-home.html,Accept-invite.html}",
       "maxDuration": 15
     }
   },
