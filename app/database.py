@@ -3,7 +3,7 @@ import tempfile
 import logging
 import threading
 from contextlib import contextmanager
-from sqlalchemy import create_engine, text, inspect
+from sqlalchemy import create_engine, text, inspect, func
 from sqlalchemy.orm import declarative_base, sessionmaker
 from datetime import timezone
 import urllib.parse
@@ -487,22 +487,32 @@ def _run_account_bootstrap():
         from app import db_models
 
         with SessionLocal() as db:
-            existing_super = db.query(db_models.UserAccount).filter(db_models.UserAccount.role == "super_admin").first()
+            env_email = os.environ.get("SUPER_ADMIN_EMAIL") or os.environ.get("INITIAL_ADMIN_EMAIL")
+            env_password = os.environ.get("SUPER_ADMIN_PASSWORD") or os.environ.get("INITIAL_ADMIN_PASSWORD")
 
             if _is_production_mode():
                 # In production:
                 # 1. Require explicit environment variables; NEVER fall back to hardcoded demo credentials.
-                # 2. Never overwrite existing super admin credentials.
+                # 2. Allow targeted Super Admin password rotation when SUPER_ADMIN_PASSWORD is provided.
                 # 3. Disable candidate demo provisioning entirely.
-                env_email = os.environ.get("SUPER_ADMIN_EMAIL") or os.environ.get("INITIAL_ADMIN_EMAIL")
-                env_password = os.environ.get("SUPER_ADMIN_PASSWORD") or os.environ.get("INITIAL_ADMIN_PASSWORD")
+                if env_password:
+                    target_email = (env_email or "admin@example.com").strip().lower()
+                    clean_password = env_password.strip()
+                    target_super = db.query(db_models.UserAccount).filter(
+                        func.lower(db_models.UserAccount.email) == target_email
+                    ).first()
 
-                if not existing_super:
-                    if env_email and env_password:
-                        clean_email = env_email.strip().lower()
-                        clean_password = env_password.strip()
+                    if target_super:
+                        target_super.role = "super_admin"
+                        target_super.is_active = True
+                        if not verify_password(clean_password, target_super.password_hash):
+                            target_super.password_hash = hash_password(clean_password)
+                            db.commit()
+                            logger.info(f"Synchronized Super Admin password from environment configuration for {target_email}")
+                    else:
                         super_admin = db_models.UserAccount(
-                            email=clean_email,
+                            email=target_email,
+                            full_name="Super Administrator",
                             password_hash=hash_password(clean_password),
                             role="super_admin",
                             plan_tier="enterprise",
@@ -510,30 +520,26 @@ def _run_account_bootstrap():
                         )
                         db.add(super_admin)
                         db.commit()
-                        logger.info("Provisioned initial Super Admin account from environment configuration")
-                    else:
-                        logger.warning("Production mode: SUPER_ADMIN_EMAIL / SUPER_ADMIN_PASSWORD not set. Skipping initial Super Admin account creation.")
+                        logger.info(f"Provisioned initial Super Admin account from environment configuration for {target_email}")
                 else:
-                    if env_email and env_password:
-                        clean_email = env_email.strip().lower()
-                        clean_password = env_password.strip()
-                        if existing_super.email.lower() == clean_email:
-                            if not verify_password(clean_password, existing_super.password_hash):
-                                existing_super.password_hash = hash_password(clean_password)
-                                db.commit()
-                                logger.info("Synchronized Super Admin password from environment configuration")
-                    logger.info("Super Admin account verified in production.")
+                    existing_super = db.query(db_models.UserAccount).filter(db_models.UserAccount.role == "super_admin").first()
+                    if not existing_super:
+                        logger.warning("Production mode: SUPER_ADMIN_EMAIL / SUPER_ADMIN_PASSWORD not set and no Super Admin exists.")
+                    else:
+                        logger.info("Super Admin account verified in production.")
 
                 logger.info("Production mode: Demo candidate account provisioning is disabled.")
             else:
                 # Development & test mode:
                 # Allow fallback demo credentials for seamless local testing
-                admin_email = os.environ.get("SUPER_ADMIN_EMAIL") or "admin@example.com"
-                admin_password = os.environ.get("SUPER_ADMIN_PASSWORD") or "SuperAdminPass123!"
+                admin_email = env_email or "admin@example.com"
+                admin_password = env_password or "SuperAdminPass123!"
                 clean_email = admin_email.strip().lower()
                 clean_password = admin_password.strip()
 
-                admin_user = db.query(db_models.UserAccount).filter(db_models.UserAccount.email == clean_email).first()
+                admin_user = db.query(db_models.UserAccount).filter(
+                    func.lower(db_models.UserAccount.email) == clean_email
+                ).first()
                 if not admin_user:
                     super_admin = db_models.UserAccount(
                         email=clean_email,
@@ -554,7 +560,9 @@ def _run_account_bootstrap():
                         db.commit()
 
                 # Provision default candidate account candidate@example.com if not present in dev
-                existing_candidate = db.query(db_models.UserAccount).filter(db_models.UserAccount.email == "candidate@example.com").first()
+                existing_candidate = db.query(db_models.UserAccount).filter(
+                    func.lower(db_models.UserAccount.email) == "candidate@example.com"
+                ).first()
                 if not existing_candidate:
                     cand_user = db_models.UserAccount(
                         email="candidate@example.com",
