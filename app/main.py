@@ -162,23 +162,10 @@ if env_origins:
 else:
     ALLOWED_ORIGINS = DEFAULT_ALLOWED_ORIGINS
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # On serverless (Vercel/Lambda), avoid blocking cold-start with heavy DDL migrations;
-    # ensure_db_initialized() handles DB access lazily per worker.
-    if not is_vercel:
-        try:
-            init_db()
-            logger.info("FastAPI lifespan: database initialized successfully")
-        except Exception as e:
-            logger.warning(f"FastAPI lifespan init_db notice: {e}")
-    yield
-
 
 app = FastAPI(
     title="Ravi — AI Interview Question Generator API",
     version="1.0.0",
-    lifespan=lifespan,
 )
 
 app.add_middleware(
