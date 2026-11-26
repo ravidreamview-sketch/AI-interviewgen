@@ -1169,9 +1169,14 @@ table.admin-table tr:hover td{background:var(--rule-soft)}
       </div>
 
       <div class="f-group">
-        <label class="f-label" for="drawerUserNewPass">Reset Password (Optional)</label>
-        <input type="password" id="drawerUserNewPass" placeholder="Enter new password to reset...">
-        <div class="f-sub">Leave blank to keep existing password unchanged.</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <input type="checkbox" id="drawerResetPassToggle" onchange="toggleResetPassField()" style="width:16px;height:16px;accent-color:var(--pen);cursor:pointer">
+          <label class="f-label" for="drawerResetPassToggle" style="margin:0;cursor:pointer;font-weight:600">Reset User Password</label>
+        </div>
+        <div id="drawerResetPassContainer" style="display:none;margin-top:8px">
+          <input type="password" id="drawerUserNewPass" autocomplete="new-password" placeholder="Enter new password (min 8 characters)..." disabled>
+          <div class="f-sub">Check the box above only if you explicitly intend to change this user's password. Prevented from browser autofill.</div>
+        </div>
       </div>
     </div>
     <div class="drawer-foot">
@@ -2035,13 +2040,48 @@ function openUserDetailsDrawer(userId) {
   document.getElementById('drawerUserRole').value = u.role;
   document.getElementById('drawerUserPlan').value = u.plan_tier;
   document.getElementById('drawerUserActive').value = String(u.is_active);
-  document.getElementById('drawerUserNewPass').value = '';
+
+  // Securely reset and disable password reset field to prevent browser autofill
+  const resetToggle = document.getElementById('drawerResetPassToggle');
+  const passContainer = document.getElementById('drawerResetPassContainer');
+  const passInput = document.getElementById('drawerUserNewPass');
+  if (resetToggle) resetToggle.checked = false;
+  if (passContainer) passContainer.style.display = 'none';
+  if (passInput) {
+    passInput.value = '';
+    passInput.disabled = true;
+  }
 
   document.getElementById('userDrawerBackdrop').classList.add('open');
   document.getElementById('userDrawer').classList.add('open');
 }
 
+function toggleResetPassField() {
+  const toggle = document.getElementById('drawerResetPassToggle');
+  const container = document.getElementById('drawerResetPassContainer');
+  const input = document.getElementById('drawerUserNewPass');
+  if (!toggle || !container || !input) return;
+  if (toggle.checked) {
+    container.style.display = 'block';
+    input.disabled = false;
+    input.focus();
+  } else {
+    container.style.display = 'none';
+    input.disabled = true;
+    input.value = '';
+  }
+}
+
 function closeUserDrawer() {
+  const resetToggle = document.getElementById('drawerResetPassToggle');
+  const passContainer = document.getElementById('drawerResetPassContainer');
+  const passInput = document.getElementById('drawerUserNewPass');
+  if (resetToggle) resetToggle.checked = false;
+  if (passContainer) passContainer.style.display = 'none';
+  if (passInput) {
+    passInput.value = '';
+    passInput.disabled = true;
+  }
   document.getElementById('userDrawerBackdrop').classList.remove('open');
   document.getElementById('userDrawer').classList.remove('open');
 }
@@ -2054,8 +2094,19 @@ async function handleSaveUser(e) {
     plan_tier: document.getElementById('drawerUserPlan').value,
     is_active: document.getElementById('drawerUserActive').value === 'true'
   };
-  const newPass = document.getElementById('drawerUserNewPass').value.trim();
-  if (newPass) payload.password = newPass;
+
+  // Only include password if explicitly enabled via the reset checkbox
+  const resetToggle = document.getElementById('drawerResetPassToggle');
+  if (resetToggle && resetToggle.checked) {
+    const newPass = document.getElementById('drawerUserNewPass').value.trim();
+    if (newPass) {
+      if (newPass.length < 8) {
+        showToast('Password must be at least 8 characters long.', 'error');
+        return;
+      }
+      payload.password = newPass;
+    }
+  }
 
   const btn = document.getElementById('saveUserBtn');
   btn.disabled = true;

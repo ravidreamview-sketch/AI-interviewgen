@@ -886,7 +886,13 @@ def update_user(
         target_user.is_active = payload.is_active
     
     if payload.password:
-        target_user.password_hash = hash_password(payload.password)
+        raw_pass = payload.password.strip()
+        if len(raw_pass) < 8:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Password must be at least 8 characters long."
+            )
+        target_user.password_hash = hash_password(raw_pass)
     
     db.commit()
     db.refresh(target_user)

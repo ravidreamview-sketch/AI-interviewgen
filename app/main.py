@@ -162,21 +162,10 @@ if env_origins:
 else:
     ALLOWED_ORIGINS = DEFAULT_ALLOWED_ORIGINS
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Safe startup initialization: ensure database tables & default accounts are created
-    try:
-        init_db()
-        logger.info("FastAPI lifespan: database initialized successfully")
-    except Exception as e:
-        logger.warning(f"FastAPI lifespan init_db notice: {e}")
-    yield
-
 
 app = FastAPI(
     title="Ravi — AI Interview Question Generator API",
     version="1.0.0",
-    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -196,12 +185,11 @@ app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RequestTracingMiddleware)
 app.include_router(api_v1_router, prefix="/api/v1")
 
-# Mount Next.js static asset bundle (/_next/*)
+# Mount Next.js static asset bundle (/_next/*) if directory exists
 next_out_dir = (BASE_DIR / "frontend" / "out").resolve()
 next_static_dir = next_out_dir / "_next"
-if not next_static_dir.exists():
-    next_static_dir.mkdir(parents=True, exist_ok=True)
-app.mount("/_next", StaticFiles(directory=str(next_static_dir)), name="next_static")
+if next_static_dir.exists() and next_static_dir.is_dir():
+    app.mount("/_next", StaticFiles(directory=str(next_static_dir)), name="next_static")
 
 @app.get("/health")
 @app.get("/api/health")
